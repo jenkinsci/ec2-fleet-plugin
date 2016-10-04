@@ -73,6 +73,7 @@ public class EC2FleetCloud extends Cloud
     private final boolean privateIpUsed;
     private final Integer idleMinutes;
     private final Integer maxSize;
+    private final Integer numExecutors;
     private @Nonnull FleetStateStats status;
 
     private final Set<NodeProvisioner.PlannedNode> plannedNodes =
@@ -85,7 +86,8 @@ public class EC2FleetCloud extends Cloud
                          final String region, final String fleet,
                          final ComputerConnector computerConnector,
                          final boolean privateIpUsed,
-                         final Integer idleMinutes, final Integer maxSize) {
+                         final Integer idleMinutes, final Integer maxSize,
+                         final Integer numExecutors) {
         super(FLEET_CLOUD_ID);
         this.credentialsId = credentialsId;
         this.region = region;
@@ -94,6 +96,7 @@ public class EC2FleetCloud extends Cloud
         this.idleMinutes = idleMinutes;
         this.privateIpUsed = privateIpUsed;
         this.maxSize = maxSize;
+        this.numExecutors = numExecutors;
 
         this.status = new FleetStateStats(fleet, 0, "Initializing", Collections.<String>emptySet());
     }
@@ -124,6 +127,10 @@ public class EC2FleetCloud extends Cloud
 
     public Integer getMaxSize() {
         return maxSize;
+    }
+
+    public String getNumExecutors() {
+        return numExecutors.toString();
     }
 
     public String getJvmSettings() {
@@ -233,7 +240,7 @@ public class EC2FleetCloud extends Cloud
             return; // Wait some more...
 
         final FleetNode slave = new FleetNode(instanceId, "Fleet slave for" + instanceId,
-                fsRoot, "1", Node.Mode.NORMAL, "ec2-fleet", new ArrayList<NodeProperty<?>>(),
+                fsRoot, this.getNumExecutors(), Node.Mode.NORMAL, "ec2-fleet", new ArrayList<NodeProperty<?>>(),
                 FLEET_CLOUD_ID, computerConnector.launch(address, TaskListener.NULL));
 
         // Initialize our retention strategy
