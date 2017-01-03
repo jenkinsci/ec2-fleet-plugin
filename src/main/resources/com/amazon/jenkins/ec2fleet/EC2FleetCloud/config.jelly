@@ -33,6 +33,9 @@
     <f:entry title="${%Maximum Cluster Size}" field="maxSize">
       <f:number clazz="required positive-number"/>
     </f:entry>
+    <f:entry title="${%Num Executors}" field="numExecutors">
+      <f:number default="1" clazz="required positive-number"/>
+    </f:entry>
 
     <f:validateButton title="${%Test Connection}" progress="${%Testing...}" method="testConnection" with="credentialsId,region,fleet" />
   </f:section>
