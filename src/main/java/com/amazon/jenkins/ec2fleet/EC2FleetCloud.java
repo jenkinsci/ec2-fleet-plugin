@@ -258,14 +258,14 @@ public class EC2FleetCloud extends Cloud
         final AmazonEC2 ec2=connect(credentialsId, region);
         final FleetStateStats curStatus=FleetStateStats.readClusterState(ec2, getFleet(), this.labelString);
         status = curStatus;
-        LOGGER.log(Level.FINE, "Fleet Update Status called");
-        LOGGER.log(Level.FINE, "# of nodes:" + Jenkins.getInstance().getNodes().size());
+        LOGGER.log(Level.INFO, "Fleet Update Status called");
+        LOGGER.log(Level.INFO, "# of nodes:" + Jenkins.getInstance().getNodes().size());
 
         // Check the nodes to see if we have some new ones
         final Set<String> newInstances = new HashSet<String>(curStatus.getInstances());
         instancesSeen.clear();
-        LOGGER.log(Level.FINE, "Fleet (" + getLabelString() + ") contains instances [" + join(", ", newInstances) + "]");
-        LOGGER.log(Level.FINE, "Jenkins contains dying instances [" + join(", ", instancesDying) + "]");
+        LOGGER.log(Level.INFO, "Fleet (" + getLabelString() + ") contains instances [" + join(", ", newInstances) + "]");
+        LOGGER.log(Level.INFO, "Jenkins contains dying instances [" + join(", ", instancesDying) + "]");
         for(final Node node : Jenkins.getInstance().getNodes()) {
             if (newInstances.contains(node.getNodeName())) {
                 // instancesSeen should only have the intersection of nodes
@@ -407,7 +407,7 @@ public class EC2FleetCloud extends Cloud
 
     @Override public boolean canProvision(final Label label) {
         boolean result = fleet != null && (label == null || Label.parse(this.labelString).containsAll(label.listAtoms()));
-        LOGGER.log(Level.FINE, "CanProvision called on fleet: \"" + this.labelString + "\" wanting: \"" + (label == null ? "(unspecified)" : label.getName()) + "\". Returning " + Boolean.toString(result) + ".");
+        LOGGER.log(Level.INFO, "CanProvision called on fleet: \"" + this.labelString + "\" wanting: \"" + (label == null ? "(unspecified)" : label.getName()) + "\". Returning " + Boolean.toString(result) + ".");
         return result;
     }
 
