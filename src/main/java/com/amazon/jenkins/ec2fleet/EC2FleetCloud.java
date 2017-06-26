@@ -142,6 +142,10 @@ public class EC2FleetCloud extends Cloud
         return fleet;
     }
 
+    public String getFsRoot() {
+        return fsRoot;
+    }
+
     public ComputerConnector getComputerConnector() {
         return computerConnector;
     }
