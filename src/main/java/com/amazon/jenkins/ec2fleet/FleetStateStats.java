@@ -35,6 +35,7 @@ public final class FleetStateStats
                            final int numDesired, final @Nonnull String state,
                            final @Nonnull Set<String> instances,
                            final @Nonnull String label) {
+
         this.fleetId=fleetId;
         this.numActive=instances.size();
         this.numDesired=numDesired;

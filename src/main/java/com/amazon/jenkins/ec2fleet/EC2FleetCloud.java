@@ -202,6 +202,8 @@ public class EC2FleetCloud extends Cloud
         final FleetStateStats stats=updateStatus();
         final int maxAllowed = this.getMaxSize();
 
+        LOGGER.log(Level.INFO, "Provisioning numDesired=" + Integer.toString(stats.getNumDesired()) + " maxAllowed=" + Integer.toString(maxAllowed));
+
         if (stats.getNumDesired() >= maxAllowed || !"active".equals(stats.getState()))
             return Collections.emptyList();
 
@@ -213,9 +215,14 @@ public class EC2FleetCloud extends Cloud
         if (targetCapacity > maxAllowed)
             targetCapacity = maxAllowed;
 
+        if (targetCapacity == 0) {
+          LOGGER.log(Level.INFO, "Target capacity calculated as zero which is invalid. Setting to 1");
+          targetCapacity = 1;
+        }
+
         int toProvision = targetCapacity - stats.getNumDesired();
 
-        LOGGER.log(Level.INFO, "Provisioning nodes. Excess workload: " + Integer.toString(weightedExcessWorkload) + ", Provisioning: " + Integer.toString(toProvision));
+        LOGGER.log(Level.INFO, "Provisioning nodes. Excess workload: " + Integer.toString(weightedExcessWorkload) + ", targetCapacity: " + Integer.toString(targetCapacity) + " Provisioning: " + Integer.toString(toProvision));
 
         final ModifySpotFleetRequestRequest request=new ModifySpotFleetRequestRequest();
         request.setSpotFleetRequestId(fleet);
