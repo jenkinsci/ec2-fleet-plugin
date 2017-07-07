@@ -202,11 +202,12 @@ public class EC2FleetCloud extends Cloud
     @Override public synchronized Collection<NodeProvisioner.PlannedNode> provision(
             final Label label, final int excessWorkload) {
 
+        LOGGER.log(Level.INFO, "calling provision()");
 
         final FleetStateStats stats=updateStatus();
         final int maxAllowed = this.getMaxSize();
 
-        LOGGER.log(Level.INFO, "Provisioning numDesired=" + Integer.toString(stats.getNumDesired()) + " maxAllowed=" + Integer.toString(maxAllowed));
+        LOGGER.log(Level.INFO, "Provisioning state=" + stats.getState() + " numDesired=" + Integer.toString(stats.getNumDesired()) + " maxAllowed=" + Integer.toString(maxAllowed));
 
         if (stats.getNumDesired() >= maxAllowed || !"active".equals(stats.getState()))
             return Collections.emptyList();
@@ -380,6 +381,7 @@ public class EC2FleetCloud extends Cloud
     }
 
     public synchronized boolean terminateInstance(final String instanceId) {
+      try {
         LOGGER.log(Level.INFO, "Attempting to terminate instance: " + instanceId);
 
         final FleetStateStats stats=updateStatus();
@@ -392,6 +394,7 @@ public class EC2FleetCloud extends Cloud
         final AmazonEC2 ec2 = connect(credentialsId, region);
 
         if (!instancesDying.contains(instanceId)) {
+            LOGGER.log(Level.INFO, "terminateInstance numDesired = " + Integer.toString(stats.getNumDesired()) + " minSize=" + Integer.toString(this.getMinSize()));
             // We can't remove instances beyond minSize
             if (stats.getNumDesired() == this.getMinSize() || !"active".equals(stats.getState())) {
                 LOGGER.log(Level.INFO, "Not terminating " + instanceId + " because we need a minimum of " + Integer.toString(this.getMinSize()) + " instances running.");
@@ -401,7 +404,14 @@ public class EC2FleetCloud extends Cloud
             // These operations aren't idempotent so only do them once
             final ModifySpotFleetRequestRequest request=new ModifySpotFleetRequestRequest();
             request.setSpotFleetRequestId(fleet);
-            request.setTargetCapacity(stats.getNumDesired() - 1);
+
+            int targetCapacity = stats.getNumDesired() - 1;
+            if (targetCapacity == 0) {
+                LOGGER.log(Level.INFO, "was asked to set targetCapacity to zero, not doing, setting to 1");
+                targetCapacity = 1;
+            }
+
+            request.setTargetCapacity(targetCapacity);
             request.setExcessCapacityTerminationPolicy("NoTermination");
             ec2.modifySpotFleetRequest(request);
 
@@ -414,11 +424,19 @@ public class EC2FleetCloud extends Cloud
         LOGGER.log(Level.INFO, "Instance " + instanceId + " termination result: " + result.toString());
 
         return true;
+      } catch(final Exception ex) {
+        LOGGER.log(Level.INFO, "failed in terminateInstance " + ex.getMessage());
+        return true;
+      }
     }
 
     @Override public boolean canProvision(final Label label) {
-        boolean result = fleet != null && (label == null || Label.parse(this.labelString).containsAll(label.listAtoms()));
-        LOGGER.log(Level.INFO, "CanProvision called on fleet: \"" + this.labelString + "\" wanting: \"" + (label == null ? "(unspecified)" : label.getName()) + "\". Returning " + Boolean.toString(result) + ".");
+        LOGGER.log(Level.INFO, "calling can Provision");
+        // boolean result = fleet != null && (label == null || Label.parse(this.labelString).containsAll(label.listAtoms()));
+        // LOGGER.log(Level.INFO, "CanProvision called on fleet: \"" + this.labelString + "\" wanting: \"" + (label == null ? "(unspecified)" : label.getName()) + "\". Returning " + Boolean.toString(result) + ".");
+
+// NOTE OVERRIDDEN BY YAN!!!
+        boolean result = true;
         return result;
     }
 
@@ -523,6 +541,9 @@ public class EC2FleetCloud extends Cloud
                 @QueryParameter final String fleet)
         {
             try {
+
+                LOGGER.log(Level.INFO, "doTestConnection: credentialsId=" + credentialsId + " region=" + region + " fleet=" + fleet);
+
                 final AmazonEC2 client=connect(credentialsId, region);
                 client.describeSpotFleetInstances(
                         new DescribeSpotFleetInstancesRequest().withSpotFleetRequestId(fleet));
