@@ -38,7 +38,7 @@ public class CloudNanny extends PeriodicWork
 
             // Update the cluster states
             final EC2FleetCloud fleetCloud =(EC2FleetCloud) cloud;
-            LOGGER.log(Level.FINE, "Checking cloud: " + fleetCloud.getLabelString() );
+            LOGGER.log(Level.INFO, "Checking cloud: " + fleetCloud.getLabelString() );
             stats.add(fleetCloud.updateStatus());
         }
 

@@ -202,21 +202,32 @@ public class EC2FleetCloud extends Cloud
     @Override public synchronized Collection<NodeProvisioner.PlannedNode> provision(
             final Label label, final int excessWorkload) {
 
+        LOGGER.log(Level.INFO, "calling provision()");
 
         final FleetStateStats stats=updateStatus();
         final int maxAllowed = this.getMaxSize();
 
+        LOGGER.log(Level.INFO, "Provisioning state=" + stats.getState() + " numDesired=" + Integer.toString(stats.getNumDesired()) + " maxAllowed=" + Integer.toString(maxAllowed));
+
         if (stats.getNumDesired() >= maxAllowed || !"active".equals(stats.getState()))
             return Collections.emptyList();
 
-        int targetCapacity = stats.getNumDesired() + excessWorkload;
+	// Presumably ceil() would also be correct but I think round() works best for
+	// scenarios when numExecutors is of reasonable size.
+        int weightedExcessWorkload = Math.round((float)excessWorkload / this.numExecutors);
+        int targetCapacity = stats.getNumDesired() + weightedExcessWorkload;
 
         if (targetCapacity > maxAllowed)
             targetCapacity = maxAllowed;
 
+        if (targetCapacity == 0) {
+          LOGGER.log(Level.INFO, "Target capacity calculated as zero which is invalid. Setting to 1");
+          targetCapacity = 1;
+        }
+
         int toProvision = targetCapacity - stats.getNumDesired();
 
-        LOGGER.log(Level.INFO, "Provisioning nodes. Excess workload: " + Integer.toString(excessWorkload) + ", Provisioning: " + Integer.toString(toProvision));
+        LOGGER.log(Level.INFO, "Provisioning nodes. Excess workload: " + Integer.toString(weightedExcessWorkload) + ", targetCapacity: " + Integer.toString(targetCapacity) + " Provisioning: " + Integer.toString(toProvision));
 
         final ModifySpotFleetRequestRequest request=new ModifySpotFleetRequestRequest();
         request.setSpotFleetRequestId(fleet);
@@ -231,7 +242,7 @@ public class EC2FleetCloud extends Cloud
         {
             final SettableFuture<Node> futureNode=SettableFuture.create();
             final NodeProvisioner.PlannedNode plannedNode=
-                    new NodeProvisioner.PlannedNode("FleetNode-"+f, futureNode, 1);
+                    new NodeProvisioner.PlannedNode("FleetNode-"+f, futureNode, this.numExecutors);
             resultList.add(plannedNode);
             this.plannedNodes.add(plannedNode);
         }
@@ -259,14 +270,14 @@ public class EC2FleetCloud extends Cloud
         final AmazonEC2 ec2=connect(credentialsId, region);
         final FleetStateStats curStatus=FleetStateStats.readClusterState(ec2, getFleet(), this.labelString);
         status = curStatus;
-        LOGGER.log(Level.FINE, "Fleet Update Status called");
-        LOGGER.log(Level.FINE, "# of nodes:" + Jenkins.getInstance().getNodes().size());
+        LOGGER.log(Level.INFO, "Fleet Update Status called");
+        LOGGER.log(Level.INFO, "# of nodes:" + Jenkins.getInstance().getNodes().size());
 
         // Check the nodes to see if we have some new ones
         final Set<String> newInstances = new HashSet<String>(curStatus.getInstances());
         instancesSeen.clear();
-        LOGGER.log(Level.FINE, "Fleet (" + getLabelString() + ") contains instances [" + join(", ", newInstances) + "]");
-        LOGGER.log(Level.FINE, "Jenkins contains dying instances [" + join(", ", instancesDying) + "]");
+        LOGGER.log(Level.INFO, "Fleet (" + getLabelString() + ") contains instances [" + join(", ", newInstances) + "]");
+        LOGGER.log(Level.INFO, "Jenkins contains dying instances [" + join(", ", instancesDying) + "]");
         for(final Node node : Jenkins.getInstance().getNodes()) {
             if (newInstances.contains(node.getNodeName())) {
                 // instancesSeen should only have the intersection of nodes
@@ -370,6 +381,7 @@ public class EC2FleetCloud extends Cloud
     }
 
     public synchronized boolean terminateInstance(final String instanceId) {
+      try {
         LOGGER.log(Level.INFO, "Attempting to terminate instance: " + instanceId);
 
         final FleetStateStats stats=updateStatus();
@@ -382,6 +394,7 @@ public class EC2FleetCloud extends Cloud
         final AmazonEC2 ec2 = connect(credentialsId, region);
 
         if (!instancesDying.contains(instanceId)) {
+            LOGGER.log(Level.INFO, "terminateInstance numDesired = " + Integer.toString(stats.getNumDesired()) + " minSize=" + Integer.toString(this.getMinSize()));
             // We can't remove instances beyond minSize
             if (stats.getNumDesired() == this.getMinSize() || !"active".equals(stats.getState())) {
                 LOGGER.log(Level.INFO, "Not terminating " + instanceId + " because we need a minimum of " + Integer.toString(this.getMinSize()) + " instances running.");
@@ -391,7 +404,14 @@ public class EC2FleetCloud extends Cloud
             // These operations aren't idempotent so only do them once
             final ModifySpotFleetRequestRequest request=new ModifySpotFleetRequestRequest();
             request.setSpotFleetRequestId(fleet);
-            request.setTargetCapacity(stats.getNumDesired() - 1);
+
+            int targetCapacity = stats.getNumDesired() - 1;
+            if (targetCapacity == 0) {
+                LOGGER.log(Level.INFO, "was asked to set targetCapacity to zero, not doing, setting to 1");
+                targetCapacity = 1;
+            }
+
+            request.setTargetCapacity(targetCapacity);
             request.setExcessCapacityTerminationPolicy("NoTermination");
             ec2.modifySpotFleetRequest(request);
 
@@ -404,11 +424,19 @@ public class EC2FleetCloud extends Cloud
         LOGGER.log(Level.INFO, "Instance " + instanceId + " termination result: " + result.toString());
 
         return true;
+      } catch(final Exception ex) {
+        LOGGER.log(Level.INFO, "failed in terminateInstance " + ex.getMessage());
+        return true;
+      }
     }
 
     @Override public boolean canProvision(final Label label) {
-        boolean result = fleet != null && (label == null || Label.parse(this.labelString).containsAll(label.listAtoms()));
-        LOGGER.log(Level.FINE, "CanProvision called on fleet: \"" + this.labelString + "\" wanting: \"" + (label == null ? "(unspecified)" : label.getName()) + "\". Returning " + Boolean.toString(result) + ".");
+        LOGGER.log(Level.INFO, "calling can Provision");
+        // boolean result = fleet != null && (label == null || Label.parse(this.labelString).containsAll(label.listAtoms()));
+        // LOGGER.log(Level.INFO, "CanProvision called on fleet: \"" + this.labelString + "\" wanting: \"" + (label == null ? "(unspecified)" : label.getName()) + "\". Returning " + Boolean.toString(result) + ".");
+
+// NOTE OVERRIDDEN BY YAN!!!
+        boolean result = true;
         return result;
     }
 
@@ -513,6 +541,9 @@ public class EC2FleetCloud extends Cloud
                 @QueryParameter final String fleet)
         {
             try {
+
+                LOGGER.log(Level.INFO, "doTestConnection: credentialsId=" + credentialsId + " region=" + region + " fleet=" + fleet);
+
                 final AmazonEC2 client=connect(credentialsId, region);
                 client.describeSpotFleetInstances(
                         new DescribeSpotFleetInstancesRequest().withSpotFleetRequestId(fleet));

@@ -17,7 +17,7 @@ public class IdleRetentionStrategy extends RetentionStrategy<SlaveComputer>
     private final int maxIdleMinutes;
     private final EC2FleetCloud parent;
 
-    private static final Logger LOGGER = Logger.getLogger(IdleRetentionStrategy.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(EC2FleetCloud.class.getName());
 
     public IdleRetentionStrategy(final int maxIdleMinutes, final EC2FleetCloud parent) {
         this.maxIdleMinutes = maxIdleMinutes;
@@ -28,7 +28,7 @@ public class IdleRetentionStrategy extends RetentionStrategy<SlaveComputer>
     protected boolean isIdleForTooLong(final Computer c) {
         long age = System.currentTimeMillis()-c.getIdleStartMilliseconds();
         long maxAge = maxIdleMinutes*60*1000;
-        LOGGER.log(Level.FINE, "Instance: " + c.getDisplayName() + " Age: " + age + " Max Age:" + maxAge);
+        LOGGER.log(Level.INFO, "Instance: " + c.getDisplayName() + " Age: " + age + " Max Age:" + maxAge);
         return System.currentTimeMillis()-c.getIdleStartMilliseconds() > (maxIdleMinutes*60*1000);
     }
 
