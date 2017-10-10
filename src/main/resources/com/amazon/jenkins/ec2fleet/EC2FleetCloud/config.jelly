@@ -27,6 +27,11 @@
     <f:entry title="${%Connect Private}" field="privateIpUsed">
       <f:checkbox />
     </f:entry>
+    <f:description>Scale as soon as a build is queued
+    </f:description>
+    <f:entry title="${%Unweighted scaling}" field="unweightedScaling">
+      <f:checkbox />
+    </f:entry>
     <f:description>Labels to add to instances in this fleet
     </f:description>
     <f:entry title="${%Label}" field="labelString">
