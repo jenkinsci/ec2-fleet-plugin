@@ -425,7 +425,7 @@ public class EC2FleetCloud extends Cloud
     }
 
     @Override public boolean canProvision(final Label label) {
-        boolean result = fleet != null && (label == null || Label.parse(this.labelString).containsAll(label.listAtoms()));
+        boolean result = fleet != null && (label == null || label.matches(Label.parse(this.labelString)));
         LOGGER.log(Level.FINE, "CanProvision called on fleet: \"" + this.labelString + "\" wanting: \"" + (label == null ? "(unspecified)" : label.getName()) + "\". Returning " + Boolean.toString(result) + ".");
         return result;
     }
