@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 public class CloudNanny extends PeriodicWork
 {
     private static final Logger LOGGER = Logger.getLogger(CloudNanny.class.getName());
-    private final String cloudNannyTimer;
+    private final long cloudNannyTimer;
 
     @Override public long getRecurrencePeriod() {
         return cloudNannyTimer;
