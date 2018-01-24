@@ -54,7 +54,7 @@
     <f:description>Time in milliseconds between Spot Fleet check
     </f:description>
     <f:entry title="${%Cloud Nanny Timer}" field="cloudNannyTimer">
-      <f:textbox clazz="required" default="10000L" />
+      <f:number clazz="required" default="10000L" />
     </f:entry>
 
     <f:validateButton title="${%Test Connection}" progress="${%Testing...}" method="testConnection" with="credentialsId,region,fleet" />
