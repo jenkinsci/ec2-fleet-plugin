@@ -69,6 +69,7 @@ public class EC2FleetCloud extends Cloud
     private final String fsRoot;
     private final ComputerConnector computerConnector;
     private final boolean privateIpUsed;
+    private final boolean unweightedScaling;
     private final String labelString;
     private final Integer idleMinutes;
     private final Integer minSize;
@@ -106,6 +107,7 @@ public class EC2FleetCloud extends Cloud
                          final String fsRoot,
                          final ComputerConnector computerConnector,
                          final boolean privateIpUsed,
+                         final boolean unweightedScaling,
                          final Integer idleMinutes,
                          final Integer minSize,
                          final Integer maxSize,
@@ -120,6 +122,7 @@ public class EC2FleetCloud extends Cloud
         this.labelString = labelString;
         this.idleMinutes = idleMinutes;
         this.privateIpUsed = privateIpUsed;
+        this.unweightedScaling = unweightedScaling;
         this.minSize = minSize;
         this.maxSize = maxSize;
         this.numExecutors = numExecutors;
@@ -160,6 +163,8 @@ public class EC2FleetCloud extends Cloud
     public boolean isPrivateIpUsed() {
         return privateIpUsed;
     }
+
+    public boolean isUnweightedScaling() {return unweightedScaling; }
 
     public String getLabelString(){
         return this.labelString;
@@ -216,17 +221,27 @@ public class EC2FleetCloud extends Cloud
         if (stats.getNumDesired() >= maxAllowed || !"active".equals(stats.getState()))
             return Collections.emptyList();
 
-	// Presumably ceil() would also be correct but I think round() works best for
-	// scenarios when numExecutors is of reasonable size.
-        int weightedExcessWorkload = Math.round((float)excessWorkload / this.numExecutors);
-        int targetCapacity = stats.getNumDesired() + weightedExcessWorkload;
+        int targetCapacity;
+
+        if(unweightedScaling) {
+            targetCapacity = stats.getNumDesired() + excessWorkload;
+            LOGGER.log(Level.INFO, "Unweighted scaling. targetCapacity: " + targetCapacity);
+        } else {
+            // Presumably ceil() would also be correct but I think round() works best for
+            // scenarios when numExecutors is of reasonable size.
+            int weightedExcessWorkload = Math.round((float)excessWorkload / this.numExecutors);
+            targetCapacity = stats.getNumDesired() + weightedExcessWorkload;
+
+            LOGGER.log(Level.INFO, "Weighted scaling. weightedExcessWorkload: " + weightedExcessWorkload + " targetCapacity: " + targetCapacity);
+        }
+
 
         if (targetCapacity > maxAllowed)
             targetCapacity = maxAllowed;
 
         int toProvision = targetCapacity - stats.getNumDesired();
 
-        LOGGER.log(Level.INFO, "Provisioning nodes. Excess workload: " + Integer.toString(weightedExcessWorkload) + ", Provisioning: " + Integer.toString(toProvision));
+        LOGGER.log(Level.INFO, "Provisioning nodes. Excess workload: " + Integer.toString(excessWorkload) + ", Provisioning: " + Integer.toString(toProvision));
 
         final ModifySpotFleetRequestRequest request=new ModifySpotFleetRequestRequest();
         request.setSpotFleetRequestId(fleet);
@@ -417,7 +432,7 @@ public class EC2FleetCloud extends Cloud
     }
 
     @Override public boolean canProvision(final Label label) {
-        boolean result = fleet != null && (label == null || Label.parse(this.labelString).containsAll(label.listAtoms()));
+        boolean result = fleet != null && (label == null || label.matches(Label.parse(this.labelString)));
         LOGGER.log(Level.FINE, "CanProvision called on fleet: \"" + this.labelString + "\" wanting: \"" + (label == null ? "(unspecified)" : label.getName()) + "\". Returning " + Boolean.toString(result) + ".");
         return result;
     }
@@ -445,6 +460,7 @@ public class EC2FleetCloud extends Cloud
         public String fleet;
         public String userName="root";
         public boolean privateIpUsed;
+        public boolean unweightedScaling;
         public String privateKey;
 
         public DescriptorImpl() {
