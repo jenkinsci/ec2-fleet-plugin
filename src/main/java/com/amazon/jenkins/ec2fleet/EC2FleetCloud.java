@@ -20,6 +20,7 @@ import com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentials
 import com.google.common.util.concurrent.SettableFuture;
 import hudson.Extension;
 import hudson.model.Descriptor;
+import hudson.model.Computer;
 import hudson.model.Label;
 import hudson.model.Node;
 import hudson.model.Queue;
