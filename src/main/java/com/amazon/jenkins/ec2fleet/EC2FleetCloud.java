@@ -86,6 +86,9 @@ public class EC2FleetCloud extends Cloud
     // instancesDyingCache are terminated nodes known to both Jenkins and the fleet,
     // that are waiting for termination
     private transient Set<String> instancesDyingCache;
+    // instacesBootingCache are new nodes known to both Jenkins and the fleet,
+    // that are booting
+    private transient Set<String> instancesBootingCache;
 
     private static final Logger LOGGER = Logger.getLogger(EC2FleetCloud.class.getName());
 
@@ -137,6 +140,7 @@ public class EC2FleetCloud extends Cloud
         plannedNodesCache = new HashSet<NodeProvisioner.PlannedNode>();
         instancesSeenCache = new HashSet<String>();
         instancesDyingCache = new HashSet<String>();
+        instancesBootingCache = new HashSet<String>();
     }
 
     public String getCredentialsId() {
@@ -236,12 +240,26 @@ public class EC2FleetCloud extends Cloud
         if (stats.getNumDesired() >= maxAllowed || !"active".equals(stats.getState()))
             return Collections.emptyList();
 
+        // Count the number of nodes still booting
+        int numNodesBooting = 0;
+        Jenkins jenkins = Jenkins.getInstance();
+        synchronized (jenkins) {
+            for (final Node node : jenkins.getNodes()) {
+                if (this.labelString.equals(node.getLabelString()))
+                    if (instancesBootingCache.contains(node.getNodeName()))
+                        numNodesBooting += 1;
+            }
+        }
+
         // if the planned node has 0 executors configured force it to 1 so we end up doing an unweighted check
         final int numExecutors = this.numExecutors == 0 ? 1 : this.numExecutors;
 
+        // Recalculate the excess taking the number of booting nodes into account
+        int effectiveExcessWorkload = excessWorkload - (numNodesBooting * numExecutors);
+
         // Calculate the ceiling, without having to work with doubles from Math.ceil
         // https://stackoverflow.com/a/21830188/877024
-        final int weightedExcessWorkload = (excessWorkload + numExecutors - 1) / numExecutors;
+        final int weightedExcessWorkload = (effectiveExcessWorkload + numExecutors - 1) / numExecutors;
         int targetCapacity = stats.getNumDesired() + weightedExcessWorkload;
 
         if (targetCapacity > maxAllowed)
@@ -314,6 +332,10 @@ public class EC2FleetCloud extends Cloud
                 instancesDyingCache.remove(node.getNodeName());
                 instancesSeenCache.remove(node.getNodeName());
             }
+            Computer computer = node.toComputer();
+            if (computer != null)
+                if (instancesBootingCache.contains(node.getNodeName()) && computer.isOnline())
+                    instancesBootingCache.remove(node.getNodeName());
         }
 
         // We should only keep dying instances that are still visible to both
@@ -402,6 +424,7 @@ public class EC2FleetCloud extends Cloud
             final NodeProvisioner.PlannedNode curNode= plannedNodesCache.iterator().next();
             plannedNodesCache.remove(curNode);
             ((SettableFuture<Node>)curNode.future).set(slave);
+            instancesBootingCache.add(slave.getNodeName());
         }
     }
 
