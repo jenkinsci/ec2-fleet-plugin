@@ -6,6 +6,9 @@
 
 
   <f:section title="${%Spot Fleet Configuration}">
+    <f:entry title="${%Name}" field="name">
+        <f:textbox default="FleetCloud"/>
+    </f:entry>
     <f:entry title="${%AWS Crendentials}" field="credentialsId">
       <c:select/>
     </f:entry>
