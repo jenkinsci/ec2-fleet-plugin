@@ -268,6 +268,9 @@ public class EC2FleetCloud extends Cloud
 
         int toProvision = targetCapacity - stats.getNumDesired();
 
+        if (toProvision < 1)
+            return Collections.emptyList();
+
         LOGGER.log(Level.INFO, "Provisioning nodes. Excess workload: " + Integer.toString(weightedExcessWorkload) + ", Provisioning: " + Integer.toString(toProvision));
 
         final ModifySpotFleetRequestRequest request=new ModifySpotFleetRequestRequest();
