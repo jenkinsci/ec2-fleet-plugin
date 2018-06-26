@@ -19,6 +19,8 @@ public class FleetNodeComputer extends SlaveComputer
         return (FleetNode) super.getNode();
     }
 
+    @Override public String getDisplayName() { return getNode().getDisplayName(); }
+
     public EC2FleetCloud getCloud() {
         return getNode().getCloud();
     }

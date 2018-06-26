@@ -34,6 +34,8 @@ public class FleetNode extends Slave implements EphemeralNode
         this.cloudName = cloudName;
     }
 
+    @Override public String getDisplayName() { return cloudName + " (" + name + ")"; }
+
     @Override public Node asNode() {
         return this;
     }
