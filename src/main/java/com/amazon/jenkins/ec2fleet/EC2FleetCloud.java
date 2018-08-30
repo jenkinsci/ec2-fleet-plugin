@@ -12,6 +12,7 @@ import com.amazonaws.services.ec2.model.DescribeSpotFleetRequestsResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.ModifySpotFleetRequestRequest;
 import com.amazonaws.services.ec2.model.Region;
+import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.SpotFleetRequestConfig;
 import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.amazonaws.services.ec2.model.TerminateInstancesResult;
@@ -357,6 +358,30 @@ public class EC2FleetCloud extends Cloud
         return curStatus;
     }
 
+    private Instance instanceFromResult(final DescribeInstancesResult result, final String instanceId) {
+        // Obtain an instance with a specific instanceId from a DescribeInstancesResult
+        Instance instance = null;
+        final List<Reservation> reservations = result.getReservations();
+        outerloop:
+        for(final Reservation reservation : reservations) {
+            final List<Instance> instances=reservation.getInstances();
+            final String resId = reservation.getReservationId();
+            for(final Instance instanceCandidate : instances) {
+                final String id = instanceCandidate.getInstanceId();
+                final String address = instanceCandidate.getPrivateIpAddress();
+                LOGGER.log(Level.FINE, "instance in reservation: " + resId + " "  + id + " " + address);
+                if(id.equals(instanceId)) {
+                    LOGGER.log(Level.FINE, "it's a match: " + id + " " + instanceId);
+                    instance = instanceCandidate;
+                    break outerloop;
+                } else {
+                    LOGGER.log(Level.FINE, "it's NOT a match: " + id + " " + instanceId);
+                }
+            }
+        }
+        return instance;
+    }
+
     private void addNewSlave(final AmazonEC2 ec2, final String instanceId) throws Exception {
         // Generate a random FS root if one isn't specified
         String fsRoot = this.fsRoot;
@@ -368,7 +393,7 @@ public class EC2FleetCloud extends Cloud
                 new DescribeInstancesRequest().withInstanceIds(instanceId));
         if (result.getReservations().isEmpty()) //Can't find this instance, skip it
             return;
-        final Instance instance=result.getReservations().get(0).getInstances().get(0);
+        final Instance instance = instanceFromResult(result, instanceId);
         final String address = isPrivateIpUsed() ?
                 instance.getPrivateIpAddress() : instance.getPublicIpAddress();
 
