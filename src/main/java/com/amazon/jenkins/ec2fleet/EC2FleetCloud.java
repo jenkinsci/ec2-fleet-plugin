@@ -323,9 +323,7 @@ public class EC2FleetCloud extends Cloud
                 instancesSeenCache.remove(node.getNodeName());
             }
             Computer computer = node.toComputer();
-            if (computer != null
-                    && computer.isOnline()
-                    && instancesBootingCache.contains(node.getNodeName()))
+            if (computer != null && computer.isOnline())
                 instancesBootingCache.remove(node.getNodeName());
         }
 
