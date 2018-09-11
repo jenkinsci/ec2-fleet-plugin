@@ -241,22 +241,11 @@ public class EC2FleetCloud extends Cloud
         if (stats.getNumDesired() >= maxAllowed || !"active".equals(stats.getState()))
             return Collections.emptyList();
 
-        // Count the number of nodes still booting
-        int numNodesBooting = 0;
-        Jenkins jenkins = Jenkins.getInstance();
-        synchronized (jenkins) {
-            for (final Node node : jenkins.getNodes()) {
-                if (this.labelString.equals(node.getLabelString()))
-                    if (instancesBootingCache.contains(node.getNodeName()))
-                        numNodesBooting += 1;
-            }
-        }
-
         // if the planned node has 0 executors configured force it to 1 so we end up doing an unweighted check
         final int numExecutors = this.numExecutors == 0 ? 1 : this.numExecutors;
 
         // Recalculate the excess taking the number of booting nodes into account
-        int effectiveExcessWorkload = excessWorkload - (numNodesBooting * numExecutors);
+        int effectiveExcessWorkload = excessWorkload - (instancesBootingCache.size() * numExecutors);
 
         // Calculate the ceiling, without having to work with doubles from Math.ceil
         // https://stackoverflow.com/a/21830188/877024
@@ -334,9 +323,10 @@ public class EC2FleetCloud extends Cloud
                 instancesSeenCache.remove(node.getNodeName());
             }
             Computer computer = node.toComputer();
-            if (computer != null)
-                if (instancesBootingCache.contains(node.getNodeName()) && computer.isOnline())
-                    instancesBootingCache.remove(node.getNodeName());
+            if (computer != null
+                    && computer.isOnline()
+                    && instancesBootingCache.contains(node.getNodeName()))
+                instancesBootingCache.remove(node.getNodeName());
         }
 
         // We should only keep dying instances that are still visible to both
