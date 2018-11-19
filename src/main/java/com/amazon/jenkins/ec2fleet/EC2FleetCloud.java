@@ -1,18 +1,19 @@
 package com.amazon.jenkins.ec2fleet;
 
 import com.amazon.jenkins.ec2fleet.cloud.FleetNode;
+import com.amazonaws.regions.RegionUtils;
+import com.amazonaws.regions.ServiceAbbreviations;
+import com.amazonaws.regions.Region;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
-import com.amazonaws.services.ec2.model.DescribeRegionsResult;
 import com.amazonaws.services.ec2.model.DescribeSpotFleetInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeSpotFleetRequestsRequest;
 import com.amazonaws.services.ec2.model.DescribeSpotFleetRequestsResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.InstanceStateName;
 import com.amazonaws.services.ec2.model.ModifySpotFleetRequestRequest;
-import com.amazonaws.services.ec2.model.Region;
 import com.amazonaws.services.ec2.model.SpotFleetRequestConfig;
 import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.amazonaws.services.ec2.model.TerminateInstancesResult;
@@ -553,11 +554,8 @@ public class EC2FleetCloud extends Cloud
                                               @QueryParameter final String region)
                 throws IOException, ServletException {
             final List<Region> regionList;
-
             try {
-                final AmazonEC2 client = connect(credentialsId, null);
-                final DescribeRegionsResult regions=client.describeRegions();
-                regionList=regions.getRegions();
+                regionList=RegionUtils.getRegionsForService(ServiceAbbreviations.EC2);
             } catch(final Exception ex) {
                 //Ignore bad exceptions
                 return new ListBoxModel();
@@ -565,7 +563,7 @@ public class EC2FleetCloud extends Cloud
 
             final ListBoxModel model = new ListBoxModel();
             for(final Region reg : regionList) {
-                model.add(new ListBoxModel.Option(reg.getRegionName(), reg.getRegionName()));
+                model.add(new ListBoxModel.Option(reg.getName(), reg.getName()));
             }
             return model;
         }
