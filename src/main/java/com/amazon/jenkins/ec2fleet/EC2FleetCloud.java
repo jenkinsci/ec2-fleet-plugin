@@ -242,7 +242,7 @@ public class EC2FleetCloud extends Cloud
             return Collections.emptyList();
 
         // if the planned node has 0 executors configured force it to 1 so we end up doing an unweighted check
-        final int numExecutors = this.numExecutors == 0 ? 1 : this.numExecutors;
+        final int numExecutors = this.numExecutors < 1 ? 1 : this.numExecutors;
 
         // Recalculate the excess taking the number of booting nodes into account
         int effectiveExcessWorkload = excessWorkload - (instancesBootingCache.size() * numExecutors);
@@ -311,6 +311,9 @@ public class EC2FleetCloud extends Cloud
         instancesSeenCache.clear();
         LOGGER.log(Level.FINE, "Fleet (" + getLabelString() + ") contains instances [" + join(", ", newInstances) + "]");
         LOGGER.log(Level.FINE, "Jenkins contains dying instances [" + join(", ", instancesDyingCache) + "]");
+        if (instancesBootingCache.size() > 0)
+        LOGGER.log(Level.INFO, "instances booting: " + instancesBootingCache.toString());
+
         for(final Node node : Jenkins.getInstance().getNodes()) {
             if (newInstances.contains(node.getNodeName())) {
                 // instancesSeenCache should only have the intersection of nodes
@@ -321,10 +324,13 @@ public class EC2FleetCloud extends Cloud
                 removeNode(node.getNodeName());
                 instancesDyingCache.remove(node.getNodeName());
                 instancesSeenCache.remove(node.getNodeName());
+                instancesBootingCache.remove(node.getNodeName());
             }
             Computer computer = node.toComputer();
-            if (computer != null && computer.isOnline())
-                instancesBootingCache.remove(node.getNodeName());
+            if (computer != null && computer.isOnline()) {
+                if (instancesBootingCache.remove(node.getNodeName()))
+                    LOGGER.log(Level.INFO, "removing " + node.getNodeName());
+            }
         }
 
         // We should only keep dying instances that are still visible to both
@@ -413,6 +419,7 @@ public class EC2FleetCloud extends Cloud
             final NodeProvisioner.PlannedNode curNode= plannedNodesCache.iterator().next();
             plannedNodesCache.remove(curNode);
             ((SettableFuture<Node>)curNode.future).set(slave);
+            LOGGER.log(Level.INFO, "adding node: "+ slave.getNodeName());
             instancesBootingCache.add(slave.getNodeName());
         }
     }
