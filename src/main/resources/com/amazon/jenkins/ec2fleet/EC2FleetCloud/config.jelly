@@ -32,6 +32,11 @@
     <f:entry title="${%Always Reconnect}" field="alwaysReconnect">
       <f:checkbox />
     </f:entry>
+    <f:description>Only build jobs with label expressions matching this node
+    </f:description>
+    <f:entry title="${%Usage}" field="exclusive">
+      <f:checkbox />
+    </f:entry>
     <f:description>Labels to add to instances in this fleet
     </f:description>
     <f:entry title="${%Label}" field="labelString">

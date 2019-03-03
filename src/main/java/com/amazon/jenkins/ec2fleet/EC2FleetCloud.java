@@ -82,7 +82,7 @@ public class EC2FleetCloud extends Cloud
     private final Integer minSize;
     private final Integer maxSize;
     private final Integer numExecutors;
-
+    private final boolean exclusive;
 
     private transient @Nonnull FleetStateStats statusCache;
 
@@ -114,6 +114,7 @@ public class EC2FleetCloud extends Cloud
                          final ComputerConnector computerConnector,
                          final boolean privateIpUsed,
                          final boolean alwaysReconnect,
+                         final boolean exclusive,
                          final Integer idleMinutes,
                          final Integer minSize,
                          final Integer maxSize,
@@ -132,6 +133,7 @@ public class EC2FleetCloud extends Cloud
         this.minSize = minSize;
         this.maxSize = maxSize;
         this.numExecutors = numExecutors;
+        this.exclusive = exclusive;
     }
 
     private Object readResolve() {
@@ -428,7 +430,7 @@ public class EC2FleetCloud extends Cloud
             return; // Wait some more...
 
         final FleetNode slave = new FleetNode(instanceId, "Fleet slave for" + instanceId,
-                fsRoot, this.numExecutors.toString(), Node.Mode.NORMAL, this.labelString, new ArrayList<NodeProperty<?>>(),
+                fsRoot, this.numExecutors.toString(), this.exclusive ? Node.Mode.EXCLUSIVE : Node.Mode.NORMAL, this.labelString, new ArrayList<NodeProperty<?>>(),
                 FLEET_CLOUD_ID, computerConnector.launch(address, TaskListener.NULL));
 
         // Initialize our retention strategy
@@ -536,6 +538,7 @@ public class EC2FleetCloud extends Cloud
         public String userName="root";
         public boolean privateIpUsed;
         public boolean alwaysReconnect;
+        public boolean exclusive;
         public String privateKey;
 
         public DescriptorImpl() {
