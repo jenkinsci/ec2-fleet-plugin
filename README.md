@@ -12,7 +12,13 @@ the fleet within the specified price range. For more information, see
 You'll need an AWS account to use this plugin, you can get one at [AWS]( http://aws.amazon.com/ec2/ "AWS"). 
 Once you have an account, create an IAM user with sufficient permissions to launch Spot Fleets ( 
 [Spot Fleet Prerequisites](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-fleet-requests.html#spot-fleet-prerequisites 
-"Spot Fleet Prerequisites") ) and get its AWS credentials.
+"Spot Fleet Prerequisites") ) and get its AWS credentials.  
+
+Those IAM permissions are:
+* `ec2:TerminateInstances`
+* `ec2:ModifySpotFleetRequest`
+
+These permissions are typically available via the combination of the `AmazonEC2SpotFleetAutoscaleRole` and `AmazonEC2SpotFleetRole` IAM Roles.
 
 Then you need to set up a fleet that will serve as the build fleet for Jenkins. You can use the 
 [AWS console]( http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-fleet-requests.html#create-spot-fleet )
