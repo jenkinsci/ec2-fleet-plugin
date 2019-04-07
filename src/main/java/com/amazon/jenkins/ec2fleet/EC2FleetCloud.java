@@ -24,6 +24,7 @@ import hudson.model.Computer;
 import hudson.model.Descriptor;
 import hudson.model.Label;
 import hudson.model.Node;
+import hudson.model.PeriodicWork;
 import hudson.model.Queue;
 import hudson.model.TaskListener;
 import hudson.slaves.Cloud;
@@ -54,6 +55,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -91,6 +93,8 @@ public class EC2FleetCloud extends Cloud
     private transient Set<String> fleetInstancesCache;
     // dyingFleetInstancesCache contains Jenkins nodes known to be in the fleet that are ready to be terminated
     private transient Set<String> dyingFleetInstancesCache;
+
+    private transient AtomicReference<Set<String>> terminatedInstancesCache = new AtomicReference<>();
 
     private static final Logger LOGGER = Logger.getLogger(EC2FleetCloud.class.getName());
 
@@ -144,6 +148,7 @@ public class EC2FleetCloud extends Cloud
         plannedNodesCache = new HashSet<NodeProvisioner.PlannedNode>();
         fleetInstancesCache = new HashSet<String>();
         dyingFleetInstancesCache = new HashSet<String>();
+        terminatedInstancesCache.set(new HashSet<String>());
     }
 
     public String getCredentialsId() {
@@ -322,14 +327,7 @@ public class EC2FleetCloud extends Cloud
         missingFleetInstances.retainAll(fleetInstancesCache);
         missingFleetInstances.removeAll(currentFleetInstances);
         // terminatedFleetInstances contains fleet instances that are terminated, stopped, stopping, or shutting down
-        final Set<String> terminatedFleetInstances = new HashSet<String>();
-        for(final String instance : currentFleetInstances) {
-            try {
-                if (isTerminated(ec2, instance)) terminatedFleetInstances.add(instance);
-            } catch (final Exception ex) {
-                LOGGER.log(Level.WARNING, "Unable to check the instance state of " + instance);
-            }
-        }
+        final Set<String> terminatedFleetInstances = terminatedInstancesCache.get();
         // newFleetInstances contains running fleet instances that are not already Jenkins nodes
         final Set<String> newFleetInstances = new HashSet<String>();
         newFleetInstances.addAll(currentFleetInstances);
@@ -391,6 +389,24 @@ public class EC2FleetCloud extends Cloud
         return curStatus;
     }
 
+    private void updateTerminatedInstances()
+    {
+        final AmazonEC2 ec2=connect(credentialsId, region);
+        final FleetStateStats curStatus=FleetStateStats.readClusterState(ec2, getFleet(), this.labelString);
+
+        LOGGER.log(Level.FINE, "Fleet Update Status for terminated instances called");
+
+        final Set<String> currentFleetInstances = new HashSet<String>(curStatus.getInstances());
+        final Set<String> terminatedFleetInstances = new HashSet<String>();
+        for(final String instance : currentFleetInstances) {
+            try {
+                if (isTerminated(ec2, instance)) terminatedFleetInstances.add(instance);
+            } catch (final Exception ex) {
+                LOGGER.log(Level.WARNING, "Unable to check the instance state of " + instance);
+            }
+        }
+        terminatedInstancesCache.set(terminatedFleetInstances);
+    }
 
     private boolean isTerminated(final AmazonEC2 ec2, final String instanceId) throws Exception {
         final DescribeInstancesResult result=ec2.describeInstances(
@@ -524,6 +540,26 @@ public class EC2FleetCloud extends Cloud
         return client;
     }
 
+    @Extension
+    public static class UpdateTerminatedInstancesTask extends PeriodicWork {
+
+        @Override
+        public long getRecurrencePeriod() {
+            return MIN;
+        }
+
+        @Override
+        protected void doRun() throws Exception {
+            for (final Cloud cloud : Jenkins.getActiveInstance().clouds) {
+                if (!(cloud instanceof EC2FleetCloud))
+                    continue;
+
+                // Update the cluster states
+                final EC2FleetCloud fleetCloud = (EC2FleetCloud) cloud;
+                fleetCloud.updateTerminatedInstances();
+            }
+        }
+    }
 
     @Extension
     @SuppressWarnings("unused")
