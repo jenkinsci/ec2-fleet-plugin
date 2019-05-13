@@ -232,7 +232,7 @@ public class EC2FleetCloudTest {
                 false, "", "", "failed_selected");
 
         Assert.assertEquals("a", r.get(0).value);
-        Assert.assertEquals("b", r.get(1).value);
+        Assert.assertEquals("failed_selected", r.get(1).value);
     }
 
     @Test
