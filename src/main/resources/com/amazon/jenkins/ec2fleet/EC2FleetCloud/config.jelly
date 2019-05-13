@@ -17,7 +17,10 @@
     <f:description>Fleet list will be available once the connection is validated
     </f:description>
     <f:entry title="${%Spot Fleet}" field="fleet">
-      <f:select/>
+        <f:select/>
+    </f:entry>
+    <f:entry title="${%Show non active fleets}" field="showNonActiveSpotFleets">
+        <f:checkbox />
     </f:entry>
     <f:entry title="${%Launcher}" field="laucnher">
       <f:dropdownDescriptorSelector field="computerConnector" descriptors="${descriptor.getComputerConnectorDescriptors()}"/>
