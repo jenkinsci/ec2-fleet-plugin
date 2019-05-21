@@ -1,4 +1,7 @@
 # ec2-spot-jenkins-plugin
+
+[![Build Status](https://ci.jenkins.io/buildStatus/icon?job=Plugins/ec2-fleet-plugin/master)](https://ci.jenkins.io/blue/organizations/jenkins/Plugins%2Fec2-fleet-plugin/activity) [![](https://img.shields.io/jenkins/plugin/v/ec2-fleet.svg)](https://github.com/jenkinsci/ec2-fleet-plugin/releases)
+
 The EC2 Spot Jenkins plugin launches EC2 Spot instances as worker nodes for Jenkins CI server, 
 automatically scaling the capacity with the load. 
 
@@ -26,3 +29,7 @@ You can specify the scaling limits in your cloud settings. By default, Jenkins w
 if there are enough tasks waiting in the build queue and scale down idle nodes after a specified idleness period.
 
 You can use the History tab in the AWS console to view the scaling history. 
+
+# Release Notes
+
+https://github.com/jenkinsci/ec2-fleet-plugin/releases
