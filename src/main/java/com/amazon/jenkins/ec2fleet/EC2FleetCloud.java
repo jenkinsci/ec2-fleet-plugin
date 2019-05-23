@@ -347,7 +347,7 @@ public class EC2FleetCloud extends Cloud {
         Set<String> terminatedInstanceIds = new HashSet<>();
         try {
             terminatedInstanceIds = EC2Api.describeTerminated(ec2, currentInstanceIds);
-            LOGGER.log(Level.FINE, "Described terminated instances " + terminatedInstanceIds + " for " + currentInstanceIds);
+            LOGGER.log(Level.INFO, "Described terminated instances " + terminatedInstanceIds + " for " + currentInstanceIds);
         } catch (final Exception ex) {
             LOGGER.log(Level.WARNING, "Unable to describe terminated instances for " + currentInstanceIds);
         }
