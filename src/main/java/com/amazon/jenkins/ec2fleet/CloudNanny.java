@@ -51,10 +51,7 @@ public class CloudNanny extends PeriodicWork {
         }
 
         for (final Widget w : Jenkins.getInstance().getWidgets()) {
-            if (!(w instanceof FleetStatusWidget))
-                continue;
-
-            ((FleetStatusWidget) w).setStatusList(stats);
+            if (w instanceof FleetStatusWidget) ((FleetStatusWidget) w).setStatusList(stats);
         }
     }
 }
