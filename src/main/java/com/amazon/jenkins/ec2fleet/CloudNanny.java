@@ -29,11 +29,10 @@ public class CloudNanny extends PeriodicWork {
 
     @Override
     protected void doRun() throws Exception {
-
         // Trigger reprovisioning as well
         Jenkins.getActiveInstance().unlabeledNodeProvisioner.suggestReviewNow();
 
-        final List<FleetStateStats> stats = new ArrayList<FleetStateStats>();
+        final List<FleetStateStats> stats = new ArrayList<>();
         for (final Cloud cloud : Jenkins.getActiveInstance().clouds) {
             if (!(cloud instanceof EC2FleetCloud))
                 continue;
@@ -43,8 +42,7 @@ public class CloudNanny extends PeriodicWork {
             LOGGER.log(Level.FINE, "Checking cloud: " + fleetCloud.getLabelString());
             stats.add(Queue.withLock(new Callable<FleetStateStats>() {
                 @Override
-                public FleetStateStats call()
-                        throws Exception {
+                public FleetStateStats call() {
                     return fleetCloud.updateStatus();
                 }
             }));
