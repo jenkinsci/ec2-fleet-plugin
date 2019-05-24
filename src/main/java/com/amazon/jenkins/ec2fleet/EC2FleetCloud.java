@@ -11,7 +11,6 @@ import com.amazonaws.services.ec2.model.DescribeSpotFleetInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeSpotFleetRequestsRequest;
 import com.amazonaws.services.ec2.model.DescribeSpotFleetRequestsResult;
 import com.amazonaws.services.ec2.model.Instance;
-import com.amazonaws.services.ec2.model.InstanceStateName;
 import com.amazonaws.services.ec2.model.ModifySpotFleetRequestRequest;
 import com.amazonaws.services.ec2.model.Region;
 import com.amazonaws.services.ec2.model.SpotFleetRequestConfig;
@@ -332,48 +331,49 @@ public class EC2FleetCloud extends Cloud {
 
         // Set up the lists of Jenkins nodes and fleet instances
         // currentFleetInstances contains instances currently in the fleet
-        final Set<String> currentFleetInstances = new HashSet<String>(curStatus.getInstances());
+        final Set<String> currentInstanceIds = new HashSet<>(curStatus.getInstances());
         // currentJenkinsNodes contains all Nodes currently registered in Jenkins
-        final Set<String> currentJenkinsNodes = new HashSet<String>();
+        final Set<String> currentJenkinsNodes = new HashSet<>();
         for (final Node node : Jenkins.getInstance().getNodes()) {
             currentJenkinsNodes.add(node.getNodeName());
         }
         // missingFleetInstances contains Jenkins nodes that were once fleet instances but are no longer in the fleet
-        final Set<String> missingFleetInstances = new HashSet<String>();
+        final Set<String> missingFleetInstances = new HashSet<>();
         missingFleetInstances.addAll(currentJenkinsNodes);
         missingFleetInstances.retainAll(fleetInstancesCache);
-        missingFleetInstances.removeAll(currentFleetInstances);
+        missingFleetInstances.removeAll(currentInstanceIds);
+
         // terminatedFleetInstances contains fleet instances that are terminated, stopped, stopping, or shutting down
-        final Set<String> terminatedFleetInstances = new HashSet<String>();
-        for (final String instance : currentFleetInstances) {
-            try {
-                if (isTerminated(ec2, instance)) terminatedFleetInstances.add(instance);
-            } catch (final Exception ex) {
-                LOGGER.log(Level.WARNING, "Unable to check the instance state of " + instance);
-            }
+        Set<String> terminatedInstanceIds = new HashSet<>();
+        try {
+            terminatedInstanceIds = EC2Api.describeTerminated(ec2, currentInstanceIds);
+            LOGGER.log(Level.INFO, "Described terminated instances " + terminatedInstanceIds + " for " + currentInstanceIds);
+        } catch (final Exception ex) {
+            LOGGER.log(Level.WARNING, "Unable to describe terminated instances for " + currentInstanceIds);
         }
+
         // newFleetInstances contains running fleet instances that are not already Jenkins nodes
-        final Set<String> newFleetInstances = new HashSet<String>();
-        newFleetInstances.addAll(currentFleetInstances);
-        newFleetInstances.removeAll(terminatedFleetInstances);
+        final Set<String> newFleetInstances = new HashSet<>();
+        newFleetInstances.addAll(currentInstanceIds);
+        newFleetInstances.removeAll(terminatedInstanceIds);
         newFleetInstances.removeAll(currentJenkinsNodes);
 
         // update caches
         dyingFleetInstancesCache.addAll(missingFleetInstances);
-        dyingFleetInstancesCache.addAll(terminatedFleetInstances);
+        dyingFleetInstancesCache.addAll(terminatedInstanceIds);
         dyingFleetInstancesCache.retainAll(currentJenkinsNodes);
-        fleetInstancesCache.addAll(currentFleetInstances);
+        fleetInstancesCache.addAll(currentInstanceIds);
         fleetInstancesCache.removeAll(dyingFleetInstancesCache);
         fleetInstancesCache.retainAll(currentJenkinsNodes);
 
         LOGGER.log(Level.FINE, "# of current Jenkins nodes:" + currentJenkinsNodes.size());
-        LOGGER.log(Level.FINE, "Fleet (" + getLabelString() + ") contains instances [" + join(", ", currentFleetInstances) + "]");
+        LOGGER.log(Level.FINE, "Fleet (" + getLabelString() + ") contains instances [" + join(", ", currentInstanceIds) + "]");
         LOGGER.log(Level.FINE, "Jenkins contains dying instances [" + join(", ", dyingFleetInstancesCache) + "]");
         LOGGER.log(Level.FINER, "Jenkins contains fleet instances [" + join(", ", fleetInstancesCache) + "]");
         LOGGER.log(Level.FINER, "Current Jenkins nodes [" + join(", ", currentJenkinsNodes) + "]");
         LOGGER.log(Level.FINER, "New fleet instances [" + join(", ", newFleetInstances) + "]");
         LOGGER.log(Level.FINER, "Missing fleet instances [" + join(", ", missingFleetInstances) + "]");
-        LOGGER.log(Level.FINER, "Terminated fleet instances [" + join(", ", terminatedFleetInstances) + "]");
+        LOGGER.log(Level.FINER, "Terminated fleet instances [" + join(", ", terminatedInstanceIds) + "]");
 
         // Remove dying fleet instances from Jenkins
         for (final String instance : dyingFleetInstancesCache) {
@@ -411,23 +411,6 @@ public class EC2FleetCloud extends Cloud {
         }
 
         return curStatus;
-    }
-
-
-    private boolean isTerminated(final AmazonEC2 ec2, final String instanceId) {
-        final DescribeInstancesResult result = ec2.describeInstances(
-                new DescribeInstancesRequest().withInstanceIds(instanceId));
-        if (result.getReservations().isEmpty()) //Can't find this instance, assume it is terminated
-            return true;
-        final Instance instance = result.getReservations().get(0).getInstances().get(0);
-        final String instanceState = instance.getState().getName();
-        final Set<String> terminatedStates = new HashSet<String>();
-        terminatedStates.add(InstanceStateName.Terminated.toString());
-        terminatedStates.add(InstanceStateName.Stopped.toString());
-        terminatedStates.add(InstanceStateName.Stopping.toString());
-        terminatedStates.add(InstanceStateName.ShuttingDown.toString());
-
-        return terminatedStates.contains(instanceState);
     }
 
     private void addNewSlave(final AmazonEC2 ec2, final String instanceId) throws Exception {
