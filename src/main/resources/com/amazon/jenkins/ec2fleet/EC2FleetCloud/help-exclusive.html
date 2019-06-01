@@ -1,0 +1,25 @@
+<div>
+    <p>Controls how Jenkins schedules builds on provisioned nodes.</p>
+    <b>When unchecked</b>
+    <p>
+        Jenkins will use provisioned nodes as much as possible.
+        This is the default setting. In this mode, Jenkins uses provisioned nodes freely.
+        Whenever there is a build that can be done by using provisioned node, Jenkins will use it.
+    </p>
+
+    <b>When checked</b>
+    <p>
+        In this mode, Jenkins will only build a project on provisioned node when that project is restricted to certain nodes
+        using a label expression, and that expression matches this node's labels.
+    </p>
+    <p>
+        This allows a node to be reserved for certain kinds of jobs. For example, if you have jobs that run performance
+        tests, you may want them to only run on a specially configured machine, while preventing all other jobs from
+        using that machine. To do so, you would restrict where the test jobs may run by giving them a label expression
+        matching that machine.
+    </p>
+    <p>
+        Furthermore, if you set the # of executors value to 1, you can ensure that only one performance test will
+        execute at any given time on that machine; no other builds will interfere.
+    </p>
+</div>
