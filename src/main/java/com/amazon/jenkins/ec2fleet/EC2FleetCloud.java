@@ -96,7 +96,7 @@ public class EC2FleetCloud extends Cloud {
     private final Integer maxSize;
     private final Integer numExecutors;
     private final boolean addNodeOnlyIfRunning;
-    private final boolean exclusive;
+    private final boolean restrictUsage;
 
     private transient Set<NodeProvisioner.PlannedNode> plannedNodesCache;
     // fleetInstancesCache contains all Jenkins nodes known to be in the fleet, not in dyingFleetInstancesCache
@@ -120,7 +120,7 @@ public class EC2FleetCloud extends Cloud {
                          final Integer maxSize,
                          final Integer numExecutors,
                          final boolean addNodeOnlyIfRunning,
-                         final boolean exclusive) {
+                         final boolean restrictUsage) {
         super(StringUtils.isBlank(name) ? FLEET_CLOUD_ID : name);
         initCaches();
         this.credentialsId = credentialsId;
@@ -137,7 +137,7 @@ public class EC2FleetCloud extends Cloud {
         this.maxSize = maxSize;
         this.numExecutors = numExecutors;
         this.addNodeOnlyIfRunning = addNodeOnlyIfRunning;
-        this.exclusive = exclusive;
+        this.restrictUsage = restrictUsage;
     }
 
     /**
@@ -202,8 +202,8 @@ public class EC2FleetCloud extends Cloud {
         return "";
     }
 
-    public boolean isExclusive() {
-        return exclusive;
+    public boolean isRestrictUsage() {
+        return restrictUsage;
     }
 
     public static void log(final Logger logger, final Level level,
@@ -488,7 +488,7 @@ public class EC2FleetCloud extends Cloud {
         if (address == null) return; // Wait some more...
 
         final FleetNode slave = new FleetNode(instanceId, "Fleet slave for" + instanceId,
-                effectiveFsRoot, numExecutors.toString(), exclusive ? Node.Mode.EXCLUSIVE : Node.Mode.NORMAL, labelString, new ArrayList<NodeProperty<?>>(),
+                effectiveFsRoot, numExecutors.toString(), restrictUsage ? Node.Mode.EXCLUSIVE : Node.Mode.NORMAL, labelString, new ArrayList<NodeProperty<?>>(),
                 name, computerConnector.launch(address, TaskListener.NULL));
 
         // Initialize our retention strategy
@@ -526,7 +526,7 @@ public class EC2FleetCloud extends Cloud {
         public String userName = "root";
         public boolean privateIpUsed;
         public boolean alwaysReconnect;
-        public boolean exclusive;
+        public boolean restrictUsage;
         public String privateKey;
         public boolean showNonActiveSpotFleets;
 

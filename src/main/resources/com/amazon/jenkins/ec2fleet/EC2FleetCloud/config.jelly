@@ -45,7 +45,7 @@
 
     <f:description>Only build jobs with label expressions matching this node
     </f:description>
-    <f:entry title="${%Restrict usage}" field="exclusive">
+    <f:entry title="${%Restrict usage}" field="restrictUsage">
       <f:checkbox />
     </f:entry>
 
