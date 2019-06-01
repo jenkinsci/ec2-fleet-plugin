@@ -487,8 +487,9 @@ public class EC2FleetCloud extends Cloud {
         // Check if we have the address to use. Nodes don't get it immediately.
         if (address == null) return; // Wait some more...
 
+        final Node.Mode nodeMode = restrictUsage ? Node.Mode.EXCLUSIVE : Node.Mode.NORMAL;
         final FleetNode slave = new FleetNode(instanceId, "Fleet slave for" + instanceId,
-                effectiveFsRoot, numExecutors.toString(), restrictUsage ? Node.Mode.EXCLUSIVE : Node.Mode.NORMAL, labelString, new ArrayList<NodeProperty<?>>(),
+                effectiveFsRoot, numExecutors.toString(), nodeMode, labelString, new ArrayList<NodeProperty<?>>(),
                 name, computerConnector.launch(address, TaskListener.NULL));
 
         // Initialize our retention strategy
