@@ -472,7 +472,7 @@ public class EC2FleetCloud extends Cloud {
             effectiveFsRoot = "/tmp/jenkins-" + UUID.randomUUID().toString().substring(0, 8);
         }
 
-        final DescribeInstancesResult result=ec2.describeInstances(
+        final DescribeInstancesResult result = ec2.describeInstances(
                 new DescribeInstancesRequest().withInstanceIds(instanceId));
         //Can't find this instance, skip it
         if (result.getReservations().isEmpty()) return;
@@ -488,14 +488,14 @@ public class EC2FleetCloud extends Cloud {
         if (address == null) return; // Wait some more...
 
         final Node.Mode nodeMode = restrictUsage ? Node.Mode.EXCLUSIVE : Node.Mode.NORMAL;
-        final FleetNode slave = new FleetNode(instanceId, "Fleet slave for" + instanceId,
+        final FleetNode slave = new FleetNode(instanceId, "Fleet slave for " + instanceId,
                 effectiveFsRoot, numExecutors.toString(), nodeMode, labelString, new ArrayList<NodeProperty<?>>(),
                 name, computerConnector.launch(address, TaskListener.NULL));
 
         // Initialize our retention strategy
         slave.setRetentionStrategy(new IdleRetentionStrategy(this));
 
-        final Jenkins jenkins=Jenkins.getInstance();
+        final Jenkins jenkins = Jenkins.getInstance();
         //noinspection SynchronizationOnLocalVariableOrMethodParameter
         synchronized (jenkins) {
             // Try to avoid duplicate nodes
@@ -505,12 +505,12 @@ public class EC2FleetCloud extends Cloud {
             jenkins.addNode(slave);
         }
 
-        //A new node, wheee!
+        // A new node, wheee!
         if (!plannedNodesCache.isEmpty()) {
             //If we're waiting for a new node - mark it as ready
-            final NodeProvisioner.PlannedNode curNode= plannedNodesCache.iterator().next();
+            final NodeProvisioner.PlannedNode curNode = plannedNodesCache.iterator().next();
             plannedNodesCache.remove(curNode);
-            ((SettableFuture<Node>)curNode.future).set(slave);
+            ((SettableFuture<Node>) curNode.future).set(slave);
             LOGGER.info("set slave " + slave.getNodeName() + " to planned node");
         }
     }
