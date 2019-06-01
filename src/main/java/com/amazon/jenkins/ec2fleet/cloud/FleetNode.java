@@ -1,6 +1,5 @@
 package com.amazon.jenkins.ec2fleet.cloud;
 
-import com.amazon.jenkins.ec2fleet.EC2FleetCloud;
 import hudson.Extension;
 import hudson.model.Computer;
 import hudson.model.Descriptor;
@@ -10,14 +9,12 @@ import hudson.slaves.ComputerLauncher;
 import hudson.slaves.EphemeralNode;
 import hudson.slaves.NodeProperty;
 import hudson.slaves.RetentionStrategy;
-import jenkins.model.Jenkins;
 
 import java.io.IOException;
 import java.util.List;
 
 public class FleetNode extends Slave implements EphemeralNode {
 
-    private static final long LAUNCH_TIMEOUT_MS = 1000 * 1000L;
     private final String cloudName;
 
     public FleetNode(final String name, final String nodeDescription, final String remoteFS, final String numExecutors, final Mode mode, final String label,
@@ -33,16 +30,13 @@ public class FleetNode extends Slave implements EphemeralNode {
     }
 
     @Override
+    public String getDisplayName() {
+        return cloudName + " " + name;
+    }
+
+    @Override
     public Computer createComputer() {
         return new FleetNodeComputer(this);
-    }
-
-    public long getLaunchTimeoutInMillis() {
-        return LAUNCH_TIMEOUT_MS;
-    }
-
-    public EC2FleetCloud getCloud() {
-        return (EC2FleetCloud) Jenkins.getInstance().getCloud(cloudName);
     }
 
     @Extension
@@ -56,7 +50,7 @@ public class FleetNode extends Slave implements EphemeralNode {
         }
 
         /**
-         * We only create this kind of nodes programatically.
+         * We only create this kind of nodes programmatically.
          */
         @Override
         public boolean isInstantiable() {
