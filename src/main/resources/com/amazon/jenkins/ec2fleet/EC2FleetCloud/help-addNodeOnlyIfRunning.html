@@ -1,0 +1,33 @@
+<div>
+    <p>
+        Regulate when plugin should add new EC2 Instances described in EC2 Spot Fleet into Jenkins as slave.
+    </p>
+
+    <b>When unchecked.</b>
+    <p>Default behavior. Old versions of plugin use this approach.</p>
+    <p>Plugin will immediately add new EC2 Instances described in EC2 Spot Fleet into Jenkins slaves.
+        Plugin will not check <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html">state
+            of EC2 Instance</a></p>
+    <p>It takes some time to EC2 Instance to run and be able accept connections, as result Jenkins will move
+        just added slaves to <code>offline</code> and will try to reconnect later. At the same time Jenkins will
+        request more capacity from EC2 Fleet Plugin. This could over-provision your EC2 Spot Fleet, but guarantee
+        that if new EC2 Instance has some problem to start, Jenkins will not be stuck and request move capacity,
+        new instances.
+    </p>
+
+    <b>When checked</b>
+    <p>
+        This option is experimental, if you have questions/problems, please report
+        <a href="https://github.com/jenkinsci/ec2-fleet-plugin/issues/76">GitHub Issue</a>
+    </p>
+    <p>
+        Plugin will add new EC2 Spot Instances to Jenkins slaves only when EC2 Instance will be in <code>running</code>
+        state.
+    </p>
+    <p>
+        As result Jenkins will not request over-provision capacity. Make sure that you have
+        <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/manage-ec2-fleet.html#ec2-fleet-health-checks">enabled health check</a>
+        for EC2 Spot Fleet to avoid case when EC2 Instance cannot be <code>running</code> but Jenkins wait it
+        and doesn't request additional capacity.
+    </p>
+</div>

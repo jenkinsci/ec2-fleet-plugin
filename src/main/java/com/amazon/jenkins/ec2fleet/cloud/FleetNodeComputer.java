@@ -4,18 +4,15 @@ import com.amazon.jenkins.ec2fleet.EC2FleetCloud;
 import hudson.model.Slave;
 import hudson.slaves.SlaveComputer;
 
-/**
- * User: cyberax
- * Date: 4/15/16
- * Time: 01:13
- */
-public class FleetNodeComputer extends SlaveComputer
-{
+public class FleetNodeComputer extends SlaveComputer {
+
+    @SuppressWarnings("WeakerAccess")
     public FleetNodeComputer(final Slave slave) {
         super(slave);
     }
 
-    @Override public FleetNode getNode() {
+    @Override
+    public FleetNode getNode() {
         return (FleetNode) super.getNode();
     }
 

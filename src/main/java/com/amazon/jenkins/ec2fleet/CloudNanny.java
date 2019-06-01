@@ -10,52 +10,41 @@ import jenkins.model.Jenkins;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
- * User: cyberax
- * Date: 1/11/16
- * Time: 13:21
+ * @see EC2FleetCloud
  */
 @Extension
 @SuppressWarnings("unused")
-public class CloudNanny extends PeriodicWork
-{
-    private static final Logger LOGGER = Logger.getLogger(CloudNanny.class.getName());
+public class CloudNanny extends PeriodicWork {
 
-    @Override public long getRecurrencePeriod() {
+    @Override
+    public long getRecurrencePeriod() {
         return 10000L;
     }
 
-    @Override protected void doRun() throws Exception {
-
+    @Override
+    protected void doRun() throws Exception {
         // Trigger reprovisioning as well
         Jenkins.getActiveInstance().unlabeledNodeProvisioner.suggestReviewNow();
 
-        final List<FleetStateStats> stats = new ArrayList<FleetStateStats>();
-        for(final Cloud cloud : Jenkins.getActiveInstance().clouds) {
+        final List<FleetStateStats> stats = new ArrayList<>();
+        for (final Cloud cloud : Jenkins.getActiveInstance().clouds) {
             if (!(cloud instanceof EC2FleetCloud))
                 continue;
 
             // Update the cluster states
-            final EC2FleetCloud fleetCloud =(EC2FleetCloud) cloud;
-            LOGGER.log(Level.FINE, "Checking cloud: " + fleetCloud.getLabelString() );
+            final EC2FleetCloud fleetCloud = (EC2FleetCloud) cloud;
             stats.add(Queue.withLock(new Callable<FleetStateStats>() {
                 @Override
-                public FleetStateStats call()
-                        throws Exception
-                {
+                public FleetStateStats call() {
                     return fleetCloud.updateStatus();
                 }
             }));
         }
 
         for (final Widget w : Jenkins.getInstance().getWidgets()) {
-            if (!(w instanceof FleetStatusWidget))
-                continue;
-
-            ((FleetStatusWidget)w).setStatusList(stats);
+            if (w instanceof FleetStatusWidget) ((FleetStatusWidget) w).setStatusList(stats);
         }
     }
 }
