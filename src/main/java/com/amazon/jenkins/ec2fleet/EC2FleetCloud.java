@@ -202,6 +202,10 @@ public class EC2FleetCloud extends Cloud {
         return "";
     }
 
+    public boolean isExclusive() {
+        return exclusive;
+    }
+
     public static void log(final Logger logger, final Level level,
                            final TaskListener listener, final String message) {
         log(logger, level, listener, message, null);
