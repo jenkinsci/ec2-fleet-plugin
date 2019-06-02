@@ -13,6 +13,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -42,13 +43,14 @@ public class FleetNodeComputerTest {
     @Test
     public void get_display_name_computer_node_removed_returns_predefined() {
         FleetNodeComputer computer = spy(new FleetNodeComputer(slave));
+        doReturn(null).when(computer).getNode();
         Assert.assertEquals("removing fleet node", computer.getDisplayName());
     }
 
     @Test
     public void get_display_name_returns_node_display_name() {
         FleetNodeComputer computer = spy(new FleetNodeComputer(slave));
-        when(computer.getNode()).thenReturn(fleetNode);
+        doReturn(fleetNode).when(computer).getNode();
         Assert.assertEquals("fleet node name", computer.getDisplayName());
     }
 

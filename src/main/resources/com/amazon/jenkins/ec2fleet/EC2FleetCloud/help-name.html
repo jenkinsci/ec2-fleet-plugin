@@ -1,3 +1,15 @@
 <div>
     Provide a name for this EC2 Fleet Cloud
+
+    <p>
+        Could be used in Groovy as cloud identifier.
+    </p>
+
+    <p>
+        <b>Note</b> Due to Jenkins organization.
+        Build Executor Status section in Jenkins UI could show old cloud name
+        for slaves, to fix that just wait when slaves will be recreated (could be long)
+        or delete slave (will not delete underline EC2 instances).
+        It will request plugin to recreate slaves with correct cloud name.
+    </p>
 </div>
