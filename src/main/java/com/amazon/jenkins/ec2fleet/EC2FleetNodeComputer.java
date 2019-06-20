@@ -79,7 +79,7 @@ public class EC2FleetNodeComputer extends SlaveComputer {
     public void taskCompleted(final Executor executor, final Queue.Task task, final long durationMS) {
         super.taskCompleted(executor, task, durationMS);
         if (isOffline() && getOfflineCause() instanceof OfflineCause.ChannelTermination) {
-            LOGGER.info("job " + task.getName() + " execution aborted because of slave EC2 instance was terminated, resubmitting");
+            LOGGER.info(" job " + task.getName() + " on " + getDisplayName() + " execution aborted because of slave EC2 instance was terminated, resubmitting");
             Queue.getInstance().schedule(task, RESCHEDULE_QUIET_PERIOD_SEC);
         }
     }
