@@ -1,6 +1,5 @@
 package com.amazon.jenkins.ec2fleet;
 
-import com.amazon.jenkins.ec2fleet.cloud.FleetNode;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.BatchState;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
@@ -464,7 +463,7 @@ public class EC2FleetCloud extends Cloud {
         if (address == null) return; // Wait some more...
 
         final Node.Mode nodeMode = restrictUsage ? Node.Mode.EXCLUSIVE : Node.Mode.NORMAL;
-        final FleetNode slave = new FleetNode(instanceId, "Fleet slave for " + instanceId,
+        final EC2FleetNode slave = new EC2FleetNode(instanceId, "Fleet slave for " + instanceId,
                 effectiveFsRoot, numExecutors.toString(), nodeMode, labelString, new ArrayList<NodeProperty<?>>(),
                 name, computerConnector.launch(address, TaskListener.NULL));
 

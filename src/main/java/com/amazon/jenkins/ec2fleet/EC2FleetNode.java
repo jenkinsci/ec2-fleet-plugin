@@ -1,4 +1,4 @@
-package com.amazon.jenkins.ec2fleet.cloud;
+package com.amazon.jenkins.ec2fleet;
 
 import hudson.Extension;
 import hudson.model.Computer;
@@ -13,12 +13,13 @@ import hudson.slaves.RetentionStrategy;
 import java.io.IOException;
 import java.util.List;
 
-public class FleetNode extends Slave implements EphemeralNode {
+public class EC2FleetNode extends Slave implements EphemeralNode {
 
     private final String cloudName;
 
-    public FleetNode(final String name, final String nodeDescription, final String remoteFS, final String numExecutors, final Mode mode, final String label,
-                     final List<? extends NodeProperty<?>> nodeProperties, final String cloudName, ComputerLauncher launcher) throws IOException, Descriptor.FormException {
+    @SuppressWarnings("WeakerAccess")
+    public EC2FleetNode(final String name, final String nodeDescription, final String remoteFS, final String numExecutors, final Mode mode, final String label,
+                        final List<? extends NodeProperty<?>> nodeProperties, final String cloudName, ComputerLauncher launcher) throws IOException, Descriptor.FormException {
         super(name, nodeDescription, remoteFS, numExecutors, mode, label,
                 launcher, RetentionStrategy.NOOP, nodeProperties);
         this.cloudName = cloudName;
@@ -36,7 +37,7 @@ public class FleetNode extends Slave implements EphemeralNode {
 
     @Override
     public Computer createComputer() {
-        return new FleetNodeComputer(this);
+        return new EC2FleetNodeComputer(this);
     }
 
     @Extension
