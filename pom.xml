@@ -31,9 +31,9 @@
 
   <developers>
     <developer>
-      <id>cyberax</id>
-      <name>Aleksei Besogonov</name>
-      <email>cyberax@amazon.com</email>
+      <id>terma</id>
+      <name>Artem Stasiuk</name>
+      <email>artem.stasuk@gmail.com</email>
     </developer>
     <developer>
       <id>schmutze</id>
@@ -72,7 +72,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>aws-java-sdk</artifactId>
-      <version>1.11.119</version>
+      <version>1.11.341</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>

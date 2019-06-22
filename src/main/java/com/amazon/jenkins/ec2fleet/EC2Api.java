@@ -1,5 +1,7 @@
 package com.amazon.jenkins.ec2fleet;
 
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
@@ -13,7 +15,9 @@ import com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentials
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -110,15 +114,56 @@ public class EC2Api {
         }
     }
 
-    public AmazonEC2 connect(final String awsCredentialsId, final String region) {
+    public AmazonEC2 connect(final String awsCredentialsId, final String regionName, final String endpoint) {
         final AmazonWebServicesCredentials credentials = AWSCredentialsHelper.getCredentials(awsCredentialsId, Jenkins.getInstance());
         final AmazonEC2Client client =
                 credentials != null ?
                         new AmazonEC2Client(credentials) :
                         new AmazonEC2Client();
-        if (region != null)
-            client.setEndpoint("https://ec2." + region + ".amazonaws.com/");
+
+        final String effectiveEndpoint = getEndpoint(regionName, endpoint);
+        if (effectiveEndpoint != null) client.setEndpoint(effectiveEndpoint);
         return client;
+    }
+
+    /**
+     * Derive EC2 API endpoint. If <code>endpoint</code> parameter not empty will use
+     * it as first priority, otherwise will try to find region in {@link RegionUtils} by <code>regionName</code>
+     * and use endpoint from it, if not available will generate endpoint as string and check if
+     * region name looks like China <code>cn-</code> prefix.
+     *
+     * Implementation details
+     *
+     * {@link RegionUtils} is static information, and to get new region required to be updated,
+     * as it's not possible too fast as you need to check new version of lib, moreover new version of lib
+     * could be pointed to new version of Jenkins which is not a case for our plugin as some of installation
+     * still on <code>1.6.x</code>
+     *
+     * For example latest AWS SDK lib depends on Jackson2 plugin which starting from version <code>2.8.7.0</code>
+     * require Jenkins at least <code>2.60</code> https://plugins.jenkins.io/jackson2-api
+     *
+     * List of all AWS endpoints
+     * https://docs.aws.amazon.com/general/latest/gr/rande.html
+     *
+     * @param regionName like us-east-1 not a airport code, could be <code>null</code>
+     * @param endpoint   custom endpoint could be <code>null</code>
+     * @return <code>null</code> or actual endpoint
+     */
+    @Nullable
+    public String getEndpoint(@Nullable final String regionName, @Nullable final String endpoint) {
+        if (StringUtils.isNotEmpty(endpoint)) {
+            return endpoint;
+        } else if (StringUtils.isNotEmpty(regionName)) {
+            final Region region = RegionUtils.getRegion(regionName);
+            if (region != null && region.isServiceSupported(endpoint)) {
+                return region.getServiceEndpoint(endpoint);
+            } else {
+                final String domain = regionName.startsWith("cn-") ? "amazonaws.com.cn" : "amazonaws.com";
+                return "https://ec2." + regionName + "." + domain;
+            }
+        } else {
+            return null;
+        }
     }
 
 }

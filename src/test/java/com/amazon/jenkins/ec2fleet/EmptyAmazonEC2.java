@@ -26,6 +26,11 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
     }
 
     @Override
+    public AcceptVpcEndpointConnectionsResult acceptVpcEndpointConnections(AcceptVpcEndpointConnectionsRequest acceptVpcEndpointConnectionsRequest) {
+        return null;
+    }
+
+    @Override
     public AcceptVpcPeeringConnectionResult acceptVpcPeeringConnection(AcceptVpcPeeringConnectionRequest acceptVpcPeeringConnectionRequest) {
         return null;
     }
@@ -176,6 +181,11 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
     }
 
     @Override
+    public CopyFpgaImageResult copyFpgaImage(CopyFpgaImageRequest copyFpgaImageRequest) {
+        return null;
+    }
+
+    @Override
     public CopyImageResult copyImage(CopyImageRequest copyImageRequest) {
         return null;
     }
@@ -191,6 +201,16 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
     }
 
     @Override
+    public CreateDefaultSubnetResult createDefaultSubnet(CreateDefaultSubnetRequest createDefaultSubnetRequest) {
+        return null;
+    }
+
+    @Override
+    public CreateDefaultVpcResult createDefaultVpc(CreateDefaultVpcRequest createDefaultVpcRequest) {
+        return null;
+    }
+
+    @Override
     public CreateDhcpOptionsResult createDhcpOptions(CreateDhcpOptionsRequest createDhcpOptionsRequest) {
         return null;
     }
@@ -201,7 +221,17 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
     }
 
     @Override
+    public CreateFleetResult createFleet(CreateFleetRequest createFleetRequest) {
+        return null;
+    }
+
+    @Override
     public CreateFlowLogsResult createFlowLogs(CreateFlowLogsRequest createFlowLogsRequest) {
+        return null;
+    }
+
+    @Override
+    public CreateFpgaImageResult createFpgaImage(CreateFpgaImageRequest createFpgaImageRequest) {
         return null;
     }
 
@@ -231,6 +261,16 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
     }
 
     @Override
+    public CreateLaunchTemplateResult createLaunchTemplate(CreateLaunchTemplateRequest createLaunchTemplateRequest) {
+        return null;
+    }
+
+    @Override
+    public CreateLaunchTemplateVersionResult createLaunchTemplateVersion(CreateLaunchTemplateVersionRequest createLaunchTemplateVersionRequest) {
+        return null;
+    }
+
+    @Override
     public CreateNatGatewayResult createNatGateway(CreateNatGatewayRequest createNatGatewayRequest) {
         return null;
     }
@@ -247,6 +287,11 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
 
     @Override
     public CreateNetworkInterfaceResult createNetworkInterface(CreateNetworkInterfaceRequest createNetworkInterfaceRequest) {
+        return null;
+    }
+
+    @Override
+    public CreateNetworkInterfacePermissionResult createNetworkInterfacePermission(CreateNetworkInterfacePermissionRequest createNetworkInterfacePermissionRequest) {
         return null;
     }
 
@@ -311,6 +356,16 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
     }
 
     @Override
+    public CreateVpcEndpointConnectionNotificationResult createVpcEndpointConnectionNotification(CreateVpcEndpointConnectionNotificationRequest createVpcEndpointConnectionNotificationRequest) {
+        return null;
+    }
+
+    @Override
+    public CreateVpcEndpointServiceConfigurationResult createVpcEndpointServiceConfiguration(CreateVpcEndpointServiceConfigurationRequest createVpcEndpointServiceConfigurationRequest) {
+        return null;
+    }
+
+    @Override
     public CreateVpcPeeringConnectionResult createVpcPeeringConnection(CreateVpcPeeringConnectionRequest createVpcPeeringConnectionRequest) {
         return null;
     }
@@ -351,7 +406,17 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
     }
 
     @Override
+    public DeleteFleetsResult deleteFleets(DeleteFleetsRequest deleteFleetsRequest) {
+        return null;
+    }
+
+    @Override
     public DeleteFlowLogsResult deleteFlowLogs(DeleteFlowLogsRequest deleteFlowLogsRequest) {
+        return null;
+    }
+
+    @Override
+    public DeleteFpgaImageResult deleteFpgaImage(DeleteFpgaImageRequest deleteFpgaImageRequest) {
         return null;
     }
 
@@ -362,6 +427,16 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
 
     @Override
     public DeleteKeyPairResult deleteKeyPair(DeleteKeyPairRequest deleteKeyPairRequest) {
+        return null;
+    }
+
+    @Override
+    public DeleteLaunchTemplateResult deleteLaunchTemplate(DeleteLaunchTemplateRequest deleteLaunchTemplateRequest) {
+        return null;
+    }
+
+    @Override
+    public DeleteLaunchTemplateVersionsResult deleteLaunchTemplateVersions(DeleteLaunchTemplateVersionsRequest deleteLaunchTemplateVersionsRequest) {
         return null;
     }
 
@@ -382,6 +457,11 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
 
     @Override
     public DeleteNetworkInterfaceResult deleteNetworkInterface(DeleteNetworkInterfaceRequest deleteNetworkInterfaceRequest) {
+        return null;
+    }
+
+    @Override
+    public DeleteNetworkInterfacePermissionResult deleteNetworkInterfacePermission(DeleteNetworkInterfacePermissionRequest deleteNetworkInterfacePermissionRequest) {
         return null;
     }
 
@@ -441,6 +521,16 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
     }
 
     @Override
+    public DeleteVpcEndpointConnectionNotificationsResult deleteVpcEndpointConnectionNotifications(DeleteVpcEndpointConnectionNotificationsRequest deleteVpcEndpointConnectionNotificationsRequest) {
+        return null;
+    }
+
+    @Override
+    public DeleteVpcEndpointServiceConfigurationsResult deleteVpcEndpointServiceConfigurations(DeleteVpcEndpointServiceConfigurationsRequest deleteVpcEndpointServiceConfigurationsRequest) {
+        return null;
+    }
+
+    @Override
     public DeleteVpcEndpointsResult deleteVpcEndpoints(DeleteVpcEndpointsRequest deleteVpcEndpointsRequest) {
         return null;
     }
@@ -487,6 +577,11 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
 
     @Override
     public DescribeAddressesResult describeAddresses() {
+        return null;
+    }
+
+    @Override
+    public DescribeAggregateIdFormatResult describeAggregateIdFormat(DescribeAggregateIdFormatRequest describeAggregateIdFormatRequest) {
         return null;
     }
 
@@ -556,6 +651,11 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
     }
 
     @Override
+    public DescribeElasticGpusResult describeElasticGpus(DescribeElasticGpusRequest describeElasticGpusRequest) {
+        return null;
+    }
+
+    @Override
     public DescribeExportTasksResult describeExportTasks(DescribeExportTasksRequest describeExportTasksRequest) {
         return null;
     }
@@ -566,12 +666,37 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
     }
 
     @Override
+    public DescribeFleetHistoryResult describeFleetHistory(DescribeFleetHistoryRequest describeFleetHistoryRequest) {
+        return null;
+    }
+
+    @Override
+    public DescribeFleetInstancesResult describeFleetInstances(DescribeFleetInstancesRequest describeFleetInstancesRequest) {
+        return null;
+    }
+
+    @Override
+    public DescribeFleetsResult describeFleets(DescribeFleetsRequest describeFleetsRequest) {
+        return null;
+    }
+
+    @Override
     public DescribeFlowLogsResult describeFlowLogs(DescribeFlowLogsRequest describeFlowLogsRequest) {
         return null;
     }
 
     @Override
     public DescribeFlowLogsResult describeFlowLogs() {
+        return null;
+    }
+
+    @Override
+    public DescribeFpgaImageAttributeResult describeFpgaImageAttribute(DescribeFpgaImageAttributeRequest describeFpgaImageAttributeRequest) {
+        return null;
+    }
+
+    @Override
+    public DescribeFpgaImagesResult describeFpgaImages(DescribeFpgaImagesRequest describeFpgaImagesRequest) {
         return null;
     }
 
@@ -656,6 +781,11 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
     }
 
     @Override
+    public DescribeInstanceCreditSpecificationsResult describeInstanceCreditSpecifications(DescribeInstanceCreditSpecificationsRequest describeInstanceCreditSpecificationsRequest) {
+        return null;
+    }
+
+    @Override
     public DescribeInstanceStatusResult describeInstanceStatus(DescribeInstanceStatusRequest describeInstanceStatusRequest) {
         return null;
     }
@@ -696,6 +826,16 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
     }
 
     @Override
+    public DescribeLaunchTemplateVersionsResult describeLaunchTemplateVersions(DescribeLaunchTemplateVersionsRequest describeLaunchTemplateVersionsRequest) {
+        return null;
+    }
+
+    @Override
+    public DescribeLaunchTemplatesResult describeLaunchTemplates(DescribeLaunchTemplatesRequest describeLaunchTemplatesRequest) {
+        return null;
+    }
+
+    @Override
     public DescribeMovingAddressesResult describeMovingAddresses(DescribeMovingAddressesRequest describeMovingAddressesRequest) {
         return null;
     }
@@ -726,6 +866,11 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
     }
 
     @Override
+    public DescribeNetworkInterfacePermissionsResult describeNetworkInterfacePermissions(DescribeNetworkInterfacePermissionsRequest describeNetworkInterfacePermissionsRequest) {
+        return null;
+    }
+
+    @Override
     public DescribeNetworkInterfacesResult describeNetworkInterfaces(DescribeNetworkInterfacesRequest describeNetworkInterfacesRequest) {
         return null;
     }
@@ -752,6 +897,11 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
 
     @Override
     public DescribePrefixListsResult describePrefixLists() {
+        return null;
+    }
+
+    @Override
+    public DescribePrincipalIdFormatResult describePrincipalIdFormat(DescribePrincipalIdFormatRequest describePrincipalIdFormatRequest) {
         return null;
     }
 
@@ -981,6 +1131,26 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
     }
 
     @Override
+    public DescribeVpcEndpointConnectionNotificationsResult describeVpcEndpointConnectionNotifications(DescribeVpcEndpointConnectionNotificationsRequest describeVpcEndpointConnectionNotificationsRequest) {
+        return null;
+    }
+
+    @Override
+    public DescribeVpcEndpointConnectionsResult describeVpcEndpointConnections(DescribeVpcEndpointConnectionsRequest describeVpcEndpointConnectionsRequest) {
+        return null;
+    }
+
+    @Override
+    public DescribeVpcEndpointServiceConfigurationsResult describeVpcEndpointServiceConfigurations(DescribeVpcEndpointServiceConfigurationsRequest describeVpcEndpointServiceConfigurationsRequest) {
+        return null;
+    }
+
+    @Override
+    public DescribeVpcEndpointServicePermissionsResult describeVpcEndpointServicePermissions(DescribeVpcEndpointServicePermissionsRequest describeVpcEndpointServicePermissionsRequest) {
+        return null;
+    }
+
+    @Override
     public DescribeVpcEndpointServicesResult describeVpcEndpointServices(DescribeVpcEndpointServicesRequest describeVpcEndpointServicesRequest) {
         return null;
     }
@@ -1141,6 +1311,11 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
     }
 
     @Override
+    public GetLaunchTemplateDataResult getLaunchTemplateData(GetLaunchTemplateDataRequest getLaunchTemplateDataRequest) {
+        return null;
+    }
+
+    @Override
     public GetPasswordDataResult getPasswordData(GetPasswordDataRequest getPasswordDataRequest) {
         return null;
     }
@@ -1186,6 +1361,16 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
     }
 
     @Override
+    public ModifyFleetResult modifyFleet(ModifyFleetRequest modifyFleetRequest) {
+        return null;
+    }
+
+    @Override
+    public ModifyFpgaImageAttributeResult modifyFpgaImageAttribute(ModifyFpgaImageAttributeRequest modifyFpgaImageAttributeRequest) {
+        return null;
+    }
+
+    @Override
     public ModifyHostsResult modifyHosts(ModifyHostsRequest modifyHostsRequest) {
         return null;
     }
@@ -1211,7 +1396,17 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
     }
 
     @Override
+    public ModifyInstanceCreditSpecificationResult modifyInstanceCreditSpecification(ModifyInstanceCreditSpecificationRequest modifyInstanceCreditSpecificationRequest) {
+        return null;
+    }
+
+    @Override
     public ModifyInstancePlacementResult modifyInstancePlacement(ModifyInstancePlacementRequest modifyInstancePlacementRequest) {
+        return null;
+    }
+
+    @Override
+    public ModifyLaunchTemplateResult modifyLaunchTemplate(ModifyLaunchTemplateRequest modifyLaunchTemplateRequest) {
         return null;
     }
 
@@ -1261,7 +1456,27 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
     }
 
     @Override
+    public ModifyVpcEndpointConnectionNotificationResult modifyVpcEndpointConnectionNotification(ModifyVpcEndpointConnectionNotificationRequest modifyVpcEndpointConnectionNotificationRequest) {
+        return null;
+    }
+
+    @Override
+    public ModifyVpcEndpointServiceConfigurationResult modifyVpcEndpointServiceConfiguration(ModifyVpcEndpointServiceConfigurationRequest modifyVpcEndpointServiceConfigurationRequest) {
+        return null;
+    }
+
+    @Override
+    public ModifyVpcEndpointServicePermissionsResult modifyVpcEndpointServicePermissions(ModifyVpcEndpointServicePermissionsRequest modifyVpcEndpointServicePermissionsRequest) {
+        return null;
+    }
+
+    @Override
     public ModifyVpcPeeringConnectionOptionsResult modifyVpcPeeringConnectionOptions(ModifyVpcPeeringConnectionOptionsRequest modifyVpcPeeringConnectionOptionsRequest) {
+        return null;
+    }
+
+    @Override
+    public ModifyVpcTenancyResult modifyVpcTenancy(ModifyVpcTenancyRequest modifyVpcTenancyRequest) {
         return null;
     }
 
@@ -1297,6 +1512,11 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
 
     @Override
     public RegisterImageResult registerImage(RegisterImageRequest registerImageRequest) {
+        return null;
+    }
+
+    @Override
+    public RejectVpcEndpointConnectionsResult rejectVpcEndpointConnections(RejectVpcEndpointConnectionsRequest rejectVpcEndpointConnectionsRequest) {
         return null;
     }
 
@@ -1352,6 +1572,11 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
 
     @Override
     public RequestSpotInstancesResult requestSpotInstances(RequestSpotInstancesRequest requestSpotInstancesRequest) {
+        return null;
+    }
+
+    @Override
+    public ResetFpgaImageAttributeResult resetFpgaImageAttribute(ResetFpgaImageAttributeRequest resetFpgaImageAttributeRequest) {
         return null;
     }
 
@@ -1432,6 +1657,16 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
 
     @Override
     public UnmonitorInstancesResult unmonitorInstances(UnmonitorInstancesRequest unmonitorInstancesRequest) {
+        return null;
+    }
+
+    @Override
+    public UpdateSecurityGroupRuleDescriptionsEgressResult updateSecurityGroupRuleDescriptionsEgress(UpdateSecurityGroupRuleDescriptionsEgressRequest updateSecurityGroupRuleDescriptionsEgressRequest) {
+        return null;
+    }
+
+    @Override
+    public UpdateSecurityGroupRuleDescriptionsIngressResult updateSecurityGroupRuleDescriptionsIngress(UpdateSecurityGroupRuleDescriptionsIngressRequest updateSecurityGroupRuleDescriptionsIngressRequest) {
         return null;
     }
 

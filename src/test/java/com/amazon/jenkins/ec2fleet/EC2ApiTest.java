@@ -299,4 +299,32 @@ public class EC2ApiTest {
         Assert.assertEquals(instanceIds, t);
     }
 
+    @Test
+    public void getEndpoint_returnNullIfRegionNameOrEndpointAreEmpty() {
+        Assert.assertNull(new EC2Api().getEndpoint(null, null));
+    }
+
+    @Test
+    public void getEndpoint_returnEnpointAsIsIfProvided() {
+        Assert.assertEquals("mymy", new EC2Api().getEndpoint(null, "mymy"));
+    }
+
+    @Test
+    public void getEndpoint_returnCraftedIfRegionNotInStatic() {
+        Assert.assertEquals("https://ec2.non-real-region.amazonaws.com",
+                new EC2Api().getEndpoint("non-real-region", null));
+    }
+
+    @Test
+    public void getEndpoint_returnCraftedChinaIfRegionNotInStatic() {
+        Assert.assertEquals("https://ec2.cn-non-real.amazonaws.com.cn",
+                new EC2Api().getEndpoint("cn-non-real", null));
+    }
+
+    @Test
+    public void getEndpoint_returnStaticRegionEndpoint() {
+        Assert.assertEquals("https://ec2.cn-north-1.amazonaws.com.cn",
+                new EC2Api().getEndpoint("cn-north-1", null));
+    }
+
 }

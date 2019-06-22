@@ -9,16 +9,22 @@
     <f:entry title="${%Name}" field="name">
         <f:textbox default="FleetCloud"/>
     </f:entry>
+
     <f:entry title="${%AWS Credentials}" field="awsCredentialsId">
       <c:select/>
     </f:entry>
 
-    <f:description>The regions will be populated once the keys above are entered.</f:description>
+    <f:description>Select <a href="https://docs.amazonaws.cn/en_us/general/latest/gr/rande.html#cnnorth_region">China region</a> for China credentials.</f:description>
     <f:entry title="${%Region}" field="region">
       <f:select/>
     </f:entry>
 
-    <f:description>Fleet list will be available once the connection is validated</f:description>
+    <f:description>Endpoint like https://ec2.us-east-2.amazonaws.com</f:description>
+    <f:entry title="${%Endpoint}" field="endpoint">
+      <f:textbox default=""/>
+    </f:entry>
+
+    <f:description>Fleet list will be available once region and credentials are specified</f:description>
     <f:entry title="${%Spot Fleet}" field="fleet">
         <f:select/>
     </f:entry>
