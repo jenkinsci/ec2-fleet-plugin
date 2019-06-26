@@ -1,0 +1,22 @@
+If unchecked which is default, plugin will try to resubmit job if it was failed due to
+<a href="https://aws.amazon.com/ec2/spot/">EC2 Spot instance</a> interruption. If checked auto resubmit
+will be disabled.
+
+<p>
+    Interrupted job will be shown as failed or aborted see pipeline notes below.
+    While copy will be submitted into jenkins queue to execute or any possible node.
+</p>
+
+<p>
+    Parametrized job will be resubmitted with same parameters as defined for interrupted.
+</p>
+
+<p>
+    In case if job is <a href="https://jenkins.io/doc/book/pipeline/">pipeline (workflow)</a> interrupted
+    task will be aborted as workflow usually don't fail in case of node interruption and wait until
+    node will be online. Plugin force job to abort and resubmit.
+</p>
+
+<p>
+    Please report any problem with this feature to <a href="https://github.com/jenkinsci/ec2-fleet-plugin/issues/45">GitHub Issue</a>
+</p>

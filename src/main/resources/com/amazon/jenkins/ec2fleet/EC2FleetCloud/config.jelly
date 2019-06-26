@@ -86,6 +86,11 @@
     <f:entry title="${%Only running instances}" field="addNodeOnlyIfRunning">
       <f:checkbox />
     </f:entry>
+
+    <f:description>Disable auto resubmit build if failed because of EC2 instance termination like Spot</f:description>
+    <f:entry title="${%Disable build resubmit}" field="disableTaskResubmit">
+      <f:checkbox />
+    </f:entry>
   </f:section>
 
 </j:jelly>

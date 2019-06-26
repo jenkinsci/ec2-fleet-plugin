@@ -98,6 +98,11 @@ public class EC2FleetCloud extends Cloud {
     private final boolean addNodeOnlyIfRunning;
     private final boolean restrictUsage;
 
+    /**
+     * @see EC2FleetAutoResubmitComputerLauncher
+     */
+    private final boolean disableTaskResubmit;
+
     private transient Set<NodeProvisioner.PlannedNode> plannedNodesCache;
     // fleetInstancesCache contains all Jenkins nodes known to be in the fleet, not in dyingFleetInstancesCache
     private transient Set<String> fleetInstancesCache;
@@ -121,7 +126,8 @@ public class EC2FleetCloud extends Cloud {
                          final Integer maxSize,
                          final Integer numExecutors,
                          final boolean addNodeOnlyIfRunning,
-                         final boolean restrictUsage) {
+                         final boolean restrictUsage,
+                         final boolean disableTaskResubmit) {
         super(StringUtils.isBlank(name) ? FLEET_CLOUD_ID : name);
         initCaches();
         this.credentialsId = credentialsId;
@@ -140,6 +146,7 @@ public class EC2FleetCloud extends Cloud {
         this.numExecutors = numExecutors;
         this.addNodeOnlyIfRunning = addNodeOnlyIfRunning;
         this.restrictUsage = restrictUsage;
+        this.disableTaskResubmit = disableTaskResubmit;
     }
 
     /**
@@ -151,6 +158,8 @@ public class EC2FleetCloud extends Cloud {
     public String getAwsCredentialsId() {
         return StringUtils.isNotBlank(awsCredentialsId) ? awsCredentialsId : credentialsId;
     }
+
+    public boolean isDisableTaskResubmit() { return disableTaskResubmit; }
 
     public String getRegion() {
         return region;
@@ -471,10 +480,12 @@ public class EC2FleetCloud extends Cloud {
         // Check if we have the address to use. Nodes don't get it immediately.
         if (address == null) return; // Wait some more...
 
+        final EC2FleetAutoResubmitComputerLauncher computerLauncher = new EC2FleetAutoResubmitComputerLauncher(
+                computerConnector.launch(address, TaskListener.NULL), disableTaskResubmit);
         final Node.Mode nodeMode = restrictUsage ? Node.Mode.EXCLUSIVE : Node.Mode.NORMAL;
         final EC2FleetNode slave = new EC2FleetNode(instanceId, "Fleet slave for " + instanceId,
                 effectiveFsRoot, numExecutors.toString(), nodeMode, labelString, new ArrayList<NodeProperty<?>>(),
-                name, computerConnector.launch(address, TaskListener.NULL));
+                name, computerLauncher);
 
         // Initialize our retention strategy
         slave.setRetentionStrategy(new IdleRetentionStrategy(this));

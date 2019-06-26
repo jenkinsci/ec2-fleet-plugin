@@ -198,3 +198,15 @@ https://jenkins.io/doc/developer/publishing/releasing/
 ```bash
 mvn release:prepare release:perform
 ```
+
+### Jenkins 2 can't connect by SSH 
+
+https://issues.jenkins-ci.org/browse/JENKINS-53954
+
+### Install Java 8 on EC2 instance 
+
+```bash
+sudo yum install java-1.8.0
+sudo yum remove java-1.7.0-openjdk
+java -version 
+```

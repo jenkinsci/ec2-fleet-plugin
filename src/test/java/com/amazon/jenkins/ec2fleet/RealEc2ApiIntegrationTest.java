@@ -50,7 +50,7 @@ public class RealEc2ApiIntegrationTest {
             public void run(AmazonEC2 amazonEC2, String fleetId) throws Exception {
                 EC2FleetCloud cloud = new EC2FleetCloud("", "credId", null, null, null, fleetId,
                         null, null, null, false, false,
-                        0, 0, 0, 0, false, false);
+                        0, 0, 0, 0, false, false, false);
                 j.jenkins.clouds.add(cloud);
 
                 // 10 sec refresh time so wait
@@ -82,7 +82,7 @@ public class RealEc2ApiIntegrationTest {
             public void run(AmazonEC2 amazonEC2, String fleetId) throws Exception {
                 EC2FleetCloud cloud = new EC2FleetCloud(null, "credId", null, null, null, fleetId,
                         null, null, null, false, false,
-                        0, 0, 0, 0, false, false);
+                        0, 0, 0, 0, false, false, false);
                 j.jenkins.clouds.add(cloud);
 
                 final long start = System.currentTimeMillis();

@@ -71,7 +71,7 @@ public class ProvisionIntegrationTest {
 
         EC2FleetCloud cloud = new EC2FleetCloud(null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
-                0, 0, 0, 1, false, false);
+                0, 0, 0, 1, false, false, false);
         j.jenkins.clouds.add(cloud);
 
         EC2Api ec2Api = mock(EC2Api.class);
@@ -111,7 +111,7 @@ public class ProvisionIntegrationTest {
 
         EC2FleetCloud cloud = new EC2FleetCloud(null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
-                0, 0, 10, 1, false, false);
+                0, 0, 10, 1, false, false, false);
         j.jenkins.clouds.add(cloud);
 
         EC2Api ec2Api = mock(EC2Api.class);
@@ -180,7 +180,7 @@ public class ProvisionIntegrationTest {
 
         EC2FleetCloud cloud = new EC2FleetCloud(null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
-                0, 0, 10, 1, false, false);
+                0, 0, 10, 1, false, false, false);
         j.jenkins.clouds.add(cloud);
 
         EC2Api ec2Api = mock(EC2Api.class);
@@ -262,7 +262,7 @@ public class ProvisionIntegrationTest {
 
         EC2FleetCloud cloud = new EC2FleetCloud(null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
-                0, 0, 10, 1, true, false);
+                0, 0, 10, 1, true, false, false);
         j.jenkins.clouds.add(cloud);
 
         EC2Api ec2Api = mock(EC2Api.class);
