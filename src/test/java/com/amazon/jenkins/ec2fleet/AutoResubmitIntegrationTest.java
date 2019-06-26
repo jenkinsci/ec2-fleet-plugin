@@ -160,7 +160,7 @@ public class AutoResubmitIntegrationTest {
             build = null
             run = {FreeStyleBuild@14834} "parameter #14"
          */
-        project.getBuildersList().add(Functions.isWindows() ? new BatchFile("timeout /T %number% /NOBREAK > NUL") : new Shell("sleep ${number}"));
+        project.getBuildersList().add(Functions.isWindows() ? new BatchFile("Ping -n %number% 127.0.0.1 > nul") : new Shell("sleep ${number}"));
 
         rs.add(project.scheduleBuild2(0, new ParametersAction(new StringParameterValue("number", "30"))));
 
@@ -311,7 +311,7 @@ public class AutoResubmitIntegrationTest {
         for (int i = 0; i < count; i++) {
             final FreeStyleProject project = j.createFreeStyleProject();
             project.setAssignedLabel(label);
-            project.getBuildersList().add(Functions.isWindows() ? new BatchFile("timeout /T 30 /NOBREAK > NUL") : new Shell("sleep 30"));
+            project.getBuildersList().add(Functions.isWindows() ? new BatchFile("Ping -n 30 127.0.0.1 > nul") : new Shell("sleep 30"));
             rs.add(project.scheduleBuild2(0));
         }
         return rs;
