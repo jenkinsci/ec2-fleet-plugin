@@ -1,7 +1,7 @@
 package com.amazon.jenkins.ec2fleet;
 
-import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.regions.RegionUtils;
+import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.BatchState;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
@@ -50,6 +50,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
@@ -61,6 +62,9 @@ import java.util.logging.SimpleFormatter;
 public class EC2FleetCloud extends Cloud {
 
     public static final String FLEET_CLOUD_ID = "FleetCloud";
+
+    private static final int DEFAULT_INIT_ONLINE_TIMEOUT_SEC = 3 * 60;
+    private static final int DEFAULT_INIT_ONLINE_CHECK_INTERVAL_SEC = 15;
 
     private static final SimpleFormatter sf = new SimpleFormatter();
     private static final Logger LOGGER = Logger.getLogger(EC2FleetCloud.class.getName());
@@ -97,6 +101,8 @@ public class EC2FleetCloud extends Cloud {
     private final Integer numExecutors;
     private final boolean addNodeOnlyIfRunning;
     private final boolean restrictUsage;
+    private final Integer initOnlineTimeoutSec;
+    private final Integer initOnlineCheckIntervalSec;
 
     /**
      * @see EC2FleetAutoResubmitComputerLauncher
@@ -127,7 +133,9 @@ public class EC2FleetCloud extends Cloud {
                          final Integer numExecutors,
                          final boolean addNodeOnlyIfRunning,
                          final boolean restrictUsage,
-                         final boolean disableTaskResubmit) {
+                         final boolean disableTaskResubmit,
+                         final Integer initOnlineTimeoutSec,
+                         final Integer initOnlineCheckIntervalSec) {
         super(StringUtils.isBlank(name) ? FLEET_CLOUD_ID : name);
         initCaches();
         this.credentialsId = credentialsId;
@@ -147,6 +155,8 @@ public class EC2FleetCloud extends Cloud {
         this.addNodeOnlyIfRunning = addNodeOnlyIfRunning;
         this.restrictUsage = restrictUsage;
         this.disableTaskResubmit = disableTaskResubmit;
+        this.initOnlineTimeoutSec = initOnlineTimeoutSec;
+        this.initOnlineCheckIntervalSec = initOnlineCheckIntervalSec;
     }
 
     /**
@@ -159,7 +169,17 @@ public class EC2FleetCloud extends Cloud {
         return StringUtils.isNotBlank(awsCredentialsId) ? awsCredentialsId : credentialsId;
     }
 
-    public boolean isDisableTaskResubmit() { return disableTaskResubmit; }
+    public boolean isDisableTaskResubmit() {
+        return disableTaskResubmit;
+    }
+
+    public int getInitOnlineTimeoutSec() {
+        return initOnlineTimeoutSec == null ? DEFAULT_INIT_ONLINE_TIMEOUT_SEC : initOnlineTimeoutSec;
+    }
+
+    public int getInitOnlineCheckIntervalSec() {
+        return initOnlineCheckIntervalSec == null ? DEFAULT_INIT_ONLINE_CHECK_INTERVAL_SEC : initOnlineCheckIntervalSec;
+    }
 
     public String getRegion() {
         return region;
@@ -272,10 +292,9 @@ public class EC2FleetCloud extends Cloud {
 
         final List<NodeProvisioner.PlannedNode> resultList = new ArrayList<>();
         for (int f = 0; f < toProvision; ++f) {
-            final SettableFuture<Node> futureNode = SettableFuture.create();
             // todo make name unique per fleet
             final NodeProvisioner.PlannedNode plannedNode = new NodeProvisioner.PlannedNode(
-                    "FleetNode-" + f, futureNode, this.numExecutors);
+                    "FleetNode-" + f, SettableFuture.<Node>create(), this.numExecutors);
             resultList.add(plannedNode);
             this.plannedNodesCache.add(plannedNode);
         }
@@ -359,7 +378,7 @@ public class EC2FleetCloud extends Cloud {
         // If we have new instances - create nodes for them!
         try {
             if (newFleetInstances.size() > 0) {
-                info("Found new instances from fleet (" + getLabelString() + "): [" +
+                info("Found new instances [" +
                         StringUtils.join(newFleetInstances, ", ") + "]");
             }
             for (final String instanceId : newFleetInstances) {
@@ -458,13 +477,13 @@ public class EC2FleetCloud extends Cloud {
         }
     }
 
+    /**
+     * https://github.com/jenkinsci/ec2-plugin/blob/master/src/main/java/hudson/plugins/ec2/EC2Cloud.java#L640
+     *
+     * @param ec2        ec2 client
+     * @param instanceId instance id
+     */
     private void addNewSlave(final AmazonEC2 ec2, final String instanceId) throws Exception {
-        // Generate a random FS root if one isn't specified
-        String effectiveFsRoot = fsRoot;
-        if (StringUtils.isBlank(effectiveFsRoot)) {
-            effectiveFsRoot = "/tmp/jenkins-" + UUID.randomUUID().toString().substring(0, 8);
-        }
-
         final DescribeInstancesResult result = ec2.describeInstances(
                 new DescribeInstancesRequest().withInstanceIds(instanceId));
         //Can't find this instance, skip it
@@ -480,50 +499,63 @@ public class EC2FleetCloud extends Cloud {
         // Check if we have the address to use. Nodes don't get it immediately.
         if (address == null) return; // Wait some more...
 
+        // Generate a random FS root if one isn't specified
+        String effectiveFsRoot = fsRoot;
+        if (StringUtils.isBlank(effectiveFsRoot)) {
+            effectiveFsRoot = "/tmp/jenkins-" + UUID.randomUUID().toString().substring(0, 8);
+        }
+
         final EC2FleetAutoResubmitComputerLauncher computerLauncher = new EC2FleetAutoResubmitComputerLauncher(
                 computerConnector.launch(address, TaskListener.NULL), disableTaskResubmit);
         final Node.Mode nodeMode = restrictUsage ? Node.Mode.EXCLUSIVE : Node.Mode.NORMAL;
-        final EC2FleetNode slave = new EC2FleetNode(instanceId, "Fleet slave for " + instanceId,
+        final EC2FleetNode node = new EC2FleetNode(instanceId, "Fleet slave for " + instanceId,
                 effectiveFsRoot, numExecutors.toString(), nodeMode, labelString, new ArrayList<NodeProperty<?>>(),
                 name, computerLauncher);
 
         // Initialize our retention strategy
-        slave.setRetentionStrategy(new IdleRetentionStrategy(this));
+        node.setRetentionStrategy(new IdleRetentionStrategy(this));
 
         final Jenkins jenkins = Jenkins.getInstance();
         //noinspection SynchronizationOnLocalVariableOrMethodParameter
         synchronized (jenkins) {
-            // Try to avoid duplicate nodes
-            final Node n = jenkins.getNode(instanceId);
-            if (n != null)
-                jenkins.removeNode(n);
-            jenkins.addNode(slave);
+            // jenkins automatically remove old node with same name if any
+            jenkins.addNode(node);
         }
 
-        // A new node, wheee!
-        if (!plannedNodesCache.isEmpty()) {
-            //If we're waiting for a new node - mark it as ready
-            final NodeProvisioner.PlannedNode curNode = plannedNodesCache.iterator().next();
-            plannedNodesCache.remove(curNode);
-            ((SettableFuture<Node>) curNode.future).set(slave);
-            info("set slave %s to planned node", slave.getNodeName());
+        final SettableFuture<Node> future;
+        if (plannedNodesCache.isEmpty()) {
+            future = SettableFuture.create();
+        } else {
+            final NodeProvisioner.PlannedNode plannedNode = plannedNodesCache.iterator().next();
+            plannedNodesCache.remove(plannedNode);
+            future = ((SettableFuture<Node>) plannedNode.future);
         }
+
+        // use getters for timeout and interval as they provide default value
+        // when user just install new version and did't recreate fleet
+        EC2FleetOnlineChecker.start(node, future,
+                TimeUnit.SECONDS.toMillis(getInitOnlineTimeoutSec()),
+                TimeUnit.SECONDS.toMillis(getInitOnlineCheckIntervalSec()));
+    }
+
+    private String getLogPrefix() {
+        return getDisplayName() + " [" + getLabelString() + "] ";
     }
 
     private void info(final String msg, final Object... args) {
-        LOGGER.info("fleet = " + getDisplayName() + " label = " + getLabelString() + " " + String.format(msg, args));
+        LOGGER.info(getLogPrefix() + String.format(msg, args));
     }
 
     private void fine(final String msg, final Object... args) {
-        LOGGER.fine("fleet = " + getDisplayName() + " label = " + getLabelString() + " " + String.format(msg, args));
+        LOGGER.fine(getLogPrefix() + String.format(msg, args));
     }
 
     private void warning(final String msg, final Object... args) {
-        LOGGER.warning("fleet = " + getDisplayName() + " label = " + getLabelString() + " " + String.format(msg, args));
+        LOGGER.warning(getLogPrefix() + String.format(msg, args));
     }
 
     private void warning(final Throwable t, final String msg, final Object... args) {
-        LOGGER.log(Level.WARNING, "fleet = " + getDisplayName() + " label = " + getLabelString() + " " + String.format(msg, args), t);
+        LOGGER.log(Level.WARNING, getLogPrefix() + String.format(msg, args), t);
     }
 
     @Extension

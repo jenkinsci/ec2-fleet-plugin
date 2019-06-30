@@ -9,58 +9,39 @@ import com.amazonaws.services.ec2.model.DescribeSpotFleetInstancesResult;
 import com.amazonaws.services.ec2.model.DescribeSpotFleetRequestsRequest;
 import com.amazonaws.services.ec2.model.DescribeSpotFleetRequestsResult;
 import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ec2.model.InstanceState;
+import com.amazonaws.services.ec2.model.InstanceStateName;
 import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.SpotFleetRequestConfig;
 import com.amazonaws.services.ec2.model.SpotFleetRequestConfigData;
 import hudson.Functions;
-import hudson.model.AbstractBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Node;
 import hudson.model.ParametersAction;
 import hudson.model.ParametersDefinitionProperty;
-import hudson.model.Queue;
 import hudson.model.Result;
 import hudson.model.StringParameterDefinition;
 import hudson.model.StringParameterValue;
-import hudson.model.TaskListener;
 import hudson.model.labels.LabelAtom;
 import hudson.model.queue.QueueTaskFuture;
-import hudson.slaves.ComputerConnector;
-import hudson.slaves.ComputerLauncher;
 import hudson.slaves.OfflineCause;
 import hudson.tasks.BatchFile;
 import hudson.tasks.Shell;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
-import org.jvnet.hudson.test.BuildWatcher;
-import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mockito;
 
-import javax.annotation.Nonnull;
-import java.io.IOException;
-import java.io.Serializable;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class AutoResubmitIntegrationTest {
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
-
-    @ClassRule
-    public static BuildWatcher bw = new BuildWatcher();
+public class AutoResubmitIntegrationTest extends IntegrationTest {
 
     @Before
     public void before() {
@@ -74,6 +55,7 @@ public class AutoResubmitIntegrationTest {
                 new DescribeInstancesResult().withReservations(
                         new Reservation().withInstances(
                                 new Instance()
+                                        .withState(new InstanceState().withName(InstanceStateName.Running))
                                         .withPublicIpAddress("public-io")
                                         .withInstanceId("i-1")
                         )));
@@ -92,17 +74,12 @@ public class AutoResubmitIntegrationTest {
                 .thenReturn(describeSpotFleetRequestsResult);
     }
 
-    @After
-    public void after() {
-        // restore
-        Registry.setEc2Api(new EC2Api());
-    }
-
     @Test
     public void should_successfully_resubmit_freestyle_task() throws Exception {
         EC2FleetCloud cloud = new EC2FleetCloud(null, "credId", null, "region",
-                null, "fId", "momo", null, new SingleComputerConnector(j), false, false,
-                0, 0, 10, 1, false, false, false);
+                null, "fId", "momo", null, new SingleLocalComputerConnector(j), false, false,
+                0, 0, 10, 1, false, false,
+                false, 0, 0);
         j.jenkins.clouds.add(cloud);
 
         List<QueueTaskFuture> rs = getQueueTaskFutures(1);
@@ -136,8 +113,9 @@ public class AutoResubmitIntegrationTest {
     @Test
     public void should_successfully_resubmit_parametrized_task() throws Exception {
         EC2FleetCloud cloud = new EC2FleetCloud(null, "credId", null, "region",
-                null, "fId", "momo", null, new SingleComputerConnector(j), false, false,
-                0, 0, 10, 1, false, false, false);
+                null, "fId", "momo", null, new SingleLocalComputerConnector(j), false, false,
+                0, 0, 10, 1, false, false,
+                false, 0, 0);
         j.jenkins.clouds.add(cloud);
 
         List<QueueTaskFuture> rs = new ArrayList<>();
@@ -191,8 +169,9 @@ public class AutoResubmitIntegrationTest {
     @Test
     public void should_not_resubmit_if_disabled() throws Exception {
         EC2FleetCloud cloud = new EC2FleetCloud(null, "credId", null, "region",
-                null, "fId", "momo", null, new SingleComputerConnector(j), false, false,
-                0, 0, 10, 1, false, false, true);
+                null, "fId", "momo", null, new SingleLocalComputerConnector(j), false, false,
+                0, 0, 10, 1, false, false,
+                true, 0, 0);
         j.jenkins.clouds.add(cloud);
 
         List<QueueTaskFuture> rs = getQueueTaskFutures(1);
@@ -221,118 +200,4 @@ public class AutoResubmitIntegrationTest {
         cancelTasks(rs);
     }
 
-    private static void assertQueueAndNodesIdle(final Node node) {
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                Assert.assertTrue(Queue.getInstance().isEmpty() && node.toComputer().isIdle());
-            }
-        });
-    }
-
-    private static void assertQueueIsEmpty() {
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("check if queue is empty");
-                Assert.assertTrue(Queue.getInstance().isEmpty());
-            }
-        });
-    }
-
-    private void assertAtLeastOneNode() {
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("check if non zero nodes!");
-                Assert.assertFalse(j.jenkins.getNodes().isEmpty());
-            }
-        });
-    }
-
-    private void assertLastBuildResult(final Result... lastBuildResults) {
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                final AbstractBuild lastBuild = j.jenkins.getProjects().get(0).getLastBuild();
-                System.out.println("wait until " + Arrays.toString(lastBuildResults) + " current state "
-                        + (lastBuild == null ? "<none>" : lastBuild.getResult()));
-                Assert.assertNotNull(lastBuild);
-                Assert.assertTrue(
-                        lastBuild.getResult() + " should be in " + Arrays.toString(lastBuildResults),
-                        Arrays.asList(lastBuildResults).contains(lastBuild.getResult()));
-            }
-        });
-    }
-
-    private void assertNodeIsOnline(final Node node) {
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("wait when back online");
-                Assert.assertTrue(node.toComputer().isOnline());
-            }
-        });
-    }
-
-    private static void tryUntil(Runnable r) {
-        long d = TimeUnit.SECONDS.toMillis(5);
-        long time = TimeUnit.SECONDS.toMillis(60);
-        final long start = System.currentTimeMillis();
-
-        while (true) {
-            try {
-                r.run();
-                return;
-            } catch (AssertionError e) {
-                if (System.currentTimeMillis() - start > time) {
-                    throw e;
-                } else {
-                    try {
-                        Thread.sleep(d);
-                    } catch (InterruptedException ex) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            }
-        }
-    }
-
-    private void cancelTasks(List<QueueTaskFuture> rs) {
-        for (QueueTaskFuture r : rs) {
-            r.cancel(true);
-        }
-    }
-
-    private List<QueueTaskFuture> getQueueTaskFutures(int count) throws IOException {
-        final LabelAtom label = new LabelAtom("momo");
-
-        final List<QueueTaskFuture> rs = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            final FreeStyleProject project = j.createFreeStyleProject();
-            project.setAssignedLabel(label);
-            project.getBuildersList().add(Functions.isWindows() ? new BatchFile("Ping -n 30 127.0.0.1 > nul") : new Shell("sleep 30"));
-            rs.add(project.scheduleBuild2(0));
-        }
-        return rs;
-    }
-
-    private static class SingleComputerConnector extends ComputerConnector implements Serializable {
-
-        @Nonnull
-        private transient final JenkinsRule j;
-
-        private SingleComputerConnector(final JenkinsRule j) {
-            this.j = j;
-        }
-
-        @Override
-        public ComputerLauncher launch(@Nonnull String host, TaskListener listener) throws IOException {
-            try {
-                return j.createComputerLauncher(null);
-            } catch (URISyntaxException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
 }

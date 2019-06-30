@@ -5,6 +5,7 @@ import hudson.model.Node;
 import hudson.slaves.RetentionStrategy;
 import hudson.slaves.SlaveComputer;
 
+import javax.annotation.concurrent.GuardedBy;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,6 +30,13 @@ public class IdleRetentionStrategy extends RetentionStrategy<SlaveComputer> {
         this.cloud = cloud;
     }
 
+    /**
+     * Will be called under {@link hudson.model.Queue#withLock(Runnable)}
+     *
+     * @param c computer
+     * @return delay in min before next run
+     */
+    @GuardedBy("Queue.withLock")
     @Override
     public long check(final SlaveComputer c) {
         // Ensure that the EC2FleetCloud cannot be mutated from under us while

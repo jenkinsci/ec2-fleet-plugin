@@ -11,9 +11,8 @@ import hudson.slaves.ComputerLauncher;
 import hudson.slaves.DelegatingComputerLauncher;
 import hudson.slaves.OfflineCause;
 import hudson.slaves.SlaveComputer;
-import hudson.util.StreamTaskListener;
-import jenkins.model.CauseOfInterruption;
 
+import javax.annotation.concurrent.ThreadSafe;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -30,6 +29,7 @@ import java.util.logging.Logger;
  * @see EC2FleetNode
  * @see EC2FleetNodeComputer
  */
+@ThreadSafe
 public class EC2FleetAutoResubmitComputerLauncher extends DelegatingComputerLauncher {
 
     private static final Level LOG_LEVEL = Level.INFO;

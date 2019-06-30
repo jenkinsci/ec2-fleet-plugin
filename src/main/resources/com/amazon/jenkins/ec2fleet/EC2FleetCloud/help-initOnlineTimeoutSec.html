@@ -1,0 +1,26 @@
+Specify maximum time which Jenkins will wait for EC2 instance startup before
+trying to request new instance from fleet.
+
+<p>
+    By default Jenkins expect that node will be available immediately, however EC2 instance
+    requires some time to be provision, start and be ready for actual builds. In result
+    Jenkins might request more capacity then actually required (over-provision). This setting
+    avoids over-provision by force Jenkins to wait until EC2 instance will be online and
+    don't request more capacity.
+</p>
+
+<p>
+    In case of positive value, will force Jenkins to wait when EC2 instance will be online,
+    no more then specified time in seconds. Cannot be negative.
+    In case of <code>0</code>, timeout will be disabled and Jenkins will
+    not wait any time to start up EC2 instance, which could lead to over-provision.
+</p>
+<p>
+    <b>Note</b> Be careful with very big values (more 5 min) for this settings. In case of any problem
+    with node (no java, wrong version of java, Jenkins agent cannot start), so it cannot be online.
+    Jenkins will wait, without requesting additional capacity.
+</p>
+<p>
+    Behavior of previous versions of plugin could be represented as this version
+    with timeout set to <code>0</code>.
+</p>

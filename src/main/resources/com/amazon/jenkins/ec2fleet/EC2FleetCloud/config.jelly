@@ -91,6 +91,11 @@
     <f:entry title="${%Disable build resubmit}" field="disableTaskResubmit">
       <f:checkbox />
     </f:entry>
+
+    <f:description>Maximum time to wait for EC2 instance startup</f:description>
+    <f:entry title="${%Maximum Init Connection Timeout in sec}" field="initOnlineTimeoutSec">
+      <f:number clazz="required positive-number" default="180" />
+    </f:entry>
   </f:section>
 
 </j:jelly>
