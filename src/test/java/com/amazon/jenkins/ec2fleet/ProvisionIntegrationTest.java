@@ -20,6 +20,7 @@ import hudson.model.TaskListener;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.slaves.ComputerConnector;
 import hudson.slaves.ComputerLauncher;
+import jenkins.model.Jenkins;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -74,6 +75,8 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
         Assert.assertEquals(0, j.jenkins.getNodes().size());
 
+        triggerSuggestReviewNow("momo");
+
         Thread.sleep(TimeUnit.SECONDS.toMillis(30));
 
         Assert.assertEquals(0, j.jenkins.getNodes().size());
@@ -97,7 +100,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
         List<QueueTaskFuture> rs = getQueueTaskFutures(1);
 
-        j.jenkins.getLabelAtom("momo").nodeProvisioner.suggestReviewNow();
+        triggerSuggestReviewNow("momo");
 
         Assert.assertEquals(0, j.jenkins.getNodes().size());
 
@@ -129,10 +132,8 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
         List<QueueTaskFuture> rs = getQueueTaskFutures(1);
 
-        for (int i = 0; i < 5; i++) {
-            j.jenkins.getLabelAtom("momo").nodeProvisioner.suggestReviewNow();
-            Thread.sleep(TimeUnit.SECONDS.toMillis(2));
-        }
+        final String labelString = "momo";
+        triggerSuggestReviewNow(labelString);
 
         Thread.sleep(TimeUnit.MINUTES.toMillis(2));
 
@@ -157,10 +158,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
         getQueueTaskFutures(1);
 
-        for (int i = 0; i < 5; i++) {
-            j.jenkins.getLabelAtom("momo").nodeProvisioner.suggestReviewNow();
-            Thread.sleep(TimeUnit.SECONDS.toMillis(2));
-        }
+        triggerSuggestReviewNow("momo");
 
         tryUntil(new Runnable() {
             @Override
@@ -238,7 +236,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
         List<QueueTaskFuture> rs = getQueueTaskFutures(1);
 
-        j.jenkins.getLabelAtom("momo").nodeProvisioner.suggestReviewNow();
+        triggerSuggestReviewNow("momo");
 
         Assert.assertEquals(0, j.jenkins.getNodes().size());
 

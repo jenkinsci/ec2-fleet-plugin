@@ -26,6 +26,7 @@ import hudson.model.labels.LabelAtom;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.tasks.BatchFile;
 import hudson.tasks.Shell;
+import jenkins.model.Jenkins;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -36,6 +37,7 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -121,6 +123,17 @@ public abstract class IntegrationTest {
                 Assert.assertTrue(node.toComputer().isOnline());
             }
         });
+    }
+
+    protected void triggerSuggestReviewNow(@Nullable final String labelString) throws InterruptedException {
+        final Jenkins jenkins = j.jenkins;
+        if (jenkins == null) throw new NullPointerException("No jenkins in j!");
+
+        for (int i = 0; i < 5; i++) {
+            if (labelString == null) jenkins.unlabeledNodeProvisioner.suggestReviewNow();
+            else jenkins.getLabelAtom(labelString).nodeProvisioner.suggestReviewNow();
+            Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+        }
     }
 
     protected static void tryUntil(Runnable r) {
