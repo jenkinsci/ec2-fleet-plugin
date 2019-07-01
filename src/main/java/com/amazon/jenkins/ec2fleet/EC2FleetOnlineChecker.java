@@ -13,10 +13,20 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Takes EC2 instance ID and trying to connect to instance, in case of success create Jenkins node
- * {@link EC2FleetNode} otherwise return error.
+ * Keep {@link hudson.slaves.NodeProvisioner.PlannedNode#future} not resolved until node will not be online
+ * or timeout reached.
  * <p>
- * https://github.com/jenkinsci/ec2-plugin/blob/master/src/main/java/hudson/plugins/ec2/EC2Cloud.java#L640
+ * Default Jenkins node capacity planner {@link hudson.slaves.NodeProvisioner.Strategy} count planned nodes
+ * as available capacity, but exclude offline computers {@link Computer#isOnline()} from available capacity.
+ * Because EC2 instance requires some time when it was added into fleet to start up, next situation happens:
+ * plugin add described capacity as node into Jenkins pool, but Jenkins keeps it as offline as no way to connect,
+ * during time when node is offline, Jenkins will try to request more nodes from plugin as offline nodes
+ * excluded from capacity.
+ * <p>
+ * This class fix this situation and keep planned node until instance is really online, so Jenkins planner
+ * count planned node as available capacity and doesn't request more.
+ * <p>
+ * Based on https://github.com/jenkinsci/ec2-plugin/blob/master/src/main/java/hudson/plugins/ec2/EC2Cloud.java#L640
  *
  * @see EC2FleetCloud
  * @see EC2FleetNode
@@ -26,6 +36,7 @@ import java.util.logging.Logger;
 class EC2FleetOnlineChecker implements Runnable {
 
     private static final Logger LOGGER = Logger.getLogger(EC2FleetOnlineChecker.class.getName());
+    // use daemon thread, so no problem when stop jenkins
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());
 
     public static void start(final Node node, final SettableFuture<Node> future, final long timeout, final long interval) {
@@ -53,7 +64,7 @@ class EC2FleetOnlineChecker implements Runnable {
             return;
         }
 
-        if (interval < 1) {
+        if (timeout < 1) {
             future.set(node);
             LOGGER.log(Level.INFO, String.format("%s connection check disabled, resolve planned node", node.getNodeName()));
             return;
