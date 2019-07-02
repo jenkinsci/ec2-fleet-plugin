@@ -26,6 +26,10 @@ import java.util.logging.Logger;
  * This class fix this situation and keep planned node until instance is really online, so Jenkins planner
  * count planned node as available capacity and doesn't request more.
  * <p>
+ * Before each wait it will try to {@link Computer#connect(boolean)}, because by default Jenkins is trying to
+ * make a few short interval reconnection initially (when EC2 instance still is not ready) after that
+ * with big interval, experiment shows a few minutes and more.
+ * <p>
  * Based on https://github.com/jenkinsci/ec2-plugin/blob/master/src/main/java/hudson/plugins/ec2/EC2Cloud.java#L640
  *
  * @see EC2FleetCloud
@@ -64,15 +68,9 @@ class EC2FleetOnlineChecker implements Runnable {
             return;
         }
 
-        if (timeout < 1) {
+        if (timeout < 1 || interval < 1) {
             future.set(node);
             LOGGER.log(Level.INFO, String.format("%s connection check disabled, resolve planned node", node.getNodeName()));
-            return;
-        }
-
-        if (System.currentTimeMillis() - start > timeout) {
-            future.setException(new IllegalStateException(
-                    "Fail to provision node, cannot connect to " + node.getNodeName() + " in " + timeout + " msec"));
             return;
         }
 
@@ -85,7 +83,18 @@ class EC2FleetOnlineChecker implements Runnable {
             }
         }
 
-        LOGGER.log(Level.INFO, String.format("%s no connection, wait before retry", node.getNodeName()));
+        if (System.currentTimeMillis() - start > timeout) {
+            future.setException(new IllegalStateException(
+                    "Fail to provision node, cannot connect to " + node.getNodeName() + " in " + timeout + " msec"));
+            return;
+        }
+
+        if (computer == null) {
+            LOGGER.log(Level.INFO, String.format("%s no connection, wait before retry", node.getNodeName()));
+        } else {
+            computer.connect(false);
+            LOGGER.log(Level.INFO, String.format("%s no connection, connect and wait before retry", node.getNodeName()));
+        }
         EXECUTOR.schedule(this, interval, TimeUnit.MILLISECONDS);
     }
 

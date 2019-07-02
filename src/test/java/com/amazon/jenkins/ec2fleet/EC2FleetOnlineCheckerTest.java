@@ -20,6 +20,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -98,19 +99,17 @@ public class EC2FleetOnlineCheckerTest {
     }
 
     @Test
-    public void shouldSuccessfullyFinishAndNoWaitIfTimeoutIsZero() throws ExecutionException, InterruptedException {
+    public void shouldSuccessfullyFinishAndNoWaitIfIntervalIsZero() throws ExecutionException, InterruptedException {
         PowerMockito.when(computer.isOnline()).thenReturn(true);
 
-        EC2FleetOnlineChecker.start(node, future, 0, 10);
+        EC2FleetOnlineChecker.start(node, future, 10, 0);
 
         Assert.assertSame(node, future.get());
+        verifyZeroInteractions(computer);
     }
 
     @Test
-    public void shouldWaitIfConnectionIfFailed() throws InterruptedException, ExecutionException {
-        final Future failedFuture = Mockito.mock(Future.class);
-        when(failedFuture.get()).thenThrow(new ExecutionException(new UnsupportedOperationException()));
-
+    public void shouldWaitIfOffline() throws InterruptedException, ExecutionException {
         PowerMockito.when(computer.isOnline())
                 .thenReturn(false)
                 .thenReturn(false)
@@ -120,6 +119,22 @@ public class EC2FleetOnlineCheckerTest {
         EC2FleetOnlineChecker.start(node, future, 100, 10);
 
         Assert.assertSame(node, future.get());
+        verify(computer, times(3)).connect(false);
+    }
+
+    @Test
+    public void shouldWaitIfComputerIsNull() throws InterruptedException, ExecutionException {
+        PowerMockito.when(computer.isOnline()).thenReturn(true);
+
+        PowerMockito.when(node.toComputer())
+                .thenReturn(null)
+                .thenReturn(null)
+                .thenReturn(computer);
+
+        EC2FleetOnlineChecker.start(node, future, 100, 10);
+
+        Assert.assertSame(node, future.get());
+        verify(computer, times(1)).isOnline();
     }
 
 }
