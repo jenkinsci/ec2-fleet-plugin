@@ -32,6 +32,7 @@ import java.util.logging.Logger;
  * <p>
  * Based on https://github.com/jenkinsci/ec2-plugin/blob/master/src/main/java/hudson/plugins/ec2/EC2Cloud.java#L640
  *
+ *
  * @see EC2FleetCloud
  * @see EC2FleetNode
  */
