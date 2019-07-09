@@ -2,6 +2,7 @@ package com.amazon.jenkins.ec2fleet;
 
 import hudson.widgets.Widget;
 
+import javax.annotation.concurrent.ThreadSafe;
 import java.util.Objects;
 
 /**
@@ -12,6 +13,8 @@ import java.util.Objects;
  * @see EC2FleetStatusWidget
  * @see CloudNanny
  */
+@SuppressWarnings("WeakerAccess")
+@ThreadSafe
 public class EC2FleetStatusInfo extends Widget {
 
     private final String id;
@@ -32,6 +35,23 @@ public class EC2FleetStatusInfo extends Widget {
         return id;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        EC2FleetStatusInfo that = (EC2FleetStatusInfo) o;
+        return numActive == that.numActive &&
+                numDesired == that.numDesired &&
+                Objects.equals(id, that.id) &&
+                Objects.equals(state, that.state) &&
+                Objects.equals(label, that.label);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, state, label, numActive, numDesired);
+    }
+
     public String getLabel() {
         return label;
     }
@@ -46,22 +66,6 @@ public class EC2FleetStatusInfo extends Widget {
 
     public int getNumDesired() {
         return numDesired;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        EC2FleetStatusInfo that = (EC2FleetStatusInfo) o;
-        return numActive == that.numActive &&
-                numDesired == that.numDesired &&
-                Objects.equals(state, that.state) &&
-                Objects.equals(label, that.label);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(state, label, numActive, numDesired);
     }
 
 }

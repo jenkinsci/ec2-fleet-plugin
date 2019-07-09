@@ -101,7 +101,7 @@ public class CloudNannyTest {
         verify(widget1).setStatusList(ImmutableList.of(new EC2FleetStatusInfo(
                 cloud1.getFleet(), stats1.getState(), cloud1.getLabelString(), stats1.getNumActive(), stats1.getNumDesired())));
         verify(widget2).setStatusList(ImmutableList.of(new EC2FleetStatusInfo(
-                cloud2.getFleet(), stats1.getState(), cloud1.getLabelString(), stats1.getNumActive(), stats1.getNumDesired())));
+                cloud1.getFleet(), stats1.getState(), cloud1.getLabelString(), stats1.getNumActive(), stats1.getNumDesired())));
     }
 
     @Test
