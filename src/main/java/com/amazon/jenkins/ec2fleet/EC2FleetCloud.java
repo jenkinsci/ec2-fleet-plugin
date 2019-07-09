@@ -89,6 +89,10 @@ public class EC2FleetCloud extends Cloud {
     private final String awsCredentialsId;
     private final String region;
     private final String endpoint;
+
+    /**
+     * In fact fleet ID, not name or anything else
+     */
     private final String fleet;
     private final String fsRoot;
     private final ComputerConnector computerConnector;
@@ -217,7 +221,7 @@ public class EC2FleetCloud extends Cloud {
     }
 
     public String getLabelString() {
-        return this.labelString;
+        return labelString;
     }
 
     public int getIdleMinutes() {
