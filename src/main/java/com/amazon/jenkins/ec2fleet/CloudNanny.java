@@ -30,7 +30,7 @@ public class CloudNanny extends PeriodicWork {
     }
 
     @Override
-    protected void doRun() throws Exception {
+    protected void doRun() {
         final List<EC2FleetStatusInfo> info = new ArrayList<>();
         for (final Cloud cloud : getClouds()) {
             if (!(cloud instanceof EC2FleetCloud)) continue;

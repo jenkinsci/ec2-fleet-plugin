@@ -46,7 +46,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
 
-        EC2FleetCloud cloud = new EC2FleetCloud(null, "credId", null, "region",
+        EC2FleetCloud cloud = new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 0, 1, false, false,
                 false, 0, 0, false);
@@ -89,7 +89,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
 
-        EC2FleetCloud cloud = new EC2FleetCloud(null, "credId", null, "region",
+        EC2FleetCloud cloud = new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 1, false, false,
                 false, 0, 0, false);
@@ -121,7 +121,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
 
-        EC2FleetCloud cloud = spy(new EC2FleetCloud(null, "credId", null, "region",
+        EC2FleetCloud cloud = spy(new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 1, false, false,
                 false, 300, 15, false));
@@ -147,7 +147,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
 
-        final EC2FleetCloud cloud = spy(new EC2FleetCloud(null, "credId", null, "region",
+        final EC2FleetCloud cloud = spy(new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 1, false, false,
                 false, 0, 0, false));
@@ -172,7 +172,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
 
-        EC2FleetCloud cloud = spy(new EC2FleetCloud(null, "credId", null, "region",
+        EC2FleetCloud cloud = spy(new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 1, false, false,
                 false, 0, 0, false));
@@ -224,7 +224,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
 
-        EC2FleetCloud cloud = new EC2FleetCloud(null, "credId", null, "region",
+        EC2FleetCloud cloud = new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 1, true, false,
                 false, 0, 0, false);

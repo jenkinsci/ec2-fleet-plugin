@@ -42,7 +42,7 @@ public class UiIntegrationTest {
 
     @Test
     public void shouldShowInConfigurationClouds() throws IOException, SAXException {
-        Cloud cloud = new EC2FleetCloud(null, null, null, null, null, null,
+        Cloud cloud = new EC2FleetCloud(null, null, null, null, null, null, null,
                 null, null, null, false, false,
                 0, 0, 0, 0, false, false,
                 false, 0, 0, false);
@@ -56,13 +56,13 @@ public class UiIntegrationTest {
 
     @Test
     public void shouldShowMultipleClouds() throws IOException, SAXException {
-        Cloud cloud1 = new EC2FleetCloud("a", null, null, null, null,
+        Cloud cloud1 = new EC2FleetCloud("a", null, null, null, null, null,
                 null, null, null, null, false, false,
                 0, 0, 0, 0, false, false,
                 false, 0, 0, false);
         j.jenkins.clouds.add(cloud1);
 
-        Cloud cloud2 = new EC2FleetCloud("b", null, null, null, null,
+        Cloud cloud2 = new EC2FleetCloud("b", null, null, null, null, null,
                 null, null, null, null, false, false,
                 0, 0, 0, 0, false, false,
                 false, 0, 0, false);
@@ -79,13 +79,13 @@ public class UiIntegrationTest {
 
     @Test
     public void shouldShowMultipleCloudsWithDefaultName() throws IOException, SAXException {
-        Cloud cloud1 = new EC2FleetCloud(null, null, null, null, null,
+        Cloud cloud1 = new EC2FleetCloud(null, null, null, null, null, null,
                 null, null, null, null, false, false,
                 0, 0, 0, 0, false, false,
                 false, 0, 0, false);
         j.jenkins.clouds.add(cloud1);
 
-        Cloud cloud2 = new EC2FleetCloud(null, null, null, null, null,
+        Cloud cloud2 = new EC2FleetCloud(null, null, null, null, null, null,
                 null, null, null, null, false, false,
                 0, 0, 0, 0, false, false,
                 false, 0, 0, false);
@@ -102,13 +102,13 @@ public class UiIntegrationTest {
 
     @Test
     public void shouldUpdateProperCloudWhenMultiple() throws IOException, SAXException {
-        EC2FleetCloud cloud1 = new EC2FleetCloud(null, null, null, null, null,
+        EC2FleetCloud cloud1 = new EC2FleetCloud(null, null, null, null, null, null,
                 null, null, null, null, false, false,
                 0, 0, 0, 0, false, false,
                 false, 0, 0, false);
         j.jenkins.clouds.add(cloud1);
 
-        EC2FleetCloud cloud2 = new EC2FleetCloud(null, null, null, null, null,
+        EC2FleetCloud cloud2 = new EC2FleetCloud(null, null, null, null, null, null,
                 null, null, null, null, false, false,
                 0, 0, 0, 0, false, false,
                 false, 0, 0, false);
@@ -127,13 +127,13 @@ public class UiIntegrationTest {
 
     @Test
     public void shouldGetFirstWhenMultipleCloudWithSameName() {
-        EC2FleetCloud cloud1 = new EC2FleetCloud(null, null, null, null, null,
+        EC2FleetCloud cloud1 = new EC2FleetCloud(null, null, null, null, null, null,
                 null, null, null, null, false, false,
                 0, 0, 0, 0, false, false,
                 false, 0, 0, false);
         j.jenkins.clouds.add(cloud1);
 
-        EC2FleetCloud cloud2 = new EC2FleetCloud(null, null, null, null, null,
+        EC2FleetCloud cloud2 = new EC2FleetCloud(null, null, null, null, null, null,
                 null, null, null, null, false, false,
                 0, 0, 0, 0, false, false,
                 false, 0, 0, false);
@@ -144,13 +144,13 @@ public class UiIntegrationTest {
 
     @Test
     public void shouldGetProperWhenMultipleWithDiffName() {
-        EC2FleetCloud cloud1 = new EC2FleetCloud("a", null, null, null, null,
+        EC2FleetCloud cloud1 = new EC2FleetCloud("a", null, null, null, null, null,
                 null, null, null, null, false, false,
                 0, 0, 0, 0, false, false,
                 false, 0, 0, false);
         j.jenkins.clouds.add(cloud1);
 
-        EC2FleetCloud cloud2 = new EC2FleetCloud("b", null, null, null, null,
+        EC2FleetCloud cloud2 = new EC2FleetCloud("b", null, null, null, null, null,
                 null, null, null, null, false, false,
                 0, 0, 0, 0, false, false,
                 false, 0, 0, false);

@@ -4,11 +4,16 @@
          xmlns:t="/lib/hudson" xmlns:f="/lib/form"
          xmlns:c="/lib/credentials">
 
-
   <f:section title="${%Spot Fleet Configuration}">
     <f:entry title="${%Name}" field="name">
         <f:textbox default="FleetCloud"/>
     </f:entry>
+
+    <!-- we use this hidden field to be able detect previos name of cloud
+     see javadoc for EC2FleetCloudAware -->
+    <f:invisibleEntry>
+        <f:textbox field="oldName" />
+    </f:invisibleEntry>
 
     <f:entry title="${%AWS Credentials}" field="awsCredentialsId">
       <c:select/>

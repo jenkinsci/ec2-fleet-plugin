@@ -13,7 +13,7 @@ import java.util.Objects;
  * @see EC2FleetStatusWidget
  * @see CloudNanny
  */
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings({"WeakerAccess", "unused"})
 @ThreadSafe
 public class EC2FleetStatusInfo extends Widget {
 

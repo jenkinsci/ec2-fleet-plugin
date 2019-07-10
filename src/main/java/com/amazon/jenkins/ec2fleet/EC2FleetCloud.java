@@ -122,6 +122,7 @@ public class EC2FleetCloud extends Cloud {
 
     @DataBoundConstructor
     public EC2FleetCloud(final String name,
+                         final String oldName,
                          final String awsCredentialsId,
                          final @Deprecated String credentialsId,
                          final String region,
@@ -164,6 +165,12 @@ public class EC2FleetCloud extends Cloud {
         this.disableTaskResubmit = disableTaskResubmit;
         this.initOnlineTimeoutSec = initOnlineTimeoutSec;
         this.initOnlineCheckIntervalSec = initOnlineCheckIntervalSec;
+
+        if (StringUtils.isNotEmpty(oldName)) {
+            // existent cloud was modified, let's re-assign all dependencies of old cloud instance
+            // to new one
+            EC2FleetCloudAwareUtils.reassign(oldName, this);
+        }
     }
 
     /**
@@ -174,6 +181,18 @@ public class EC2FleetCloud extends Cloud {
      */
     public String getAwsCredentialsId() {
         return StringUtils.isNotBlank(awsCredentialsId) ? awsCredentialsId : credentialsId;
+    }
+
+    /**
+     * config.jelly needs this method to get current name and store it in field for old name
+     * which will be send back to new instance of cloud so we can find resources from old cloud
+     * if name was changed
+     *
+     * @return current name
+     * @see EC2FleetCloudAware
+     */
+    public String getOldName() {
+        return name;
     }
 
     public boolean isDisableTaskResubmit() {
@@ -527,14 +546,14 @@ public class EC2FleetCloud extends Cloud {
         }
 
         final EC2FleetAutoResubmitComputerLauncher computerLauncher = new EC2FleetAutoResubmitComputerLauncher(
-                computerConnector.launch(address, TaskListener.NULL), disableTaskResubmit);
+                computerConnector.launch(address, TaskListener.NULL));
         final Node.Mode nodeMode = restrictUsage ? Node.Mode.EXCLUSIVE : Node.Mode.NORMAL;
         final EC2FleetNode node = new EC2FleetNode(instanceId, "Fleet slave for " + instanceId,
                 effectiveFsRoot, effectiveNumExecutors, nodeMode, labelString, new ArrayList<NodeProperty<?>>(),
-                name, computerLauncher);
+                this, computerLauncher);
 
         // Initialize our retention strategy
-        node.setRetentionStrategy(new IdleRetentionStrategy(this));
+        node.setRetentionStrategy(new IdleRetentionStrategy());
 
         final Jenkins jenkins = Jenkins.getInstance();
         //noinspection SynchronizationOnLocalVariableOrMethodParameter

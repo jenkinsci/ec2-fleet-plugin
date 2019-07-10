@@ -29,6 +29,7 @@ import java.util.logging.Logger;
  * @see EC2FleetNode
  * @see EC2FleetNodeComputer
  */
+@SuppressWarnings("WeakerAccess")
 @ThreadSafe
 public class EC2FleetAutoResubmitComputerLauncher extends DelegatingComputerLauncher {
 
@@ -41,12 +42,8 @@ public class EC2FleetAutoResubmitComputerLauncher extends DelegatingComputerLaun
      */
     private static final int RESCHEDULE_QUIET_PERIOD_SEC = 10;
 
-    private final boolean disableTaskResubmit;
-
-    protected EC2FleetAutoResubmitComputerLauncher(
-            final ComputerLauncher launcher, final boolean disableTaskResubmit) {
+    public EC2FleetAutoResubmitComputerLauncher(final ComputerLauncher launcher) {
         super(launcher);
-        this.disableTaskResubmit = disableTaskResubmit;
     }
 
     /**
@@ -77,8 +74,19 @@ public class EC2FleetAutoResubmitComputerLauncher extends DelegatingComputerLaun
      */
     @Override
     public void afterDisconnect(final SlaveComputer computer, final TaskListener listener) {
+        // according to jenkins docs could be null in edge cases, check ComputerLauncher.afterDisconnect
+        if (computer == null) return;
+
+        // in some multi-thread edge cases cloud could be null for some time, just be ok with that
+        final EC2FleetCloud cloud = ((EC2FleetNodeComputer) computer).getCloud();
+        if (cloud == null) {
+            LOGGER.warning("Edge case cloud is null for computer " + computer.getDisplayName()
+                    + " should be autofixed in a few minutes, if no please create issue for plugin");
+            return;
+        }
+
         final boolean unexpectedDisconnect = computer.isOffline() && computer.getOfflineCause() instanceof OfflineCause.ChannelTermination;
-        if (!disableTaskResubmit && unexpectedDisconnect) {
+        if (!cloud.isDisableTaskResubmit() && unexpectedDisconnect) {
             final List<Executor> executors = computer.getExecutors();
             LOGGER.log(LOG_LEVEL, "Unexpected " + computer.getDisplayName()
                     + " termination,  resubmit");
@@ -109,7 +117,7 @@ public class EC2FleetAutoResubmitComputerLauncher extends DelegatingComputerLaun
         } else {
             LOGGER.log(LOG_LEVEL, "Unexpected " + computer.getDisplayName()
                     + " termination but resubmit disabled, no actions, disableTaskResubmit: "
-                    + disableTaskResubmit + ", offline: " + computer.isOffline()
+                    + cloud.isDisableTaskResubmit() + ", offline: " + computer.isOffline()
                     + ", offlineCause: " + (computer.getOfflineCause() != null ? computer.getOfflineCause().getClass() : "null"));
         }
 
