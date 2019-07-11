@@ -6,7 +6,11 @@ import com.gargoylesoftware.htmlunit.html.HtmlFormUtil;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlTextInput;
 import hudson.PluginWrapper;
+import hudson.model.Node;
 import hudson.slaves.Cloud;
+import hudson.slaves.NodeProperty;
+import org.apache.commons.lang.StringUtils;
+import org.hamcrest.Matchers;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -20,7 +24,10 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Detailed guides https://jenkins.io/doc/developer/testing/
@@ -41,6 +48,44 @@ public class UiIntegrationTest {
     }
 
     @Test
+    public void shouldShowAsHiddenCloudIdAsOldId() throws IOException, SAXException {
+        Cloud cloud = new EC2FleetCloud(null, null, null, null, null, null, null,
+                null, null, null, false, false,
+                0, 0, 0, 0, false, false,
+                false, 0, 0, false);
+        j.jenkins.clouds.add(cloud);
+
+        HtmlPage page = j.createWebClient().goTo("configure");
+
+        assertTrue(StringUtils.isNotBlank(((HtmlTextInput) getElementsByNameWithoutJdk(page, "_.oldId").get(0)).getText()));
+    }
+
+    @Test
+    public void shouldReplaceCloudForNodesAfterConfigurationSave() throws Exception {
+        EC2FleetCloud cloud = new EC2FleetCloud(null, null, null, null, null, null, null,
+                null, null, null, false, false,
+                0, 0, 0, 0, false, false,
+                false, 0, 0, false);
+        j.jenkins.clouds.add(cloud);
+
+        j.jenkins.addNode(new EC2FleetNode("mock", "", "", 1,
+                Node.Mode.EXCLUSIVE, "", new ArrayList<NodeProperty<?>>(), cloud,
+                j.createComputerLauncher(null)));
+
+        HtmlPage page = j.createWebClient().goTo("configure");
+        HtmlForm form = page.getFormByName("config");
+
+        ((HtmlTextInput) getElementsByNameWithoutJdk(page, "_.name").get(0)).setText("a");
+
+        HtmlFormUtil.submit(form);
+
+        final Cloud newCloud = j.jenkins.clouds.get(0);
+        assertNotSame(cloud, newCloud);
+
+        assertSame(newCloud, ((EC2FleetNode) j.jenkins.getNode("mock")).getCloud());
+    }
+
+    @Test
     public void shouldShowInConfigurationClouds() throws IOException, SAXException {
         Cloud cloud = new EC2FleetCloud(null, null, null, null, null, null, null,
                 null, null, null, false, false,
@@ -49,7 +94,6 @@ public class UiIntegrationTest {
         j.jenkins.clouds.add(cloud);
 
         HtmlPage page = j.createWebClient().goTo("configure");
-        System.out.println(page);
 
         assertEquals("ec2-fleet", ((HtmlTextInput) getElementsByNameWithoutJdk(page, "_.labelString").get(1)).getText());
     }
@@ -69,7 +113,6 @@ public class UiIntegrationTest {
         j.jenkins.clouds.add(cloud2);
 
         HtmlPage page = j.createWebClient().goTo("configure");
-        System.out.println(page);
 
         List<DomElement> elementsByName = getElementsByNameWithoutJdk(page, "_.name");
         assertEquals(2, elementsByName.size());
@@ -92,7 +135,6 @@ public class UiIntegrationTest {
         j.jenkins.clouds.add(cloud2);
 
         HtmlPage page = j.createWebClient().goTo("configure");
-        System.out.println(page);
 
         List<DomElement> elementsByName = getElementsByNameWithoutJdk(page, "_.name");
         assertEquals(2, elementsByName.size());

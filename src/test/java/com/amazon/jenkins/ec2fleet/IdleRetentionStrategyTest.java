@@ -1,6 +1,5 @@
 package com.amazon.jenkins.ec2fleet;
 
-import hudson.model.Slave;
 import hudson.slaves.SlaveComputer;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,10 +27,10 @@ public class IdleRetentionStrategyTest {
     private EC2FleetCloud cloud;
 
     @Mock
-    private SlaveComputer slaveComputer;
+    private EC2FleetNodeComputer slaveComputer;
 
     @Mock
-    private Slave slave;
+    private EC2FleetNode slave;
 
     @Before
     public void before() {
@@ -41,6 +40,7 @@ public class IdleRetentionStrategyTest {
         PowerMockito.when(slaveComputer.isIdle()).thenReturn(true);
         when(slave.getNodeName()).thenReturn("n-a");
         when(slaveComputer.isAcceptingTasks()).thenReturn(true);
+        when(slaveComputer.getCloud()).thenReturn(cloud);
     }
 
     @Test
@@ -86,6 +86,17 @@ public class IdleRetentionStrategyTest {
         verify(cloud, times(1)).terminateInstance("n-a");
         verify(slaveComputer, times(1)).setAcceptingTasks(true);
         verify(slaveComputer, times(1)).setAcceptingTasks(false);
+    }
+
+    @Test
+    public void if_computer_has_no_cloud_should_do_nothing() {
+        when(slaveComputer.getCloud()).thenReturn(null);
+
+        new IdleRetentionStrategy().check(slaveComputer);
+
+        verify(cloud, times(0)).terminateInstance(anyString());
+        verify(slaveComputer, times(0)).setAcceptingTasks(true);
+        verify(slaveComputer, times(0)).setAcceptingTasks(false);
     }
 
     @Test

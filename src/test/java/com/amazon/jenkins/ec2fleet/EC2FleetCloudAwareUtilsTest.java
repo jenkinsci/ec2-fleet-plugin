@@ -50,12 +50,12 @@ public class EC2FleetCloudAwareUtilsTest {
         PowerMockito.mockStatic(Jenkins.class);
         PowerMockito.when(Jenkins.getActiveInstance()).thenReturn(jenkins);
 
-        when(oldCloud.getDisplayName()).thenReturn("cloud");
+        when(oldCloud.getOldId()).thenReturn("cloud");
         when(computer.getCloud()).thenReturn(oldCloud);
         when(node.getCloud()).thenReturn(oldCloud);
 
-        when(cloud.getDisplayName()).thenReturn("cloud");
-        when(otherCloud.getDisplayName()).thenReturn("other");
+        when(cloud.getOldId()).thenReturn("cloud");
+        when(otherCloud.getOldId()).thenReturn("other");
 
         when(jenkins.getNodes()).thenReturn(Collections.<Node>emptyList());
         when(jenkins.getComputers()).thenReturn(new Computer[0]);
@@ -67,7 +67,7 @@ public class EC2FleetCloudAwareUtilsTest {
     }
 
     @Test
-    public void reassign_nothing_if_computers_belong_to_diff_cloud_name() {
+    public void reassign_nothing_if_computers_belong_to_diff_cloud_id() {
         when(jenkins.getNodes()).thenReturn(Collections.<Node>emptyList());
         when(computer.getCloud()).thenReturn(otherCloud);
         when(jenkins.getComputers()).thenReturn(new Computer[]{computer});
@@ -104,6 +104,17 @@ public class EC2FleetCloudAwareUtilsTest {
         EC2FleetCloudAwareUtils.reassign("cloud", cloud);
 
         verify(node, times(1)).setCloud(cloud);
+    }
+
+    @Test
+    public void reassign_nothing_if_node_belong_to_other_cloud_id() {
+        when(computer.getCloud()).thenReturn(cloud);
+        when(node.getCloud()).thenReturn(otherCloud);
+        when(jenkins.getNodes()).thenReturn(Arrays.asList((Node) node));
+
+        EC2FleetCloudAwareUtils.reassign("cloud", cloud);
+
+        verify(node, times(0)).setCloud(cloud);
     }
 
 }

@@ -70,6 +70,22 @@ public class EC2FleetCloud extends Cloud {
     private static final Logger LOGGER = Logger.getLogger(EC2FleetCloud.class.getName());
 
     /**
+     * Provide unique identifier for this instance of {@link EC2FleetCloud}, <code>transient</code>
+     * will not be stored. Not available for customer, instead use {@link EC2FleetCloud#name}
+     * will be used only during Jenkins configuration update <code>config.jelly</code>,
+     * when new instance of same cloud is created and we need to find old instance and
+     * repoint resources like {@link Computer} {@link Node} etc.
+     * <p>
+     * It's lazy to support old versions which don't have this field at all.
+     * <p>
+     * However it's stable, as soon as it will be created and called first uuid will be same
+     * for all future calls to the same instances of lazy uuid.
+     *
+     * @see EC2FleetCloudAware
+     */
+    private transient LazyUuid id;
+
+    /**
      * Replaced with {@link EC2FleetCloud#awsCredentialsId}
      * <p>
      * Plugin is using {@link EC2FleetCloud#computerConnector} for node connection credentials
@@ -122,7 +138,7 @@ public class EC2FleetCloud extends Cloud {
 
     @DataBoundConstructor
     public EC2FleetCloud(final String name,
-                         final String oldName,
+                         final String oldId,
                          final String awsCredentialsId,
                          final @Deprecated String credentialsId,
                          final String region,
@@ -166,10 +182,10 @@ public class EC2FleetCloud extends Cloud {
         this.initOnlineTimeoutSec = initOnlineTimeoutSec;
         this.initOnlineCheckIntervalSec = initOnlineCheckIntervalSec;
 
-        if (StringUtils.isNotEmpty(oldName)) {
+        if (StringUtils.isNotEmpty(oldId)) {
             // existent cloud was modified, let's re-assign all dependencies of old cloud instance
             // to new one
-            EC2FleetCloudAwareUtils.reassign(oldName, this);
+            EC2FleetCloudAwareUtils.reassign(oldId, this);
         }
     }
 
@@ -184,15 +200,13 @@ public class EC2FleetCloud extends Cloud {
     }
 
     /**
-     * config.jelly needs this method to get current name and store it in field for old name
-     * which will be send back to new instance of cloud so we can find resources from old cloud
-     * if name was changed
+     * Called old as will be used by new instance of cloud, for
+     * which this id is old (not current)
      *
-     * @return current name
-     * @see EC2FleetCloudAware
+     * @return id of current cloud
      */
-    public String getOldName() {
-        return name;
+    public String getOldId() {
+        return id.getValue();
     }
 
     public boolean isDisableTaskResubmit() {
@@ -486,6 +500,8 @@ public class EC2FleetCloud extends Cloud {
     }
 
     private void initCaches() {
+        id = new LazyUuid();
+
         plannedNodesCache = new HashSet<>();
         fleetInstancesCache = new HashSet<>();
         dyingFleetInstancesCache = new HashSet<>();
