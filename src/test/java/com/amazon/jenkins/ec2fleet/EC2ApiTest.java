@@ -9,7 +9,6 @@ import com.amazonaws.services.ec2.model.InstanceState;
 import com.amazonaws.services.ec2.model.InstanceStateName;
 import com.amazonaws.services.ec2.model.Reservation;
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.internal.guava.collect.$ImmutableMap;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -235,7 +234,7 @@ public class EC2ApiTest {
         final Map<String, Instance> described = new EC2Api().describeInstances(amazonEC2, instanceIds);
 
         // then
-        Assert.assertEquals($ImmutableMap.of("i-3", instance3), described);
+        Assert.assertEquals(ImmutableMap.of("i-3", instance3), described);
         verify(amazonEC2).describeInstances(new DescribeInstancesRequest().withInstanceIds(Arrays.asList("i-1", "i-3", "i-f")));
         verify(amazonEC2).describeInstances(new DescribeInstancesRequest().withInstanceIds(Arrays.asList("i-3")));
         verifyNoMoreInteractions(amazonEC2);
