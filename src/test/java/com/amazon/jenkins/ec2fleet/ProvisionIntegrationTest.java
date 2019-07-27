@@ -52,7 +52,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                 false, 0, 0, false);
         j.jenkins.clouds.add(cloud);
 
-        EC2Api ec2Api = mock(EC2Api.class);
+        EC2Api ec2Api = spy(EC2Api.class);
         Registry.setEc2Api(ec2Api);
 
         AmazonEC2 amazonEC2 = mock(AmazonEC2.class);
@@ -178,7 +178,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                 false, 0, 0, false));
         j.jenkins.clouds.add(cloud);
 
-        EC2Api ec2Api = mock(EC2Api.class);
+        EC2Api ec2Api = spy(EC2Api.class);
         Registry.setEc2Api(ec2Api);
 
         AmazonEC2 amazonEC2 = mock(AmazonEC2.class);

@@ -50,6 +50,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 /**
@@ -185,7 +186,7 @@ public abstract class IntegrationTest {
     }
 
     protected void mockEc2ApiToDescribeInstancesWhenModified(final InstanceStateName instanceStateName) {
-        EC2Api ec2Api = mock(EC2Api.class);
+        EC2Api ec2Api = spy(EC2Api.class);
         Registry.setEc2Api(ec2Api);
 
         AmazonEC2 amazonEC2 = mock(AmazonEC2.class);

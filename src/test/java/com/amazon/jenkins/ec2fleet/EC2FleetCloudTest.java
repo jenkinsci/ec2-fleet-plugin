@@ -3,21 +3,18 @@ package com.amazon.jenkins.ec2fleet;
 import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2Client;
-import com.amazonaws.services.ec2.model.ActiveInstance;
 import com.amazonaws.services.ec2.model.BatchState;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.DescribeRegionsResult;
-import com.amazonaws.services.ec2.model.DescribeSpotFleetInstancesRequest;
-import com.amazonaws.services.ec2.model.DescribeSpotFleetInstancesResult;
 import com.amazonaws.services.ec2.model.DescribeSpotFleetRequestsRequest;
 import com.amazonaws.services.ec2.model.DescribeSpotFleetRequestsResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Region;
 import com.amazonaws.services.ec2.model.Reservation;
-import com.amazonaws.services.ec2.model.SpotFleetLaunchSpecification;
 import com.amazonaws.services.ec2.model.SpotFleetRequestConfig;
-import com.amazonaws.services.ec2.model.SpotFleetRequestConfigData;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import hudson.ExtensionList;
 import hudson.model.LabelFinder;
 import hudson.model.Node;
@@ -43,6 +40,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -54,7 +52,8 @@ import static org.mockito.Mockito.when;
 
 @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Jenkins.class, EC2FleetCloud.class, EC2FleetCloud.DescriptorImpl.class, LabelFinder.class})
+@PrepareForTest({Jenkins.class, EC2FleetCloud.class, EC2FleetCloud.DescriptorImpl.class,
+        LabelFinder.class, FleetStateStats.class})
 public class EC2FleetCloudTest {
 
     private SpotFleetRequestConfig spotFleetRequestConfig1;
@@ -95,6 +94,8 @@ public class EC2FleetCloudTest {
 
         PowerMockito.mockStatic(LabelFinder.class);
 
+        PowerMockito.mockStatic(FleetStateStats.class);
+
         PowerMockito.mockStatic(Jenkins.class);
         PowerMockito.when(Jenkins.getInstance()).thenReturn(jenkins);
     }
@@ -109,21 +110,12 @@ public class EC2FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        DescribeSpotFleetInstancesResult describeSpotFleetInstancesResult = new DescribeSpotFleetInstancesResult();
-        when(amazonEC2.describeSpotFleetInstances(any(DescribeSpotFleetInstancesRequest.class)))
-                .thenReturn(describeSpotFleetInstancesResult);
-
-        DescribeSpotFleetRequestsResult describeSpotFleetRequestsResult = new DescribeSpotFleetRequestsResult();
-        describeSpotFleetRequestsResult.setSpotFleetRequestConfigs(Arrays.asList(
-                new SpotFleetRequestConfig()
-                        .withSpotFleetRequestState("active")
-                        .withSpotFleetRequestConfig(
-                                new SpotFleetRequestConfigData().withTargetCapacity(0))));
-        when(amazonEC2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenReturn(describeSpotFleetRequestsResult);
+        PowerMockito.when(FleetStateStats.readClusterState(any(AmazonEC2.class), anyString(), anyString()))
+                .thenReturn(new FleetStateStats("", 0, "active",
+                        Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
         EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
-                "", null, null, null, null, false,
+                "", "", "", null, null, false,
                 false, 0, 0, 1, 1, false,
                 false, false, 0, 0, false);
 
@@ -139,21 +131,12 @@ public class EC2FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        DescribeSpotFleetInstancesResult describeSpotFleetInstancesResult = new DescribeSpotFleetInstancesResult();
-        when(amazonEC2.describeSpotFleetInstances(any(DescribeSpotFleetInstancesRequest.class)))
-                .thenReturn(describeSpotFleetInstancesResult);
-
-        DescribeSpotFleetRequestsResult describeSpotFleetRequestsResult = new DescribeSpotFleetRequestsResult();
-        describeSpotFleetRequestsResult.setSpotFleetRequestConfigs(Arrays.asList(
-                new SpotFleetRequestConfig()
-                        .withSpotFleetRequestState("active")
-                        .withSpotFleetRequestConfig(
-                                new SpotFleetRequestConfigData().withTargetCapacity(0))));
-        when(amazonEC2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenReturn(describeSpotFleetRequestsResult);
+        PowerMockito.when(FleetStateStats.readClusterState(any(AmazonEC2.class), anyString(), anyString()))
+                .thenReturn(new FleetStateStats("fleetId", 0, "active",
+                        Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
         EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
-                "", "fleetId", null, null, null, false,
+                "", "fleetId", "", null, null, false,
                 false, 0, 0, 1, 1,
                 false, false, false, 0,
                 0, false);
@@ -172,36 +155,21 @@ public class EC2FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        DescribeInstancesResult describeInstancesResult = new DescribeInstancesResult();
-        describeInstancesResult.withReservations(
-                new Reservation().withInstances(new Instance()
-                        .withPublicIpAddress("p-ip")
-                        .withInstanceId("i-0")));
+        final Instance instance = new Instance()
+                .withPublicIpAddress("p-ip")
+                .withInstanceId("i-0");
 
-        when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class)))
-                .thenReturn(describeInstancesResult);
+        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+                ImmutableMap.of("i-0", instance));
 
-        DescribeSpotFleetInstancesResult describeSpotFleetInstancesResult = new DescribeSpotFleetInstancesResult();
-        describeSpotFleetInstancesResult.setActiveInstances(Arrays.asList(
-                new ActiveInstance().withInstanceId("i-0")
-        ));
-
-        when(amazonEC2.describeSpotFleetInstances(any(DescribeSpotFleetInstancesRequest.class)))
-                .thenReturn(describeSpotFleetInstancesResult);
-
-        DescribeSpotFleetRequestsResult describeSpotFleetRequestsResult = new DescribeSpotFleetRequestsResult();
-        describeSpotFleetRequestsResult.setSpotFleetRequestConfigs(Arrays.asList(
-                new SpotFleetRequestConfig()
-                        .withSpotFleetRequestState("active")
-                        .withSpotFleetRequestConfig(
-                                new SpotFleetRequestConfigData().withTargetCapacity(0))));
-        when(amazonEC2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenReturn(describeSpotFleetRequestsResult);
+        PowerMockito.when(FleetStateStats.readClusterState(any(AmazonEC2.class), anyString(), anyString()))
+                .thenReturn(new FleetStateStats("fleetId", 0, "active",
+                        ImmutableSet.of("i-0"), Collections.<String, Double>emptyMap()));
 
         mockNodeCreatingPart();
 
         EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
-                "", "fleetId", null, null, PowerMockito.mock(ComputerConnector.class), false,
+                "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 1,
                 false, false, false,
                 0, 0, false);
@@ -227,36 +195,21 @@ public class EC2FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        DescribeInstancesResult describeInstancesResult = new DescribeInstancesResult();
-        describeInstancesResult.withReservations(
-                new Reservation().withInstances(new Instance()
-                        .withPublicIpAddress("p-ip")
-                        .withInstanceId("i-0")));
+        PowerMockito.when(FleetStateStats.readClusterState(any(AmazonEC2.class), anyString(), anyString()))
+                .thenReturn(new FleetStateStats("fleetId", 0, "active",
+                        ImmutableSet.of("i-0"), Collections.<String, Double>emptyMap()));
 
-        when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class)))
-                .thenReturn(describeInstancesResult);
+        final Instance instance = new Instance()
+                .withPublicIpAddress("p-ip")
+                .withInstanceId("i-0");
 
-        DescribeSpotFleetInstancesResult describeSpotFleetInstancesResult = new DescribeSpotFleetInstancesResult();
-        describeSpotFleetInstancesResult.setActiveInstances(Arrays.asList(
-                new ActiveInstance().withInstanceId("i-0")
-        ));
-
-        when(amazonEC2.describeSpotFleetInstances(any(DescribeSpotFleetInstancesRequest.class)))
-                .thenReturn(describeSpotFleetInstancesResult);
-
-        DescribeSpotFleetRequestsResult describeSpotFleetRequestsResult = new DescribeSpotFleetRequestsResult();
-        describeSpotFleetRequestsResult.setSpotFleetRequestConfigs(Arrays.asList(
-                new SpotFleetRequestConfig()
-                        .withSpotFleetRequestState("active")
-                        .withSpotFleetRequestConfig(
-                                new SpotFleetRequestConfigData().withTargetCapacity(0))));
-        when(amazonEC2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenReturn(describeSpotFleetRequestsResult);
+        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+                ImmutableMap.of("i-0", instance));
 
         mockNodeCreatingPart();
 
         EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
-                "", "fleetId", null, null, PowerMockito.mock(ComputerConnector.class), false,
+                "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 1, false,
                 true, false,
                 0, 0, false);
@@ -282,43 +235,24 @@ public class EC2FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        DescribeInstancesResult describeInstancesResult = new DescribeInstancesResult();
         final String instanceType = "t";
-        describeInstancesResult.withReservations(
-                new Reservation().withInstances(new Instance()
-                        .withPublicIpAddress("p-ip")
-                        .withInstanceType(instanceType)
-                        .withInstanceId("i-0")));
+        final Instance instance = new Instance()
+                .withPublicIpAddress("p-ip")
+                .withInstanceType(instanceType)
+                .withInstanceId("i-0");
 
-        when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class)))
-                .thenReturn(describeInstancesResult);
+        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+                ImmutableMap.of("i-0", instance));
 
-        DescribeSpotFleetInstancesResult describeSpotFleetInstancesResult = new DescribeSpotFleetInstancesResult();
-        describeSpotFleetInstancesResult.setActiveInstances(Arrays.asList(
-                new ActiveInstance().withInstanceId("i-0")
-        ));
-
-        when(amazonEC2.describeSpotFleetInstances(any(DescribeSpotFleetInstancesRequest.class)))
-                .thenReturn(describeSpotFleetInstancesResult);
-
-        DescribeSpotFleetRequestsResult describeSpotFleetRequestsResult = new DescribeSpotFleetRequestsResult();
-        describeSpotFleetRequestsResult.setSpotFleetRequestConfigs(Arrays.asList(
-                new SpotFleetRequestConfig()
-                        .withSpotFleetRequestState("active")
-                        .withSpotFleetRequestConfig(
-                                new SpotFleetRequestConfigData()
-                                        .withLaunchSpecifications(
-                                                new SpotFleetLaunchSpecification()
-                                                        .withInstanceType(instanceType)
-                                                        .withWeightedCapacity(1.1))
-                                        .withTargetCapacity(0))));
-        when(amazonEC2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenReturn(describeSpotFleetRequestsResult);
+        PowerMockito.when(FleetStateStats.readClusterState(any(AmazonEC2.class), anyString(), anyString()))
+                .thenReturn(new FleetStateStats("fleetId", 0, "active",
+                        ImmutableSet.of("i-0"),
+                        ImmutableMap.of(instanceType, 1.1)));
 
         mockNodeCreatingPart();
 
         EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
-                "", "fleetId", null, null, PowerMockito.mock(ComputerConnector.class), false,
+                "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 1, false,
                 true, false,
                 0, 0, false);
@@ -341,34 +275,23 @@ public class EC2FleetCloudTest {
 
         final String instanceType = "t";
         final String instanceId = "i-0";
-        mockDescribeInstances(instanceId, instanceType);
+        final Instance instance = new Instance()
+                .withPublicIpAddress("p-ip")
+                .withInstanceType(instanceType)
+                .withInstanceId(instanceId);
 
-        DescribeSpotFleetInstancesResult describeSpotFleetInstancesResult = new DescribeSpotFleetInstancesResult();
-        describeSpotFleetInstancesResult.setActiveInstances(Arrays.asList(
-                new ActiveInstance().withInstanceId(instanceId)
-        ));
+        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+                ImmutableMap.of(instanceId, instance));
 
-        when(amazonEC2.describeSpotFleetInstances(any(DescribeSpotFleetInstancesRequest.class)))
-                .thenReturn(describeSpotFleetInstancesResult);
-
-        DescribeSpotFleetRequestsResult describeSpotFleetRequestsResult = new DescribeSpotFleetRequestsResult();
-        describeSpotFleetRequestsResult.setSpotFleetRequestConfigs(Arrays.asList(
-                new SpotFleetRequestConfig()
-                        .withSpotFleetRequestState("active")
-                        .withSpotFleetRequestConfig(
-                                new SpotFleetRequestConfigData()
-                                        .withLaunchSpecifications(
-                                                new SpotFleetLaunchSpecification()
-                                                        .withInstanceType(instanceType)
-                                                        .withWeightedCapacity(2.0))
-                                        .withTargetCapacity(0))));
-        when(amazonEC2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenReturn(describeSpotFleetRequestsResult);
+        PowerMockito.when(FleetStateStats.readClusterState(any(AmazonEC2.class), anyString(), anyString()))
+                .thenReturn(new FleetStateStats("fleetId", 0, "active",
+                        ImmutableSet.of(instanceId),
+                        ImmutableMap.of(instanceType, 2.0)));
 
         mockNodeCreatingPart();
 
         EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
-                "", "fleetId", null, null, PowerMockito.mock(ComputerConnector.class), false,
+                "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 1, false,
                 true, false,
                 0, 0, true);
@@ -389,34 +312,25 @@ public class EC2FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        mockDescribeInstances("i-0", "t");
+        final String instanceType = "t";
+        final String instanceId = "i-0";
+        final Instance instance = new Instance()
+                .withPublicIpAddress("p-ip")
+                .withInstanceType(instanceType)
+                .withInstanceId(instanceId);
 
-        DescribeSpotFleetInstancesResult describeSpotFleetInstancesResult = new DescribeSpotFleetInstancesResult();
-        describeSpotFleetInstancesResult.setActiveInstances(Arrays.asList(
-                new ActiveInstance().withInstanceId("i-0")
-        ));
+        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+                ImmutableMap.of(instanceId, instance));
 
-        when(amazonEC2.describeSpotFleetInstances(any(DescribeSpotFleetInstancesRequest.class)))
-                .thenReturn(describeSpotFleetInstancesResult);
-
-        DescribeSpotFleetRequestsResult describeSpotFleetRequestsResult = new DescribeSpotFleetRequestsResult();
-        describeSpotFleetRequestsResult.setSpotFleetRequestConfigs(Arrays.asList(
-                new SpotFleetRequestConfig()
-                        .withSpotFleetRequestState("active")
-                        .withSpotFleetRequestConfig(
-                                new SpotFleetRequestConfigData()
-                                        .withLaunchSpecifications(
-                                                new SpotFleetLaunchSpecification()
-                                                        .withInstanceType("non-t")
-                                                        .withWeightedCapacity(2.0))
-                                        .withTargetCapacity(0))));
-        when(amazonEC2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenReturn(describeSpotFleetRequestsResult);
+        PowerMockito.when(FleetStateStats.readClusterState(any(AmazonEC2.class), anyString(), anyString()))
+                .thenReturn(new FleetStateStats("fleetId", 0, "active",
+                        ImmutableSet.of(instanceId),
+                        ImmutableMap.of("diff-t", 2.0)));
 
         mockNodeCreatingPart();
 
         EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
-                "", "fleetId", null, null, PowerMockito.mock(ComputerConnector.class), false,
+                "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 1, false,
                 true, false,
                 0, 0, true);
@@ -437,35 +351,25 @@ public class EC2FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        final String instanceId = "i-0";
         final String instanceType = "t";
-        mockDescribeInstances(instanceId, instanceType);
+        final String instanceId = "i-0";
+        final Instance instance = new Instance()
+                .withPublicIpAddress("p-ip")
+                .withInstanceType(instanceType)
+                .withInstanceId(instanceId);
 
-        DescribeSpotFleetInstancesResult describeSpotFleetInstancesResult = new DescribeSpotFleetInstancesResult();
-        describeSpotFleetInstancesResult.setActiveInstances(Arrays.asList(
-                new ActiveInstance().withInstanceId(instanceId)
-        ));
+        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+                ImmutableMap.of(instanceId, instance));
 
-        when(amazonEC2.describeSpotFleetInstances(any(DescribeSpotFleetInstancesRequest.class)))
-                .thenReturn(describeSpotFleetInstancesResult);
-
-        DescribeSpotFleetRequestsResult describeSpotFleetRequestsResult = new DescribeSpotFleetRequestsResult();
-        describeSpotFleetRequestsResult.setSpotFleetRequestConfigs(Arrays.asList(
-                new SpotFleetRequestConfig()
-                        .withSpotFleetRequestState("active")
-                        .withSpotFleetRequestConfig(new SpotFleetRequestConfigData()
-                                .withLaunchSpecifications(
-                                        new SpotFleetLaunchSpecification()
-                                                .withInstanceType(instanceType)
-                                                .withWeightedCapacity(1.44))
-                                .withTargetCapacity(0))));
-        when(amazonEC2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenReturn(describeSpotFleetRequestsResult);
+        PowerMockito.when(FleetStateStats.readClusterState(any(AmazonEC2.class), anyString(), anyString()))
+                .thenReturn(new FleetStateStats("fleetId", 0, "active",
+                        ImmutableSet.of(instanceId),
+                        ImmutableMap.of(instanceType, 1.44)));
 
         mockNodeCreatingPart();
 
         EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
-                "", "fleetId", null, null, PowerMockito.mock(ComputerConnector.class), false,
+                "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 1, false,
                 true, false,
                 0, 0, true);
@@ -486,35 +390,25 @@ public class EC2FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        final String instanceId = "i-0";
         final String instanceType = "t";
-        mockDescribeInstances(instanceId, instanceType);
+        final String instanceId = "i-0";
+        final Instance instance = new Instance()
+                .withPublicIpAddress("p-ip")
+                .withInstanceType(instanceType)
+                .withInstanceId(instanceId);
 
-        DescribeSpotFleetInstancesResult describeSpotFleetInstancesResult = new DescribeSpotFleetInstancesResult();
-        describeSpotFleetInstancesResult.setActiveInstances(Arrays.asList(
-                new ActiveInstance().withInstanceId(instanceId)
-        ));
+        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+                ImmutableMap.of(instanceId, instance));
 
-        when(amazonEC2.describeSpotFleetInstances(any(DescribeSpotFleetInstancesRequest.class)))
-                .thenReturn(describeSpotFleetInstancesResult);
-
-        DescribeSpotFleetRequestsResult describeSpotFleetRequestsResult = new DescribeSpotFleetRequestsResult();
-        describeSpotFleetRequestsResult.setSpotFleetRequestConfigs(Arrays.asList(
-                new SpotFleetRequestConfig()
-                        .withSpotFleetRequestState("active")
-                        .withSpotFleetRequestConfig(new SpotFleetRequestConfigData()
-                                .withLaunchSpecifications(
-                                        new SpotFleetLaunchSpecification()
-                                                .withInstanceType("t")
-                                                .withWeightedCapacity(1.5))
-                                .withTargetCapacity(0))));
-        when(amazonEC2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenReturn(describeSpotFleetRequestsResult);
+        PowerMockito.when(FleetStateStats.readClusterState(any(AmazonEC2.class), anyString(), anyString()))
+                .thenReturn(new FleetStateStats("fleetId", 0, "active",
+                        ImmutableSet.of(instanceId),
+                        ImmutableMap.of(instanceType, 1.5)));
 
         mockNodeCreatingPart();
 
         EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
-                "", "fleetId", null, null, PowerMockito.mock(ComputerConnector.class), false,
+                "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 1, false,
                 true, false,
                 0, 0, true);
@@ -535,35 +429,25 @@ public class EC2FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        final String instanceId = "i-0";
         final String instanceType = "t";
-        mockDescribeInstances(instanceId, instanceType);
+        final String instanceId = "i-0";
+        final Instance instance = new Instance()
+                .withPublicIpAddress("p-ip")
+                .withInstanceType(instanceType)
+                .withInstanceId(instanceId);
 
-        DescribeSpotFleetInstancesResult describeSpotFleetInstancesResult = new DescribeSpotFleetInstancesResult();
-        describeSpotFleetInstancesResult.setActiveInstances(Arrays.asList(
-                new ActiveInstance().withInstanceId(instanceId)
-        ));
+        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+                ImmutableMap.of(instanceId, instance));
 
-        when(amazonEC2.describeSpotFleetInstances(any(DescribeSpotFleetInstancesRequest.class)))
-                .thenReturn(describeSpotFleetInstancesResult);
-
-        DescribeSpotFleetRequestsResult describeSpotFleetRequestsResult = new DescribeSpotFleetRequestsResult();
-        describeSpotFleetRequestsResult.setSpotFleetRequestConfigs(Arrays.asList(
-                new SpotFleetRequestConfig()
-                        .withSpotFleetRequestState("active")
-                        .withSpotFleetRequestConfig(new SpotFleetRequestConfigData()
-                                .withLaunchSpecifications(
-                                        new SpotFleetLaunchSpecification()
-                                                .withInstanceType("t")
-                                                .withWeightedCapacity(0.1))
-                                .withTargetCapacity(0))));
-        when(amazonEC2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenReturn(describeSpotFleetRequestsResult);
+        PowerMockito.when(FleetStateStats.readClusterState(any(AmazonEC2.class), anyString(), anyString()))
+                .thenReturn(new FleetStateStats("fleetId", 0, "active",
+                        ImmutableSet.of(instanceId),
+                        ImmutableMap.of(instanceType, .1)));
 
         mockNodeCreatingPart();
 
         EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
-                "", "fleetId", null, null, PowerMockito.mock(ComputerConnector.class), false,
+                "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 1, false,
                 true, false,
                 0, 0, true);

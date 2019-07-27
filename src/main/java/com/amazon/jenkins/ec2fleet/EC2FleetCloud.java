@@ -3,8 +3,6 @@ package com.amazon.jenkins.ec2fleet;
 import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.BatchState;
-import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
-import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.DescribeRegionsResult;
 import com.amazonaws.services.ec2.model.DescribeSpotFleetInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeSpotFleetRequestsRequest;
@@ -44,8 +42,10 @@ import org.springframework.util.ObjectUtils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -350,34 +350,38 @@ public class EC2FleetCloud extends Cloud {
 
         final AmazonEC2 ec2 = Registry.getEc2Api().connect(getAwsCredentialsId(), region, endpoint);
         final FleetStateStats stats = FleetStateStats.readClusterState(ec2, getFleet(), labelString);
-        info("described instances: %s", stats.getInstances());
+        info("fleet instances: %s", stats.getInstances());
 
         // Set up the lists of Jenkins nodes and fleet instances
         // currentFleetInstances contains instances currently in the fleet
         final Set<String> currentInstanceIds = new HashSet<>(stats.getInstances());
+
         // currentJenkinsNodes contains all Nodes currently registered in Jenkins
         final Set<String> currentJenkinsNodes = new HashSet<>();
         for (final Node node : Jenkins.getInstance().getNodes()) {
             currentJenkinsNodes.add(node.getNodeName());
         }
+        info("jenkins nodes %s", currentJenkinsNodes);
+
         // missingFleetInstances contains Jenkins nodes that were once fleet instances but are no longer in the fleet
         final Set<String> missingFleetInstances = new HashSet<>(currentJenkinsNodes);
         missingFleetInstances.retainAll(fleetInstancesCache);
         missingFleetInstances.removeAll(currentInstanceIds);
+        info("jenkins nodes without instance %s", missingFleetInstances);
+
+        final Map<String, Instance> described = Registry.getEc2Api().describeInstances(ec2, currentInstanceIds);
+        info("described instances: %s", described.keySet());
 
         // terminatedFleetInstances contains fleet instances that are terminated, stopped, stopping, or shutting down
-        Set<String> terminatedInstanceIds = new HashSet<>();
-        try {
-            terminatedInstanceIds = Registry.getEc2Api().describeTerminated(ec2, currentInstanceIds);
-            info("Described terminated instances " + terminatedInstanceIds + " for " + currentInstanceIds);
-        } catch (final Exception ex) {
-            warning(ex, "Unable to describe terminated instances for %s", currentInstanceIds);
-        }
+        final Set<String> terminatedInstanceIds = new HashSet<>(currentInstanceIds);
+        // terminated are any current which cannot be described
+        terminatedInstanceIds.removeAll(described.keySet());
+        info("terminated instances " + terminatedInstanceIds);
 
         // newFleetInstances contains running fleet instances that are not already Jenkins nodes
-        final Set<String> newFleetInstances = new HashSet<>(currentInstanceIds);
-        newFleetInstances.removeAll(terminatedInstanceIds);
-        newFleetInstances.removeAll(currentJenkinsNodes);
+        final Map<String, Instance> newFleetInstances = new HashMap<>(described);
+        for (final String instanceId : currentJenkinsNodes) newFleetInstances.remove(instanceId);
+        info("new instances " + newFleetInstances.keySet());
 
         // update caches
         dyingFleetInstancesCache.addAll(missingFleetInstances);
@@ -386,15 +390,6 @@ public class EC2FleetCloud extends Cloud {
         fleetInstancesCache.addAll(currentInstanceIds);
         fleetInstancesCache.removeAll(dyingFleetInstancesCache);
         fleetInstancesCache.retainAll(currentJenkinsNodes);
-
-        fine("# of current Jenkins nodes:" + currentJenkinsNodes.size());
-        fine("Fleet (" + getLabelString() + ") contains instances [" + StringUtils.join(currentInstanceIds, ", ") + "]");
-        fine("Jenkins contains dying instances [" + StringUtils.join(dyingFleetInstancesCache, ", ") + "]");
-        LOGGER.log(Level.FINER, "Jenkins contains fleet instances [" + StringUtils.join(fleetInstancesCache, ", ") + "]");
-        LOGGER.log(Level.FINER, "Current Jenkins nodes [" + StringUtils.join(currentJenkinsNodes, ", ") + "]");
-        LOGGER.log(Level.FINER, "New fleet instances [" + StringUtils.join(newFleetInstances, ", ") + "]");
-        LOGGER.log(Level.FINER, "Missing fleet instances [" + StringUtils.join(missingFleetInstances, ", ") + "]");
-        LOGGER.log(Level.FINER, "Terminated fleet instances [" + StringUtils.join(terminatedInstanceIds, ", ") + "]");
 
         // Remove dying fleet instances from Jenkins
         for (final String instance : dyingFleetInstancesCache) {
@@ -421,12 +416,8 @@ public class EC2FleetCloud extends Cloud {
 
         // If we have new instances - create nodes for them!
         try {
-            if (newFleetInstances.size() > 0) {
-                info("Found new instances [" +
-                        StringUtils.join(newFleetInstances, ", ") + "]");
-            }
-            for (final String instanceId : newFleetInstances) {
-                addNewSlave(ec2, instanceId, stats);
+            for (final Instance instance : newFleetInstances.values()) {
+                addNewSlave(ec2, instance, stats);
             }
         } catch (final Exception ex) {
             warning(ex, "Unable to set label on node");
@@ -526,16 +517,11 @@ public class EC2FleetCloud extends Cloud {
     /**
      * https://github.com/jenkinsci/ec2-plugin/blob/master/src/main/java/hudson/plugins/ec2/EC2Cloud.java#L640
      *
-     * @param ec2        ec2 client
-     * @param instanceId instance id
+     * @param ec2      ec2 client
+     * @param instance instance
      */
-    private void addNewSlave(final AmazonEC2 ec2, final String instanceId, FleetStateStats stats) throws Exception {
-        final DescribeInstancesResult result = ec2.describeInstances(
-                new DescribeInstancesRequest().withInstanceIds(instanceId));
-        //Can't find this instance, skip it
-        if (result.getReservations().isEmpty()) return;
-
-        final Instance instance = result.getReservations().get(0).getInstances().get(0);
+    private void addNewSlave(final AmazonEC2 ec2, final Instance instance, FleetStateStats stats) throws Exception {
+        final String instanceId = instance.getInstanceId();
 
         // instance state check enabled and not running, skip adding
         if (addNodeOnlyIfRunning && InstanceStateName.Running != InstanceStateName.fromValue(instance.getState().getName()))

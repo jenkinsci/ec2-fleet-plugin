@@ -20,8 +20,9 @@ import org.apache.commons.lang.StringUtils;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -52,24 +53,24 @@ public class EC2Api {
         return instanceIds;
     }
 
-    public Set<String> describeTerminated(final AmazonEC2 ec2, final Set<String> instanceIds) {
-        return describeTerminated(ec2, instanceIds, BATCH_SIZE);
+    public Map<String, Instance> describeInstances(final AmazonEC2 ec2, final Set<String> instanceIds) {
+        return describeInstances(ec2, instanceIds, BATCH_SIZE);
     }
 
-    public Set<String> describeTerminated(final AmazonEC2 ec2, final Set<String> instanceIds, final int batchSize) {
-        // assume all terminated until we get opposite info
-        final Set<String> terminated = new HashSet<>(instanceIds);
+    public Map<String, Instance> describeInstances(final AmazonEC2 ec2, final Set<String> instanceIds, final int batchSize) {
+        final Map<String, Instance> described = new HashMap<>();
         // don't do actual call if no data
-        if (instanceIds.isEmpty()) return terminated;
+        if (instanceIds.isEmpty()) return described;
 
         final List<List<String>> batches = Lists.partition(new ArrayList<>(instanceIds), batchSize);
         for (final List<String> batch : batches) {
-            describeTerminatedBatch(ec2, terminated, batch);
+            describeInstancesBatch(ec2, described, batch);
         }
-        return terminated;
+        return described;
     }
 
-    private static void describeTerminatedBatch(final AmazonEC2 ec2, final Set<String> terminated, final List<String> batch) {
+    private static void describeInstancesBatch(
+            final AmazonEC2 ec2, final Map<String, Instance> described, final List<String> batch) {
         // we are going to modify list, so copy
         final List<String> copy = new ArrayList<>(batch);
 
@@ -89,9 +90,9 @@ public class EC2Api {
 
                     for (final Reservation r : result.getReservations()) {
                         for (final Instance instance : r.getInstances()) {
-                            // if instance not in terminated state, remove it from terminated
+                            // if instance not in terminated state, add it to described
                             if (!TERMINATED_STATES.contains(instance.getState().getName())) {
-                                terminated.remove(instance.getInstanceId());
+                                described.put(instance.getInstanceId(), instance);
                             }
                         }
                     }
@@ -131,17 +132,17 @@ public class EC2Api {
      * it as first priority, otherwise will try to find region in {@link RegionUtils} by <code>regionName</code>
      * and use endpoint from it, if not available will generate endpoint as string and check if
      * region name looks like China <code>cn-</code> prefix.
-     *
+     * <p>
      * Implementation details
-     *
+     * <p>
      * {@link RegionUtils} is static information, and to get new region required to be updated,
      * as it's not possible too fast as you need to check new version of lib, moreover new version of lib
      * could be pointed to new version of Jenkins which is not a case for our plugin as some of installation
      * still on <code>1.6.x</code>
-     *
+     * <p>
      * For example latest AWS SDK lib depends on Jackson2 plugin which starting from version <code>2.8.7.0</code>
      * require Jenkins at least <code>2.60</code> https://plugins.jenkins.io/jackson2-api
-     *
+     * <p>
      * List of all AWS endpoints
      * https://docs.aws.amazon.com/general/latest/gr/rande.html
      *
@@ -165,5 +166,4 @@ public class EC2Api {
             return null;
         }
     }
-
 }

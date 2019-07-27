@@ -1,8 +1,6 @@
 package com.amazon.jenkins.ec2fleet;
 
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
@@ -10,8 +8,9 @@ import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.InstanceState;
 import com.amazonaws.services.ec2.model.InstanceStateName;
 import com.amazonaws.services.ec2.model.Reservation;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.internal.guava.collect.$ImmutableMap;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -20,6 +19,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import static org.mockito.Mockito.any;
@@ -29,6 +29,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
+@SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 @RunWith(MockitoJUnitRunner.class)
 public class EC2ApiTest {
 
@@ -36,15 +37,15 @@ public class EC2ApiTest {
     private AmazonEC2 amazonEC2;
 
     @Test
-    public void shouldReturnEmptyResultAndNoCallIfEmptyListOfInstances() {
-        Set<String> terminated = new EC2Api().describeTerminated(amazonEC2, Collections.<String>emptySet());
+    public void describeInstances_shouldReturnEmptyResultAndNoCallIfEmptyListOfInstances() {
+        Map<String, Instance> described = new EC2Api().describeInstances(amazonEC2, Collections.<String>emptySet());
 
-        Assert.assertEquals(Collections.emptySet(), terminated);
+        Assert.assertEquals(Collections.<String, Instance>emptyMap(), described);
         verifyZeroInteractions(amazonEC2);
     }
 
     @Test
-    public void shouldReturnEmptyIfAllInstancesStillActive() {
+    public void describeInstances_shouldReturnAllInstancesIfStillActive() {
         // given
         Set<String> instanceIds = new HashSet<>();
         instanceIds.add("i-1");
@@ -64,36 +65,38 @@ public class EC2ApiTest {
         when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class))).thenReturn(describeInstancesResult);
 
         // when
-        Set<String> terminated = new EC2Api().describeTerminated(amazonEC2, instanceIds);
+        Map<String, Instance> described = new EC2Api().describeInstances(amazonEC2, instanceIds);
 
         // then
-        Assert.assertEquals(Collections.emptySet(), terminated);
+        Assert.assertEquals(ImmutableMap.of("i-1", instance1, "i-2", instance2), described);
         verify(amazonEC2, times(1))
                 .describeInstances(any(DescribeInstancesRequest.class));
     }
 
     @Test
-    public void shouldProcessAllPagesUntilNextTokenIsAvailable() {
+    public void describeInstances_shouldProcessAllPagesUntilNextTokenIsAvailable() {
         // given
         Set<String> instanceIds = new HashSet<>();
         instanceIds.add("i-1");
         instanceIds.add("i-2");
         instanceIds.add("i-3");
 
+        final Instance instance1 = new Instance()
+                .withInstanceId("i-1")
+                .withState(new InstanceState().withName(InstanceStateName.Running));
         DescribeInstancesResult describeInstancesResult1 =
                 new DescribeInstancesResult()
                         .withReservations(
-                                new Reservation().withInstances(new Instance()
-                                        .withInstanceId("i-1")
-                                        .withState(new InstanceState().withName(InstanceStateName.Running))))
+                                new Reservation().withInstances(instance1))
                         .withNextToken("a");
 
+        final Instance instance2 = new Instance()
+                .withInstanceId("i-2")
+                .withState(new InstanceState().withName(InstanceStateName.Running));
         DescribeInstancesResult describeInstancesResult2 =
                 new DescribeInstancesResult()
                         .withReservations(new Reservation().withInstances(
-                                new Instance()
-                                        .withInstanceId("i-2")
-                                        .withState(new InstanceState().withName(InstanceStateName.Running)),
+                                instance2,
                                 new Instance()
                                         .withInstanceId("i-3")
                                         .withState(new InstanceState().withName(InstanceStateName.Terminated))
@@ -104,16 +107,16 @@ public class EC2ApiTest {
                 .thenReturn(describeInstancesResult2);
 
         // when
-        Set<String> terminated = new EC2Api().describeTerminated(amazonEC2, instanceIds);
+        Map<String, Instance> described = new EC2Api().describeInstances(amazonEC2, instanceIds);
 
         // then
-        Assert.assertEquals(new HashSet<>(Arrays.asList("i-3")), terminated);
+        Assert.assertEquals(ImmutableMap.of("i-1", instance1, "i-2", instance2), described);
         verify(amazonEC2, times(2))
                 .describeInstances(any(DescribeInstancesRequest.class));
     }
 
     @Test
-    public void shouldAssumeMissedInResultInstanceOrTerminatedOrStoppedOrStoppingOrShuttingDownAsTermianted() {
+    public void describeInstances_shouldNotDescribeMissedInResultInstanceOrTerminatedOrStoppedOrStoppingOrShuttingDownAs() {
         // given
         Set<String> instanceIds = new HashSet<>();
         instanceIds.add("missed");
@@ -144,17 +147,16 @@ public class EC2ApiTest {
                 .thenReturn(describeInstancesResult1);
 
         // when
-        Set<String> terminated = new EC2Api().describeTerminated(amazonEC2, instanceIds);
+        Map<String, Instance> described = new EC2Api().describeInstances(amazonEC2, instanceIds);
 
         // then
-        Assert.assertEquals(new HashSet<>(Arrays.asList(
-                "missed", "terminated", "stopped", "shutting-down", "stopping")), terminated);
+        Assert.assertEquals(Collections.<String, Instance>emptyMap(), described);
         verify(amazonEC2, times(1))
                 .describeInstances(any(DescribeInstancesRequest.class));
     }
 
     @Test
-    public void shouldSendInOneCallNoMoreThenBatchSizeOfInstance() {
+    public void describeInstances_shouldSendInOneCallNoMoreThenBatchSizeOfInstance() {
         // given
         Set<String> instanceIds = new HashSet<>();
         instanceIds.add("i1");
@@ -179,7 +181,7 @@ public class EC2ApiTest {
                 .thenReturn(describeInstancesResult2);
 
         // when
-        new EC2Api().describeTerminated(amazonEC2, instanceIds, 2);
+        new EC2Api().describeInstances(amazonEC2, instanceIds, 2);
 
         // then
         verify(amazonEC2).describeInstances(new DescribeInstancesRequest().withInstanceIds(Arrays.asList("i1", "i2")));
@@ -208,7 +210,7 @@ public class EC2ApiTest {
      * </code>
      */
     @Test
-    public void shouldHandleAmazonEc2NotFoundErrorAsTerminatedInstancesAndRetry() {
+    public void describeInstances_shouldHandleAmazonEc2NotFoundErrorAsTerminatedInstancesAndRetry() {
         // given
         Set<String> instanceIds = new HashSet<>();
         instanceIds.add("i-1");
@@ -219,27 +221,28 @@ public class EC2ApiTest {
                 "The instance IDs 'i-1, i-f' do not exist");
         notFoundException.setErrorCode("InvalidInstanceID.NotFound");
 
+        final Instance instance3 = new Instance().withInstanceId("i-3")
+                .withState(new InstanceState().withName(InstanceStateName.Running));
         DescribeInstancesResult describeInstancesResult2 = new DescribeInstancesResult()
                 .withReservations(new Reservation().withInstances(
-                        new Instance().withInstanceId("i-3")
-                                .withState(new InstanceState().withName(InstanceStateName.Running))));
+                        instance3));
 
         when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class)))
                 .thenThrow(notFoundException)
                 .thenReturn(describeInstancesResult2);
 
         // when
-        final Set<String> terminatedIds = new EC2Api().describeTerminated(amazonEC2, instanceIds);
+        final Map<String, Instance> described = new EC2Api().describeInstances(amazonEC2, instanceIds);
 
         // then
-        Assert.assertEquals(new HashSet<>(Arrays.asList("i-1", "i-f")), terminatedIds);
+        Assert.assertEquals($ImmutableMap.of("i-3", instance3), described);
         verify(amazonEC2).describeInstances(new DescribeInstancesRequest().withInstanceIds(Arrays.asList("i-1", "i-3", "i-f")));
         verify(amazonEC2).describeInstances(new DescribeInstancesRequest().withInstanceIds(Arrays.asList("i-3")));
         verifyNoMoreInteractions(amazonEC2);
     }
 
     @Test
-    public void shouldFailIfNotAbleToParseNotFoundExceptionFromEc2Api() {
+    public void describeInstances_shouldFailIfNotAbleToParseNotFoundExceptionFromEc2Api() {
         // given
         Set<String> instanceIds = new HashSet<>();
         instanceIds.add("i-1");
@@ -255,7 +258,7 @@ public class EC2ApiTest {
 
         // when
         try {
-            new EC2Api().describeTerminated(amazonEC2, instanceIds);
+            new EC2Api().describeInstances(amazonEC2, instanceIds);
             Assert.fail();
         } catch (AmazonEC2Exception exception) {
             Assert.assertSame(notFoundException, exception);
@@ -263,7 +266,7 @@ public class EC2ApiTest {
     }
 
     @Test
-    public void shouldThrowExceptionIfEc2DescribeFailsWithException() {
+    public void describeInstances_shouldThrowExceptionIfEc2DescribeFailsWithException() {
         // given
         Set<String> instanceIds = new HashSet<>();
         instanceIds.add("a");
@@ -274,29 +277,11 @@ public class EC2ApiTest {
 
         // when
         try {
-            new EC2Api().describeTerminated(amazonEC2, instanceIds);
+            new EC2Api().describeInstances(amazonEC2, instanceIds);
             Assert.fail();
         } catch (UnsupportedOperationException e) {
             Assert.assertSame(exception, e);
         }
-    }
-
-    @Ignore("manual test pass credentials if you want to run")
-    @Test
-    public void realShouldHandleAmazonEc2NotFoundErrorAsTerminatedInstancesAndRetry() {
-        // given
-        final String accessKey = "...";
-        final String secretKey = "...";
-
-        final Set<String> instanceIds = new HashSet<>();
-        instanceIds.add("i-1233f");
-        instanceIds.add("i-ff");
-
-        final AmazonEC2 amazonEC2 = new AmazonEC2Client(new BasicAWSCredentials(accessKey, secretKey));
-
-        // when
-        Set<String> t = new EC2Api().describeTerminated(amazonEC2, instanceIds);
-        Assert.assertEquals(instanceIds, t);
     }
 
     @Test
