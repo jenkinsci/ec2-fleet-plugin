@@ -318,11 +318,11 @@ public class EC2FleetCloud extends Cloud {
         // Calculate the ceiling, without having to work with doubles from Math.ceil
         // https://stackoverflow.com/a/21830188/877024
         final int weightedExcessWorkload = (excessWorkload + numExecutors - 1) / numExecutors;
-        int targetCapacity = stats.getNumDesired() + weightedExcessWorkload;
+        int targetCapacity = stats.getNumActive() + weightedExcessWorkload;
 
         if (targetCapacity > maxAllowed) targetCapacity = maxAllowed;
 
-        int toProvision = targetCapacity - stats.getNumDesired();
+        int toProvision = targetCapacity - stats.getNumActive();
         info("to provision = %s", toProvision);
 
         if (toProvision < 1)
