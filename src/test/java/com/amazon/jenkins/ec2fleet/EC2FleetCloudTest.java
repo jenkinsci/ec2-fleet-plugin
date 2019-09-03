@@ -115,6 +115,8 @@ public class EC2FleetCloudTest {
         Registry.setEc2Api(new EC2Api());
     }
 
+    // todo test that we don't remove nodes beyong min size
+
     @Test
     public void provision_fleetIsEmpty() {
         // given

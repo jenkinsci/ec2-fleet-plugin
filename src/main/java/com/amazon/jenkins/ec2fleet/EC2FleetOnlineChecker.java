@@ -1,11 +1,16 @@
 package com.amazon.jenkins.ec2fleet;
 
 import com.google.common.util.concurrent.SettableFuture;
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.Proc;
 import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.util.DaemonThreadFactory;
 
 import javax.annotation.concurrent.ThreadSafe;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -78,6 +83,19 @@ class EC2FleetOnlineChecker implements Runnable {
         final Computer computer = node.toComputer();
         if (computer != null) {
             if (computer.isOnline()) {
+
+                try {
+                    FilePath filePath = new FilePath(computer.getChannel(), "");
+                    final FilePath tempFile = filePath.createTempFile("a", "b");
+                    tempFile.copyFrom(new ByteArrayInputStream("echo opa".getBytes()));
+
+                    Launcher.ProcStarter ps = filePath.createLauncher(null).launch().cmds(tempFile.getRemote());
+                    Proc p = filePath.createLauncher(null).launch(ps);
+                    int exitCode = p.joinWithTimeout(15, TimeUnit.SECONDS, null);
+                } catch (IOException | InterruptedException e) {
+                    // todo
+                }
+
                 future.set(node);
                 LOGGER.log(Level.INFO, String.format("%s connected, resolve planned node", node.getNodeName()));
                 return;

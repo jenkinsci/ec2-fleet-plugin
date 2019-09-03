@@ -137,4 +137,6 @@ public class IdleRetentionStrategyTest {
         }
     }
 
+    // todo we do nothing if computer doesn't have node
+
 }
