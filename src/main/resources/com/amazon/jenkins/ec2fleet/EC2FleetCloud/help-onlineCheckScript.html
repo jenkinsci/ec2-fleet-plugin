@@ -1,16 +1,32 @@
-Select fleet which will be used to launch Jenkins workers.
-<p>
-    By default this list include only active
-    fleets. If you need to see all fleet include cancelled etc. click checkbox below.
-    Selected fleet will be in list regardless of fleet state.
-</p>
-<p>
-    All non <code>maintain</code> fleets will be filter out from this list.
-    Plugin requires stable capacity.
-    <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-fleet-configuration-strategies.html#ec2-fleet-request-type">More
-        about
-        types</a>
+EC2 instance online check script.
 
-    If you are not sure about your fleet check its type by API or
-    check if <code>Maintain target capacity</code> enabled in UI for this spot fleet.
+<p>
+    Allow you to provide script which will be executed on a EC2 instance to check if instance is
+    ok for Jenkins tasks. Could be useful when you need to wait until <a
+        href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html">User Data</a>
+    execution will be finished.
+</p>
+
+<p>
+    By default is empty, in this case plugin will ignore script and assume EC2 instance as ready
+    immediately when SSH connection established.
+    <b>It doesn't guarantee that user data execution is finished.</b>
+</p>
+
+<p>
+    In case if field provided (not empty). Plugin will block Jenkins tasks for this node until
+    SSH connection is established and script executed with exit code <code>0</code>
+    If script fail, plugin will try to execute script again with some internal until exit code is <code>0</code>
+    or max time reached (configured in <i>Maximum Init Connection Timeout in sec</i>). If max time
+    reached but script still fails plugin enable Jenkins tasks.
+</p>
+
+<p>
+    <b>Execution notes:</b>
+<ul>
+    <li>Script could be executed zero (when no SSH connection) or multiple times (if script fails)</li>
+    <li>Script will be executed under SSH connection user</li>
+    <li>Script will be copied to node into temp file</li>
+    <li>Script will use default bash</li>
+</ul>
 </p>
