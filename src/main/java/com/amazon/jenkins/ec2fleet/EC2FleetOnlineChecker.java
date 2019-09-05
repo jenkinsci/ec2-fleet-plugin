@@ -72,7 +72,11 @@ class EC2FleetOnlineChecker implements Runnable {
     private final long interval;
     private final String checkScript;
 
-    private Phase phase = Phase.PENDING;
+    /**
+     * special as <code>volatile</code> as same instance will be shared cross multiple
+     * execution
+     */
+    private volatile Phase phase = Phase.PENDING;
 
     private enum Phase {
         PENDING, CONNECTING, CHECKING
