@@ -106,8 +106,8 @@
       <f:number clazz="required positive-number" default="180" />
     </f:entry>
 
-    <f:description>EC2 instance online check script</f:description>
-    <f:entry field="onlineCheckScript">
+    <f:description>Empty to skip script</f:description>
+    <f:entry title="${%EC2 instance online check script}" field="onlineCheckScript">
       <f:textarea/>
     </f:entry>
   </f:section>
