@@ -51,7 +51,7 @@ public class RealEc2ApiIntegrationTest {
                 EC2FleetCloud cloud = new EC2FleetCloud("", null, "credId", null, null, null, fleetId,
                         null, null, null, false, false,
                         0, 0, 0, 0, false, false,
-                        false, 0, 0, false);
+                        false, 0, 0, false, null);
                 j.jenkins.clouds.add(cloud);
 
                 // 10 sec refresh time so wait
@@ -84,7 +84,7 @@ public class RealEc2ApiIntegrationTest {
                 EC2FleetCloud cloud = new EC2FleetCloud(null, null, "credId", null, null, null, fleetId,
                         null, null, null, false, false,
                         0, 0, 0, 0, false, false,
-                        false, 0, 0, false);
+                        false, 0, 0, false, null);
                 j.jenkins.clouds.add(cloud);
 
                 final long start = System.currentTimeMillis();

@@ -105,6 +105,11 @@
     <f:entry title="${%Maximum Init Connection Timeout in sec}" field="initOnlineTimeoutSec">
       <f:number clazz="required positive-number" default="180" />
     </f:entry>
+
+    <f:description>EC2 instance online check script</f:description>
+    <f:entry field="onlineCheckScript">
+      <f:textarea/>
+    </f:entry>
   </f:section>
 
 </j:jelly>

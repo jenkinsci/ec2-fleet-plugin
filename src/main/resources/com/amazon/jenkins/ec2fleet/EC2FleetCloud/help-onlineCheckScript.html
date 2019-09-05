@@ -1,0 +1,16 @@
+Select fleet which will be used to launch Jenkins workers.
+<p>
+    By default this list include only active
+    fleets. If you need to see all fleet include cancelled etc. click checkbox below.
+    Selected fleet will be in list regardless of fleet state.
+</p>
+<p>
+    All non <code>maintain</code> fleets will be filter out from this list.
+    Plugin requires stable capacity.
+    <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-fleet-configuration-strategies.html#ec2-fleet-request-type">More
+        about
+        types</a>
+
+    If you are not sure about your fleet check its type by API or
+    check if <code>Maintain target capacity</code> enabled in UI for this spot fleet.
+</p>

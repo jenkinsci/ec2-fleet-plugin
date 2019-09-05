@@ -127,7 +127,7 @@ public class EC2FleetCloudTest {
         EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
                 "", "", "", null, null, false,
                 false, 0, 0, 1, 1, false,
-                false, false, 0, 0, false);
+                false, false, 0, 0, false, null);
 
         // when
         Collection<NodeProvisioner.PlannedNode> r = fleetCloud.provision(null, 1);
@@ -149,7 +149,7 @@ public class EC2FleetCloudTest {
                 "", "fleetId", "", null, null, false,
                 false, 0, 0, 1, 1,
                 false, false, false, 0,
-                0, false);
+                0, false, null);
 
         // when
         FleetStateStats stats = fleetCloud.updateStatus();
@@ -182,7 +182,7 @@ public class EC2FleetCloudTest {
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 1,
                 false, false, false,
-                0, 0, false);
+                0, 0, false, null);
 
         ArgumentCaptor<Node> nodeCaptor = ArgumentCaptor.forClass(Node.class);
         doNothing().when(jenkins).addNode(nodeCaptor.capture());
@@ -222,7 +222,7 @@ public class EC2FleetCloudTest {
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 1, false,
                 true, false,
-                0, 0, false);
+                0, 0, false, null);
 
         ArgumentCaptor<Node> nodeCaptor = ArgumentCaptor.forClass(Node.class);
         doNothing().when(jenkins).addNode(nodeCaptor.capture());
@@ -265,7 +265,7 @@ public class EC2FleetCloudTest {
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 1, false,
                 true, false,
-                0, 0, false);
+                0, 0, false, null);
 
         ArgumentCaptor<Node> nodeCaptor = ArgumentCaptor.forClass(Node.class);
         doNothing().when(jenkins).addNode(nodeCaptor.capture());
@@ -304,7 +304,7 @@ public class EC2FleetCloudTest {
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 1, false,
                 true, false,
-                0, 0, true);
+                0, 0, true, null);
 
         ArgumentCaptor<Node> nodeCaptor = ArgumentCaptor.forClass(Node.class);
         doNothing().when(jenkins).addNode(nodeCaptor.capture());
@@ -343,7 +343,7 @@ public class EC2FleetCloudTest {
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 1, false,
                 true, false,
-                0, 0, true);
+                0, 0, true, null);
 
         ArgumentCaptor<Node> nodeCaptor = ArgumentCaptor.forClass(Node.class);
         doNothing().when(jenkins).addNode(nodeCaptor.capture());
@@ -382,7 +382,7 @@ public class EC2FleetCloudTest {
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 1, false,
                 true, false,
-                0, 0, true);
+                0, 0, true, null);
 
         ArgumentCaptor<Node> nodeCaptor = ArgumentCaptor.forClass(Node.class);
         doNothing().when(jenkins).addNode(nodeCaptor.capture());
@@ -421,7 +421,7 @@ public class EC2FleetCloudTest {
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 1, false,
                 true, false,
-                0, 0, true);
+                0, 0, true, null);
 
         ArgumentCaptor<Node> nodeCaptor = ArgumentCaptor.forClass(Node.class);
         doNothing().when(jenkins).addNode(nodeCaptor.capture());
@@ -460,7 +460,7 @@ public class EC2FleetCloudTest {
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 1, false,
                 true, false,
-                0, 0, true);
+                0, 0, true, null);
 
         ArgumentCaptor<Node> nodeCaptor = ArgumentCaptor.forClass(Node.class);
         doNothing().when(jenkins).addNode(nodeCaptor.capture());
@@ -708,7 +708,7 @@ public class EC2FleetCloudTest {
                 null, null, null, false,
                 false, null, null, null,
                 null, false, false, false
-                , 0, 0, false);
+                , 0, 0, false, null);
         assertEquals(ec2FleetCloud.getDisplayName(), EC2FleetCloud.FLEET_CLOUD_ID);
     }
 
@@ -719,7 +719,7 @@ public class EC2FleetCloudTest {
                 null, null, null, false,
                 false, null, null, null,
                 null, false, false, false
-                , 0, 0, false);
+                , 0, 0, false, null);
         assertEquals(ec2FleetCloud.getDisplayName(), "CloudName");
     }
 
@@ -730,7 +730,7 @@ public class EC2FleetCloudTest {
                 null, null, null, false,
                 false, null, null, null,
                 null, false, false, false
-                , 0, 0, false);
+                , 0, 0, false, null);
         Assert.assertNull(ec2FleetCloud.getAwsCredentialsId());
     }
 
@@ -741,7 +741,7 @@ public class EC2FleetCloudTest {
                 null, null, null, false,
                 false, null, null, null,
                 null, false, false, false
-                , 0, 0, false);
+                , 0, 0, false, null);
         assertEquals("Opa", ec2FleetCloud.getAwsCredentialsId());
     }
 
@@ -752,7 +752,7 @@ public class EC2FleetCloudTest {
                 null, null, null, false,
                 false, null, null, null,
                 null, false, false, false
-                , 0, 0, false);
+                , 0, 0, false, null);
         assertEquals("Opa", ec2FleetCloud.getAwsCredentialsId());
     }
 
@@ -763,7 +763,7 @@ public class EC2FleetCloudTest {
                 null, null, null, false,
                 false, null, null, null,
                 null, false, false, false
-                , 0, 0, false);
+                , 0, 0, false, null);
         assertEquals("A", ec2FleetCloud.getAwsCredentialsId());
     }
 

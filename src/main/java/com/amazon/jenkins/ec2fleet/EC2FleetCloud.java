@@ -125,6 +125,7 @@ public class EC2FleetCloud extends Cloud {
     private final boolean scaleExecutorsByWeight;
     private final Integer initOnlineTimeoutSec;
     private final Integer initOnlineCheckIntervalSec;
+    private final String onlineCheckScript;
 
     /**
      * @see EC2FleetAutoResubmitComputerLauncher
@@ -159,7 +160,8 @@ public class EC2FleetCloud extends Cloud {
                          final boolean disableTaskResubmit,
                          final Integer initOnlineTimeoutSec,
                          final Integer initOnlineCheckIntervalSec,
-                         final boolean scaleExecutorsByWeight) {
+                         final boolean scaleExecutorsByWeight,
+                         final String onlineCheckScript) {
         super(StringUtils.isBlank(name) ? FLEET_CLOUD_ID : name);
         initCaches();
         this.credentialsId = credentialsId;
@@ -182,6 +184,7 @@ public class EC2FleetCloud extends Cloud {
         this.disableTaskResubmit = disableTaskResubmit;
         this.initOnlineTimeoutSec = initOnlineTimeoutSec;
         this.initOnlineCheckIntervalSec = initOnlineCheckIntervalSec;
+        this.onlineCheckScript = onlineCheckScript;
 
         if (StringUtils.isNotEmpty(oldId)) {
             // existent cloud was modified, let's re-assign all dependencies of old cloud instance
@@ -220,6 +223,10 @@ public class EC2FleetCloud extends Cloud {
 
     public int getInitOnlineCheckIntervalSec() {
         return initOnlineCheckIntervalSec == null ? DEFAULT_INIT_ONLINE_CHECK_INTERVAL_SEC : initOnlineCheckIntervalSec;
+    }
+
+    public String getOnlineCheckScript() {
+        return onlineCheckScript;
     }
 
     public String getRegion() {
@@ -584,7 +591,8 @@ public class EC2FleetCloud extends Cloud {
         // when user just install new version and did't recreate fleet
         EC2FleetOnlineChecker.start(node, future,
                 TimeUnit.SECONDS.toMillis(getInitOnlineTimeoutSec()),
-                TimeUnit.SECONDS.toMillis(getInitOnlineCheckIntervalSec()));
+                TimeUnit.SECONDS.toMillis(getInitOnlineCheckIntervalSec()),
+                onlineCheckScript);
     }
 
     private String getLogPrefix() {
