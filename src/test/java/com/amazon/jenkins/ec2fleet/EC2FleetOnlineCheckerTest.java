@@ -58,6 +58,8 @@ public class EC2FleetOnlineCheckerTest {
         PowerMockito.when(node.toComputer()).thenReturn(computer);
 
         PowerMockito.whenNew(EC2FleetNode.class).withAnyArguments().thenReturn(node);
+
+        when(node.executeScript(anyString())).thenReturn(0);
     }
 
     @Test
@@ -149,9 +151,6 @@ public class EC2FleetOnlineCheckerTest {
                 .thenReturn(false)
                 .thenReturn(true);
 
-        PowerMockito.when(node.toComputer())
-                .thenReturn(computer);
-
         EC2FleetOnlineChecker.start(node, future, 100, 10, "script");
 
         Assert.assertSame(node, future.get());
@@ -168,9 +167,6 @@ public class EC2FleetOnlineCheckerTest {
                 .thenReturn(false)
                 .thenReturn(true);
 
-        PowerMockito.when(node.toComputer())
-                .thenReturn(computer);
-
         EC2FleetOnlineChecker.start(node, future, 100, 10, null);
 
         Assert.assertSame(node, future.get());
@@ -185,9 +181,6 @@ public class EC2FleetOnlineCheckerTest {
             throws InterruptedException, ExecutionException, IOException {
         PowerMockito.when(computer.isOnline())
                 .thenReturn(true);
-
-        PowerMockito.when(node.toComputer())
-                .thenReturn(computer);
 
         when(node.executeScript(anyString()))
                 .thenReturn(1)
@@ -206,9 +199,6 @@ public class EC2FleetOnlineCheckerTest {
             throws InterruptedException, ExecutionException, IOException {
         PowerMockito.when(computer.isOnline())
                 .thenReturn(true);
-
-        PowerMockito.when(node.toComputer())
-                .thenReturn(computer);
 
         when(node.executeScript(anyString()))
                 .thenReturn(1)
@@ -229,9 +219,6 @@ public class EC2FleetOnlineCheckerTest {
         PowerMockito.when(computer.isOnline())
                 .thenReturn(true);
 
-        PowerMockito.when(node.toComputer())
-                .thenReturn(computer);
-
         when(node.executeScript(anyString()))
                 .thenThrow(new IOException("test"))
                 .thenThrow(new IOException("test"))
@@ -250,9 +237,6 @@ public class EC2FleetOnlineCheckerTest {
             throws InterruptedException {
         future.cancel(true);
 
-        PowerMockito.when(node.toComputer())
-                .thenReturn(computer);
-
         EC2FleetOnlineChecker.start(node, future, 100, 10, "script");
 
         Thread.sleep(100);
@@ -266,9 +250,6 @@ public class EC2FleetOnlineCheckerTest {
             throws InterruptedException, IOException {
         PowerMockito.when(computer.isOnline())
                 .thenReturn(true);
-
-        PowerMockito.when(node.toComputer())
-                .thenReturn(computer);
 
         when(node.executeScript(anyString()))
                 .thenThrow(new IOException("test"));
