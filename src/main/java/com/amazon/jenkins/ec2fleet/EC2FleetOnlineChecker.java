@@ -72,11 +72,7 @@ class EC2FleetOnlineChecker implements Runnable {
     private final long interval;
     private final String checkScript;
 
-    /**
-     * special as <code>volatile</code> as same instance will be shared cross multiple
-     * execution
-     */
-    private volatile Phase phase = Phase.PENDING;
+    private Phase phase = Phase.PENDING;
 
     private enum Phase {
         PENDING, CONNECTING, CHECKING
@@ -166,6 +162,7 @@ class EC2FleetOnlineChecker implements Runnable {
                 enableAcceptingTasks(computer);
                 future.set(node);
                 info("online and check script is ok, resolve planned node");
+                return;
             } else {
                 info("check script not ok, wait before retry");
             }
