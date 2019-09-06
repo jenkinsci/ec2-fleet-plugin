@@ -83,12 +83,14 @@ public class EC2FleetNode extends Slave implements EphemeralNode, EC2FleetCloudA
         // "cmd","/c","call"
         LOGGER.info(getNodeName() + " upload script");
         final FilePath rootFilePath = getRootPath();
-        final boolean isWindows = rootFilePath.act(new CheckIfWindows());
         // todo merge create file, copy and chmod operation in one call if possible
         final FilePath tempFile = rootFilePath.createTempFile("temp", null);
         tempFile.copyFrom(new ByteArrayInputStream(script.getBytes()));
         @SuppressWarnings("OctalInteger") final int onlyUserExecutePermissions = 0500;
         tempFile.chmod(onlyUserExecutePermissions);
+
+        final boolean isWindows = rootFilePath.act(new CheckIfWindows());
+        LOGGER.info(getNodeName() + " node type " + (isWindows ? "windows" : "linux"));
 
         LOGGER.info(getNodeName() + " executing script");
         final TaskListener taskListener = new LogTaskListener(LOGGER, Level.INFO);
