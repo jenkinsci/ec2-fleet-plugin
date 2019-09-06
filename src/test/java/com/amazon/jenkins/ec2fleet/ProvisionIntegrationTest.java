@@ -15,6 +15,7 @@ import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.SpotFleetRequestConfig;
 import com.amazonaws.services.ec2.model.SpotFleetRequestConfigData;
 import com.google.common.collect.ImmutableSet;
+import hudson.Functions;
 import hudson.model.Label;
 import hudson.model.Node;
 import hudson.model.TaskListener;
@@ -255,10 +256,12 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
     @Test
     public void should_mark_node_online_and_accept_tasks_when_online_and_excute_scripts() throws Exception {
+        final String onlineCheckScript = Functions.isWindows() ? "Ping -n %number% 127.0.0.1 > nul" : "echo 1";
+
         EC2FleetCloud cloud = new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", "/tmp/", new SingleLocalComputerConnector(j), false, false,
                 0, 0, 10, 1, true, false,
-                false, 9000, 1, false, "echo 1");
+                false, 9000, 1, false, onlineCheckScript);
         j.jenkins.clouds.add(cloud);
 
         mockEc2ApiToDescribeInstancesWhenModified(InstanceStateName.Running);
