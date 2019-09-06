@@ -80,9 +80,10 @@ public class EC2FleetNode extends Slave implements EphemeralNode, EC2FleetCloudA
     public int executeScript(final String script) throws IOException, InterruptedException {
         LOGGER.info(getNodeName() + " script to execute:");
         LOGGER.info(script);
-
+        // "cmd","/c","call"
         LOGGER.info(getNodeName() + " upload script");
         final FilePath rootFilePath = getRootPath();
+        final boolean isWindows = rootFilePath.act(new CheckIfWindows());
         // todo merge create file, copy and chmod operation in one call if possible
         final FilePath tempFile = rootFilePath.createTempFile("temp", null);
         tempFile.copyFrom(new ByteArrayInputStream(script.getBytes()));
@@ -92,7 +93,8 @@ public class EC2FleetNode extends Slave implements EphemeralNode, EC2FleetCloudA
         LOGGER.info(getNodeName() + " executing script");
         final TaskListener taskListener = new LogTaskListener(LOGGER, Level.INFO);
         final Launcher launcher = rootFilePath.createLauncher(taskListener);
-        final Launcher.ProcStarter procStarter = launcher.launch().cmds(tempFile.getRemote());
+        final String[] cmd = isWindows ? new String[]{"cmd", "/c", "call", tempFile.getRemote()} : new String[]{tempFile.getRemote()};
+        final Launcher.ProcStarter procStarter = launcher.launch().cmds(cmd);
         procStarter.readStdout();
 
         final Proc proc = procStarter.start();
