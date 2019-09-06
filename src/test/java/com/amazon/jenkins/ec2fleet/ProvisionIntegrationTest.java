@@ -16,14 +16,17 @@ import com.amazonaws.services.ec2.model.SpotFleetRequestConfig;
 import com.amazonaws.services.ec2.model.SpotFleetRequestConfigData;
 import com.google.common.collect.ImmutableSet;
 import hudson.model.Label;
+import hudson.model.Node;
 import hudson.model.TaskListener;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.slaves.ComputerConnector;
 import hudson.slaves.ComputerLauncher;
+import hudson.slaves.NodeProperty;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -244,6 +247,32 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                 Assert.assertEquals(ImmutableSet.of("master", "momo"), labelsToNames(j.jenkins.getLabels()));
                 Assert.assertEquals(1, j.jenkins.getLabelAtom("momo").nodeProvisioner.getPendingLaunches().size());
                 Assert.assertEquals(0, j.jenkins.getNodes().size());
+            }
+        });
+
+        cancelTasks(rs);
+    }
+
+    @Test
+    public void should_mark_node_online_and_accept_tasks_when_online_and_excute_scripts() throws Exception {
+        EC2FleetCloud cloud = new EC2FleetCloud(null, null, "credId", null, "region",
+                null, "fId", "momo", "/tmp/", new SingleLocalComputerConnector(j), false, false,
+                0, 0, 10, 1, true, false,
+                false, 9000, 1, false, "echo 1");
+        j.jenkins.clouds.add(cloud);
+
+        mockEc2ApiToDescribeInstancesWhenModified(InstanceStateName.Running);
+
+        List<QueueTaskFuture> rs = getQueueTaskFutures(1);
+
+        triggerSuggestReviewNow("momo");
+
+        tryUntil(new Runnable() {
+            @Override
+            public void run() {
+                Assert.assertEquals(1, j.jenkins.getNodes().size());
+                Assert.assertEquals(true, j.jenkins.getNodes().get(0).toComputer().isOnline());
+                Assert.assertEquals(true, j.jenkins.getNodes().get(0).isAcceptingTasks());
             }
         });
 
