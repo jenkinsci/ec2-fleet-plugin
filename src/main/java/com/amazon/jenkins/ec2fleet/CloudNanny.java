@@ -41,7 +41,7 @@ public class CloudNanny extends PeriodicWork {
                 info.add(Queue.withLock(new Callable<EC2FleetStatusInfo>() {
                     @Override
                     public EC2FleetStatusInfo call() {
-                        final FleetStateStats stats = fleetCloud.updateStatus();
+                        final FleetStateStats stats = fleetCloud.update();
                         return new EC2FleetStatusInfo(
                                 fleetCloud.getFleet(), stats.getState(), fleetCloud.getLabelString(),
                                 stats.getNumActive(), stats.getNumDesired());

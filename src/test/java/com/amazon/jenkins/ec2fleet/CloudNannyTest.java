@@ -60,8 +60,8 @@ public class CloudNannyTest {
         when(cloud1.getFleet()).thenReturn("f1");
         when(cloud2.getFleet()).thenReturn("f2");
 
-        when(cloud1.updateStatus()).thenReturn(stats1);
-        when(cloud2.updateStatus()).thenReturn(stats2);
+        when(cloud1.update()).thenReturn(stats1);
+        when(cloud2.update()).thenReturn(stats2);
     }
 
     @Test
@@ -115,7 +115,7 @@ public class CloudNannyTest {
 
         Whitebox.newInstance(CloudNanny.class).doRun();
 
-        verify(cloud1).updateStatus();
+        verify(cloud1).update();
         verifyZeroInteractions(nonEc2FleetCloud);
     }
 
@@ -139,7 +139,7 @@ public class CloudNannyTest {
         clouds.add(cloud1);
         clouds.add(cloud2);
 
-        when(cloud1.updateStatus()).thenThrow(new IllegalArgumentException("test"));
+        when(cloud1.update()).thenThrow(new IllegalArgumentException("test"));
 
         widgets.add(widget1);
 

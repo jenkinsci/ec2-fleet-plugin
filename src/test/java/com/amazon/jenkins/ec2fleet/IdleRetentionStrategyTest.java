@@ -50,7 +50,7 @@ public class IdleRetentionStrategyTest {
         new IdleRetentionStrategy().check(slaveComputer);
 
         verify(slaveComputer, times(0)).getNode();
-        verify(cloud, times(0)).terminateInstance(anyString());
+        verify(cloud, times(0)).scheduleToTerminate(anyString());
         verify(slaveComputer).setAcceptingTasks(false);
         verify(slaveComputer).setAcceptingTasks(true);
     }
@@ -62,7 +62,7 @@ public class IdleRetentionStrategyTest {
         new IdleRetentionStrategy().check(slaveComputer);
 
         verify(slaveComputer, never()).getNode();
-        verify(cloud, never()).terminateInstance(anyString());
+        verify(cloud, never()).scheduleToTerminate(anyString());
         verify(slaveComputer).setAcceptingTasks(false);
         verify(slaveComputer).setAcceptingTasks(true);
     }
@@ -74,7 +74,7 @@ public class IdleRetentionStrategyTest {
         new IdleRetentionStrategy().check(slaveComputer);
 
         verify(slaveComputer, times(0)).getNode();
-        verify(cloud, times(0)).terminateInstance(anyString());
+        verify(cloud, times(0)).scheduleToTerminate(anyString());
         verify(slaveComputer).setAcceptingTasks(false);
         verify(slaveComputer).setAcceptingTasks(true);
     }
@@ -83,7 +83,7 @@ public class IdleRetentionStrategyTest {
     public void if_idle_time_configured_should_terminate_node_if_idle_time_more_then_allowed() {
         new IdleRetentionStrategy().check(slaveComputer);
 
-        verify(cloud, times(1)).terminateInstance("n-a");
+        verify(cloud, times(1)).scheduleToTerminate("n-a");
         verify(slaveComputer, times(1)).setAcceptingTasks(true);
         verify(slaveComputer, times(1)).setAcceptingTasks(false);
     }
@@ -94,7 +94,7 @@ public class IdleRetentionStrategyTest {
 
         new IdleRetentionStrategy().check(slaveComputer);
 
-        verify(cloud, times(0)).terminateInstance(anyString());
+        verify(cloud, times(0)).scheduleToTerminate(anyString());
         verify(slaveComputer, times(0)).setAcceptingTasks(true);
         verify(slaveComputer, times(0)).setAcceptingTasks(false);
     }
@@ -106,7 +106,7 @@ public class IdleRetentionStrategyTest {
 
         new IdleRetentionStrategy().check(slaveComputer);
 
-        verify(cloud, never()).terminateInstance("n-a");
+        verify(cloud, never()).scheduleToTerminate("n-a");
         verify(slaveComputer, times(1)).setAcceptingTasks(true);
         verify(slaveComputer, times(1)).setAcceptingTasks(false);
     }
@@ -117,21 +117,21 @@ public class IdleRetentionStrategyTest {
 
         new IdleRetentionStrategy().check(slaveComputer);
 
-        verify(cloud, never()).terminateInstance("n-a");
+        verify(cloud, never()).scheduleToTerminate("n-a");
         verify(slaveComputer, times(1)).setAcceptingTasks(true);
         verify(slaveComputer, times(1)).setAcceptingTasks(false);
     }
 
     @Test
     public void if_exception_happen_during_termination_should_throw_it_and_restore_task_accepting() {
-        when(cloud.terminateInstance(anyString())).thenThrow(new IllegalArgumentException("test"));
+        when(cloud.scheduleToTerminate(anyString())).thenThrow(new IllegalArgumentException("test"));
 
         try {
             new IdleRetentionStrategy().check(slaveComputer);
             fail();
         } catch (IllegalArgumentException e) {
             assertEquals("test", e.getMessage());
-            verify(cloud, times(1)).terminateInstance("n-a");
+            verify(cloud, times(1)).scheduleToTerminate("n-a");
             verify(slaveComputer).setAcceptingTasks(false);
             verify(slaveComputer).setAcceptingTasks(true);
         }

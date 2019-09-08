@@ -154,7 +154,7 @@ public class EC2FleetCloudTest {
                 0, false);
 
         // when
-        FleetStateStats stats = fleetCloud.updateStatus();
+        FleetStateStats stats = fleetCloud.update();
 
         // then
         assertEquals(0, stats.getNumDesired());
@@ -190,7 +190,7 @@ public class EC2FleetCloudTest {
         doNothing().when(jenkins).addNode(nodeCaptor.capture());
 
         // when
-        FleetStateStats stats = fleetCloud.updateStatus();
+        FleetStateStats stats = fleetCloud.update();
 
         // then
         assertEquals(0, stats.getNumDesired());
@@ -230,7 +230,7 @@ public class EC2FleetCloudTest {
         doNothing().when(jenkins).addNode(nodeCaptor.capture());
 
         // when
-        FleetStateStats stats = fleetCloud.updateStatus();
+        FleetStateStats stats = fleetCloud.update();
 
         // then
         assertEquals(0, stats.getNumDesired());
@@ -273,7 +273,7 @@ public class EC2FleetCloudTest {
         doNothing().when(jenkins).addNode(nodeCaptor.capture());
 
         // when
-        fleetCloud.updateStatus();
+        fleetCloud.update();
 
         // then
         Node actualFleetNode = nodeCaptor.getValue();
@@ -312,7 +312,7 @@ public class EC2FleetCloudTest {
         doNothing().when(jenkins).addNode(nodeCaptor.capture());
 
         // when
-        fleetCloud.updateStatus();
+        fleetCloud.update();
 
         // then
         Node actualFleetNode = nodeCaptor.getValue();
@@ -351,7 +351,7 @@ public class EC2FleetCloudTest {
         doNothing().when(jenkins).addNode(nodeCaptor.capture());
 
         // when
-        fleetCloud.updateStatus();
+        fleetCloud.update();
 
         // then
         Node actualFleetNode = nodeCaptor.getValue();
@@ -390,7 +390,7 @@ public class EC2FleetCloudTest {
         doNothing().when(jenkins).addNode(nodeCaptor.capture());
 
         // when
-        fleetCloud.updateStatus();
+        fleetCloud.update();
 
         // then
         Node actualFleetNode = nodeCaptor.getValue();
@@ -429,7 +429,7 @@ public class EC2FleetCloudTest {
         doNothing().when(jenkins).addNode(nodeCaptor.capture());
 
         // when
-        fleetCloud.updateStatus();
+        fleetCloud.update();
 
         // then
         Node actualFleetNode = nodeCaptor.getValue();
@@ -468,7 +468,7 @@ public class EC2FleetCloudTest {
         doNothing().when(jenkins).addNode(nodeCaptor.capture());
 
         // when
-        fleetCloud.updateStatus();
+        fleetCloud.update();
 
         // then
         Node actualFleetNode = nodeCaptor.getValue();

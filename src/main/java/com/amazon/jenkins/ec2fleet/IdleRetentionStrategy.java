@@ -55,8 +55,8 @@ public class IdleRetentionStrategy extends RetentionStrategy<SlaveComputer> {
                         return 0;
                     }
 
-                    final String nodeId = compNode.getNodeName();
-                    if (cloud.terminateInstance(nodeId)) {
+                    final String instanceId = compNode.getNodeName();
+                    if (cloud.scheduleToTerminate(instanceId)) {
                         // Instance successfully terminated, so no longer accept tasks
                         shouldAcceptTasks = false;
                         justTerminated = true;

@@ -18,7 +18,6 @@ public class EC2FleetNode extends Slave implements EphemeralNode, EC2FleetCloudA
 
     private volatile EC2FleetCloud cloud;
 
-    @SuppressWarnings("WeakerAccess")
     public EC2FleetNode(final String name, final String nodeDescription, final String remoteFS, final int numExecutors, final Mode mode, final String label,
                         final List<? extends NodeProperty<?>> nodeProperties, final EC2FleetCloud cloud, ComputerLauncher launcher) throws IOException, Descriptor.FormException {
         super(name, nodeDescription, remoteFS, numExecutors, mode, label,
