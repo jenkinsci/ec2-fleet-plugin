@@ -14,6 +14,7 @@ automatically scaling the capacity with the load.
   * [Setup](#setup)
   * [Scaling](#scaling)
   * [Groovy](#groovy)
+  * [Preconfigure Slave](#preconfigure-slave)
 * [Development](#development)
 
 # Overview
@@ -193,6 +194,46 @@ jenkins.clouds.add(ec2FleetCloud)
 // save current Jenkins state to disk
 jenkins.save()
 ```
+
+## Preconfigure Slave
+
+Sometimes you need to prepare slave (which is EC2 instance) before Jenkins could use it.
+For example install some software which will be required by your builds like Maven etc.
+
+For those cases you have a few options, described below:
+
+### Amazon EC2 AMI
+
+**Greate for static preconfiguration**
+
+[AMI](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) allows you to 
+create custom images for your EC2 instances. For example you can create image with
+Linux plus Java, Maven etc. as result when EC2 fleet will launch new EC2 instance with
+this AMI it will automatically get all required software. Nice =)
+
+1. Create custom AMI as described [here](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html#creating-an-ami)
+1. Create EC2 Spot Fleet with this AMI
+
+### EC2 instance User Data
+
+EC2 instance allows to specify special script [User Data](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html)
+which will be executed when EC2 instance is created. That's allow you to do some customization
+for particular instance.
+
+However, EC2 instance doesn't provide any information about User Data execution status,
+as result Jenkins could start task on new instances while User Data still in progress.
+
+To avoid that you can use Jenkins SSH Launcher ```Prefix Start Agent Command``` setting
+to specify command which should fail if User Data is not finished, in that way Jenkins will
+not be able to connect to instance until User Data is not done [more](https://github.com/jenkinsci/ssh-slaves-plugin/blob/master/doc/CONFIGURE.md)
+
+1. Prepare [User Data script](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html)
+1. Open Jenkins
+1. Goto ```Manage Jenkins > Configure Jenkins```
+1. Find proper fleet configuration and click ```Advance``` for SSH Launcher
+1. Add checking command into field ```	Prefix Start Slave Command```
+   - example ```java -version && ```
+1. To apply for existent instances restart Jenkins or Delete Nodes from Jenkins so they will be reconnected 
 
 # Development
 
