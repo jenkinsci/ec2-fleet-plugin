@@ -136,7 +136,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
         Thread.sleep(TimeUnit.MINUTES.toMillis(2));
 
-        verify(cloud, times(1)).provisionInternal(any(Label.class), anyInt());
+        verify(cloud, times(1)).provision(any(Label.class), anyInt());
 
         cancelTasks(rs);
     }
@@ -161,7 +161,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
             @Override
             public void run() {
                 j.jenkins.getLabelAtom("momo").nodeProvisioner.suggestReviewNow();
-                verify(cloud, atLeast(2)).provisionInternal(any(Label.class), anyInt());
+                verify(cloud, atLeast(2)).provision(any(Label.class), anyInt());
             }
         });
     }

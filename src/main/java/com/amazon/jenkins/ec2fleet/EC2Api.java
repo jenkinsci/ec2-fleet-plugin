@@ -10,6 +10,7 @@ import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.InstanceStateName;
 import com.amazonaws.services.ec2.model.Reservation;
+import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
 import com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentials;
 import com.google.common.collect.ImmutableSet;
@@ -110,6 +111,33 @@ public class EC2Api {
                         throw exception;
                     }
                     copy.removeAll(notFoundInstanceIds);
+                }
+            }
+        }
+    }
+
+    /**
+     * Auto handle instance not found exception if any and assume those instances as already terminated
+     *
+     * @param ec2
+     * @param instanceIds
+     */
+    public void terminateInstances(final AmazonEC2 ec2, final Set<String> instanceIds) {
+        final List<String> temp = new ArrayList<>(instanceIds);
+        while (temp.size() > 0) {
+            // terminateInstances is idempotent so it can be called until it's successful
+            try {
+                ec2.terminateInstances(new TerminateInstancesRequest(temp));
+            } catch (AmazonEC2Exception exception) {
+                // if we cannot find instance, that's fine assume them as terminated
+                // remove from request and try again
+                if (exception.getErrorCode().equals(NOT_FOUND_ERROR_CODE)) {
+                    final List<String> notFoundInstanceIds = parseInstanceIdsFromNotFoundException(exception.getMessage());
+                    if (notFoundInstanceIds.isEmpty()) {
+                        // looks like we cannot parse correctly, rethrow
+                        throw exception;
+                    }
+                    temp.removeAll(notFoundInstanceIds);
                 }
             }
         }
