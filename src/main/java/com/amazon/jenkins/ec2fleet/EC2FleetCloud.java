@@ -307,6 +307,11 @@ public class EC2FleetCloud extends Cloud {
     }
 
     @VisibleForTesting
+    synchronized FleetStateStats getStats() {
+        return stats;
+    }
+
+    @VisibleForTesting
     synchronized void setStats(final FleetStateStats stats) {
         this.stats = stats;
     }
@@ -527,7 +532,7 @@ public class EC2FleetCloud extends Cloud {
         }
 
         // We can't remove instances beyond minSize
-        if (stats.getNumDesired() - instanceIdsToTerminate.size() <= minSize) {
+        if (minSize > 0 && stats.getNumDesired() - instanceIdsToTerminate.size() <= minSize) {
             info("Not terminating %s because we need a minimum of %s instances running.", instanceId, minSize);
             return false;
         }
