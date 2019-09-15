@@ -48,7 +48,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -320,39 +319,22 @@ public class EC2FleetCloud extends Cloud {
     public synchronized Collection<NodeProvisioner.PlannedNode> provision(final Label label, final int excessWorkload) {
         info("excessWorkload %s", excessWorkload);
 
-        synchronized (this) {
-            if (stats == null) {
-                info("No first update, skip provision");
-                return Collections.emptyList();
-            }
+        if (stats == null) {
+            info("No first update, skip provision");
+            return Collections.emptyList();
         }
 
-        try {
-            // todo this lock is redundant, NodeProvisioner line 305 as example why
-            return Queue.withLock(new Callable<Collection<NodeProvisioner.PlannedNode>>() {
-                @Override
-                public Collection<NodeProvisioner.PlannedNode> call() {
-                    return provisionUnderQueueLock(excessWorkload);
-                }
-            });
-        } catch (Exception exception) {
-            warning(exception, "provision failed");
-            throw new IllegalStateException(exception);
-        }
-    }
-
-    private synchronized Collection<NodeProvisioner.PlannedNode> provisionUnderQueueLock(final int excessWorkload) {
         final int cap = stats.getNumDesired() + toAdd;
 
         if (cap >= getMaxSize() || !"active".equals(stats.getState()))
             return Collections.emptyList();
 
         // if the planned node has 0 executors configured force it to 1 so we end up doing an unweighted check
-        final int numExecutors = EC2FleetCloud.this.numExecutors == 0 ? 1 : EC2FleetCloud.this.numExecutors;
+        final int numExecutors1 = this.numExecutors == 0 ? 1 : this.numExecutors;
 
         // Calculate the ceiling, without having to work with doubles from Math.ceil
         // https://stackoverflow.com/a/21830188/877024
-        final int weightedExcessWorkload = (excessWorkload + numExecutors - 1) / numExecutors;
+        final int weightedExcessWorkload = (excessWorkload + numExecutors1 - 1) / numExecutors1;
         int targetCapacity = Math.min(cap + weightedExcessWorkload, getMaxSize());
 
         int toProvision = targetCapacity - cap;
@@ -366,7 +348,7 @@ public class EC2FleetCloud extends Cloud {
         for (int f = 0; f < toProvision; ++f) {
             // todo make name unique per fleet
             final NodeProvisioner.PlannedNode plannedNode = new NodeProvisioner.PlannedNode(
-                    "FleetNode-" + f, SettableFuture.<Node>create(), EC2FleetCloud.this.numExecutors);
+                    "FleetNode-" + f, SettableFuture.<Node>create(), this.numExecutors);
             resultList.add(plannedNode);
             plannedNodesCache.add(plannedNode);
         }
@@ -411,16 +393,24 @@ public class EC2FleetCloud extends Cloud {
         if (currentInstanceIdsToTerminate.size() > 0) {
             // remove nodes from Jenkins
             synchronized (jenkins) {
-                for (final String instanceId : currentInstanceIdsToTerminate) {
-                    final Node node = jenkins.getNode(instanceId);
-                    if (node != null) {
-                        try {
-                            jenkins.removeNode(node);
-                        } catch (IOException e) {
-                            warning("unable remove node %s from Jenkins, skip, just terminate EC2 instance", instanceId);
+                // internally removeNode lock on queue to correctly update node list
+                // we do big block for all removal to avoid delay on lock waiting
+                // for each node
+                Queue.withLock(new Runnable() {
+                    @Override
+                    public void run() {
+                        for (final String instanceId : currentInstanceIdsToTerminate) {
+                            final Node node = jenkins.getNode(instanceId);
+                            if (node != null) {
+                                try {
+                                    jenkins.removeNode(node);
+                                } catch (IOException e) {
+                                    warning("unable remove node %s from Jenkins, skip, just terminate EC2 instance", instanceId);
+                                }
+                            }
                         }
                     }
-                }
+                });
             }
             info("Delete terminating nodes from Jenkins %s", currentInstanceIdsToTerminate);
 
@@ -489,12 +479,21 @@ public class EC2FleetCloud extends Cloud {
         }
 
         // If we have new instances - create nodes for them!
-        try {
-            for (final Instance instance : newFleetInstances.values()) {
-                addNewSlave(ec2, instance, currentStats);
-            }
-        } catch (final Exception ex) {
-            warning(ex, "Unable to set label on node");
+        if (newFleetInstances.size() > 0) {
+            // addNewSlave will call addNode which call queue lock
+            // we speed up this by getting one lock for all nodes to all
+            Queue.withLock(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        for (final Instance instance : newFleetInstances.values()) {
+                            addNewSlave(ec2, instance, currentStats);
+                        }
+                    } catch (final Exception ex) {
+                        warning(ex, "Unable to set label on node");
+                    }
+                }
+            });
         }
 
         // lock and update state of plugin, so terminate or provision could work with new state of world

@@ -31,6 +31,8 @@ public class IdleRetentionStrategy extends RetentionStrategy<SlaveComputer> {
         final EC2FleetNodeComputer fc = (EC2FleetNodeComputer) computer;
         final EC2FleetCloud cloud = fc.getCloud();
 
+        LOGGER.log(Level.INFO, "Check if node idle " + computer.getName());
+
         // in some multi-thread edge cases cloud could be null for some time, just be ok with that
         if (cloud == null) {
             LOGGER.warning("Edge case cloud is null for computer " + fc.getDisplayName()
@@ -40,36 +42,33 @@ public class IdleRetentionStrategy extends RetentionStrategy<SlaveComputer> {
 
         // Ensure that the EC2FleetCloud cannot be mutated from under us while
         // we're doing this check
-        //noinspection SynchronizationOnLocalVariableOrMethodParameter
-        synchronized (cloud) {
-            // Ensure nobody provisions onto this node until we've done
-            // checking
-            boolean shouldAcceptTasks = fc.isAcceptingTasks();
-            boolean justTerminated = false;
-            fc.setAcceptingTasks(false);
-            try {
-                if (fc.isIdle() && isIdleForTooLong(cloud, fc)) {
-                    // Find instance ID
-                    Node compNode = fc.getNode();
-                    if (compNode == null) {
-                        return 0;
-                    }
-
-                    final String instanceId = compNode.getNodeName();
-                    if (cloud.scheduleToTerminate(instanceId)) {
-                        // Instance successfully terminated, so no longer accept tasks
-                        shouldAcceptTasks = false;
-                        justTerminated = true;
-                    }
+        // Ensure nobody provisions onto this node until we've done
+        // checking
+        boolean shouldAcceptTasks = fc.isAcceptingTasks();
+        boolean justTerminated = false;
+        fc.setAcceptingTasks(false);
+        try {
+            if (fc.isIdle() && isIdleForTooLong(cloud, fc)) {
+                // Find instance ID
+                Node compNode = fc.getNode();
+                if (compNode == null) {
+                    return 0;
                 }
 
-                if (cloud.isAlwaysReconnect() && !justTerminated && fc.isOffline() && !fc.isConnecting() && fc.isLaunchSupported()) {
-                    LOGGER.log(Level.INFO, "Reconnecting to instance: " + fc.getDisplayName());
-                    fc.tryReconnect();
+                final String instanceId = compNode.getNodeName();
+                if (cloud.scheduleToTerminate(instanceId)) {
+                    // Instance successfully terminated, so no longer accept tasks
+                    shouldAcceptTasks = false;
+                    justTerminated = true;
                 }
-            } finally {
-                fc.setAcceptingTasks(shouldAcceptTasks);
             }
+
+            if (cloud.isAlwaysReconnect() && !justTerminated && fc.isOffline() && !fc.isConnecting() && fc.isLaunchSupported()) {
+                LOGGER.log(Level.INFO, "Reconnecting to instance: " + fc.getDisplayName());
+                fc.tryReconnect();
+            }
+        } finally {
+            fc.setAcceptingTasks(shouldAcceptTasks);
         }
 
         return RE_CHECK_IN_MINUTE;
@@ -86,7 +85,7 @@ public class IdleRetentionStrategy extends RetentionStrategy<SlaveComputer> {
         if (idleMinutes <= 0) return false;
         final long idleTime = System.currentTimeMillis() - computer.getIdleStartMilliseconds();
         final long maxIdle = TimeUnit.MINUTES.toMillis(idleMinutes);
-        LOGGER.log(Level.FINE, "Instance: " + computer.getDisplayName() + " Age: " + idleTime + " Max Age:" + maxIdle);
+        LOGGER.log(Level.INFO, "Instance: " + computer.getDisplayName() + " Age: " + idleTime + " Max Age:" + maxIdle);
         return idleTime > maxIdle;
     }
 }
