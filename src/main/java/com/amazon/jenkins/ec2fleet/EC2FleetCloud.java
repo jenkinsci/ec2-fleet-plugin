@@ -391,27 +391,24 @@ public class EC2FleetCloud extends Cloud {
         }
 
         if (currentInstanceIdsToTerminate.size() > 0) {
-            // remove nodes from Jenkins
-            synchronized (jenkins) {
-                // internally removeNode lock on queue to correctly update node list
-                // we do big block for all removal to avoid delay on lock waiting
-                // for each node
-                Queue.withLock(new Runnable() {
-                    @Override
-                    public void run() {
-                        for (final String instanceId : currentInstanceIdsToTerminate) {
-                            final Node node = jenkins.getNode(instanceId);
-                            if (node != null) {
-                                try {
-                                    jenkins.removeNode(node);
-                                } catch (IOException e) {
-                                    warning("unable remove node %s from Jenkins, skip, just terminate EC2 instance", instanceId);
-                                }
+            // internally removeNode lock on queue to correctly update node list
+            // we do big block for all removal to avoid delay on lock waiting
+            // for each node
+            Queue.withLock(new Runnable() {
+                @Override
+                public void run() {
+                    for (final String instanceId : currentInstanceIdsToTerminate) {
+                        final Node node = jenkins.getNode(instanceId);
+                        if (node != null) {
+                            try {
+                                jenkins.removeNode(node);
+                            } catch (IOException e) {
+                                warning("unable remove node %s from Jenkins, skip, just terminate EC2 instance", instanceId);
                             }
                         }
                     }
-                });
-            }
+                }
+            });
             info("Delete terminating nodes from Jenkins %s", currentInstanceIdsToTerminate);
 
             Registry.getEc2Api().terminateInstances(ec2, currentInstanceIdsToTerminate);
@@ -561,16 +558,13 @@ public class EC2FleetCloud extends Cloud {
 
     private void removeNode(final String instanceId) {
         final Jenkins jenkins = Jenkins.getInstance();
-        //noinspection SynchronizationOnLocalVariableOrMethodParameter
-        synchronized (jenkins) {
-            // If this node is dying, remove it from Jenkins
-            final Node n = jenkins.getNode(instanceId);
-            if (n != null) {
-                try {
-                    jenkins.removeNode(n);
-                } catch (final Exception ex) {
-                    throw new IllegalStateException(String.format("Error removing node %s", instanceId), ex);
-                }
+        // If this node is dying, remove it from Jenkins
+        final Node n = jenkins.getNode(instanceId);
+        if (n != null) {
+            try {
+                jenkins.removeNode(n);
+            } catch (final Exception ex) {
+                throw new IllegalStateException(String.format("Error removing node %s", instanceId), ex);
             }
         }
     }
@@ -625,11 +619,8 @@ public class EC2FleetCloud extends Cloud {
         node.setRetentionStrategy(new IdleRetentionStrategy());
 
         final Jenkins jenkins = Jenkins.getInstance();
-        //noinspection SynchronizationOnLocalVariableOrMethodParameter
-        synchronized (jenkins) {
-            // jenkins automatically remove old node with same name if any
-            jenkins.addNode(node);
-        }
+        // jenkins automatically remove old node with same name if any
+        jenkins.addNode(node);
 
         final SettableFuture<Node> future;
         if (plannedNodesCache.isEmpty()) {
