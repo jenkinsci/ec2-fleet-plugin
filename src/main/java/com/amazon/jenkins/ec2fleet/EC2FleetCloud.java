@@ -326,8 +326,15 @@ public class EC2FleetCloud extends Cloud {
 
         final int cap = stats.getNumDesired() + toAdd;
 
-        if (cap >= getMaxSize() || !"active".equals(stats.getState()))
+        if (cap >= getMaxSize()) {
+            info("max %s reached, no more provision", getMaxSize());
             return Collections.emptyList();
+        }
+
+        if (!"active".equals(stats.getState())) {
+            info("fleet in %s not active state", stats.getState());
+            return Collections.emptyList();
+        }
 
         // if the planned node has 0 executors configured force it to 1 so we end up doing an unweighted check
         final int numExecutors1 = this.numExecutors == 0 ? 1 : this.numExecutors;
@@ -586,7 +593,7 @@ public class EC2FleetCloud extends Cloud {
         // Check if we have the address to use. Nodes don't get it immediately.
         if (address == null) {
             if (!privateIpUsed) {
-                info("%s instance %s public IP address not assigned, it could take some time or" +
+                info("%s instance public IP address not assigned, it could take some time or" +
                         " Spot Request is not configured to assign public IPs", instance.getInstanceId());
             }
             return; // wait more time, probably IP address not yet assigned

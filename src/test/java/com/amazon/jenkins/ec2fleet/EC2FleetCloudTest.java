@@ -365,6 +365,33 @@ public class EC2FleetCloudTest {
     }
 
     @Test
+    public void scheduleToTerminate_upToZeroNodes() {
+        // given
+        when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
+
+        PowerMockito.when(FleetStateStats.readClusterState(any(AmazonEC2.class), anyString(), anyString()))
+                .thenReturn(new FleetStateStats("", 0, "active",
+                        Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
+                "", "", "", null, null, false,
+                false, 0, 0, 1, 1, false,
+                false, false, 0, 0, false);
+
+        fleetCloud.setStats(new FleetStateStats("", 2, "active",
+                Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+
+        // when
+        boolean r1 = fleetCloud.scheduleToTerminate("z-1");
+        boolean r2 = fleetCloud.scheduleToTerminate("z-2");
+
+        // then
+        assertTrue(r1);
+        assertTrue(r2);
+        assertEquals(ImmutableSet.of("z-1", "z-2"), fleetCloud.getInstanceIdsToTerminate());
+    }
+
+    @Test
     public void scheduleToTerminate_removeNoMoreMinIfCalledMultipleBeforeUpdate() {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
@@ -503,6 +530,40 @@ public class EC2FleetCloudTest {
         for (int i = 0; i < 10; i++) fleetCloud.provision(null, 1);
         for (int i = 0; i < 10; i++) fleetCloud.scheduleToTerminate("i-" + i);
         for (int i = 0; i < 10; i++) fleetCloud.provision(null, 1);
+
+        // when
+        fleetCloud.update();
+
+        // then
+        verify(amazonEC2).modifySpotFleetRequest(
+                new ModifySpotFleetRequestRequest()
+                        .withExcessCapacityTerminationPolicy("NoTermination")
+                        .withSpotFleetRequestId("fleetId")
+                        .withTargetCapacity(0));
+        assertEquals(0, fleetCloud.getInstanceIdsToTerminate().size());
+        assertEquals(0, fleetCloud.getToAdd());
+    }
+
+    @Test
+    public void update_shouldNotCountScheduledToTerminateWhenScaleUp() {
+        // given
+        when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
+
+        PowerMockito.when(FleetStateStats.readClusterState(any(AmazonEC2.class), anyString(), anyString()))
+                .thenReturn(new FleetStateStats("fleetId", 0, "active",
+                        Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
+                "", "fleetId", "", null, null, false,
+                false, 0, 0, 10, 1,
+                false, false, false, 0,
+                0, false);
+
+        fleetCloud.setStats(new FleetStateStats("", 5, "active",
+                Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+
+        for (int i = 0; i < 10; i++) fleetCloud.provision(null, 1);
+        for (int i = 0; i < 5; i++) fleetCloud.scheduleToTerminate("i-" + i);
 
         // when
         fleetCloud.update();

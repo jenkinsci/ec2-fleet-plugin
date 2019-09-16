@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -125,6 +126,11 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 1, false, false,
                 false, 300, 15, false));
+
+        // provide init state
+        cloud.setStats(new FleetStateStats("", 0, "active",
+                Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+
         j.jenkins.clouds.add(cloud);
 
         mockEc2ApiToDescribeInstancesWhenModified(InstanceStateName.Running);
@@ -176,6 +182,10 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 1, false, false,
                 false, 0, 0, false));
+
+        cloud.setStats(new FleetStateStats("", 0, "active",
+                Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+
         j.jenkins.clouds.add(cloud);
 
         EC2Api ec2Api = spy(EC2Api.class);
