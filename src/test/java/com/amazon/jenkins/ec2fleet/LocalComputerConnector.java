@@ -15,17 +15,18 @@ import java.net.URISyntaxException;
  *
  * @see AutoResubmitIntegrationTest
  */
-class SingleLocalComputerConnector extends ComputerConnector implements Serializable {
+class LocalComputerConnector extends ComputerConnector implements Serializable {
 
     @Nonnull
     private transient final JenkinsRule j;
 
-    SingleLocalComputerConnector(final JenkinsRule j) {
+    LocalComputerConnector(final JenkinsRule j) {
         this.j = j;
     }
 
     @Override
     public ComputerLauncher launch(@Nonnull String host, TaskListener listener) throws IOException {
+        System.out.println("Creating computer launcher");
         try {
             return j.createComputerLauncher(null);
         } catch (URISyntaxException e) {

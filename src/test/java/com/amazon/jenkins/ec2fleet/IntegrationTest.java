@@ -15,6 +15,8 @@ import com.amazonaws.services.ec2.model.ModifySpotFleetRequestRequest;
 import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.SpotFleetRequestConfig;
 import com.amazonaws.services.ec2.model.SpotFleetRequestConfigData;
+import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
+import com.amazonaws.services.ec2.model.TerminateInstancesResult;
 import hudson.Functions;
 import hudson.model.AbstractBuild;
 import hudson.model.FreeStyleProject;
@@ -59,6 +61,8 @@ import static org.mockito.Mockito.when;
  */
 @SuppressWarnings("WeakerAccess")
 public abstract class IntegrationTest {
+
+    protected static final long JOB_SLEEP_TIME = 30;
 
     @ClassRule
     public static BuildWatcher bw = new BuildWatcher();
@@ -138,8 +142,11 @@ public abstract class IntegrationTest {
     }
 
     protected static void tryUntil(Runnable r) {
+        tryUntil(r, TimeUnit.SECONDS.toMillis(60));
+    }
+
+    protected static void tryUntil(Runnable r, long time) {
         long d = TimeUnit.SECONDS.toMillis(5);
-        long time = TimeUnit.SECONDS.toMillis(60);
         final long start = System.currentTimeMillis();
 
         while (true) {
@@ -173,7 +180,7 @@ public abstract class IntegrationTest {
         for (int i = 0; i < count; i++) {
             final FreeStyleProject project = j.createFreeStyleProject();
             project.setAssignedLabel(label);
-            project.getBuildersList().add(Functions.isWindows() ? new BatchFile("Ping -n 30 127.0.0.1 > nul") : new Shell("sleep 30"));
+            project.getBuildersList().add(Functions.isWindows() ? new BatchFile("Ping -n " + JOB_SLEEP_TIME + " 127.0.0.1 > nul") : new Shell("sleep " + JOB_SLEEP_TIME));
             rs.add(project.scheduleBuild2(0));
         }
         return rs;
@@ -185,41 +192,86 @@ public abstract class IntegrationTest {
         return r;
     }
 
+    private static class AnswerWithDelay<T> implements Answer<T> {
+
+        private final Answer<T> delegate;
+        private final long delayMillis;
+
+        public static <T> Answer<T> get(Answer<T> delegate, long delayMillis) {
+            if (delayMillis == 0) {
+                return delegate;
+            } else {
+                return new AnswerWithDelay<>(delegate, delayMillis);
+            }
+        }
+
+        private AnswerWithDelay(Answer<T> delegate, long delayMillis) {
+            this.delegate = delegate;
+            this.delayMillis = delayMillis;
+        }
+
+        @Override
+        public T answer(InvocationOnMock invocation) throws Throwable {
+            Thread.sleep(delayMillis);
+            return delegate.answer(invocation);
+        }
+
+    }
+
     protected void mockEc2ApiToDescribeInstancesWhenModified(final InstanceStateName instanceStateName) {
+        mockEc2ApiToDescribeInstancesWhenModifiedWithDelay(instanceStateName, 0);
+    }
+
+    protected void mockEc2ApiToDescribeInstancesWhenModifiedWithDelay(final InstanceStateName instanceStateName, final long delayMillis) {
         EC2Api ec2Api = spy(EC2Api.class);
         Registry.setEc2Api(ec2Api);
 
         AmazonEC2 amazonEC2 = mock(AmazonEC2.class);
         when(ec2Api.connect(anyString(), anyString(), Mockito.nullable(String.class))).thenReturn(amazonEC2);
 
+        when(amazonEC2.terminateInstances(any(TerminateInstancesRequest.class)))
+                .thenAnswer(AnswerWithDelay.get(new Answer<Object>() {
+                    @Override
+                    public Object answer(InvocationOnMock invocation) throws Throwable {
+                        return new TerminateInstancesResult();
+                    }
+                }, delayMillis));
+
         when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class)))
-                .then(new Answer<Object>() {
+                .then(AnswerWithDelay.get(new Answer<Object>() {
                     @Override
                     public Object answer(InvocationOnMock invocationOnMock) {
                         DescribeInstancesRequest request = invocationOnMock.getArgument(0);
+
+                        System.out.println("call describeInstances(" + request.getInstanceIds().size() + ")");
+                        final List<Instance> instances = new ArrayList<>();
+                        for (final String instanceId : request.getInstanceIds()) {
+                            instances.add(new Instance()
+                                    .withState(new InstanceState().withName(instanceStateName))
+                                    .withPublicIpAddress("public-io")
+                                    .withInstanceId(instanceId));
+                        }
+
                         return new DescribeInstancesResult().withReservations(
-                                new Reservation().withInstances(
-                                        new Instance()
-                                                .withState(new InstanceState().withName(instanceStateName))
-                                                .withPublicIpAddress("public-io")
-                                                .withInstanceId(request.getInstanceIds().get(0))
-                                ));
+                                new Reservation().withInstances(instances));
                     }
-                });
+                }, delayMillis));
 
         final AtomicInteger targetCapacity = new AtomicInteger(0);
 
-        when(amazonEC2.modifySpotFleetRequest(any(ModifySpotFleetRequestRequest.class))).then(new Answer<Object>() {
-            @Override
-            public Object answer(InvocationOnMock invocationOnMock) {
-                ModifySpotFleetRequestRequest argument = invocationOnMock.getArgument(0);
-                targetCapacity.set(argument.getTargetCapacity());
-                return null;
-            }
-        });
+        when(amazonEC2.modifySpotFleetRequest(any(ModifySpotFleetRequestRequest.class)))
+                .then(AnswerWithDelay.get(new Answer<Object>() {
+                    @Override
+                    public Object answer(InvocationOnMock invocationOnMock) {
+                        ModifySpotFleetRequestRequest argument = invocationOnMock.getArgument(0);
+                        System.out.println("modifySpotFleetRequest(targetCapacity = " + argument.getTargetCapacity() + ")");
+                        targetCapacity.set(argument.getTargetCapacity());
+                        return null;
+                    }
+                }, delayMillis));
 
         when(amazonEC2.describeSpotFleetInstances(any(DescribeSpotFleetInstancesRequest.class)))
-                .then(new Answer<Object>() {
+                .then(AnswerWithDelay.get(new Answer<Object>() {
                     @Override
                     public Object answer(InvocationOnMock invocationOnMock) {
                         final List<ActiveInstance> activeInstances = new ArrayList<>();
@@ -229,16 +281,19 @@ public abstract class IntegrationTest {
                         }
                         return new DescribeSpotFleetInstancesResult().withActiveInstances(activeInstances);
                     }
-                });
+                }, delayMillis));
 
-        DescribeSpotFleetRequestsResult describeSpotFleetRequestsResult = new DescribeSpotFleetRequestsResult();
-        describeSpotFleetRequestsResult.setSpotFleetRequestConfigs(Arrays.asList(
-                new SpotFleetRequestConfig()
-                        .withSpotFleetRequestState("active")
-                        .withSpotFleetRequestConfig(
-                                new SpotFleetRequestConfigData().withTargetCapacity(0))));
         when(amazonEC2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenReturn(describeSpotFleetRequestsResult);
+                .thenAnswer(AnswerWithDelay.get(new Answer<Object>() {
+                    @Override
+                    public Object answer(InvocationOnMock invocationOnMock) {
+                        return new DescribeSpotFleetRequestsResult().withSpotFleetRequestConfigs(Arrays.asList(
+                                new SpotFleetRequestConfig()
+                                        .withSpotFleetRequestState("active")
+                                        .withSpotFleetRequestConfig(
+                                                new SpotFleetRequestConfigData().withTargetCapacity(targetCapacity.get()))));
+                    }
+                }, delayMillis));
     }
 
     protected void mockEc2ApiToDescribeFleetNotInstanceWhenModified() {
