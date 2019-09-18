@@ -42,7 +42,7 @@ public class ProvisionPerformanceTest extends IntegrationTest {
         final EC2FleetCloudWithMeter cloud = new EC2FleetCloudWithMeter(null, null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 1, 0, workers, 1, true, false,
-                false, 0, 0, false);
+                false, 0, 0, false, 2);
         j.jenkins.clouds.add(cloud);
 
         // updated plugin requires some init time to get first update

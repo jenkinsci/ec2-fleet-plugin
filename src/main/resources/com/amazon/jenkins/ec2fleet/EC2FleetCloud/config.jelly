@@ -105,6 +105,11 @@
     <f:entry title="${%Maximum Init Connection Timeout in sec}" field="initOnlineTimeoutSec">
       <f:number clazz="required positive-number" default="180" />
     </f:entry>
+
+    <f:description>Interval for updating EC2 cloud status</f:description>
+    <f:entry title="${%Cloud Status Interval in sec}" field="cloudStatusIntervalSec">
+      <f:number clazz="required positive-number" default="10" />
+    </f:entry>
   </f:section>
 
 </j:jelly>

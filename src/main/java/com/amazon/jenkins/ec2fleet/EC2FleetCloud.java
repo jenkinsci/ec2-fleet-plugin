@@ -61,6 +61,8 @@ public class EC2FleetCloud extends Cloud {
 
     public static final String FLEET_CLOUD_ID = "FleetCloud";
 
+    public static final int DEFAULT_CLOUD_STATUS_INTERVAL_SEC = 10;
+
     private static final int DEFAULT_INIT_ONLINE_TIMEOUT_SEC = 3 * 60;
     private static final int DEFAULT_INIT_ONLINE_CHECK_INTERVAL_SEC = 15;
 
@@ -122,6 +124,7 @@ public class EC2FleetCloud extends Cloud {
     private final boolean scaleExecutorsByWeight;
     private final Integer initOnlineTimeoutSec;
     private final Integer initOnlineCheckIntervalSec;
+    private final Integer cloudStatusIntervalSec;
 
     /**
      * @see EC2FleetAutoResubmitComputerLauncher
@@ -168,7 +171,8 @@ public class EC2FleetCloud extends Cloud {
                          final boolean disableTaskResubmit,
                          final Integer initOnlineTimeoutSec,
                          final Integer initOnlineCheckIntervalSec,
-                         final boolean scaleExecutorsByWeight) {
+                         final boolean scaleExecutorsByWeight,
+                         final Integer cloudStatusIntervalSec) {
         super(StringUtils.isBlank(name) ? FLEET_CLOUD_ID : name);
         init();
         this.credentialsId = credentialsId;
@@ -191,6 +195,7 @@ public class EC2FleetCloud extends Cloud {
         this.disableTaskResubmit = disableTaskResubmit;
         this.initOnlineTimeoutSec = initOnlineTimeoutSec;
         this.initOnlineCheckIntervalSec = initOnlineCheckIntervalSec;
+        this.cloudStatusIntervalSec = cloudStatusIntervalSec;
 
         if (StringUtils.isNotEmpty(oldId)) {
             // existent cloud was modified, let's re-assign all dependencies of old cloud instance
@@ -225,6 +230,10 @@ public class EC2FleetCloud extends Cloud {
 
     public int getInitOnlineTimeoutSec() {
         return initOnlineTimeoutSec == null ? DEFAULT_INIT_ONLINE_TIMEOUT_SEC : initOnlineTimeoutSec;
+    }
+
+    public int getCloudStatusIntervalSec() {
+        return cloudStatusIntervalSec == null ? DEFAULT_CLOUD_STATUS_INTERVAL_SEC : cloudStatusIntervalSec;
     }
 
     public int getInitOnlineCheckIntervalSec() {

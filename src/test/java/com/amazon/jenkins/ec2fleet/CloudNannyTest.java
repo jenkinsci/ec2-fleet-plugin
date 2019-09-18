@@ -2,6 +2,7 @@ package com.amazon.jenkins.ec2fleet;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.MapMaker;
 import hudson.slaves.Cloud;
 import hudson.widgets.Widget;
 import org.junit.Before;
@@ -16,7 +17,10 @@ import org.powermock.reflect.Whitebox;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -49,6 +53,16 @@ public class CloudNannyTest {
     private FleetStateStats stats2 = new FleetStateStats(
             "f2", 1, "a", ImmutableSet.<String>of(), Collections.<String, Double>emptyMap());
 
+    private int recurrencePeriod = 45;
+
+    private AtomicInteger recurrenceCounter1 = new AtomicInteger();
+    private AtomicInteger recurrenceCounter2 = new AtomicInteger();
+
+    private ConcurrentMap<EC2FleetCloud, AtomicInteger> recurrenceCounters = new MapMaker()
+            .weakKeys()
+            .concurrencyLevel(2)
+            .makeMap();
+
     @Before
     public void before() throws Exception {
         PowerMockito.mockStatic(CloudNanny.class);
@@ -62,11 +76,29 @@ public class CloudNannyTest {
 
         when(cloud1.update()).thenReturn(stats1);
         when(cloud2.update()).thenReturn(stats2);
+
+        when(cloud1.getCloudStatusIntervalSec()).thenReturn(recurrencePeriod);
+        when(cloud2.getCloudStatusIntervalSec()).thenReturn(recurrencePeriod * 2);
+
+        recurrenceCounters.put(cloud1, recurrenceCounter1);
+        recurrenceCounters.put(cloud2, recurrenceCounter2);
+    }
+
+    private CloudNanny getMockCloudNannyInstance() {
+        CloudNanny cloudNanny = Whitebox.newInstance(CloudNanny.class);
+
+        // next execution should trigger running the status check.
+        recurrenceCounter1.set(1);
+        recurrenceCounter2.set(1);
+
+        Whitebox.setInternalState(cloudNanny, "recurrenceCounters", recurrenceCounters);
+
+        return cloudNanny;
     }
 
     @Test
     public void shouldDoNothingIfNoCloudsAndWidgets() throws Exception {
-        Whitebox.newInstance(CloudNanny.class).doRun();
+        getMockCloudNannyInstance().doRun();
     }
 
     @Test
@@ -74,7 +106,7 @@ public class CloudNannyTest {
         clouds.add(cloud1);
         clouds.add(cloud2);
 
-        Whitebox.newInstance(CloudNanny.class).doRun();
+        getMockCloudNannyInstance().doRun();
     }
 
     @Test
@@ -83,7 +115,7 @@ public class CloudNannyTest {
 
         widgets.add(widget1);
 
-        Whitebox.newInstance(CloudNanny.class).doRun();
+        getMockCloudNannyInstance().doRun();
 
         verify(widget1).setStatusList(ImmutableList.of(new EC2FleetStatusInfo(
                 cloud1.getFleet(), stats1.getState(), cloud1.getLabelString(), stats1.getNumActive(), stats1.getNumDesired())));
@@ -96,7 +128,7 @@ public class CloudNannyTest {
         widgets.add(widget1);
         widgets.add(widget2);
 
-        Whitebox.newInstance(CloudNanny.class).doRun();
+        getMockCloudNannyInstance().doRun();
 
         verify(widget1).setStatusList(ImmutableList.of(new EC2FleetStatusInfo(
                 cloud1.getFleet(), stats1.getState(), cloud1.getLabelString(), stats1.getNumActive(), stats1.getNumDesired())));
@@ -113,7 +145,7 @@ public class CloudNannyTest {
 
         widgets.add(widget2);
 
-        Whitebox.newInstance(CloudNanny.class).doRun();
+        getMockCloudNannyInstance().doRun();
 
         verify(cloud1).update();
         verifyZeroInteractions(nonEc2FleetCloud);
@@ -126,7 +158,7 @@ public class CloudNannyTest {
 
         widgets.add(widget1);
 
-        Whitebox.newInstance(CloudNanny.class).doRun();
+        getMockCloudNannyInstance().doRun();
 
         verify(widget1).setStatusList(ImmutableList.of(
                 new EC2FleetStatusInfo(cloud1.getFleet(), stats1.getState(), cloud1.getLabelString(), stats1.getNumActive(), stats1.getNumDesired()),
@@ -143,7 +175,7 @@ public class CloudNannyTest {
 
         widgets.add(widget1);
 
-        Whitebox.newInstance(CloudNanny.class).doRun();
+        getMockCloudNannyInstance().doRun();
 
         verify(widget1).setStatusList(ImmutableList.of(
                 new EC2FleetStatusInfo(cloud2.getFleet(), stats2.getState(), cloud2.getLabelString(), stats2.getNumActive(), stats2.getNumDesired())
@@ -160,10 +192,62 @@ public class CloudNannyTest {
 
         widgets.add(widget1);
 
-        Whitebox.newInstance(CloudNanny.class).doRun();
+        getMockCloudNannyInstance().doRun();
 
         verify(widget1).setStatusList(any(List.class));
         verifyZeroInteractions(nonEc2FleetWidget);
     }
 
+    @Test
+    public void resetCloudInterval() throws Exception {
+        clouds.add(cloud1);
+        clouds.add(cloud2);
+        CloudNanny cloudNanny = getMockCloudNannyInstance();
+
+        cloudNanny.doRun();
+
+        verify(cloud1).update();
+        verify(cloud1).getCloudStatusIntervalSec();
+        verify(cloud2).update();
+        verify(cloud2).getCloudStatusIntervalSec();
+
+
+        assertEquals(cloud1.getCloudStatusIntervalSec(), recurrenceCounter1.get());
+        assertEquals(cloud2.getCloudStatusIntervalSec(), recurrenceCounter2.get());
+    }
+
+    @Test
+    public void skipCloudIntervalExecution() throws Exception {
+        clouds.add(cloud1);
+        clouds.add(cloud2);
+        CloudNanny cloudNanny = getMockCloudNannyInstance();
+        recurrenceCounter1.set(2);
+        recurrenceCounter2.set(3);
+
+        cloudNanny.doRun();
+
+        verifyZeroInteractions(cloud1, cloud2);
+
+        assertEquals(1, recurrenceCounter1.get());
+        assertEquals(2, recurrenceCounter2.get());
+    }
+
+    @Test
+    public void updateOnlyOneCloud() throws Exception {
+        clouds.add(cloud1);
+        clouds.add(cloud2);
+        CloudNanny cloudNanny = getMockCloudNannyInstance();
+        recurrenceCounter1.set(2);
+        recurrenceCounter2.set(1);
+
+        cloudNanny.doRun();
+
+        verify(cloud2).getCloudStatusIntervalSec();
+        verify(cloud2).update();
+
+        verifyZeroInteractions(cloud1);
+
+        assertEquals(1, recurrenceCounter1.get());
+        assertEquals(cloud2.getCloudStatusIntervalSec(), recurrenceCounter2.get());
+    }
 }
