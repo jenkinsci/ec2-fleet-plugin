@@ -219,10 +219,18 @@ public abstract class IntegrationTest {
     }
 
     protected void mockEc2ApiToDescribeInstancesWhenModified(final InstanceStateName instanceStateName) {
-        mockEc2ApiToDescribeInstancesWhenModifiedWithDelay(instanceStateName, 0);
+        mockEc2ApiToDescribeInstancesWhenModifiedWithDelay(instanceStateName, 0, 0);
+    }
+
+    protected void mockEc2ApiToDescribeInstancesWhenModified(final InstanceStateName instanceStateName, final int initialTargetCapacity) {
+        mockEc2ApiToDescribeInstancesWhenModifiedWithDelay(instanceStateName, initialTargetCapacity, 0);
     }
 
     protected void mockEc2ApiToDescribeInstancesWhenModifiedWithDelay(final InstanceStateName instanceStateName, final long delayMillis) {
+        mockEc2ApiToDescribeInstancesWhenModifiedWithDelay(instanceStateName, 0, delayMillis);
+    }
+
+    protected void mockEc2ApiToDescribeInstancesWhenModifiedWithDelay(final InstanceStateName instanceStateName, final int initialTargetCapacity, final long delayMillis) {
         EC2Api ec2Api = spy(EC2Api.class);
         Registry.setEc2Api(ec2Api);
 

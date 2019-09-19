@@ -128,6 +128,8 @@ public class EC2Api {
             // terminateInstances is idempotent so it can be called until it's successful
             try {
                 ec2.terminateInstances(new TerminateInstancesRequest(temp));
+                // clear as removed so we can finish
+                temp.clear();
             } catch (AmazonEC2Exception exception) {
                 // if we cannot find instance, that's fine assume them as terminated
                 // remove from request and try again

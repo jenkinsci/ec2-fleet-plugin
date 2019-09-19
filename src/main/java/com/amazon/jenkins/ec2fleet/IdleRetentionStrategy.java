@@ -5,7 +5,6 @@ import hudson.model.Node;
 import hudson.slaves.RetentionStrategy;
 import hudson.slaves.SlaveComputer;
 
-import javax.annotation.concurrent.GuardedBy;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,7 +24,6 @@ public class IdleRetentionStrategy extends RetentionStrategy<SlaveComputer> {
      * @param computer computer
      * @return delay in min before next run
      */
-    @GuardedBy("Queue.withLock")
     @Override
     public long check(final SlaveComputer computer) {
         final EC2FleetNodeComputer fc = (EC2FleetNodeComputer) computer;

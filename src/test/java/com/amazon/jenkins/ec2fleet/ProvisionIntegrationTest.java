@@ -15,18 +15,27 @@ import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.SpotFleetRequestConfig;
 import com.amazonaws.services.ec2.model.SpotFleetRequestConfigData;
 import com.google.common.collect.ImmutableSet;
+import hudson.model.Computer;
+import hudson.model.FreeStyleBuild;
 import hudson.model.Label;
+import hudson.model.Node;
+import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.slaves.ComputerConnector;
 import hudson.slaves.ComputerLauncher;
+import org.hamcrest.Matchers;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -40,6 +49,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class ProvisionIntegrationTest extends IntegrationTest {
+
+    @BeforeClass
+    public static void beforeClass() {
+        System.setProperty("jenkins.test.timeout", "720");
+    }
 
     @Test
     public void dont_provide_any_planned_if_empty_and_reached_max_capacity() throws Exception {
@@ -258,6 +272,60 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         });
 
         cancelTasks(rs);
+    }
+
+    @Test
+    public void should_continue_update_after_termination() throws IOException {
+        mockEc2ApiToDescribeInstancesWhenModified(InstanceStateName.Running, 5);
+
+        final ComputerConnector computerConnector = new LocalComputerConnector(j);
+        final EC2FleetCloudWithMeter cloud = new EC2FleetCloudWithMeter(null, null, "credId", null, "region",
+                null, "fId", "momo", null, computerConnector, false, false,
+                1, 0, 5, 1, true, false,
+                false, 0, 0, false);
+        j.jenkins.clouds.add(cloud);
+
+        // wait while all nodes will be ok
+        tryUntil(new Runnable() {
+            @Override
+            public void run() {
+                for (Node node : j.jenkins.getNodes()) {
+                    final Computer computer = node.toComputer();
+                    Assert.assertNotNull(computer);
+                    Assert.assertTrue(computer.isOnline());
+                }
+            }
+        });
+
+        final List<QueueTaskFuture<FreeStyleBuild>> tasks = new ArrayList<>();
+        tasks.addAll((List) getQueueTaskFutures(5));
+
+        // wait full execution
+        for (final QueueTaskFuture<FreeStyleBuild> task : tasks) {
+            try {
+                Assert.assertEquals(task.get().getResult(), Result.SUCCESS);
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        // wait until downscale happens
+        tryUntil(new Runnable() {
+            @Override
+            public void run() {
+                // defect in termination logic, that why 1
+                Assert.assertThat(j.jenkins.getLabel("momo").getNodes().size(), Matchers.lessThanOrEqualTo(1));
+            }
+        }, TimeUnit.MINUTES.toMillis(3));
+
+        final FleetStateStats oldStats = cloud.getStats();
+        tryUntil(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("stats should be updated");
+                Assert.assertNotSame(oldStats, cloud.getStats());
+            }
+        });
     }
 
 }

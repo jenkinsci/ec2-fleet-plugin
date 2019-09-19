@@ -27,6 +27,12 @@ public class CloudNanny extends PeriodicWork {
         return 10000L;
     }
 
+    /**
+     * <h2>Exceptions</h2>
+     * This method will be executed by {@link PeriodicWork} inside {@link java.util.concurrent.ScheduledExecutorService}
+     * by default it stops execution if task throws exception, however {@link PeriodicWork} fix that
+     * by catch any exception and just log it, so we safe to throw exception here.
+     */
     @Override
     protected void doRun() {
         final List<EC2FleetStatusInfo> info = new ArrayList<>();
