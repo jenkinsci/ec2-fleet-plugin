@@ -22,8 +22,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
@@ -207,9 +209,9 @@ public class CloudNannyTest {
         cloudNanny.doRun();
 
         verify(cloud1).update();
-        verify(cloud1).getCloudStatusIntervalSec();
+        verify(cloud1, atLeastOnce()).getCloudStatusIntervalSec();
         verify(cloud2).update();
-        verify(cloud2).getCloudStatusIntervalSec();
+        verify(cloud2, atLeastOnce()).getCloudStatusIntervalSec();
 
 
         assertEquals(cloud1.getCloudStatusIntervalSec(), recurrenceCounter1.get());
@@ -226,7 +228,9 @@ public class CloudNannyTest {
 
         cloudNanny.doRun();
 
-        verifyZeroInteractions(cloud1, cloud2);
+        verify(cloud1, atLeastOnce()).getCloudStatusIntervalSec();
+        verify(cloud2, atLeastOnce()).getCloudStatusIntervalSec();
+        verifyNoMoreInteractions(cloud1, cloud2);
 
         assertEquals(1, recurrenceCounter1.get());
         assertEquals(2, recurrenceCounter2.get());
@@ -242,10 +246,11 @@ public class CloudNannyTest {
 
         cloudNanny.doRun();
 
-        verify(cloud2).getCloudStatusIntervalSec();
+        verify(cloud2, atLeastOnce()).getCloudStatusIntervalSec();
         verify(cloud2).update();
 
-        verifyZeroInteractions(cloud1);
+        verify(cloud1, atLeastOnce()).getCloudStatusIntervalSec();
+        verifyNoMoreInteractions(cloud1);
 
         assertEquals(1, recurrenceCounter1.get());
         assertEquals(cloud2.getCloudStatusIntervalSec(), recurrenceCounter2.get());

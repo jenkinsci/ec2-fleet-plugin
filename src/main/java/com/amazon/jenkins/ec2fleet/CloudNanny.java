@@ -1,6 +1,7 @@
 package com.amazon.jenkins.ec2fleet;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Objects;
 import com.google.common.collect.MapMaker;
 import hudson.Extension;
 import hudson.model.PeriodicWork;
@@ -27,7 +28,7 @@ public class CloudNanny extends PeriodicWork {
 
     private final ConcurrentMap<EC2FleetCloud, AtomicInteger> recurrenceCounters = new MapMaker()
             .weakKeys() // the map should not hold onto fleet instances to allow deletion of fleets.
-            .concurrencyLevel(2)
+            .concurrencyLevel(1)
             .makeMap();
 
     @Override
@@ -96,9 +97,8 @@ public class CloudNanny extends PeriodicWork {
 
     @VisibleForTesting
     private AtomicInteger getRecurrenceCounter(EC2FleetCloud fleetCloud) {
-        if (!recurrenceCounters.containsKey(fleetCloud)) {
-            recurrenceCounters.putIfAbsent(fleetCloud, new AtomicInteger(fleetCloud.getCloudStatusIntervalSec()));
-        }
-        return recurrenceCounters.get(fleetCloud);
+        AtomicInteger counter = new AtomicInteger(fleetCloud.getCloudStatusIntervalSec());
+        // If a counter already exists, return the value, otherwise set the new counter value and return it.
+        return Objects.firstNonNull(recurrenceCounters.putIfAbsent(fleetCloud, counter), counter);
     }
 }

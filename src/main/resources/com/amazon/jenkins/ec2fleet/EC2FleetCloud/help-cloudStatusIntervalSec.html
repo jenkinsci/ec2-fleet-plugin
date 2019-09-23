@@ -1,3 +1,12 @@
 <div>
-    Set the interval for checking the status of the EC2 cloud.
+    Set the interval for checking the EC2 clouds status.
+    <p>
+        Every check fetches the current state of the cloud from EC2 and scales the size of the cloud up or down.
+    </p>
+    <p>
+        Longer intervals will reduce the number of EC2 API calls, shorter intervals will allow the cloud to faster scale up and down.
+    </p>
+    <p>
+        <b>The default is to check every 10 seconds.</b>
+    </p>
 </div>
