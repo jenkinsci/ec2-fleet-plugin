@@ -285,7 +285,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         mockEc2ApiToDescribeInstancesWhenModified(InstanceStateName.Running, 5);
 
         final ComputerConnector computerConnector = new LocalComputerConnector(j);
-        final EC2FleetCloudWithMeter cloud = new EC2FleetCloudWithMeter(null, null, "credId", null, "region",
+        final EC2FleetCloud cloud = new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 1, 0, 5, 1, true, false,
                 false, 0, 0, false,
