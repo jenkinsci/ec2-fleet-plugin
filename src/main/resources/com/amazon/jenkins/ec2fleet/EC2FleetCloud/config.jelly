@@ -110,6 +110,11 @@
     <f:entry title="${%Cloud Status Interval in sec}" field="cloudStatusIntervalSec">
       <f:number clazz="required positive-number" default="10" />
     </f:entry>
+
+    <f:description>Enable faster provision when queue grow</f:description>
+    <f:entry title="${%No Delay Provision Strategy}" field="noDelayProvision">
+      <f:checkbox />
+    </f:entry>
   </f:section>
 
 </j:jelly>

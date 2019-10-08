@@ -132,6 +132,11 @@ public class EC2FleetCloud extends Cloud {
     private final boolean disableTaskResubmit;
 
     /**
+     * @see NoDelayProvisionStrategy
+     */
+    private final boolean noDelayProvision;
+
+    /**
      * {@link EC2FleetCloud#update()} updating this field, this is one thread
      * related to {@link CloudNanny}. At the same time {@link IdleRetentionStrategy}
      * call {@link EC2FleetCloud#scheduleToTerminate(String)} to stop instance when it free
@@ -172,7 +177,8 @@ public class EC2FleetCloud extends Cloud {
                          final Integer initOnlineTimeoutSec,
                          final Integer initOnlineCheckIntervalSec,
                          final boolean scaleExecutorsByWeight,
-                         final Integer cloudStatusIntervalSec) {
+                         final Integer cloudStatusIntervalSec,
+                         final boolean noDelayProvision) {
         super(StringUtils.isBlank(name) ? FLEET_CLOUD_ID : name);
         init();
         this.credentialsId = credentialsId;
@@ -196,12 +202,17 @@ public class EC2FleetCloud extends Cloud {
         this.initOnlineTimeoutSec = initOnlineTimeoutSec;
         this.initOnlineCheckIntervalSec = initOnlineCheckIntervalSec;
         this.cloudStatusIntervalSec = cloudStatusIntervalSec;
+        this.noDelayProvision = noDelayProvision;
 
         if (StringUtils.isNotEmpty(oldId)) {
             // existent cloud was modified, let's re-assign all dependencies of old cloud instance
             // to new one
             EC2FleetCloudAwareUtils.reassign(oldId, this);
         }
+    }
+
+    public boolean isNoDelayProvision() {
+        return noDelayProvision;
     }
 
     /**
