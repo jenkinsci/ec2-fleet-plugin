@@ -695,7 +695,7 @@ public class EC2FleetCloudTest {
         fleetCloud.update();
 
         // then
-        verify(ec2Api).tagInstances(amazonEC2, ImmutableSet.of("i-0", "i-1"), "ec2-fleet-plugin", "FleetCloud");
+        verify(ec2Api).tagInstances(amazonEC2, ImmutableSet.of("i-0", "i-1"), "ec2-fleet-plugin:cloud-name", "FleetCloud");
         Node actualFleetNode = nodeCaptor.getValue();
         assertEquals(Node.Mode.NORMAL, actualFleetNode.getMode());
     }
@@ -729,7 +729,7 @@ public class EC2FleetCloudTest {
         fleetCloud.update();
 
         // then
-        verify(ec2Api).tagInstances(amazonEC2, ImmutableSet.of("i-0"), "ec2-fleet-plugin", "my-fleet");
+        verify(ec2Api).tagInstances(amazonEC2, ImmutableSet.of("i-0"), "ec2-fleet-plugin:cloud-name", "my-fleet");
         Node actualFleetNode = nodeCaptor.getValue();
         assertEquals(Node.Mode.NORMAL, actualFleetNode.getMode());
     }
@@ -767,7 +767,7 @@ public class EC2FleetCloudTest {
         fleetCloud.update();
 
         // then
-        verify(ec2Api).tagInstances(amazonEC2, ImmutableSet.of("i-0"), "ec2-fleet-plugin", "FleetCloud");
+        verify(ec2Api).tagInstances(amazonEC2, ImmutableSet.of("i-0"), "ec2-fleet-plugin:cloud-name", "FleetCloud");
         Node actualFleetNode = nodeCaptor.getValue();
         assertEquals(Node.Mode.NORMAL, actualFleetNode.getMode());
     }

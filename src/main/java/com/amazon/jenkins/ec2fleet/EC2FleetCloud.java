@@ -59,7 +59,8 @@ import java.util.logging.SimpleFormatter;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class EC2FleetCloud extends Cloud {
 
-    public static final String EC2_INSTANCE_TAG = "ec2-fleet-plugin";
+    public static final String EC2_INSTANCE_TAG_NAMESPACE = "ec2-fleet-plugin";
+    public static final String EC2_INSTANCE_CLOUD_NAME_TAG = EC2_INSTANCE_TAG_NAMESPACE + ":cloud-name";
 
     public static final String FLEET_CLOUD_ID = "FleetCloud";
 
@@ -509,7 +510,8 @@ public class EC2FleetCloud extends Cloud {
             // we tag new instances to help users to identify instances launched from plugin managed fleets
             // if failed we are fine to skip this call
             try {
-                Registry.getEc2Api().tagInstances(ec2, newFleetInstances.keySet(), EC2_INSTANCE_TAG, name);
+                Registry.getEc2Api().tagInstances(ec2, newFleetInstances.keySet(),
+                        EC2_INSTANCE_CLOUD_NAME_TAG, name);
             } catch (final Exception e) {
                 warning("failed to tag new instances %s, skip", newFleetInstances.keySet());
             }
