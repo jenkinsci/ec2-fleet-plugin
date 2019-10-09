@@ -695,7 +695,41 @@ public class EC2FleetCloudTest {
         fleetCloud.update();
 
         // then
-        verify(ec2Api).tagInstances(amazonEC2, ImmutableSet.of("i-0", "i-1"), "ec2-fleet-plugin");
+        verify(ec2Api).tagInstances(amazonEC2, ImmutableSet.of("i-0", "i-1"), "ec2-fleet-plugin", "FleetCloud");
+        Node actualFleetNode = nodeCaptor.getValue();
+        assertEquals(Node.Mode.NORMAL, actualFleetNode.getMode());
+    }
+
+    @Test
+    public void update_shouldTagNewNodesBeforeAddingWithFleetName() throws IOException {
+        // given
+        when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
+
+        final Instance instance1 = new Instance().withPublicIpAddress("p-ip").withInstanceId("i-0");
+
+        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+                ImmutableMap.of("i-0", instance1));
+
+        PowerMockito.when(FleetStateStats.readClusterState(any(AmazonEC2.class), anyString(), anyString()))
+                .thenReturn(new FleetStateStats("fleetId", 0, "active",
+                        ImmutableSet.of("i-0"), Collections.<String, Double>emptyMap()));
+
+        mockNodeCreatingPart();
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("my-fleet", null, "credId", null, "region",
+                "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
+                false, 0, 0, 1, 1,
+                false, false, false,
+                0, 0, false, 10, false);
+
+        ArgumentCaptor<Node> nodeCaptor = ArgumentCaptor.forClass(Node.class);
+        doNothing().when(jenkins).addNode(nodeCaptor.capture());
+
+        // when
+        fleetCloud.update();
+
+        // then
+        verify(ec2Api).tagInstances(amazonEC2, ImmutableSet.of("i-0"), "ec2-fleet-plugin", "my-fleet");
         Node actualFleetNode = nodeCaptor.getValue();
         assertEquals(Node.Mode.NORMAL, actualFleetNode.getMode());
     }
@@ -705,7 +739,7 @@ public class EC2FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
         doThrow(new UnsupportedOperationException("testexception"))
-                .when(ec2Api).tagInstances(any(AmazonEC2.class), any(Set.class), anyString());
+                .when(ec2Api).tagInstances(any(AmazonEC2.class), any(Set.class), anyString(), anyString());
 
         final Instance instance = new Instance()
                 .withPublicIpAddress("p-ip")
@@ -733,7 +767,7 @@ public class EC2FleetCloudTest {
         fleetCloud.update();
 
         // then
-        verify(ec2Api).tagInstances(amazonEC2, ImmutableSet.of("i-0"), "ec2-fleet-plugin");
+        verify(ec2Api).tagInstances(amazonEC2, ImmutableSet.of("i-0"), "ec2-fleet-plugin", "FleetCloud");
         Node actualFleetNode = nodeCaptor.getValue();
         assertEquals(Node.Mode.NORMAL, actualFleetNode.getMode());
     }

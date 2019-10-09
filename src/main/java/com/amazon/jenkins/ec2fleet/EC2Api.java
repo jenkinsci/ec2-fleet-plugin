@@ -147,13 +147,13 @@ public class EC2Api {
         }
     }
 
-    public void tagInstances(final AmazonEC2 ec2, final Set<String> instanceIds, final String tag) {
+    public void tagInstances(final AmazonEC2 ec2, final Set<String> instanceIds, final String key, final String value) {
         if (instanceIds.isEmpty()) return;
 
         final CreateTagsRequest request = new CreateTagsRequest()
                 .withResources(instanceIds)
                 // if you don't need value EC2 API requires empty string
-                .withTags(Collections.singletonList(new Tag().withKey(tag).withValue("")));
+                .withTags(Collections.singletonList(new Tag().withKey(key).withValue(value == null ? "" : value)));
         ec2.createTags(request);
     }
 

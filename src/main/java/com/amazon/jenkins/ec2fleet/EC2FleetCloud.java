@@ -509,7 +509,7 @@ public class EC2FleetCloud extends Cloud {
             // we tag new instances to help users to identify instances launched from plugin managed fleets
             // if failed we are fine to skip this call
             try {
-                Registry.getEc2Api().tagInstances(ec2, newFleetInstances.keySet(), EC2_INSTANCE_TAG);
+                Registry.getEc2Api().tagInstances(ec2, newFleetInstances.keySet(), EC2_INSTANCE_TAG, name);
             } catch (final Exception e) {
                 warning("failed to tag new instances %s, skip", newFleetInstances.keySet());
             }

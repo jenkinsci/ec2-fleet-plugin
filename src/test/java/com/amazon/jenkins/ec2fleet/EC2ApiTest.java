@@ -289,7 +289,7 @@ public class EC2ApiTest {
     @Test
     public void tagInstances_shouldDoNothingIfNoInstancesPassed() {
         // when
-        new EC2Api().tagInstances(amazonEC2, Collections.<String>emptySet(), "opa");
+        new EC2Api().tagInstances(amazonEC2, Collections.<String>emptySet(), "opa", "v");
 
         // then
         verifyZeroInteractions(amazonEC2);
@@ -298,7 +298,19 @@ public class EC2ApiTest {
     @Test
     public void tagInstances_shouldTag() {
         // when
-        new EC2Api().tagInstances(amazonEC2, ImmutableSet.of("i-1", "i-2"), "opa");
+        new EC2Api().tagInstances(amazonEC2, ImmutableSet.of("i-1", "i-2"), "opa", "v");
+
+        // then
+        verify(amazonEC2).createTags(new CreateTagsRequest()
+                .withResources(ImmutableSet.of("i-1", "i-2"))
+                .withTags(new Tag().withKey("opa").withValue("v")));
+        verifyNoMoreInteractions(amazonEC2);
+    }
+
+    @Test
+    public void tagInstances_givenNullValueShouldTagWithEmptyValue() {
+        // when
+        new EC2Api().tagInstances(amazonEC2, ImmutableSet.of("i-1", "i-2"), "opa", null);
 
         // then
         verify(amazonEC2).createTags(new CreateTagsRequest()
