@@ -513,7 +513,7 @@ public class EC2FleetCloud extends Cloud {
                 Registry.getEc2Api().tagInstances(ec2, newFleetInstances.keySet(),
                         EC2_INSTANCE_CLOUD_NAME_TAG, name);
             } catch (final Exception e) {
-                warning("failed to tag new instances %s, skip", newFleetInstances.keySet());
+                warning(e, "failed to tag new instances %s, skip", newFleetInstances.keySet());
             }
 
             // addNewSlave will call addNode which call queue lock
