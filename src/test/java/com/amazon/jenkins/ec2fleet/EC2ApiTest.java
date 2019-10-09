@@ -2,13 +2,16 @@ package com.amazon.jenkins.ec2fleet;
 
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
+import com.amazonaws.services.ec2.model.CreateTagsRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.InstanceState;
 import com.amazonaws.services.ec2.model.InstanceStateName;
 import com.amazonaws.services.ec2.model.Reservation;
+import com.amazonaws.services.ec2.model.Tag;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -281,6 +284,27 @@ public class EC2ApiTest {
         } catch (UnsupportedOperationException e) {
             Assert.assertSame(exception, e);
         }
+    }
+
+    @Test
+    public void tagInstances_shouldDoNothingIfNoInstancesPassed() {
+        // when
+        new EC2Api().tagInstances(amazonEC2, Collections.<String>emptySet(), "opa");
+
+        // then
+        verifyZeroInteractions(amazonEC2);
+    }
+
+    @Test
+    public void tagInstances_shouldTag() {
+        // when
+        new EC2Api().tagInstances(amazonEC2, ImmutableSet.of("i-1", "i-2"), "opa");
+
+        // then
+        verify(amazonEC2).createTags(new CreateTagsRequest()
+                .withResources(ImmutableSet.of("i-1", "i-2"))
+                .withTags(new Tag().withKey("opa").withValue("")));
+        verifyNoMoreInteractions(amazonEC2);
     }
 
     @Test

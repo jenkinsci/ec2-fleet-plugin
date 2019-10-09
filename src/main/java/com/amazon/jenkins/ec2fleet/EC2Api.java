@@ -5,11 +5,13 @@ import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
+import com.amazonaws.services.ec2.model.CreateTagsRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.InstanceStateName;
 import com.amazonaws.services.ec2.model.Reservation;
+import com.amazonaws.services.ec2.model.Tag;
 import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
 import com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentials;
@@ -143,6 +145,16 @@ public class EC2Api {
                 }
             }
         }
+    }
+
+    public void tagInstances(final AmazonEC2 ec2, final Set<String> instanceIds, final String tag) {
+        if (instanceIds.isEmpty()) return;
+
+        final CreateTagsRequest request = new CreateTagsRequest()
+                .withResources(instanceIds)
+                // if you don't need value EC2 API requires empty string
+                .withTags(Collections.singletonList(new Tag().withKey(tag).withValue("")));
+        ec2.createTags(request);
     }
 
     public AmazonEC2 connect(final String awsCredentialsId, final String regionName, final String endpoint) {
