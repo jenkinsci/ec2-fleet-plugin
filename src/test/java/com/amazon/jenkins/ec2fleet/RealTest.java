@@ -58,7 +58,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-@Ignore("for manual run as you need to provide real AWS credentials")
 public class RealTest extends IntegrationTest {
 
     private static final String USER_DATA_INSTALL_JAVA8 = Base64.getEncoder().encodeToString(
@@ -81,10 +80,9 @@ public class RealTest extends IntegrationTest {
         awsCredentialsProvider = getAwsCredentialsProvider(credentialLines);
     }
 
+//    @Ignore("for manual run as you need to provide real AWS credentials")
     @Test
     public void givenAutoScalingGroup_shouldScaleUpExecuteTaskAndScaleDown() throws IOException {
-//        final String ec2SpotFleetRoleArn = getOrCreateEc2SpotFleetIamRoleArn(awsCredentialsProvider);
-
         final AmazonEC2 amazonEC2 = AmazonEC2Client.builder().withCredentials(awsCredentialsProvider).build();
 
         final AmazonAutoScaling autoScalingClient = AmazonAutoScalingClient.builder().withCredentials(awsCredentialsProvider).build();
@@ -158,6 +156,7 @@ public class RealTest extends IntegrationTest {
         }, TimeUnit.MINUTES.toMillis(3));
     }
 
+//    @Ignore("for manual run as you need to provide real AWS credentials")
     @Test
     public void givenEc2SpotFleet_shouldScaleUpExecuteTaskAndScaleDown() throws Exception {
         final String ec2SpotFleetRoleArn = getOrCreateEc2SpotFleetIamRoleArn(awsCredentialsProvider);

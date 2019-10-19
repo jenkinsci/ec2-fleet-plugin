@@ -707,7 +707,7 @@ public class EC2FleetCloud extends Cloud {
 
         @Override
         public String getDisplayName() {
-            return "Amazon AWS EC2";
+            return "Amazon EC2 Fleet";
         }
 
         public List getComputerConnectorDescriptors() {
