@@ -61,6 +61,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -392,7 +393,7 @@ public abstract class IntegrationTest {
             }
         }).when(ec2Fleet).modify(anyString(), anyString(), anyString(), anyString(), anyInt());
 
-        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenAnswer(new Answer<Object>() {
+        when(ec2Fleet.getState(anyString(), anyString(), nullable(String.class), anyString())).thenAnswer(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
                 final Set<String> instanceIds = new HashSet<>();

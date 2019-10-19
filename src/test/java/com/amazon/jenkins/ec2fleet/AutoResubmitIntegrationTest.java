@@ -11,7 +11,6 @@ import com.amazonaws.services.ec2.model.InstanceStateName;
 import com.amazonaws.services.ec2.model.Reservation;
 import com.google.common.collect.ImmutableSet;
 import hudson.Functions;
-import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Node;
 import hudson.model.ParametersAction;
@@ -35,6 +34,8 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -51,7 +52,7 @@ public class AutoResubmitIntegrationTest extends IntegrationTest {
         EC2Api ec2Api = spy(EC2Api.class);
         Registry.setEc2Api(ec2Api);
 
-        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
+        when(ec2Fleet.getState(anyString(), anyString(), nullable(String.class), anyString())).thenReturn(
                 new FleetStateStats("", 1, "active", ImmutableSet.of("i-1"),
                         Collections.<String, Double>emptyMap()));
 
