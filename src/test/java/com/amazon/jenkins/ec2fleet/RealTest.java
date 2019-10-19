@@ -80,7 +80,7 @@ public class RealTest extends IntegrationTest {
         awsCredentialsProvider = getAwsCredentialsProvider(credentialLines);
     }
 
-//    @Ignore("for manual run as you need to provide real AWS credentials")
+    @Ignore("for manual run as you need to provide real AWS credentials")
     @Test
     public void givenAutoScalingGroup_shouldScaleUpExecuteTaskAndScaleDown() throws IOException {
         final AmazonEC2 amazonEC2 = AmazonEC2Client.builder().withCredentials(awsCredentialsProvider).build();
