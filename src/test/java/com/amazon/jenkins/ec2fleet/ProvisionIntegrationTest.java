@@ -72,13 +72,14 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
         EC2Fleets.setGet(ec2Fleet);
 
-        when(ec2Fleet.getState(any(), any(), any(), any())).thenReturn(
-                new FleetStateStats("", 0, "active", ImmutableSet.of(), Collections.emptyMap()));
+        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
+                new FleetStateStats("", 0, "active", ImmutableSet.<String>of(),
+                        Collections.<String, Double>emptyMap()));
 
         AmazonEC2 amazonEC2 = mock(AmazonEC2.class);
         when(ec2Api.connect(anyString(), anyString(), Mockito.nullable(String.class))).thenReturn(amazonEC2);
 
-        List<QueueTaskFuture<FreeStyleBuild>> rs = enqueTask(5);
+        List<QueueTaskFuture> rs = enqueTask(5);
 
         Assert.assertEquals(0, j.jenkins.getNodes().size());
 
@@ -106,7 +107,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                 2, false);
         j.jenkins.clouds.add(cloud);
 
-        List<QueueTaskFuture<FreeStyleBuild>> rs = enqueTask(1);
+        List<QueueTaskFuture> rs = enqueTask(1);
 
         triggerSuggestReviewNow("momo");
 
@@ -144,7 +145,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
         mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Running);
 
-        List<QueueTaskFuture<FreeStyleBuild>> rs = enqueTask(1);
+        List<QueueTaskFuture> rs = enqueTask(1);
 
         final String labelString = "momo";
         triggerSuggestReviewNow(labelString);
@@ -226,7 +227,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         when(amazonEC2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
                 .thenReturn(describeSpotFleetRequestsResult);
 
-        List<QueueTaskFuture<FreeStyleBuild>> rs = enqueTask(1);
+        List<QueueTaskFuture> rs = enqueTask(1);
 
         j.jenkins.getLabelAtom("momo").nodeProvisioner.suggestReviewNow();
 
@@ -254,7 +255,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
         mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Pending);
 
-        final List<QueueTaskFuture<FreeStyleBuild>> rs = enqueTask(1);
+        final List<QueueTaskFuture> rs = enqueTask(1);
 
         triggerSuggestReviewNow("momo");
 
@@ -286,7 +287,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
         waitFirstStats(cloud);
 
-        final List<QueueTaskFuture<FreeStyleBuild>> tasks = new ArrayList<>(enqueTask(5));
+        final List<QueueTaskFuture> tasks = new ArrayList<>(enqueTask(5));
         j.jenkins.getLabelAtom("momo").nodeProvisioner.suggestReviewNow();
         System.out.println("tasks submitted");
 

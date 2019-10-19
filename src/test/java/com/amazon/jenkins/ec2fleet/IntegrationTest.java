@@ -28,6 +28,7 @@ import hudson.model.Label;
 import hudson.model.Node;
 import hudson.model.Queue;
 import hudson.model.Result;
+import hudson.model.Run;
 import hudson.model.labels.LabelAtom;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.tasks.BatchFile;
@@ -53,6 +54,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -208,16 +210,16 @@ public abstract class IntegrationTest {
         });
     }
 
-    protected void cancelTasks(List<QueueTaskFuture<FreeStyleBuild>> rs) {
+    protected void cancelTasks(List<QueueTaskFuture> rs) {
         for (QueueTaskFuture r : rs) {
             r.cancel(true);
         }
     }
 
-    protected List<QueueTaskFuture<FreeStyleBuild>> enqueTask(int count) throws IOException {
+    protected List<QueueTaskFuture> enqueTask(int count) throws IOException {
         final LabelAtom label = new LabelAtom("momo");
 
-        final List<QueueTaskFuture<FreeStyleBuild>> rs = new ArrayList<>();
+        final List<QueueTaskFuture> rs = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             final FreeStyleProject project = j.createFreeStyleProject();
             project.setAssignedLabel(label);
@@ -235,10 +237,11 @@ public abstract class IntegrationTest {
         return r;
     }
 
-    protected static void waitJobSuccessfulExecution(final List<QueueTaskFuture<FreeStyleBuild>> tasks) {
-        for (final QueueTaskFuture<FreeStyleBuild> task : tasks) {
+    protected static void waitJobSuccessfulExecution(final List<QueueTaskFuture> tasks) {
+        for (final QueueTaskFuture task : tasks) {
             try {
-                Assert.assertEquals(task.get().getResult(), Result.SUCCESS);
+                Object o = task.get();
+                Assert.assertEquals(((Run) o).getResult(), Result.SUCCESS);
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
@@ -387,9 +390,9 @@ public abstract class IntegrationTest {
                 targetCapacity.set(argument.getTargetCapacity());
                 return null;
             }
-        }).when(ec2Fleet).modify(any(), any(), any(), any(), anyInt());
+        }).when(ec2Fleet).modify(anyString(), anyString(), anyString(), anyString(), anyInt());
 
-        when(ec2Fleet.getState(any(), any(), any(), any())).thenAnswer(new Answer<Object>() {
+        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenAnswer(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
                 final Set<String> instanceIds = new HashSet<>();
@@ -398,40 +401,9 @@ public abstract class IntegrationTest {
                     instanceIds.add("i-" + i);
                 }
 
-                return new FleetStateStats("", 0, "active", instanceIds, Collections.emptyMap());
+                return new FleetStateStats("", 0, "active", instanceIds, Collections.<String, Double>emptyMap());
             }
         });
-
-//        when(amazonEC2.modifySpotFleetRequest(any(ModifySpotFleetRequestRequest.class))).then(new Answer<Object>() {
-//            @Override
-//            public Object answer(InvocationOnMock invocationOnMock) {
-//                ModifySpotFleetRequestRequest argument = invocationOnMock.getArgument(0);
-//                targetCapacity.set(argument.getTargetCapacity());
-//                return null;
-//            }
-//        });
-
-//        when(amazonEC2.describeSpotFleetInstances(any(DescribeSpotFleetInstancesRequest.class)))
-//                .then(new Answer<Object>() {
-//                    @Override
-//                    public Object answer(InvocationOnMock invocationOnMock) {
-//                        final List<ActiveInstance> activeInstances = new ArrayList<>();
-//                        final int size = targetCapacity.get();
-//                        for (int i = 0; i < size; i++) {
-//                            activeInstances.add(new ActiveInstance().withInstanceId("i-" + i));
-//                        }
-//                        return new DescribeSpotFleetInstancesResult().withActiveInstances(activeInstances);
-//                    }
-//                });
-
-//        DescribeSpotFleetRequestsResult describeSpotFleetRequestsResult = new DescribeSpotFleetRequestsResult();
-//        describeSpotFleetRequestsResult.setSpotFleetRequestConfigs(Arrays.asList(
-//                new SpotFleetRequestConfig()
-//                        .withSpotFleetRequestState("active")
-//                        .withSpotFleetRequestConfig(
-//                                new SpotFleetRequestConfigData().withTargetCapacity(0))));
-//        when(amazonEC2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-//                .thenReturn(describeSpotFleetRequestsResult);
     }
 
 }

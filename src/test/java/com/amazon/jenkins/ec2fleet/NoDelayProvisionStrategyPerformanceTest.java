@@ -73,7 +73,7 @@ public class NoDelayProvisionStrategyPerformanceTest extends IntegrationTest {
         // warm up jenkins queue, as it takes some time when jenkins run first task and start scale in/out
         // so let's run one task and wait it finish
         System.out.println("waiting warm up task execution");
-        final List<QueueTaskFuture<FreeStyleBuild>> warmUpTasks = enqueTask(1);
+        final List<QueueTaskFuture> warmUpTasks = enqueTask(1);
         waitTasksFinish(warmUpTasks);
 
         final List<ImmutableTriple<Long, Integer, Integer>> metrics = new ArrayList<>();
@@ -103,7 +103,7 @@ public class NoDelayProvisionStrategyPerformanceTest extends IntegrationTest {
 
         System.out.println("start test");
         int taskCount = 0;
-        final List<QueueTaskFuture<FreeStyleBuild>> tasks = new ArrayList<>();
+        final List<QueueTaskFuture> tasks = new ArrayList<>();
         for (int i = 0; i < 15; i++) {
             tasks.addAll(enqueTask(batchSize));
             taskCount += batchSize;
@@ -121,8 +121,8 @@ public class NoDelayProvisionStrategyPerformanceTest extends IntegrationTest {
         }
     }
 
-    private static void waitTasksFinish(List<QueueTaskFuture<FreeStyleBuild>> tasks) {
-        for (final QueueTaskFuture<FreeStyleBuild> task : tasks) {
+    private static void waitTasksFinish(List<QueueTaskFuture> tasks) {
+        for (final QueueTaskFuture task : tasks) {
             try {
                 task.get();
             } catch (InterruptedException | ExecutionException e) {

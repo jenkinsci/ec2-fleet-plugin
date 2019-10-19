@@ -489,7 +489,7 @@ public class EC2FleetCloudTest {
         fleetCloud.update();
 
         // then
-        verify(ec2Fleet).modify(any(), any(), any(), eq("fleetId"), eq(2));
+        verify(ec2Fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(2));
     }
 
     @Test
@@ -517,7 +517,7 @@ public class EC2FleetCloudTest {
         fleetCloud.update();
 
         // then
-        verify(ec2Fleet).modify(any(), any(), any(), eq("fleetId"), eq(6));
+        verify(ec2Fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(6));
         assertEquals(0, fleetCloud.getInstanceIdsToTerminate().size());
         assertEquals(0, fleetCloud.getToAdd());
     }
@@ -548,7 +548,7 @@ public class EC2FleetCloudTest {
         fleetCloud.update();
 
         // then
-        verify(ec2Fleet).modify(any(), any(), any(), eq("fleetId"), eq(0));
+        verify(ec2Fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(0));
         assertEquals(0, fleetCloud.getInstanceIdsToTerminate().size());
         assertEquals(0, fleetCloud.getToAdd());
     }
@@ -578,7 +578,7 @@ public class EC2FleetCloudTest {
         fleetCloud.update();
 
         // then
-        verify(ec2Fleet).modify(any(), any(), any(), eq("fleetId"), eq(5));
+        verify(ec2Fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(5));
         assertEquals(0, fleetCloud.getInstanceIdsToTerminate().size());
         assertEquals(0, fleetCloud.getToAdd());
     }
@@ -608,7 +608,7 @@ public class EC2FleetCloudTest {
         fleetCloud.update();
 
         // then
-        verify(ec2Fleet).modify(any(), any(), any(), eq("fleetId"), eq(2));
+        verify(ec2Fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(2));
         verify(ec2Api).terminateInstances(amazonEC2, ImmutableSet.<String>of("i-1", "i-2"));
     }
 
@@ -1095,7 +1095,8 @@ public class EC2FleetCloudTest {
     @Test
     public void descriptorImpl_doFillFleetItems_returnEmptyListIfAnyException() {
         final EC2Fleet ec2SpotFleet = mock(EC2SpotFleet.class);
-        doThrow(new RuntimeException("test")).when(ec2SpotFleet).describe(any(), any(), any(), any(), any(), anyBoolean());
+        doThrow(new RuntimeException("test")).when(ec2SpotFleet).describe(
+                anyString(), anyString(), anyString(), any(ListBoxModel.class), anyString(), anyBoolean());
 
         final EC2Fleet autoScalingGroupFleet = mock(AutoScalingGroupFleet.class);
         when(EC2Fleets.all()).thenReturn(Arrays.asList(ec2SpotFleet, autoScalingGroupFleet));

@@ -28,6 +28,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -44,7 +45,7 @@ public class EC2SpotFleetTest {
     public void before() {
         Registry.setEc2Api(ec2Api);
 
-        when(ec2Api.connect(any(), any(), any())).thenReturn(ec2);
+        when(ec2Api.connect(anyString(), anyString(), anyString())).thenReturn(ec2);
 
         when(ec2.describeSpotFleetInstances(any(DescribeSpotFleetInstancesRequest.class)))
                 .thenReturn(new DescribeSpotFleetInstancesResult());

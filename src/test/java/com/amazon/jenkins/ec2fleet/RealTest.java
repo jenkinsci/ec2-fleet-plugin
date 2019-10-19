@@ -141,7 +141,7 @@ public class RealTest extends IntegrationTest {
                 10, true);
         j.jenkins.clouds.add(cloud);
 
-        final List<QueueTaskFuture<FreeStyleBuild>> tasks = enqueTask(2);
+        final List<QueueTaskFuture> tasks = enqueTask(2);
 
         waitJobSuccessfulExecution(tasks);
         waitZeroNodes();
@@ -192,7 +192,7 @@ public class RealTest extends IntegrationTest {
                 10, true);
         j.jenkins.clouds.add(cloud);
 
-        final List<QueueTaskFuture<FreeStyleBuild>> tasks = enqueTask(2);
+        final List<QueueTaskFuture> tasks = enqueTask(2);
 
         waitJobSuccessfulExecution(tasks);
         waitZeroNodes();
