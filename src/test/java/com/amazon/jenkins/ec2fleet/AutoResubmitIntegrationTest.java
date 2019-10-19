@@ -24,7 +24,6 @@ import hudson.model.queue.QueueTaskFuture;
 import hudson.slaves.OfflineCause;
 import hudson.tasks.BatchFile;
 import hudson.tasks.Shell;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -70,24 +69,17 @@ public class AutoResubmitIntegrationTest extends IntegrationTest {
                         )));
     }
 
-    @After
-    public void after() {
-        EC2Fleets.setGet(null);
-    }
-
     @Test
     public void should_successfully_resubmit_freestyle_task() throws Exception {
         EC2FleetCloud cloud = new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
-                0, 0, 10, 1, false,
+                0, 0, 10, 1, false, true,
                 false, 0, 0, false,
                 10, false);
         j.jenkins.clouds.add(cloud);
 
         List<QueueTaskFuture<FreeStyleBuild>> rs = enqueTask(1);
-
-        System.out.println("check if zero nodes!");
-        Assert.assertEquals(0, j.jenkins.getNodes().size());
+        triggerSuggestReviewNow();
 
         assertAtLeastOneNode();
 
@@ -116,7 +108,7 @@ public class AutoResubmitIntegrationTest extends IntegrationTest {
     public void should_successfully_resubmit_parametrized_task() throws Exception {
         EC2FleetCloud cloud = new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
-                0, 0, 10, 1, false,
+                0, 0, 10, 1, false, true,
                 false, 0, 0, false,
                 10, false);
         j.jenkins.clouds.add(cloud);
@@ -145,9 +137,7 @@ public class AutoResubmitIntegrationTest extends IntegrationTest {
 
         rs.add(project.scheduleBuild2(0, new ParametersAction(new StringParameterValue("number", "30"))));
 
-        System.out.println("check if zero nodes!");
-        Assert.assertEquals(0, j.jenkins.getNodes().size());
-
+        triggerSuggestReviewNow();
         assertAtLeastOneNode();
 
         final Node node = j.jenkins.getNodes().get(0);
@@ -173,14 +163,12 @@ public class AutoResubmitIntegrationTest extends IntegrationTest {
     public void should_not_resubmit_if_disabled() throws Exception {
         EC2FleetCloud cloud = new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
-                0, 0, 10, 1, false,
+                0, 0, 10, 1, false, true,
                 true, 0, 0, false, 10, false);
         j.jenkins.clouds.add(cloud);
 
         List<QueueTaskFuture<FreeStyleBuild>> rs = enqueTask(1);
-
-        System.out.println("check if zero nodes!");
-        Assert.assertEquals(0, j.jenkins.getNodes().size());
+        triggerSuggestReviewNow();
 
         assertAtLeastOneNode();
 

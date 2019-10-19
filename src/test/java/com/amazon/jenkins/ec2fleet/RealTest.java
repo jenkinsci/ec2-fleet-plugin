@@ -136,7 +136,7 @@ public class RealTest extends IntegrationTest {
                 "", null, credentialId, null, null, null,
                 autoScalingGroupName,
                 "momo", null, computerConnector, false, false,
-                1, 0, 5, 1, false,
+                1, 0, 5, 1, true, false,
                 false, 180, 15, false,
                 10, true);
         j.jenkins.clouds.add(cloud);
@@ -187,7 +187,7 @@ public class RealTest extends IntegrationTest {
                 "", null, credentialId, null, null, null,
                 requestSpotFleetResult.getSpotFleetRequestId(),
                 "momo", null, computerConnector, false, false,
-                1, 0, 5, 1, false,
+                1, 0, 5, 1, true, false,
                 false, 180, 15, false,
                 10, true);
         j.jenkins.clouds.add(cloud);

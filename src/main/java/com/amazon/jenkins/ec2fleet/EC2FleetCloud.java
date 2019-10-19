@@ -6,6 +6,7 @@ import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.DescribeRegionsResult;
 import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ec2.model.InstanceStateName;
 import com.amazonaws.services.ec2.model.Region;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
 import com.google.common.annotations.VisibleForTesting;
@@ -115,6 +116,7 @@ public class EC2FleetCloud extends Cloud {
     private final Integer minSize;
     private final Integer maxSize;
     private final Integer numExecutors;
+    private final boolean addNodeOnlyIfRunning;
     private final boolean restrictUsage;
     private final boolean scaleExecutorsByWeight;
     private final Integer initOnlineTimeoutSec;
@@ -166,6 +168,7 @@ public class EC2FleetCloud extends Cloud {
                          final Integer minSize,
                          final Integer maxSize,
                          final Integer numExecutors,
+                         final boolean addNodeOnlyIfRunning,
                          final boolean restrictUsage,
                          final boolean disableTaskResubmit,
                          final Integer initOnlineTimeoutSec,
@@ -189,6 +192,7 @@ public class EC2FleetCloud extends Cloud {
         this.minSize = minSize;
         this.maxSize = maxSize;
         this.numExecutors = numExecutors;
+        this.addNodeOnlyIfRunning = addNodeOnlyIfRunning;
         this.restrictUsage = restrictUsage;
         this.scaleExecutorsByWeight = scaleExecutorsByWeight;
         this.disableTaskResubmit = disableTaskResubmit;
@@ -258,6 +262,10 @@ public class EC2FleetCloud extends Cloud {
 
     public String getFsRoot() {
         return fsRoot;
+    }
+
+    public boolean isAddNodeOnlyIfRunning() {
+        return addNodeOnlyIfRunning;
     }
 
     public ComputerConnector getComputerConnector() {
@@ -600,6 +608,10 @@ public class EC2FleetCloud extends Cloud {
      */
     private void addNewSlave(final AmazonEC2 ec2, final Instance instance, FleetStateStats stats) throws Exception {
         final String instanceId = instance.getInstanceId();
+
+        // instance state check enabled and not running, skip adding
+        if (addNodeOnlyIfRunning && InstanceStateName.Running != InstanceStateName.fromValue(instance.getState().getName()))
+            return;
 
         final String address = privateIpUsed ? instance.getPrivateIpAddress() : instance.getPublicIpAddress();
         // Check if we have the address to use. Nodes don't get it immediately.
