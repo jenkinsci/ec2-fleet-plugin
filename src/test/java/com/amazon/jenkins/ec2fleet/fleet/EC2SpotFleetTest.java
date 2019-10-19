@@ -86,7 +86,7 @@ public class EC2SpotFleetTest {
         FleetStateStats stats = new EC2SpotFleet().getState("cred", "region", "", "f-id");
 
         Assert.assertEquals("f-id", stats.getFleetId());
-        Assert.assertEquals("active", stats.getState());
+        Assert.assertEquals(FleetStateStats.State.active(), stats.getState());
         Assert.assertEquals(12, stats.getNumDesired());
     }
 

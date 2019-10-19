@@ -22,7 +22,6 @@ import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.amazonaws.services.ec2.model.TerminateInstancesResult;
 import hudson.Functions;
 import hudson.model.AbstractBuild;
-import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Label;
 import hudson.model.Node;
@@ -54,7 +53,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -402,7 +400,9 @@ public abstract class IntegrationTest {
                     instanceIds.add("i-" + i);
                 }
 
-                return new FleetStateStats("", 0, "active", instanceIds, Collections.<String, Double>emptyMap());
+                return new FleetStateStats("", 0,
+                        new FleetStateStats.State(true, "active"),
+                        instanceIds, Collections.<String, Double>emptyMap());
             }
         });
     }

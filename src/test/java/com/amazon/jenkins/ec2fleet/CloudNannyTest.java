@@ -50,10 +50,10 @@ public class CloudNannyTest {
     private List<Cloud> clouds = new ArrayList<>();
 
     private FleetStateStats stats1 = new FleetStateStats(
-            "f1", 1, "a", ImmutableSet.<String>of(), Collections.<String, Double>emptyMap());
+            "f1", 1, new FleetStateStats.State(true, "a"), ImmutableSet.<String>of(), Collections.<String, Double>emptyMap());
 
     private FleetStateStats stats2 = new FleetStateStats(
-            "f2", 1, "a", ImmutableSet.<String>of(), Collections.<String, Double>emptyMap());
+            "f2", 1, new FleetStateStats.State(true, "a"), ImmutableSet.<String>of(), Collections.<String, Double>emptyMap());
 
     private int recurrencePeriod = 45;
 
@@ -120,7 +120,7 @@ public class CloudNannyTest {
         getMockCloudNannyInstance().doRun();
 
         verify(widget1).setStatusList(ImmutableList.of(new EC2FleetStatusInfo(
-                cloud1.getFleet(), stats1.getState(), cloud1.getLabelString(), stats1.getNumActive(), stats1.getNumDesired())));
+                cloud1.getFleet(), stats1.getState().getDetailed(), cloud1.getLabelString(), stats1.getNumActive(), stats1.getNumDesired())));
     }
 
     @Test
@@ -133,9 +133,9 @@ public class CloudNannyTest {
         getMockCloudNannyInstance().doRun();
 
         verify(widget1).setStatusList(ImmutableList.of(new EC2FleetStatusInfo(
-                cloud1.getFleet(), stats1.getState(), cloud1.getLabelString(), stats1.getNumActive(), stats1.getNumDesired())));
+                cloud1.getFleet(), stats1.getState().getDetailed(), cloud1.getLabelString(), stats1.getNumActive(), stats1.getNumDesired())));
         verify(widget2).setStatusList(ImmutableList.of(new EC2FleetStatusInfo(
-                cloud1.getFleet(), stats1.getState(), cloud1.getLabelString(), stats1.getNumActive(), stats1.getNumDesired())));
+                cloud1.getFleet(), stats1.getState().getDetailed(), cloud1.getLabelString(), stats1.getNumActive(), stats1.getNumDesired())));
     }
 
     @Test
@@ -163,8 +163,8 @@ public class CloudNannyTest {
         getMockCloudNannyInstance().doRun();
 
         verify(widget1).setStatusList(ImmutableList.of(
-                new EC2FleetStatusInfo(cloud1.getFleet(), stats1.getState(), cloud1.getLabelString(), stats1.getNumActive(), stats1.getNumDesired()),
-                new EC2FleetStatusInfo(cloud2.getFleet(), stats2.getState(), cloud2.getLabelString(), stats2.getNumActive(), stats2.getNumDesired())
+                new EC2FleetStatusInfo(cloud1.getFleet(), stats1.getState().getDetailed(), cloud1.getLabelString(), stats1.getNumActive(), stats1.getNumDesired()),
+                new EC2FleetStatusInfo(cloud2.getFleet(), stats2.getState().getDetailed(), cloud2.getLabelString(), stats2.getNumActive(), stats2.getNumDesired())
         ));
     }
 
@@ -180,7 +180,7 @@ public class CloudNannyTest {
         getMockCloudNannyInstance().doRun();
 
         verify(widget1).setStatusList(ImmutableList.of(
-                new EC2FleetStatusInfo(cloud2.getFleet(), stats2.getState(), cloud2.getLabelString(), stats2.getNumActive(), stats2.getNumDesired())
+                new EC2FleetStatusInfo(cloud2.getFleet(), stats2.getState().getDetailed(), cloud2.getLabelString(), stats2.getNumActive(), stats2.getNumDesired())
         ));
     }
 

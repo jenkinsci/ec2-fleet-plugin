@@ -53,7 +53,7 @@ public class AutoResubmitIntegrationTest extends IntegrationTest {
         Registry.setEc2Api(ec2Api);
 
         when(ec2Fleet.getState(anyString(), anyString(), nullable(String.class), anyString())).thenReturn(
-                new FleetStateStats("", 1, "active", ImmutableSet.of("i-1"),
+                new FleetStateStats("", 1, FleetStateStats.State.active(), ImmutableSet.of("i-1"),
                         Collections.<String, Double>emptyMap()));
 
         AmazonEC2 amazonEC2 = mock(AmazonEC2.class);

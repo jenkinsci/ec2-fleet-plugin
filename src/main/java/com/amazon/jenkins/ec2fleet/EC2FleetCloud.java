@@ -348,8 +348,8 @@ public class EC2FleetCloud extends Cloud {
             return Collections.emptyList();
         }
 
-        if (!"active".equals(stats.getState())) {
-            info("fleet in %s not active state", stats.getState());
+        if (!stats.getState().isActive()) {
+            info("fleet in %s not active state", stats.getState().getDetailed());
             return Collections.emptyList();
         }
 

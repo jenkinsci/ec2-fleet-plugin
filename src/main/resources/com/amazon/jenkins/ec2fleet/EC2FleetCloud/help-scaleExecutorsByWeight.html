@@ -5,6 +5,10 @@ information to scale number of executors per node, and just set number of execut
 configuration field <code>Number of Executors</code>
 
 <p>
+    <b>Note</b> Auto Scaling Groups don't support weights, only EC2 Spot Fleet.
+</p>
+
+<p>
     When it's checked, plugin consumes instance weight information provided by Launch Specification
     and uses it to scale node number of executors from configuration field <code>Number of Executors</code>
     <b>Note</b> current implementation doesn't support Launch Template only Launch Specification

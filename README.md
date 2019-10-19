@@ -67,7 +67,7 @@ which will be used by Jenkins EC2 Fleet Plugin to connect to your Spot Fleet
  
 #### 3. Configure User permissions
 
-Add inline policy to the user to allow it use EC2 Spot Fleet 
+Add inline policy to the user to allow it use EC2 Spot Fleet and Auto Scaling Group
 [AWS documentation about that](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-fleet-requests.html#spot-fleet-prerequisites)
 
 ```json
@@ -77,7 +77,8 @@ Add inline policy to the user to allow it use EC2 Spot Fleet
           {
               "Effect": "Allow",
               "Action": [
-                  "ec2:*"
+                  "ec2:*",
+                  "autoscaling:*"
               ],
               "Resource": "*"
           },
@@ -115,8 +116,8 @@ Once the fleet is launched, you can set it up by adding a new **EC2 Fleet** clou
 1. Goto ```Manage Jenkins > Plugin Manager``` 
 1. Install ```EC2 Fleet Jenkins Plugin```
 1. Goto ```Manage Jenkins > Configure System```
-1. Click ```Add a new cloud``` and select ```Amazon SpotFleet```
-1. Configure credentials and specify EC2 Spot Fleet which you want to use
+1. Click ```Add a new cloud``` and select ```Amazon EC2 Fleet```
+1. Configure credentials and specify EC2 Spot Fleet or Auto Scaling Group which you want to use
 
 ## Scaling
 You can specify the scaling limits in your cloud settings. By default, Jenkins will try to scale fleet up
@@ -145,7 +146,9 @@ import jenkins.model.Jenkins
 // just modify this config other code just logic
 config = [
     region: "us-east-1",
-    fleetId: "...",
+    // EC2 Spot Fleet ID
+    // or Auto Scaling Group Name
+    fleetId: "...", 
     idleMinutes: 10,
     minSize: 0,
     maxSize: 10,

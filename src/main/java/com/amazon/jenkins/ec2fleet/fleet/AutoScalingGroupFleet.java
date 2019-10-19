@@ -22,11 +22,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-// todo make sure we set scale in protection
 @ThreadSafe
 public class AutoScalingGroupFleet implements EC2Fleet {
-
-    private static final String ACTIVE_STATE = "active";
 
     @Override
     public void describe(
@@ -49,16 +46,23 @@ public class AutoScalingGroupFleet implements EC2Fleet {
     }
 
     @Override
-    public void modify(String awsCredentialsId, String regionName, String endpoint, String id, int targetCapacity) {
+    public void modify(
+            final String awsCredentialsId, final String regionName, final String endpoint,
+            final String id, final int targetCapacity) {
         final AmazonAutoScalingClient client = createClient(awsCredentialsId, regionName, endpoint);
         client.updateAutoScalingGroup(
                 new UpdateAutoScalingGroupRequest()
                         .withDesiredCapacity(targetCapacity)
-                        .withAutoScalingGroupName(id));
+                        .withAutoScalingGroupName(id)
+                        // without scale in protection auto scaling group could terminate random ec2 instances
+                        // in case of scale in, instead we need to enable so plugin could decide
+                        // which empty instance should be terminated
+                        .withNewInstancesProtectedFromScaleIn(true));
     }
 
     @Override
-    public FleetStateStats getState(String awsCredentialsId, String regionName, String endpoint, String id) {
+    public FleetStateStats getState(
+            final String awsCredentialsId, final String regionName, final String endpoint, final String id) {
         final AmazonAutoScalingClient client = createClient(awsCredentialsId, regionName, endpoint);
         final DescribeAutoScalingGroupsResult result = client.describeAutoScalingGroups(
                 new DescribeAutoScalingGroupsRequest()
@@ -78,13 +82,14 @@ public class AutoScalingGroupFleet implements EC2Fleet {
 
         return new FleetStateStats(
                 id, group.getDesiredCapacity(),
-                // default status is null, so just put active to make EC2FleetCloud happy
-                StringUtils.isNotEmpty(group.getStatus()) ? group.getStatus() : ACTIVE_STATE,
+                // status could be null which is active
+                FleetStateStats.State.active(StringUtils.defaultIfEmpty(group.getStatus(), "active")),
                 // auto scaling groups don't support weight, may be in future
                 instanceIds, Collections.<String, Double>emptyMap());
     }
 
-    private AmazonAutoScalingClient createClient(String awsCredentialsId, String regionName, String endpoint) {
+    private AmazonAutoScalingClient createClient(
+            final String awsCredentialsId, final String regionName, final String endpoint) {
         final AmazonWebServicesCredentials credentials = AWSCredentialsHelper.getCredentials(awsCredentialsId, Jenkins.getInstance());
         final AmazonAutoScalingClient client = new AmazonAutoScalingClient(credentials);
         final String effectiveEndpoint = getEndpoint(regionName, endpoint);

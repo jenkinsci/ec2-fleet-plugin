@@ -73,7 +73,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         EC2Fleets.setGet(ec2Fleet);
 
         when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
-                new FleetStateStats("", 0, "active", ImmutableSet.<String>of(),
+                new FleetStateStats("", 0, FleetStateStats.State.active(), ImmutableSet.<String>of(),
                         Collections.<String, Double>emptyMap()));
 
         AmazonEC2 amazonEC2 = mock(AmazonEC2.class);
@@ -138,7 +138,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                 2, false));
 
         // provide init state
-        cloud.setStats(new FleetStateStats("", 0, "active",
+        cloud.setStats(new FleetStateStats("", 0, FleetStateStats.State.active(),
                 Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
         j.jenkins.clouds.add(cloud);
@@ -195,7 +195,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                 false, 0, 0, false,
                 10, false));
 
-        cloud.setStats(new FleetStateStats("", 0, "active",
+        cloud.setStats(new FleetStateStats("", 0, FleetStateStats.State.active(),
                 Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
         j.jenkins.clouds.add(cloud);

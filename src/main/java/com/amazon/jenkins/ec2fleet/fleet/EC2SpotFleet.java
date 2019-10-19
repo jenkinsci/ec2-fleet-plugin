@@ -40,7 +40,7 @@ public class EC2SpotFleet implements EC2Fleet {
             for (final SpotFleetRequestConfig config : result.getSpotFleetRequestConfigs()) {
                 final String curFleetId = config.getSpotFleetRequestId();
                 final boolean selected = ObjectUtils.nullSafeEquals(selectedId, curFleetId);
-                if (selected || showAll || isSpotFleetActiveAndMaintain(config)) {
+                if (selected || showAll || isActiveAndMaintain(config)) {
                     final String displayStr = "EC2 Spot Fleet - " + curFleetId +
                             " (" + config.getSpotFleetRequestState() + ")" +
                             " (" + config.getSpotFleetRequestConfig().getType() + ")";
@@ -56,11 +56,14 @@ public class EC2SpotFleet implements EC2Fleet {
      * @return return <code>true</code> not only for {@link BatchState#Active} but for any other
      * in which fleet in theory could accept load.
      */
-    private boolean isSpotFleetActiveAndMaintain(final SpotFleetRequestConfig config) {
-        return FleetType.Maintain.toString().equals(config.getSpotFleetRequestConfig().getType()) && (
-                BatchState.Active.toString().equals(config.getSpotFleetRequestState())
-                        || BatchState.Modifying.toString().equals(config.getSpotFleetRequestState())
-                        || BatchState.Submitted.toString().equals(config.getSpotFleetRequestState()));
+    private boolean isActiveAndMaintain(final SpotFleetRequestConfig config) {
+        return FleetType.Maintain.toString().equals(config.getSpotFleetRequestConfig().getType()) && isActive(config);
+    }
+
+    private boolean isActive(final SpotFleetRequestConfig config) {
+        return BatchState.Active.toString().equals(config.getSpotFleetRequestState())
+                || BatchState.Modifying.toString().equals(config.getSpotFleetRequestState())
+                || BatchState.Submitted.toString().equals(config.getSpotFleetRequestState());
     }
 
     @Override
@@ -120,7 +123,8 @@ public class EC2SpotFleet implements EC2Fleet {
 
         return new FleetStateStats(id,
                 fleetRequestConfig.getTargetCapacity(),
-                fleetConfig.getSpotFleetRequestState(), instances,
+                new FleetStateStats.State(isActive(fleetConfig), fleetConfig.getSpotFleetRequestState()),
+                instances,
                 instanceTypeWeights);
     }
 
