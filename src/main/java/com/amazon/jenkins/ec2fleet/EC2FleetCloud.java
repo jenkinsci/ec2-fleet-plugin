@@ -407,7 +407,7 @@ public class EC2FleetCloud extends Cloud {
             // we do update any time even real capacity was not update like remove one add one to
             // update fleet settings with NoTermination so we can terminate instances on our own
             EC2Fleets.get(fleet).modify(
-                    getAwsCredentialsId(), region, endpoint, fleet, targetCapacity);
+                    getAwsCredentialsId(), region, endpoint, fleet, targetCapacity, minSize, maxSize);
             info("Update fleet target capacity to %s", targetCapacity);
         }
 

@@ -18,7 +18,7 @@ public interface EC2Fleet {
 
     void modify(
             final String awsCredentialsId, final String regionName, final String endpoint,
-            final String id, final int targetCapacity);
+            final String id, final int targetCapacity, int min, int max);
 
     FleetStateStats getState(
             final String awsCredentialsId, final String regionName, final String endpoint,

@@ -48,10 +48,12 @@ public class AutoScalingGroupFleet implements EC2Fleet {
     @Override
     public void modify(
             final String awsCredentialsId, final String regionName, final String endpoint,
-            final String id, final int targetCapacity) {
+            final String id, final int targetCapacity, final int min, final int max) {
         final AmazonAutoScalingClient client = createClient(awsCredentialsId, regionName, endpoint);
         client.updateAutoScalingGroup(
                 new UpdateAutoScalingGroupRequest()
+                        .withMinSize(min)
+                        .withMaxSize(max)
                         .withDesiredCapacity(targetCapacity)
                         .withAutoScalingGroupName(id)
                         // without scale in protection auto scaling group could terminate random ec2 instances

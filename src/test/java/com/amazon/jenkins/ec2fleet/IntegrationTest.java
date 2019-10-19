@@ -389,7 +389,7 @@ public abstract class IntegrationTest {
                 targetCapacity.set(argument.getTargetCapacity());
                 return null;
             }
-        }).when(ec2Fleet).modify(anyString(), anyString(), anyString(), anyString(), anyInt());
+        }).when(ec2Fleet).modify(anyString(), anyString(), anyString(), anyString(), anyInt(), anyInt(), anyInt());
 
         when(ec2Fleet.getState(anyString(), anyString(), nullable(String.class), anyString())).thenAnswer(new Answer<Object>() {
             @Override

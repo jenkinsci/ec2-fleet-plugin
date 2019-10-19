@@ -49,7 +49,7 @@ public class CloudNanny extends PeriodicWork {
             if (!(cloud instanceof EC2FleetCloud)) continue;
             final EC2FleetCloud fleetCloud = (EC2FleetCloud) cloud;
 
-            AtomicInteger recurrenceCounter = getRecurrenceCounter(fleetCloud);
+            final AtomicInteger recurrenceCounter = getRecurrenceCounter(fleetCloud);
 
             if (recurrenceCounter.decrementAndGet() > 0) {
                 continue;

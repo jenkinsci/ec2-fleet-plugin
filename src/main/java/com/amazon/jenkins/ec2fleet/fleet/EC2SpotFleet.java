@@ -69,7 +69,7 @@ public class EC2SpotFleet implements EC2Fleet {
     @Override
     public void modify(
             final String awsCredentialsId, final String regionName, final String endpoint,
-            String id, int targetCapacity) {
+            String id, int targetCapacity, int min, int max) {
         final ModifySpotFleetRequestRequest request = new ModifySpotFleetRequestRequest();
         request.setSpotFleetRequestId(id);
         request.setTargetCapacity(targetCapacity);

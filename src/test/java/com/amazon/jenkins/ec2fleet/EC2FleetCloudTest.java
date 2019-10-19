@@ -489,7 +489,7 @@ public class EC2FleetCloudTest {
         fleetCloud.update();
 
         // then
-        verify(ec2Fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(2));
+        verify(ec2Fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(2), eq(0), eq(10));
     }
 
     @Test
@@ -517,7 +517,7 @@ public class EC2FleetCloudTest {
         fleetCloud.update();
 
         // then
-        verify(ec2Fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(6));
+        verify(ec2Fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(6), eq(0), eq(10));
         assertEquals(0, fleetCloud.getInstanceIdsToTerminate().size());
         assertEquals(0, fleetCloud.getToAdd());
     }
@@ -548,7 +548,7 @@ public class EC2FleetCloudTest {
         fleetCloud.update();
 
         // then
-        verify(ec2Fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(0));
+        verify(ec2Fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(0), eq(0), eq(10));
         assertEquals(0, fleetCloud.getInstanceIdsToTerminate().size());
         assertEquals(0, fleetCloud.getToAdd());
     }
@@ -578,7 +578,7 @@ public class EC2FleetCloudTest {
         fleetCloud.update();
 
         // then
-        verify(ec2Fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(5));
+        verify(ec2Fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(5), eq(0), eq(10));
         assertEquals(0, fleetCloud.getInstanceIdsToTerminate().size());
         assertEquals(0, fleetCloud.getToAdd());
     }
@@ -608,7 +608,7 @@ public class EC2FleetCloudTest {
         fleetCloud.update();
 
         // then
-        verify(ec2Fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(2));
+        verify(ec2Fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(2), eq(0), eq(10));
         verify(ec2Api).terminateInstances(amazonEC2, ImmutableSet.<String>of("i-1", "i-2"));
     }
 
