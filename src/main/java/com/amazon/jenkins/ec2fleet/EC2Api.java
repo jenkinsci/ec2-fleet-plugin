@@ -1,5 +1,6 @@
 package com.amazon.jenkins.ec2fleet;
 
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.services.ec2.AmazonEC2;
@@ -158,11 +159,12 @@ public class EC2Api {
     }
 
     public AmazonEC2 connect(final String awsCredentialsId, final String regionName, final String endpoint) {
+        final ClientConfiguration clientConfiguration = AWSUtils.getClientConfiguration();
         final AmazonWebServicesCredentials credentials = AWSCredentialsHelper.getCredentials(awsCredentialsId, Jenkins.getInstance());
         final AmazonEC2Client client =
                 credentials != null ?
-                        new AmazonEC2Client(credentials) :
-                        new AmazonEC2Client();
+                        new AmazonEC2Client(credentials, clientConfiguration) :
+                        new AmazonEC2Client(clientConfiguration);
 
         final String effectiveEndpoint = getEndpoint(regionName, endpoint);
         if (effectiveEndpoint != null) client.setEndpoint(effectiveEndpoint);

@@ -1,6 +1,8 @@
 package com.amazon.jenkins.ec2fleet.fleet;
 
+import com.amazon.jenkins.ec2fleet.AWSUtils;
 import com.amazon.jenkins.ec2fleet.FleetStateStats;
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
@@ -93,7 +95,8 @@ public class AutoScalingGroupFleet implements EC2Fleet {
     private AmazonAutoScalingClient createClient(
             final String awsCredentialsId, final String regionName, final String endpoint) {
         final AmazonWebServicesCredentials credentials = AWSCredentialsHelper.getCredentials(awsCredentialsId, Jenkins.getInstance());
-        final AmazonAutoScalingClient client = new AmazonAutoScalingClient(credentials);
+        final ClientConfiguration clientConfiguration = AWSUtils.getClientConfiguration();
+        final AmazonAutoScalingClient client = new AmazonAutoScalingClient(credentials, clientConfiguration);
         final String effectiveEndpoint = getEndpoint(regionName, endpoint);
         if (effectiveEndpoint != null) client.setEndpoint(effectiveEndpoint);
         return client;
