@@ -17,7 +17,6 @@ import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.SpotFleetRequestConfig;
 import com.amazonaws.services.ec2.model.SpotFleetRequestConfigData;
 import com.google.common.collect.ImmutableSet;
-import hudson.model.FreeStyleBuild;
 import hudson.model.Label;
 import hudson.model.TaskListener;
 import hudson.model.queue.QueueTaskFuture;
@@ -267,6 +266,38 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                 Assert.assertEquals(ImmutableSet.of("master", "momo"), labelsToNames(j.jenkins.getLabels()));
                 Assert.assertEquals(1, j.jenkins.getLabelAtom("momo").nodeProvisioner.getPendingLaunches().size());
                 Assert.assertEquals(0, j.jenkins.getNodes().size());
+            }
+        });
+
+        cancelTasks(rs);
+    }
+
+    @Test
+    public void should_successfully_create_nodes() throws Exception {
+        ComputerLauncher computerLauncher = mock(ComputerLauncher.class);
+        ComputerConnector computerConnector = mock(ComputerConnector.class);
+        when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
+
+        EC2FleetCloud cloud = new EC2FleetCloud(null, null, "credId", null, "region",
+                null, "fId", "momo", null, computerConnector, false, false,
+                0, 0, 2, 1, true, false,
+                false, 0, 0, false,
+                2, false);
+        j.jenkins.clouds.add(cloud);
+
+        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Running);
+
+        final List<QueueTaskFuture> rs = enqueTask(2);
+
+        triggerSuggestReviewNow("momo");
+
+        tryUntil(new Runnable() {
+            @Override
+            public void run() {
+                Assert.assertEquals(ImmutableSet.of("master", "momo", "i-0", "i-1"), labelsToNames(j.jenkins.getLabels()));
+                Assert.assertEquals(2, j.jenkins.getLabelAtom("momo").getNodes().size());
+                // node name should be instance name
+                Assert.assertEquals(ImmutableSet.of("i-0", "i-1"), nodeToNames(j.jenkins.getLabelAtom("momo").getNodes()));
             }
         });
 

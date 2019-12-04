@@ -48,6 +48,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -233,6 +234,12 @@ public abstract class IntegrationTest {
     protected static Set<String> labelsToNames(Set<Label> labels) {
         Set<String> r = new HashSet<>();
         for (Label l : labels) r.add(l.getName());
+        return r;
+    }
+
+    protected static Set<String> nodeToNames(Collection<Node> nodes) {
+        Set<String> r = new HashSet<>();
+        for (Node l : nodes) r.add(l.getNodeName());
         return r;
     }
 
