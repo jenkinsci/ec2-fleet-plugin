@@ -1,10 +1,8 @@
 package com.amazon.jenkins.ec2fleet;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MapMaker;
 import hudson.slaves.Cloud;
-import hudson.widgets.Widget;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,7 +19,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -38,14 +35,6 @@ public class CloudNannyTest {
 
     @Mock
     private EC2FleetCloud cloud2;
-
-    @Mock
-    private EC2FleetStatusWidget widget1;
-
-    @Mock
-    private EC2FleetStatusWidget widget2;
-
-    private List<Widget> widgets = new ArrayList<>();
 
     private List<Cloud> clouds = new ArrayList<>();
 
@@ -69,7 +58,6 @@ public class CloudNannyTest {
     public void before() throws Exception {
         PowerMockito.mockStatic(CloudNanny.class);
         PowerMockito.when(CloudNanny.class, "getClouds").thenReturn(clouds);
-        PowerMockito.when(CloudNanny.class, "getWidgets").thenReturn(widgets);
 
         when(cloud1.getLabelString()).thenReturn("a");
         when(cloud2.getLabelString()).thenReturn("");
@@ -112,40 +100,11 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void shouldUpdateCloudCollectResultAndUpdateWidgets() {
-        clouds.add(cloud1);
-
-        widgets.add(widget1);
-
-        getMockCloudNannyInstance().doRun();
-
-        verify(widget1).setStatusList(ImmutableList.of(new EC2FleetStatusInfo(
-                cloud1.getFleet(), stats1.getState().getDetailed(), cloud1.getLabelString(), stats1.getNumActive(), stats1.getNumDesired())));
-    }
-
-    @Test
-    public void shouldUpdateCloudCollectResultAndUpdateAllEC2FleetWidgets() {
-        clouds.add(cloud1);
-
-        widgets.add(widget1);
-        widgets.add(widget2);
-
-        getMockCloudNannyInstance().doRun();
-
-        verify(widget1).setStatusList(ImmutableList.of(new EC2FleetStatusInfo(
-                cloud1.getFleet(), stats1.getState().getDetailed(), cloud1.getLabelString(), stats1.getNumActive(), stats1.getNumDesired())));
-        verify(widget2).setStatusList(ImmutableList.of(new EC2FleetStatusInfo(
-                cloud1.getFleet(), stats1.getState().getDetailed(), cloud1.getLabelString(), stats1.getNumActive(), stats1.getNumDesired())));
-    }
-
-    @Test
     public void shouldIgnoreNonEC2FleetClouds() {
         clouds.add(cloud1);
 
         Cloud nonEc2FleetCloud = mock(Cloud.class);
         clouds.add(nonEc2FleetCloud);
-
-        widgets.add(widget2);
 
         getMockCloudNannyInstance().doRun();
 
@@ -154,18 +113,14 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void shouldUpdateCloudCollectAllResultAndUpdateWidgets() {
+    public void shouldUpdateCloudCollectAll() {
         clouds.add(cloud1);
         clouds.add(cloud2);
 
-        widgets.add(widget1);
-
         getMockCloudNannyInstance().doRun();
 
-        verify(widget1).setStatusList(ImmutableList.of(
-                new EC2FleetStatusInfo(cloud1.getFleet(), stats1.getState().getDetailed(), cloud1.getLabelString(), stats1.getNumActive(), stats1.getNumDesired()),
-                new EC2FleetStatusInfo(cloud2.getFleet(), stats2.getState().getDetailed(), cloud2.getLabelString(), stats2.getNumActive(), stats2.getNumDesired())
-        ));
+        verify(cloud1).update();
+        verify(cloud2).update();
     }
 
     @Test
@@ -175,29 +130,10 @@ public class CloudNannyTest {
 
         when(cloud1.update()).thenThrow(new IllegalArgumentException("test"));
 
-        widgets.add(widget1);
-
         getMockCloudNannyInstance().doRun();
 
-        verify(widget1).setStatusList(ImmutableList.of(
-                new EC2FleetStatusInfo(cloud2.getFleet(), stats2.getState().getDetailed(), cloud2.getLabelString(), stats2.getNumActive(), stats2.getNumDesired())
-        ));
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void shouldIgnoreNonEc2FleetWidgets() {
-        clouds.add(cloud1);
-
-        Widget nonEc2FleetWidget = mock(Widget.class);
-        widgets.add(nonEc2FleetWidget);
-
-        widgets.add(widget1);
-
-        getMockCloudNannyInstance().doRun();
-
-        verify(widget1).setStatusList(any(List.class));
-        verifyZeroInteractions(nonEc2FleetWidget);
+        verify(cloud1).update();
+        verify(cloud2).update();
     }
 
     @Test
@@ -220,7 +156,6 @@ public class CloudNannyTest {
 
     @Test
     public void skipCloudIntervalExecution() {
-        widgets.add(widget1);
         clouds.add(cloud1);
         clouds.add(cloud2);
         CloudNanny cloudNanny = getMockCloudNannyInstance();
@@ -235,9 +170,6 @@ public class CloudNannyTest {
 
         assertEquals(1, recurrenceCounter1.get());
         assertEquals(2, recurrenceCounter2.get());
-
-        // commented because of bug https://github.com/jenkinsci/ec2-fleet-plugin/issues/147
-        // verifyZeroInteractions(widget1, widget2);
     }
 
     @Test

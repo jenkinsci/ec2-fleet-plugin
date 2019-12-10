@@ -9,7 +9,7 @@ import java.util.List;
 
 /**
  * This class should be thread safe, consumed by Jenkins and updated
- * by {@link CloudNanny}
+ * by {@link EC2FleetStatusWidgetUpdater}
  */
 @Extension
 @ThreadSafe

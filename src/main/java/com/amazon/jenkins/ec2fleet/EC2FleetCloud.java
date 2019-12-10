@@ -403,6 +403,7 @@ public class EC2FleetCloud extends Cloud {
         final AmazonEC2 ec2 = Registry.getEc2Api().connect(getAwsCredentialsId(), region, endpoint);
 
         if (currentToAdd > 0 || currentInstanceIdsToTerminate.size() > 0) {
+            // todo fix negative value
             final int targetCapacity = stats.getNumDesired() - currentInstanceIdsToTerminate.size() + toAdd;
             // we do update any time even real capacity was not update like remove one add one to
             // update fleet settings with NoTermination so we can terminate instances on our own
