@@ -47,6 +47,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
@@ -57,7 +58,7 @@ import static org.mockito.Mockito.nullable;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
+@SuppressWarnings("unchecked")
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Jenkins.class, EC2FleetCloud.class, EC2FleetCloud.DescriptorImpl.class,
         LabelFinder.class, FleetStateStats.class, EC2Fleets.class})
@@ -609,7 +610,7 @@ public class EC2FleetCloudTest {
 
         // then
         verify(ec2Fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(2), eq(0), eq(10));
-        verify(ec2Api).terminateInstances(amazonEC2, ImmutableSet.<String>of("i-1", "i-2"));
+        verify(ec2Api).terminateInstances(amazonEC2, ImmutableSet.of("i-1", "i-2"));
     }
 
     @Test
@@ -995,6 +996,49 @@ public class EC2FleetCloudTest {
 
     @Test
     public void update_shouldAddNodeWithScaledToOneNumExecutors_whenWeightPresentButLessOneAndEnabled() throws IOException {
+        // given
+        when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
+
+        final String instanceType = "t";
+        final String instanceId = "i-0";
+        final Instance instance = new Instance()
+                .withPublicIpAddress("p-ip")
+                .withInstanceType(instanceType)
+                .withInstanceId(instanceId);
+
+        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+                ImmutableMap.of(instanceId, instance));
+
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
+                        ImmutableSet.of(instanceId),
+                        Collections.<String, Double>emptyMap()));
+
+        PowerMockito.doThrow(new UnsupportedOperationException("Test exception")).when(ec2Fleet)
+                .modify(anyString(), anyString(), anyString(), anyString(), anyInt(), anyInt(), anyInt());
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
+                "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
+                false, 0, 0, 1, 1, false,
+                true, false,
+                0, 0, true, 10, false);
+        // set init state so we can do provision
+        fleetCloud.setStats(new FleetStateStats("", 0, FleetStateStats.State.active(),
+                Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+        // run provision
+        fleetCloud.provision(null, 1);
+
+        // when
+        try {
+            fleetCloud.update();
+            Assert.fail("Where is my exception?");
+        } catch (UnsupportedOperationException e) {
+            Assert.assertEquals(1, fleetCloud.getToAdd());
+        }
+    }
+
+    @Test
+    public void update_givenFailedModifyShouldNotUpdateToAddToDelete() throws IOException {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
