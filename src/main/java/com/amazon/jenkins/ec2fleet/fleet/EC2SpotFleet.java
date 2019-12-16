@@ -24,6 +24,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-fleet-requests.html#spot-fleet-states
+ */
 @ThreadSafe
 public class EC2SpotFleet implements EC2Fleet {
 
@@ -56,14 +59,18 @@ public class EC2SpotFleet implements EC2Fleet {
      * @return return <code>true</code> not only for {@link BatchState#Active} but for any other
      * in which fleet in theory could accept load.
      */
-    private boolean isActiveAndMaintain(final SpotFleetRequestConfig config) {
+    private static boolean isActiveAndMaintain(final SpotFleetRequestConfig config) {
         return FleetType.Maintain.toString().equals(config.getSpotFleetRequestConfig().getType()) && isActive(config);
     }
 
-    private boolean isActive(final SpotFleetRequestConfig config) {
+    private static boolean isActive(final SpotFleetRequestConfig config) {
         return BatchState.Active.toString().equals(config.getSpotFleetRequestState())
                 || BatchState.Modifying.toString().equals(config.getSpotFleetRequestState())
                 || BatchState.Submitted.toString().equals(config.getSpotFleetRequestState());
+    }
+
+    private static boolean isModifying(final SpotFleetRequestConfig config) {
+        return BatchState.Modifying.toString().equals(config.getSpotFleetRequestState());
     }
 
     @Override
@@ -79,6 +86,7 @@ public class EC2SpotFleet implements EC2Fleet {
         ec2.modifySpotFleetRequest(request);
     }
 
+    @Override
     public FleetStateStats getState(
             final String awsCredentialsId, final String regionName, final String endpoint,
             final String id) {
@@ -123,7 +131,10 @@ public class EC2SpotFleet implements EC2Fleet {
 
         return new FleetStateStats(id,
                 fleetRequestConfig.getTargetCapacity(),
-                new FleetStateStats.State(isActive(fleetConfig), fleetConfig.getSpotFleetRequestState()),
+                new FleetStateStats.State(
+                        isActive(fleetConfig),
+                        isModifying(fleetConfig),
+                        fleetConfig.getSpotFleetRequestState()),
                 instances,
                 instanceTypeWeights);
     }

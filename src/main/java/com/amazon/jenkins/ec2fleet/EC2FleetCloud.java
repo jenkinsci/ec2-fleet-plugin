@@ -37,6 +37,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -313,6 +314,11 @@ public class EC2FleetCloud extends Cloud {
     }
 
     @VisibleForTesting
+    synchronized Set<NodeProvisioner.PlannedNode> getPlannedNodesCache() {
+        return plannedNodesCache;
+    }
+
+    @VisibleForTesting
     synchronized Set<String> getInstanceIdsToTerminate() {
         return instanceIdsToTerminate;
     }
@@ -398,13 +404,57 @@ public class EC2FleetCloud extends Cloud {
             currentInstanceIdsToTerminate = new HashSet<>(instanceIdsToTerminate);
         }
 
+        // plugin loads fleet state before possible modification and adjust current state
+        // with fixed target capacity, because not all implementations of EC2Fleet updates
+        // fleet state immediately and if you do update then load state you can get inconsistent
+        // state, see EC2SpotFleet doc
+        FleetStateStats currentState = EC2Fleets.get(fleet).getState(
+                getAwsCredentialsId(), region, endpoint, getFleet());
+        if (currentState.getState().isModifying()) {
+            info("Fleet under modification, try update later, %s", currentState.getState().getDetailed());
+            synchronized (this) {
+                stats = currentState;
+            }
+            return stats;
+        }
+
+        // fleet could be updated outside of plugin, we should be ready that
+        // real target capacity is zero or less then plugin thinks and make sure
+        // new target capacity will not be negative
+        final int targetCapacity = Math.max(0,
+                currentState.getNumDesired() - currentInstanceIdsToTerminate.size() + currentToAdd);
+        currentState = new FleetStateStats(currentState, targetCapacity);
+
+        updateByState(currentToAdd, currentInstanceIdsToTerminate, targetCapacity, currentState);
+
+        // lock and update state of plugin, so terminate or provision could work with new state of world
+        synchronized (this) {
+            instanceIdsToTerminate.removeAll(currentInstanceIdsToTerminate);
+            // toAdd only grow outside of this method, so we can subtract
+            toAdd = toAdd - currentToAdd;
+            stats = currentState;
+            // limit planned pool according to real target capacity
+            while (plannedNodesCache.size() > targetCapacity) {
+                final Iterator<NodeProvisioner.PlannedNode> iterator = plannedNodesCache.iterator();
+                final NodeProvisioner.PlannedNode plannedNodeToCancel = iterator.next();
+                iterator.remove();
+                // cancel to let jenkins no that node is not valid any more
+                plannedNodeToCancel.future.cancel(true);
+            }
+        }
+
+        return stats;
+    }
+
+    private void updateByState(
+            final int currentToAdd, final Set<String> currentInstanceIdsToTerminate,
+            final int targetCapacity, final FleetStateStats newStatus) {
         final Jenkins jenkins = Jenkins.getInstance();
 
         final AmazonEC2 ec2 = Registry.getEc2Api().connect(getAwsCredentialsId(), region, endpoint);
 
         if (currentToAdd > 0 || currentInstanceIdsToTerminate.size() > 0) {
             // todo fix negative value
-            final int targetCapacity = stats.getNumDesired() - currentInstanceIdsToTerminate.size() + toAdd;
             // we do update any time even real capacity was not update like remove one add one to
             // update fleet settings with NoTermination so we can terminate instances on our own
             EC2Fleets.get(fleet).modify(
@@ -437,13 +487,11 @@ public class EC2FleetCloud extends Cloud {
             info("Instances %s were terminated with result", currentInstanceIdsToTerminate);
         }
 
-        final FleetStateStats currentStats = EC2Fleets.get(fleet).getState(
-                getAwsCredentialsId(), region, endpoint, getFleet());
-        info("fleet instances %s", currentStats.getInstances());
+        info("fleet instances %s", newStatus.getInstances());
 
         // Set up the lists of Jenkins nodes and fleet instances
         // currentFleetInstances contains instances currently in the fleet
-        final Set<String> fleetInstances = new HashSet<>(currentStats.getInstances());
+        final Set<String> fleetInstances = new HashSet<>(newStatus.getInstances());
 
         final Map<String, Instance> described = Registry.getEc2Api().describeInstances(ec2, fleetInstances);
         info("described instances %s", described.keySet());
@@ -516,7 +564,7 @@ public class EC2FleetCloud extends Cloud {
                 public void run() {
                     try {
                         for (final Instance instance : newFleetInstances.values()) {
-                            addNewSlave(ec2, instance, currentStats);
+                            addNewSlave(ec2, instance, newStatus);
                         }
                     } catch (final Exception ex) {
                         warning(ex, "Unable to set label on node");
@@ -524,16 +572,6 @@ public class EC2FleetCloud extends Cloud {
                 }
             });
         }
-
-        // lock and update state of plugin, so terminate or provision could work with new state of world
-        synchronized (this) {
-            instanceIdsToTerminate.removeAll(currentInstanceIdsToTerminate);
-            // toAdd only grow outside of this method, so we can subtract
-            toAdd = toAdd - currentToAdd;
-            stats = currentStats;
-        }
-
-        return stats;
     }
 
     /**

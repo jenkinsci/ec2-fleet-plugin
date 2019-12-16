@@ -408,7 +408,7 @@ public abstract class IntegrationTest {
                 }
 
                 return new FleetStateStats("", 0,
-                        new FleetStateStats.State(true, "active"),
+                        new FleetStateStats.State(true, false, "active"),
                         instanceIds, Collections.<String, Double>emptyMap());
             }
         });

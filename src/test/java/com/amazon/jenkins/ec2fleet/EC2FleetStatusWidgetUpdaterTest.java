@@ -44,10 +44,10 @@ public class EC2FleetStatusWidgetUpdaterTest {
     private List<Cloud> clouds = new ArrayList<>();
 
     private FleetStateStats stats1 = new FleetStateStats(
-            "f1", 1, new FleetStateStats.State(true, "a"), ImmutableSet.<String>of(), Collections.<String, Double>emptyMap());
+            "f1", 1, new FleetStateStats.State(true, false, "a"), ImmutableSet.<String>of(), Collections.<String, Double>emptyMap());
 
     private FleetStateStats stats2 = new FleetStateStats(
-            "f2", 1, new FleetStateStats.State(true, "a"), ImmutableSet.<String>of(), Collections.<String, Double>emptyMap());
+            "f2", 1, new FleetStateStats.State(true, false, "a"), ImmutableSet.<String>of(), Collections.<String, Double>emptyMap());
 
     @Before
     public void before() throws Exception {

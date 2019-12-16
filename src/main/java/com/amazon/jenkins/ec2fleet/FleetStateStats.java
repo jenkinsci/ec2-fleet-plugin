@@ -1,6 +1,7 @@
 package com.amazon.jenkins.ec2fleet;
 
 import com.amazonaws.services.ec2.model.BatchState;
+import hudson.model.Label;
 
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
@@ -23,7 +24,11 @@ public final class FleetStateStats {
     public static class State {
 
         public static State active(final String detailed) {
-            return new State(true, detailed);
+            return new State(true, false, detailed);
+        }
+
+        public static State modifying(final String detailed) {
+            return new State(true, true, detailed);
         }
 
         public static State active() {
@@ -31,20 +36,40 @@ public final class FleetStateStats {
         }
 
         public static State notActive(final String detailed) {
-            return new State(false, detailed);
+            return new State(false, false, detailed);
         }
 
         private final String detailed;
         private final boolean active;
+        private final boolean modifying;
 
-        public State(final boolean active, final String detailed) {
+        public State(final boolean active, final boolean modifying, final String detailed) {
             this.detailed = detailed;
             this.active = active;
+            this.modifying = modifying;
         }
 
         /**
-         * Consumed by {@link EC2FleetCloud#update()} to check if fleet is ok to
-         * continue provision otherwise provision will be ignored
+         * Is underline fleet is updating so we need to suppress update
+         * until modification will be completed and fleet state will be stabilized.
+         *
+         * This is important only for {@link com.amazon.jenkins.ec2fleet.fleet.EC2SpotFleet}
+         * as it has delay between update request and actual update of target capacity, while
+         * {@link com.amazon.jenkins.ec2fleet.fleet.AutoScalingGroupFleet} does it in sync with
+         * update call.
+         *
+         * Consumed by {@link EC2FleetCloud#update()}
+         *
+         * @return true or false
+         */
+        public boolean isModifying() {
+            return modifying;
+        }
+
+        /**
+         * Fleet is good to be used for plugin, it will be shown on UI as option to use
+         * and plugin will use it for provision {@link EC2FleetCloud#provision(Label, int)} ()} and de-provision
+         * otherwise activity will be ignored until state will not be updated.
          *
          * @return true or false
          */
@@ -101,6 +126,16 @@ public final class FleetStateStats {
         this.state = state;
         this.instances = instances;
         this.instanceTypeWeights = instanceTypeWeights;
+    }
+
+    public FleetStateStats(final @Nonnull FleetStateStats stats,
+                           final int numDesired) {
+        this.fleetId = stats.fleetId;
+        this.numActive = stats.instances.size();
+        this.numDesired = numDesired;
+        this.state = stats.state;
+        this.instances = stats.instances;
+        this.instanceTypeWeights = stats.instanceTypeWeights;
     }
 
     @Nonnull
