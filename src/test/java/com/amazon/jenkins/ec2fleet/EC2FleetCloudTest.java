@@ -902,7 +902,12 @@ public class EC2FleetCloudTest {
         doNothing().when(jenkins).addNode(any(Node.class));
 
         // when
-        fleetCloud.provision(null, 10);
+        Collection<NodeProvisioner.PlannedNode> plannedNodes = fleetCloud.provision(null, 10);
+        Assert.assertEquals(10, plannedNodes.size());
+        for (NodeProvisioner.PlannedNode plannedNode : plannedNodes) {
+            Assert.assertFalse(plannedNode.future.isCancelled());
+        }
+
         // try to modify and reset to add
         fleetCloud.update();
         // reset to old empty state
@@ -912,9 +917,12 @@ public class EC2FleetCloudTest {
         // then
         // should reset list to empty
         Assert.assertEquals(0, fleetCloud.getPlannedNodesCache().size());
+        // make sure all trimmed planned nodes were cancelled
+        Assert.assertEquals(10, plannedNodes.size());
+        for (NodeProvisioner.PlannedNode plannedNode : plannedNodes) {
+            Assert.assertTrue("Planned node should be cancelled", plannedNode.future.isCancelled());
+        }
     }
-
-    // todo check that trimmed were cancelled
 
     @Test
     public void update_shouldUpdateStateWithFleetTargetCapacityPlusToAdd() throws IOException {
