@@ -23,6 +23,7 @@ import org.apache.commons.lang.StringUtils;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -125,7 +126,7 @@ public class EC2Api {
      * @param ec2 ec2 client
      * @param instanceIds set of instance ids
      */
-    public void terminateInstances(final AmazonEC2 ec2, final Set<String> instanceIds) {
+    public void terminateInstances(final AmazonEC2 ec2, final Collection<String> instanceIds) {
         final List<String> temp = new ArrayList<>(instanceIds);
         while (temp.size() > 0) {
             // terminateInstances is idempotent so it can be called until it's successful

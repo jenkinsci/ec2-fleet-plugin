@@ -18,9 +18,12 @@ import hudson.util.ListBoxModel;
 import org.springframework.util.ObjectUtils;
 
 import javax.annotation.concurrent.ThreadSafe;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -137,6 +140,67 @@ public class EC2SpotFleet implements EC2Fleet {
                         fleetConfig.getSpotFleetRequestState()),
                 instances,
                 instanceTypeWeights);
+    }
+
+    private static class State {
+        String id;
+        Set<String> instances;
+        SpotFleetRequestConfig config;
+    }
+
+    @Override
+    public Map<String, FleetStateStats> getStateBatch(
+            final String awsCredentialsId, final String regionName, final String endpoint,
+            final Collection<String> ids) {
+        final AmazonEC2 ec2 = Registry.getEc2Api().connect(awsCredentialsId, regionName, endpoint);
+
+        List<State> states = new ArrayList<>();
+        for (String id : ids) {
+            final State s = new State();
+            s.id = id;
+            states.add(s);
+        }
+
+        for (State state : states) {
+            String token = null;
+            state.instances = new HashSet<>();
+            do {
+                final DescribeSpotFleetInstancesRequest request = new DescribeSpotFleetInstancesRequest();
+                request.setSpotFleetRequestId(state.id);
+                request.setNextToken(token);
+                final DescribeSpotFleetInstancesResult res = ec2.describeSpotFleetInstances(request);
+                for (final ActiveInstance instance : res.getActiveInstances()) {
+                    state.instances.add(instance.getInstanceId());
+                }
+
+                token = res.getNextToken();
+            } while (token != null);
+        }
+
+        final DescribeSpotFleetRequestsRequest request = new DescribeSpotFleetRequestsRequest();
+        request.setSpotFleetRequestIds(ids);
+        final DescribeSpotFleetRequestsResult fleet = ec2.describeSpotFleetRequests(request);
+        for (SpotFleetRequestConfig c : fleet.getSpotFleetRequestConfigs()) {
+            for (State state : states) {
+                if (state.id.equals(c.getSpotFleetRequestId())) state.config = c;
+            }
+        }
+
+        Map<String, FleetStateStats> r = new HashMap<>();
+        for (State state : states) {
+            r.put(state.id, new FleetStateStats(state.id,
+                    state.config.getSpotFleetRequestConfig().getTargetCapacity(),
+                    new FleetStateStats.State(
+                            isActive(state.config),
+                            isModifying(state.config),
+                            state.config.getSpotFleetRequestState()),
+                    state.instances,
+                    Collections.<String, Double>emptyMap()));
+        }
+
+        // todo add weight
+        // todo replace single with multiple but just one id less code
+        return r;
     }
 
 }

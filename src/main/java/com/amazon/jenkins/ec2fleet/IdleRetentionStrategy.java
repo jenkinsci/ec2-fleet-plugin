@@ -27,7 +27,7 @@ public class IdleRetentionStrategy extends RetentionStrategy<SlaveComputer> {
     @Override
     public long check(final SlaveComputer computer) {
         final EC2FleetNodeComputer fc = (EC2FleetNodeComputer) computer;
-        final EC2FleetCloud cloud = fc.getCloud();
+        final AbstractEC2FleetCloud cloud = fc.getCloud();
 
         LOGGER.log(Level.INFO, "Check if node idle " + computer.getName());
 
@@ -78,7 +78,7 @@ public class IdleRetentionStrategy extends RetentionStrategy<SlaveComputer> {
         c.connect(false);
     }
 
-    private boolean isIdleForTooLong(final EC2FleetCloud cloud, final Computer computer) {
+    private boolean isIdleForTooLong(final AbstractEC2FleetCloud cloud, final Computer computer) {
         final int idleMinutes = cloud.getIdleMinutes();
         if (idleMinutes <= 0) return false;
         final long idleTime = System.currentTimeMillis() - computer.getIdleStartMilliseconds();

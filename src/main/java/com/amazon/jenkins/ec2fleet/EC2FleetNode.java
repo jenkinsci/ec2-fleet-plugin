@@ -16,10 +16,10 @@ import java.util.List;
 
 public class EC2FleetNode extends Slave implements EphemeralNode, EC2FleetCloudAware {
 
-    private volatile EC2FleetCloud cloud;
+    private volatile AbstractEC2FleetCloud cloud;
 
     public EC2FleetNode(final String name, final String nodeDescription, final String remoteFS, final int numExecutors, final Mode mode, final String label,
-                        final List<? extends NodeProperty<?>> nodeProperties, final EC2FleetCloud cloud, ComputerLauncher launcher) throws IOException, Descriptor.FormException {
+                        final List<? extends NodeProperty<?>> nodeProperties, final AbstractEC2FleetCloud cloud, ComputerLauncher launcher) throws IOException, Descriptor.FormException {
         //noinspection deprecation
         super(name, nodeDescription, remoteFS, numExecutors, mode, label,
                 launcher, RetentionStrategy.NOOP, nodeProperties);
@@ -43,7 +43,7 @@ public class EC2FleetNode extends Slave implements EphemeralNode, EC2FleetCloudA
     }
 
     @Override
-    public EC2FleetCloud getCloud() {
+    public AbstractEC2FleetCloud getCloud() {
         return cloud;
     }
 
@@ -51,7 +51,7 @@ public class EC2FleetNode extends Slave implements EphemeralNode, EC2FleetCloudA
      * {@inheritDoc}
      */
     @Override
-    public void setCloud(@Nonnull EC2FleetCloud cloud) {
+    public void setCloud(@Nonnull AbstractEC2FleetCloud cloud) {
         this.cloud = cloud;
     }
 

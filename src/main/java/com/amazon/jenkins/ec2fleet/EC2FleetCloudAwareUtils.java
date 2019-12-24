@@ -15,7 +15,7 @@ public class EC2FleetCloudAwareUtils {
 
     private static final Logger LOGGER = Logger.getLogger(EC2FleetCloudAwareUtils.class.getName());
 
-    public static void reassign(final @Nonnull String oldId, @Nonnull final EC2FleetCloud cloud) {
+    public static void reassign(final @Nonnull String oldId, @Nonnull final AbstractEC2FleetCloud cloud) {
         for (final Computer computer : Jenkins.getActiveInstance().getComputers()) {
             checkAndReassign(oldId, cloud, computer);
         }
@@ -27,10 +27,10 @@ public class EC2FleetCloudAwareUtils {
         LOGGER.info("Finish to reassign resources from old cloud with id " + oldId + " to " + cloud.getDisplayName());
     }
 
-    private static void checkAndReassign(final String oldId, final EC2FleetCloud cloud, final Object object) {
+    private static void checkAndReassign(final String oldId, final AbstractEC2FleetCloud cloud, final Object object) {
         if (object instanceof EC2FleetCloudAware) {
             final EC2FleetCloudAware cloudAware = (EC2FleetCloudAware) object;
-            final EC2FleetCloud oldCloud = cloudAware.getCloud();
+            final AbstractEC2FleetCloud oldCloud = cloudAware.getCloud();
             if (oldCloud != null && oldId.equals(oldCloud.getOldId())) {
                 ((EC2FleetCloudAware) object).setCloud(cloud);
                 LOGGER.info("Reassign " + object + " from " + oldCloud.getDisplayName() + " to " + cloud.getDisplayName());

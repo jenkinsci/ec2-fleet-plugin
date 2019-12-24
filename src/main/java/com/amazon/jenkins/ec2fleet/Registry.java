@@ -11,6 +11,7 @@ package com.amazon.jenkins.ec2fleet;
 public class Registry {
 
     private static EC2Api ec2Api = new EC2Api();
+    private static CloudFormationApi cloudFormationApi = new CloudFormationApi();
 
     public static void setEc2Api(EC2Api ec2Api) {
         Registry.ec2Api = ec2Api;
@@ -18,6 +19,14 @@ public class Registry {
 
     public static EC2Api getEc2Api() {
         return ec2Api;
+    }
+
+    public static CloudFormationApi getCloudFormationApi() {
+        return cloudFormationApi;
+    }
+
+    public static void setCloudFormationApi(CloudFormationApi cloudFormationApi) {
+        Registry.cloudFormationApi = cloudFormationApi;
     }
 
 }

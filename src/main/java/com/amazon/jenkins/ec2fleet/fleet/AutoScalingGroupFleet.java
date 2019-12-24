@@ -20,8 +20,10 @@ import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 @ThreadSafe
@@ -90,6 +92,11 @@ public class AutoScalingGroupFleet implements EC2Fleet {
                 FleetStateStats.State.active(StringUtils.defaultIfEmpty(group.getStatus(), "active")),
                 // auto scaling groups don't support weight, may be in future
                 instanceIds, Collections.<String, Double>emptyMap());
+    }
+
+    @Override
+    public Map<String, FleetStateStats> getStateBatch(String awsCredentialsId, String regionName, String endpoint, Collection<String> ids) {
+        throw new UnsupportedOperationException();
     }
 
     private AmazonAutoScalingClient createClient(

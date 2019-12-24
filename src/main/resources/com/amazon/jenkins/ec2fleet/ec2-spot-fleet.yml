@@ -1,0 +1,50 @@
+Parameters:
+  InstanceType:
+    Type: String
+  ImageId:
+    Type: String
+  SpotPrice:
+    Type: String
+  MaxSize:
+    Type: String
+  MinSize:
+    Type: String
+  KeyName:
+    Type: String
+
+Outputs:
+  FleetId:
+    Value:
+      Ref: SpotFleet
+
+Resources:
+  SpotFleetRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - spotfleet.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole
+
+  # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-spotfleet-spotfleetrequestconfigdata-launchspecifications.html
+  SpotFleet:
+    Type: AWS::EC2::SpotFleet
+    Properties:
+      SpotFleetRequestConfigData:
+        IamFleetRole: !GetAtt [SpotFleetRole, Arn]
+        TargetCapacity:
+          Ref: MinSize
+        LaunchSpecifications:
+          - InstanceType:
+              Ref: InstanceType
+            ImageId:
+              Ref: ImageId
+            KeyName:
+              Ref: KeyName

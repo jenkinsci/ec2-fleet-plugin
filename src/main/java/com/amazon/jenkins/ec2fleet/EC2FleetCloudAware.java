@@ -16,8 +16,8 @@ import javax.annotation.Nonnull;
  */
 public interface EC2FleetCloudAware {
 
-    EC2FleetCloud getCloud();
+    AbstractEC2FleetCloud getCloud();
 
-    void setCloud(@Nonnull EC2FleetCloud cloud);
+    void setCloud(@Nonnull AbstractEC2FleetCloud cloud);
 
 }

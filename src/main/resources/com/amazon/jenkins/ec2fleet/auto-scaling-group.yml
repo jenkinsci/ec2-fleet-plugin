@@ -1,0 +1,48 @@
+Parameters:
+  InstanceType:
+    Type: String
+  ImageId:
+    Type: String
+  SpotPrice:
+    Type: String
+  MaxSize:
+    Type: String
+  MinSize:
+    Type: String
+  KeyName:
+    Type: String
+
+Outputs:
+  FleetId:
+    Value:
+      Ref: ASG
+
+Resources:
+  # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-as-launchconfig.html#aws-properties-as-launchconfig-properties
+  ASGLaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId:
+        Ref: ImageId
+#      UserData:
+#        Fn::Base64:
+#          Ref: "WebServerPort"
+      InstanceType:
+        Ref: InstanceType
+      SpotPrice:
+        Ref: SpotPrice
+      KeyName:
+        Ref: KeyName
+
+  ASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AvailabilityZones:
+        Fn::GetAZs:
+          Ref: AWS::Region
+      LaunchConfigurationName:
+        Ref: ASGLaunchConfig
+      MinSize:
+        Ref: MinSize
+      MaxSize:
+        Ref: MaxSize

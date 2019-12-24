@@ -3,6 +3,16 @@ package com.amazon.jenkins.ec2fleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 import com.amazon.jenkins.ec2fleet.fleet.EC2SpotFleet;
+import com.amazonaws.services.cloudformation.AmazonCloudFormation;
+import com.amazonaws.services.cloudformation.model.CreateStackRequest;
+import com.amazonaws.services.cloudformation.model.CreateStackResult;
+import com.amazonaws.services.cloudformation.model.DeleteStackRequest;
+import com.amazonaws.services.cloudformation.model.DeleteStackResult;
+import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
+import com.amazonaws.services.cloudformation.model.DescribeStacksResult;
+import com.amazonaws.services.cloudformation.model.Output;
+import com.amazonaws.services.cloudformation.model.Stack;
+import com.amazonaws.services.cloudformation.model.StackStatus;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.ActiveInstance;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
@@ -50,8 +60,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -86,12 +99,17 @@ public abstract class IntegrationTest {
     public void after() {
         // restore
         Registry.setEc2Api(new EC2Api());
+        Registry.setCloudFormationApi(new CloudFormationApi());
         EC2Fleets.setGet(null);
     }
 
     protected static void turnOffJenkinsTestTimout() {
         // zero is unlimited timeout
         System.setProperty("jenkins.test.timeout", "0");
+    }
+
+    protected static void setJenkinsTestTimoutTo720() {
+        System.setProperty("jenkins.test.timeout", "720");
     }
 
     protected static void assertQueueAndNodesIdle(final Node node) {
@@ -148,18 +166,28 @@ public abstract class IntegrationTest {
         });
     }
 
-    protected void triggerSuggestReviewNow() throws InterruptedException {
+    protected static void assertTasksDone(List<QueueTaskFuture> rs) {
+        for (final QueueTaskFuture queueTaskFuture : rs) {
+            Assert.assertTrue(queueTaskFuture.isDone());
+        }
+    }
+
+    protected void triggerSuggestReviewNow() {
         triggerSuggestReviewNow("momo");
     }
 
-    protected void triggerSuggestReviewNow(@Nullable final String labelString) throws InterruptedException {
+    protected void triggerSuggestReviewNow(@Nullable final String labelString) {
         final Jenkins jenkins = j.jenkins;
         if (jenkins == null) throw new NullPointerException("No jenkins in j!");
 
         for (int i = 0; i < 5; i++) {
             if (labelString == null) jenkins.unlabeledNodeProvisioner.suggestReviewNow();
             else jenkins.getLabelAtom(labelString).nodeProvisioner.suggestReviewNow();
-            Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+            try {
+                Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -217,7 +245,11 @@ public abstract class IntegrationTest {
     }
 
     protected List<QueueTaskFuture> enqueTask(int count) throws IOException {
-        final LabelAtom label = new LabelAtom("momo");
+        return enqueTask(count, "momo");
+    }
+
+    protected List<QueueTaskFuture> enqueTask(int count, final String labelString) throws IOException {
+        final LabelAtom label = new LabelAtom(labelString);
 
         final List<QueueTaskFuture> rs = new ArrayList<>();
         for (int i = 0; i < count; i++) {
@@ -227,7 +259,7 @@ public abstract class IntegrationTest {
             rs.add(project.scheduleBuild2(0));
         }
 
-        System.out.println(count + " tasks submitted");
+        System.out.println(count + " tasks submitted for label " + labelString);
         return rs;
     }
 
@@ -360,13 +392,90 @@ public abstract class IntegrationTest {
                 .thenAnswer(AnswerWithDelay.get(new Answer<Object>() {
                     @Override
                     public Object answer(InvocationOnMock invocationOnMock) {
-                        return new DescribeSpotFleetRequestsResult().withSpotFleetRequestConfigs(Arrays.asList(
-                                new SpotFleetRequestConfig()
+                        final DescribeSpotFleetRequestsRequest request = invocationOnMock.getArgument(0);
+
+                        final List<SpotFleetRequestConfig> r = new ArrayList<>();
+                        if (request.getSpotFleetRequestIds().size() > 0) {
+                            for (String id : request.getSpotFleetRequestIds()) {
+                                r.add(new SpotFleetRequestConfig()
+                                        .withSpotFleetRequestId(id)
                                         .withSpotFleetRequestState("active")
                                         .withSpotFleetRequestConfig(
-                                                new SpotFleetRequestConfigData().withTargetCapacity(targetCapacity.get()))));
+                                                new SpotFleetRequestConfigData()
+                                                        .withTargetCapacity(targetCapacity.get())));
+                            }
+                        } else {
+                            r.add(new SpotFleetRequestConfig()
+                                    .withSpotFleetRequestId("some-id")
+                                    .withSpotFleetRequestState("active")
+                                    .withSpotFleetRequestConfig(
+                                            new SpotFleetRequestConfigData()
+                                                    .withTargetCapacity(targetCapacity.get())));
+                        }
+                        return new DescribeSpotFleetRequestsResult().withSpotFleetRequestConfigs(r);
                     }
                 }, delayMillis));
+    }
+
+    protected AmazonCloudFormation mockCloudFormationApi() {
+        CloudFormationApi cloudFormationApi = spy(CloudFormationApi.class);
+        Registry.setCloudFormationApi(cloudFormationApi);
+
+        AmazonCloudFormation amazonCloudFormation = mock(AmazonCloudFormation.class);
+        when(cloudFormationApi.connect(anyString(), anyString(), Mockito.nullable(String.class))).thenReturn(amazonCloudFormation);
+
+        final Object lock = new Object();
+        final Map<String, CreateStackRequest> createStackRequests = new HashMap<>();
+
+        when(amazonCloudFormation.createStack(any(CreateStackRequest.class))).thenAnswer(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocation) {
+                synchronized (lock) {
+                    CreateStackRequest request = invocation.getArgument(0);
+                    createStackRequests.put(request.getStackName(), request);
+                }
+                return new CreateStackResult();
+            }
+        });
+
+        when(amazonCloudFormation.describeStacks(any(DescribeStacksRequest.class))).thenAnswer(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocation) {
+                final DescribeStacksResult result = new DescribeStacksResult();
+                synchronized (lock) {
+                    for (Map.Entry<String, CreateStackRequest> entry : createStackRequests.entrySet()) {
+                        result.getStacks().add(new Stack()
+                                .withStackId(entry.getValue().getStackName())
+                                .withStackName(entry.getValue().getStackName())
+                                .withStackStatus(StackStatus.CREATE_COMPLETE)
+                                .withTags(entry.getValue().getTags())
+                                .withOutputs(new Output().withOutputValue(entry.getValue().getStackName() + "-Id"))
+                        );
+                    }
+                }
+                return result;
+            }
+        });
+
+        when(amazonCloudFormation.deleteStack(any(DeleteStackRequest.class))).thenAnswer(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocation) {
+                synchronized (lock) {
+                    DeleteStackRequest request = invocation.getArgument(0);
+                    Iterator<String> iterator = createStackRequests.keySet().iterator();
+                    while (iterator.hasNext()) {
+                        // since we delete by stack id and create stack name we need contains
+                        if (request.getStackName().contains(iterator.next())) {
+                            iterator.remove();
+                            break;
+                        }
+                    }
+                }
+                return new DeleteStackResult();
+            }
+        });
+
+        return amazonCloudFormation;
     }
 
     protected void mockEc2FleetApi() {

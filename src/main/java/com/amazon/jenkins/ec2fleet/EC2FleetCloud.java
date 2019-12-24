@@ -52,7 +52,7 @@ import java.util.logging.SimpleFormatter;
  * @see CloudNanny
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
-public class EC2FleetCloud extends Cloud {
+public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
     public static final String EC2_INSTANCE_TAG_NAMESPACE = "ec2-fleet-plugin";
     public static final String EC2_INSTANCE_CLOUD_NAME_TAG = EC2_INSTANCE_TAG_NAMESPACE + ":cloud-name";
@@ -692,6 +692,7 @@ public class EC2FleetCloud extends Cloud {
         // jenkins automatically remove old node with same name if any
         jenkins.addNode(node);
 
+        // todo use plannedNodesCache in thread-safe way
         final SettableFuture<Node> future;
         if (plannedNodesCache.isEmpty()) {
             future = SettableFuture.create();

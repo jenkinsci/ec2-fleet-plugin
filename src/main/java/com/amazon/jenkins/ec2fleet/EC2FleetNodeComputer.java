@@ -15,9 +15,9 @@ public class EC2FleetNodeComputer extends SlaveComputer implements EC2FleetCloud
 
     private final String name;
 
-    private volatile EC2FleetCloud cloud;
+    private volatile AbstractEC2FleetCloud cloud;
 
-    public EC2FleetNodeComputer(final Slave slave, @Nonnull final String name, @Nonnull final EC2FleetCloud cloud) {
+    public EC2FleetNodeComputer(final Slave slave, @Nonnull final String name, @Nonnull final AbstractEC2FleetCloud cloud) {
         super(slave);
         this.name = name;
         this.cloud = cloud;
@@ -45,12 +45,12 @@ public class EC2FleetNodeComputer extends SlaveComputer implements EC2FleetCloud
      * {@inheritDoc}
      */
     @Override
-    public void setCloud(@Nonnull final EC2FleetCloud cloud) {
+    public void setCloud(@Nonnull final AbstractEC2FleetCloud cloud) {
         this.cloud = cloud;
     }
 
     @Override
-    public EC2FleetCloud getCloud() {
+    public AbstractEC2FleetCloud getCloud() {
         return cloud;
     }
 
