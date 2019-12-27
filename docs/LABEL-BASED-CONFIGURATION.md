@@ -33,6 +33,8 @@ Label format
 
 # Supported Parameters
 
+*Note* Parameter name is case insensitive
+
 | Parameter | Value Example | Value |      
 | --- | ---| ---- |
 | imageId | ```ami-0080e4c5bc078760e``` | *Required* AMI ID https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html |

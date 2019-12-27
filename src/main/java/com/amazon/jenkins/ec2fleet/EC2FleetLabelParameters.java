@@ -13,17 +13,18 @@ public class EC2FleetLabelParameters {
         parameters = parse(label);
     }
 
-    public String get(String name) {
-        return parameters.get(name);
+    public String get(final String name) {
+        // todo add fail on null name
+        return parameters.get(name.toLowerCase());
     }
 
     public String getOrDefault(String name, String defaultValue) {
-        final String value = parameters.get(name);
+        final String value = get(name);
         return value == null ? defaultValue : value;
     }
 
     public int getIntOrDefault(String name, int defaultValue) {
-        final String value = parameters.get(name);
+        final String value = get(name);
         return value == null ? defaultValue : Integer.parseInt(value);
     }
 
@@ -35,7 +36,7 @@ public class EC2FleetLabelParameters {
         for (final String parameter : parameters) {
             String[] keyValue = parameter.split("=");
             if (keyValue.length == 2) {
-                p.put(keyValue[0], keyValue[1]);
+                p.put(keyValue[0].toLowerCase(), keyValue[1]);
             }
         }
         return p;

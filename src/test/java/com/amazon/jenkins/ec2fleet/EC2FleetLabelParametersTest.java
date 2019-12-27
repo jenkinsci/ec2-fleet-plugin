@@ -26,6 +26,17 @@ public class EC2FleetLabelParametersTest {
     }
 
     @Test
+    public void get_caseInsensitive() {
+        final EC2FleetLabelParameters parameters = new EC2FleetLabelParameters("aBc=1");
+        Assert.assertEquals("1", parameters.get("aBc"));
+        Assert.assertEquals("1", parameters.get("ABC"));
+        Assert.assertEquals("1", parameters.get("abc"));
+        Assert.assertEquals("1", parameters.get("AbC"));
+        Assert.assertEquals("1", parameters.getOrDefault("AbC", "?"));
+        Assert.assertEquals(1, parameters.getIntOrDefault("AbC", -1));
+    }
+
+    @Test
     public void parse_withFleetNamePrefixSkipItAndProvideParameters() {
         final EC2FleetLabelParameters parameters = new EC2FleetLabelParameters("AA_a=1,b=2");
         Assert.assertEquals("1", parameters.get("a"));
