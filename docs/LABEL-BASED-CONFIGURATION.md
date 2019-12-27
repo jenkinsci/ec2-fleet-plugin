@@ -14,8 +14,8 @@ Feature in *beta* mode. Please report all problem [here](https://github.com/jenk
 This feature auto manages EC2 Spot Fleet or ASG based Fleets for Jenkins based on 
 label attached to Jenkins Jobs.
 
-With this feature user of EC2 Fleet Plugin don't need to pre-create AWS resources 
-before start configuration and run Jobs. Plugin required just AWS Credentials 
+With this feature user of EC2 Fleet Plugin doesn't need to have pre-created AWS resources 
+to start configuration and run Jobs. Plugin required just AWS Credentials 
 with permissions to be able create resources.
 
 # How It Works
