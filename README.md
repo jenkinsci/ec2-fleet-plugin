@@ -19,6 +19,7 @@ automatically scaling the capacity with the load.
   * [Scaling](#scaling)
   * [Groovy](#groovy)
   * [Preconfigure Slave](#preconfigure-slave)
+  * [Label Based Configuration (beta)](docs/LABEL-BASED-CONFIGURATION.md)
 * [Development](#development)
 
 # Overview
@@ -36,6 +37,7 @@ the fleet within the specified price range. For more information, see
 - Allow no delay scale up strategy, enable ```No Delay Provision Strategy``` in configuration
 - Add tags to EC2 instances used by plugin, for easy search, tag format ```ec2-fleet-plugin:cloud-name=<MyCloud>```
 - Allow custom EC2 API endpoint
+- Auto Fleet creation based on Job label [see](docs/LABEL-BASED-CONFIGURATION.md)
 
 # Change Log
 
