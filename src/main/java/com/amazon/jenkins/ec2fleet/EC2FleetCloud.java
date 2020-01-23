@@ -430,11 +430,15 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         // lock and update state of plugin, so terminate or provision could work with new state of world
         synchronized (this) {
             instanceIdsToTerminate.removeAll(currentInstanceIdsToTerminate);
-            // toAdd only grow outside of this method, so we can subtract
+            // toAdd only grows outside of this method, so we can subtract
             toAdd = toAdd - currentToAdd;
             stats = currentState;
+
+            // since data could be changed between two sybc blocks we need to recalc target capacity
+            final int updatedTargetCapacity = Math.max(0,
+                    stats.getNumDesired() - instanceIdsToTerminate.size() + toAdd);
             // limit planned pool according to real target capacity
-            while (plannedNodesCache.size() > targetCapacity) {
+            while (plannedNodesCache.size() > updatedTargetCapacity) {
                 final Iterator<NodeProvisioner.PlannedNode> iterator = plannedNodesCache.iterator();
                 final NodeProvisioner.PlannedNode plannedNodeToCancel = iterator.next();
                 iterator.remove();

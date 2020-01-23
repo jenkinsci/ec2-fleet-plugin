@@ -33,6 +33,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -51,6 +53,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -922,6 +925,50 @@ public class EC2FleetCloudTest {
         for (NodeProvisioner.PlannedNode plannedNode : plannedNodes) {
             Assert.assertTrue("Planned node should be cancelled", plannedNode.future.isCancelled());
         }
+    }
+
+    @Test
+    public void update_shouldTrimPlannedNodesBasedOnUpdatedTargetCapacityIfProvisionCalledInBetween() throws IOException {
+        // given
+        when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
+
+        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+                Collections.emptyMap());
+
+        final FleetStateStats initState = new FleetStateStats("fleetId", 0,
+                FleetStateStats.State.active(),
+                Collections.<String>emptySet(), Collections.<String, Double>emptyMap());
+        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(initState);
+
+        mockNodeCreatingPart();
+
+        final EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
+                "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
+                false, 0, 0, 10, 1, false,
+                true, false,
+                0, 0, false, 10, false);
+        fleetCloud.setStats(initState);
+
+        doNothing().when(jenkins).addNode(any(Node.class));
+
+        fleetCloud.provision(null, 1);
+
+        // intercept modify operation to emulate call of provision during update method
+        doAnswer(new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocation) {
+                fleetCloud.provision(null, 1);
+                return null;
+            }
+        }).when(ec2Fleet).modify(anyString(), anyString(), anyString(), anyString(), anyInt(), anyInt(), anyInt());
+
+        // when
+        fleetCloud.update();
+
+        // then
+        // should be two, planned one added before update another during update
+        Assert.assertEquals(2, fleetCloud.getPlannedNodesCache().size());
     }
 
     @Test
