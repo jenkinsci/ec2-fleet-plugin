@@ -22,6 +22,7 @@ automatically scaling the capacity with the load.
   * [Preconfigure Slave](#preconfigure-slave)
   * [Label Based Configuration (beta)](docs/LABEL-BASED-CONFIGURATION.md)
   * [Windows Slave](docs/SETUP-WINDOWS-SLAVE.md)
+  * [Configuration As Code](docs/CONFIGURATION-AS-CODE.md)
 * [Development](#development)
 
 # Overview
