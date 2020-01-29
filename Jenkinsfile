@@ -1,3 +1,9 @@
 #!groovy
 
-buildPlugin(jenkinsVersions: [null, '2.60.1', '2.107.1'], failFast: false)
+// null is min supported version of jenkins from plugin pom.xml
+def minRequiredForPlugin = null
+
+// LTS releases https://jenkins.io/changelog-stable/
+def lts = '2.204.2'
+
+buildPlugin(jenkinsVersions: [minRequiredForPlugin, lts], failFast: false)
