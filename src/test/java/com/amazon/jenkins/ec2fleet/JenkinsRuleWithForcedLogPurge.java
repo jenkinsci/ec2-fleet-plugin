@@ -1,13 +1,6 @@
 package com.amazon.jenkins.ec2fleet;
 
-import hudson.Functions;
-import hudson.model.Computer;
-import hudson.remoting.VirtualChannel;
-import hudson.slaves.SlaveComputer;
 import org.jvnet.hudson.test.JenkinsRule;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Current min version Jenkins doesn't close log files correctly for Windows, this class fix problem
@@ -24,42 +17,42 @@ import java.util.List;
  */
 class JenkinsRuleWithForcedLogPurge extends JenkinsRule {
 
-    private void purgeSlaves() {
-        final List<Computer> disconnectingComputers = new ArrayList<>();
-        final List<VirtualChannel> closingChannels = new ArrayList<>();
-        for (final Computer computer : jenkins.getComputers()) {
-            if (!(computer instanceof SlaveComputer)) {
-                continue;
-            }
-            // disconnect slaves.
-            // retrieve the channel before disconnecting.
-            // even a computer gets offline, channel delays to close.
-            if (!computer.isOffline()) {
-                final VirtualChannel ch = computer.getChannel();
-                computer.disconnect(null);
-                disconnectingComputers.add(computer);
-                closingChannels.add(ch);
-            }
-        }
-
-        try {
-            // Wait for all computers disconnected and all channels closed.
-            for (Computer computer : disconnectingComputers) {
-                computer.waitUntilOffline();
-            }
-            for (VirtualChannel ch : closingChannels) {
-                ch.join();
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
+//    private void purgeSlaves() {
+//        final List<Computer> disconnectingComputers = new ArrayList<>();
+//        final List<VirtualChannel> closingChannels = new ArrayList<>();
+//        for (final Computer computer : jenkins.getComputers()) {
+//            if (!(computer instanceof SlaveComputer)) {
+//                continue;
+//            }
+//            // disconnect slaves.
+//            // retrieve the channel before disconnecting.
+//            // even a computer gets offline, channel delays to close.
+//            if (!computer.isOffline()) {
+//                final VirtualChannel ch = computer.getChannel();
+//                computer.disconnect(null);
+//                disconnectingComputers.add(computer);
+//                closingChannels.add(ch);
+//            }
+//        }
+//
+//        try {
+//            // Wait for all computers disconnected and all channels closed.
+//            for (Computer computer : disconnectingComputers) {
+//                computer.waitUntilOffline();
+//            }
+//            for (VirtualChannel ch : closingChannels) {
+//                ch.join();
+//            }
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     @Override
     public void after() throws Exception {
-        if (Functions.isWindows()) {
-            purgeSlaves();
-        }
+//        if (Functions.isWindows()) {
+////            purgeSlaves();
+//        }
         super.after();
     }
 }
