@@ -131,10 +131,17 @@
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
+    <!-- before jenkins 2.112 this plugin was part of jenkins core -->
     <dependency>
       <groupId>io.jenkins.configuration-as-code</groupId>
       <artifactId>configuration-as-code-support</artifactId>
       <version>${configuration-as-code.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>jdk-tool</artifactId>
+      <version>1.4</version>
       <scope>test</scope>
     </dependency>
 
