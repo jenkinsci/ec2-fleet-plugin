@@ -724,9 +724,6 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
         Set<String> labelsWithoutStacks = missed(labels, allStacks.keySet());
         Set<String> stacksWithoutLabels = missed(allStacks.keySet(), labels);
 
-        Set<String> stacksWithLabels = new HashSet<>(allStacks.keySet());
-        stacksWithLabels.removeAll(stacksWithoutLabels);
-
         final Set<String> runningStacksWithLabels = new HashSet<>();
         for (Map.Entry<String, CloudFormationApi.StackInfo> stack : allStacks.entrySet()) {
             if (labels.contains(stack.getKey()) && stack.getValue().stackStatus == StackStatus.CREATE_COMPLETE) {
@@ -802,11 +799,6 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
     @SuppressWarnings("unused")
     public static class DescriptorImpl extends Descriptor<Cloud> {
 
-        public String accessId;
-        public String secretKey;
-        public String region;
-        public String privateKey;
-
         public DescriptorImpl() {
             super();
             load();
@@ -856,7 +848,6 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
                 @QueryParameter final String region,
                 @QueryParameter final String endpoint) {
             final ListBoxModel model = new ListBoxModel();
-//            model.add(NEW_EC2_KEY_PAIR_VALUE);
 
             try {
                 final AmazonEC2 amazonEC2 = new EC2Api().connect(awsCredentialsId, region, endpoint);
@@ -891,18 +882,6 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
             req.bindJSON(this, formData);
             save();
             return super.configure(req, formData);
-        }
-
-        public String getAccessId() {
-            return accessId;
-        }
-
-        public String getSecretKey() {
-            return secretKey;
-        }
-
-        public String getRegion() {
-            return region;
         }
 
     }

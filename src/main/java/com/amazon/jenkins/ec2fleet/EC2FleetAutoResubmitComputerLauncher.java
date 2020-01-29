@@ -1,5 +1,6 @@
 package com.amazon.jenkins.ec2fleet;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.Action;
 import hudson.model.Actionable;
 import hudson.model.Executor;
@@ -72,6 +73,9 @@ public class EC2FleetAutoResubmitComputerLauncher extends DelegatingComputerLaun
      * @param computer computer
      * @param listener listener
      */
+    @SuppressFBWarnings(
+            value = "BC_UNCONFIRMED_CAST",
+            justification = "to ignore EC2FleetNodeComputer cast")
     @Override
     public void afterDisconnect(final SlaveComputer computer, final TaskListener listener) {
         // according to jenkins docs could be null in edge cases, check ComputerLauncher.afterDisconnect

@@ -1,5 +1,6 @@
 package com.amazon.jenkins.ec2fleet;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.slaves.RetentionStrategy;
@@ -24,6 +25,9 @@ public class IdleRetentionStrategy extends RetentionStrategy<SlaveComputer> {
      * @param computer computer
      * @return delay in min before next run
      */
+    @SuppressFBWarnings(
+            value = "BC_UNCONFIRMED_CAST",
+            justification = "to ignore EC2FleetNodeComputer cast")
     @Override
     public long check(final SlaveComputer computer) {
         final EC2FleetNodeComputer fc = (EC2FleetNodeComputer) computer;

@@ -414,8 +414,8 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             info("Fleet under modification, try update later, %s", currentState.getState().getDetailed());
             synchronized (this) {
                 stats = currentState;
+                return stats;
             }
-            return stats;
         }
 
         // fleet could be updated outside of plugin, we should be ready that
@@ -445,9 +445,8 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                 // cancel to let jenkins no that node is not valid any more
                 plannedNodeToCancel.future.cancel(true);
             }
+            return stats;
         }
-
-        return stats;
     }
 
     private void updateByState(
@@ -737,13 +736,6 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     @SuppressWarnings("unused")
     public static class DescriptorImpl extends Descriptor<Cloud> {
 
-        public String accessId;
-        public String secretKey;
-        public String region;
-        public String privateKey;
-        public String fleet;
-        public boolean showAllFleets;
-
         public DescriptorImpl() {
             super();
             load();
@@ -826,26 +818,6 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             req.bindJSON(this, formData);
             save();
             return super.configure(req, formData);
-        }
-
-        public boolean isShowAllFleets() {
-            return showAllFleets;
-        }
-
-        public String getAccessId() {
-            return accessId;
-        }
-
-        public String getSecretKey() {
-            return secretKey;
-        }
-
-        public String getRegion() {
-            return region;
-        }
-
-        public String getFleet() {
-            return fleet;
         }
 
     }

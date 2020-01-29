@@ -74,8 +74,7 @@ public class NoDelayProvisionStrategy extends NodeProvisioner.Strategy {
 
     @VisibleForTesting
     protected List<Cloud> getClouds() {
-        final Jenkins jenkins = Jenkins.getInstance();
-        return jenkins == null ? Collections.<Cloud>emptyList() : jenkins.clouds;
+        return Jenkins.getInstance().clouds;
     }
 
 }
