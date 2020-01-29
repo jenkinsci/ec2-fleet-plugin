@@ -131,6 +131,7 @@
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
+
     <!-- before jenkins 2.112 this plugin was part of jenkins core -->
     <dependency>
       <groupId>io.jenkins.configuration-as-code</groupId>
