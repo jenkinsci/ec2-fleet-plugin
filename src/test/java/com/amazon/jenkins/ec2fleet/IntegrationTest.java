@@ -92,7 +92,7 @@ public abstract class IntegrationTest {
     public static BuildWatcher bw = new BuildWatcher();
 
     @Rule
-    public JenkinsRule j = new JenkinsRuleWithForcedLogPurge();
+    public JenkinsRule j = new JenkinsRule();
 
     @After
     public void after() {

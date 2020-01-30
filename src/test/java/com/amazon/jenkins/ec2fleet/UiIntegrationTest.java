@@ -34,7 +34,7 @@ import static org.junit.Assert.assertTrue;
 public class UiIntegrationTest {
 
     @Rule
-    public JenkinsRule j = new JenkinsRuleWithForcedLogPurge();
+    public JenkinsRule j = new JenkinsRule();
 
     @ClassRule
     public static BuildWatcher bw = new BuildWatcher();

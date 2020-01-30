@@ -13,7 +13,7 @@ public class AWSUtilsIntegrationTest {
     private static final String PROXY_HOST = "localhost";
 
     @Rule
-    public JenkinsRule j = new JenkinsRuleWithForcedLogPurge();
+    public JenkinsRule j = new JenkinsRule();
 
     @Test
     public void getClientConfiguration_when_no_proxy_returns_configuration_without_proxy() {
