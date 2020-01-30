@@ -1,5 +1,7 @@
 package com.amazon.jenkins.ec2fleet;
 
+import hudson.plugins.sshslaves.SSHConnector;
+import hudson.plugins.sshslaves.verifiers.NonVerifyingKeyVerificationStrategy;
 import io.jenkins.plugins.casc.misc.ConfiguredWithCode;
 import io.jenkins.plugins.casc.misc.JenkinsConfiguredWithCodeRule;
 import org.junit.Rule;
@@ -68,5 +70,8 @@ public class EC2FleetCloudConfigurationAsCodeTest {
         assertEquals(cloud.isDisableTaskResubmit(), true);
         assertEquals(cloud.isNoDelayProvision(), true);
         assertEquals(cloud.getAwsCredentialsId(), "xx");
+
+        SSHConnector sshConnector = (SSHConnector) cloud.getComputerConnector();
+        assertEquals(sshConnector.getSshHostKeyVerificationStrategy().getClass(), NonVerifyingKeyVerificationStrategy.class);
     }
 }

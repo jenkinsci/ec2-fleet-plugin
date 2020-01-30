@@ -4,9 +4,10 @@ jenkins:
         name: ec2-fleet
         awsCredentialsId: xx
         computerConnector:
-            sshConnector:
-                credentialsId: cred
-                port: 22
+          sshConnector:
+            credentialsId: cred
+            sshHostKeyVerificationStrategy:
+              NonVerifyingKeyVerificationStrategy
         region: us-east-2
         endpoint: http://a.com
         fleet: my-fleet
