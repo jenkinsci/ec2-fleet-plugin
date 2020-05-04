@@ -73,7 +73,8 @@ public class EC2SpotFleet implements EC2Fleet {
     }
 
     private static boolean isModifying(final SpotFleetRequestConfig config) {
-        return BatchState.Modifying.toString().equals(config.getSpotFleetRequestState());
+        return BatchState.Submitted.toString().equals(config.getSpotFleetRequestState())
+                || BatchState.Modifying.toString().equals(config.getSpotFleetRequestState());
     }
 
     @Override

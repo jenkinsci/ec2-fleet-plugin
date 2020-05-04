@@ -404,16 +404,15 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             currentInstanceIdsToTerminate = new HashSet<>(instanceIdsToTerminate);
         }
 
-        // plugin loads fleet state before possible modification and adjust current state
-        // with fixed target capacity, because not all implementations of EC2Fleet updates
-        // fleet state immediately and if you do update then load state you can get inconsistent
-        // state, see EC2SpotFleet doc
+        // we check state to make sure that fleet not in modification state
+        // if it's under modification let stop immediately and don't update state
+        // because some fleet implementation like (EC2SpotFleet) reflects state only at the end
+        // of modification, see EC2SpotFleet doc
         FleetStateStats currentState = EC2Fleets.get(fleet).getState(
                 getAwsCredentialsId(), region, endpoint, getFleet());
         if (currentState.getState().isModifying()) {
             info("Fleet under modification, try update later, %s", currentState.getState().getDetailed());
             synchronized (this) {
-                stats = currentState;
                 return stats;
             }
         }
@@ -434,7 +433,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             toAdd = toAdd - currentToAdd;
             stats = currentState;
 
-            // since data could be changed between two sybc blocks we need to recalc target capacity
+            // since data could be changed between two sync blocks we need to recalculate target capacity
             final int updatedTargetCapacity = Math.max(0,
                     stats.getNumDesired() - instanceIdsToTerminate.size() + toAdd);
             // limit planned pool according to real target capacity

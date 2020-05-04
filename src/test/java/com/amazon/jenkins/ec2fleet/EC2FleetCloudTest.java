@@ -160,6 +160,58 @@ public class EC2FleetCloudTest {
     }
 
     @Test
+    public void provision_shouldProvisionNoneWhenMaxReachedAndNumExecutorsMoreOne() {
+        // given
+        when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
+
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
+                        Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
+                "", "", "", null, null, false,
+                false, 0, 1, 8, 3, true,
+                false, false, 0, 0, false,
+                10, false);
+
+        fleetCloud.setStats(new FleetStateStats("", 1, FleetStateStats.State.active(),
+                Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+
+        // when
+        Collection<NodeProvisioner.PlannedNode> r = fleetCloud.provision(null, 50);
+
+        // then
+        assertEquals(7, r.size());
+        assertEquals(7, fleetCloud.getToAdd());
+    }
+
+    @Test
+    public void provision_shouldProvisionNoneWhenMaxReachedAndNumExecutorsMoreOne1() {
+        // given
+        when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
+
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
+                        Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
+                "", "", "", null, null, false,
+                false, 0, 1, 8, 3, true,
+                false, false, 0, 0, false,
+                10, false);
+
+        fleetCloud.setStats(new FleetStateStats("", 7, FleetStateStats.State.active(),
+                Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+
+        // when
+        Collection<NodeProvisioner.PlannedNode> r = fleetCloud.provision(null, 50);
+
+        // then
+        assertEquals(1, r.size());
+        assertEquals(1, fleetCloud.getToAdd());
+    }
+
+    @Test
     public void provision_shouldProvisionNoneWhenExceedMax() {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
@@ -1293,7 +1345,7 @@ public class EC2FleetCloudTest {
     }
 
     @Test
-    public void update_givenFleetInModifyingShouldStopAndNotUpdateAddOrModify() throws IOException {
+    public void update_givenFleetInModifyingShouldNotDoAnyUpdates() throws IOException {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
@@ -1313,6 +1365,11 @@ public class EC2FleetCloudTest {
                 ImmutableMap.of(instanceType, .1));
         PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(stats);
 
+        final FleetStateStats initialState = new FleetStateStats("fleetId", 0,
+                FleetStateStats.State.active(),
+                ImmutableSet.of(instanceId),
+                ImmutableMap.of(instanceType, .1));
+
         mockNodeCreatingPart();
 
         EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
@@ -1320,7 +1377,7 @@ public class EC2FleetCloudTest {
                 false, 0, 0, 1, 1, false,
                 true, false,
                 0, 0, true, 10, false);
-        fleetCloud.setStats(stats);
+        fleetCloud.setStats(initialState);
 
         doNothing().when(jenkins).addNode(any(Node.class));
 
@@ -1328,7 +1385,8 @@ public class EC2FleetCloudTest {
         FleetStateStats newStats = fleetCloud.update();
 
         // then
-        Assert.assertSame(stats, newStats);
+        Assert.assertSame(initialState, newStats);
+        Assert.assertSame(initialState, fleetCloud.getStats());
         verify(ec2Fleet, never()).modify(any(String.class), any(String.class), any(String.class), any(String.class), anyInt(), anyInt(), anyInt());
         verify(jenkins, never()).addNode(any(Node.class));
     }
