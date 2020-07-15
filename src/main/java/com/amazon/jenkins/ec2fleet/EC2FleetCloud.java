@@ -13,6 +13,7 @@ import com.amazonaws.services.ec2.model.Region;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.SettableFuture;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.model.Computer;
 import hudson.model.Descriptor;
@@ -766,6 +767,9 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
          * @param awsCredentialsId
          * @return <code>ListBoxModel</code> with label and values
          */
+        @SuppressFBWarnings(
+                value = {"DE_MIGHT_IGNORE, WMI_WRONG_MAP_ITERATOR"},
+                justification = "Ignore API exceptions and key iterator is intended")
         public ListBoxModel doFillRegionItems(@QueryParameter final String awsCredentialsId) {
             // to keep user consistent order tree map, default value to regionCode (eg. us-east-1)
             final TreeMap<String, String> regionDisplayNames = new TreeMap<>();
