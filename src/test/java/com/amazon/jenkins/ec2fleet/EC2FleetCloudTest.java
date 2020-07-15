@@ -4,6 +4,7 @@ import com.amazon.jenkins.ec2fleet.fleet.AutoScalingGroupFleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 import com.amazon.jenkins.ec2fleet.fleet.EC2SpotFleet;
+import com.amazon.jenkins.ec2fleet.fleet.RegionInfo;
 import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2Client;
@@ -25,6 +26,7 @@ import hudson.slaves.NodeProvisioner;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import jenkins.model.Nodes;
+import org.apache.commons.lang.StringUtils;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Assert;
@@ -43,11 +45,14 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -1397,9 +1402,11 @@ public class EC2FleetCloudTest {
         when(ec2Api.connect(anyString(), anyString(), anyString())).thenReturn(amazonEC2Client);
 
         ListBoxModel r = new EC2FleetCloud.DescriptorImpl().doFillRegionItems("");
+        HashSet<String> staticRegions = new HashSet<>(RegionInfo.getRegionNames());
+        staticRegions.addAll(RegionUtils.getRegions().stream().map(com.amazonaws.regions.Region::getName).collect(Collectors.toSet()));
 
-        Assert.assertThat(r.size(), Matchers.greaterThan(0));
-        assertEquals(RegionUtils.getRegions().size(), r.size());
+        Assert.assertThat(staticRegions.size(), Matchers.greaterThan(0));
+        assertEquals(staticRegions.size(), r.size());
     }
 
     @Test
@@ -1409,10 +1416,56 @@ public class EC2FleetCloudTest {
         when(amazonEC2Client.describeRegions()).thenReturn(new DescribeRegionsResult().withRegions(new Region().withRegionName("dynamic-region")));
 
         ListBoxModel r = new EC2FleetCloud.DescriptorImpl().doFillRegionItems("");
+        HashSet<String> staticRegions = new HashSet<>(RegionInfo.getRegionNames());
+        staticRegions.addAll(RegionUtils.getRegions().stream().map(com.amazonaws.regions.Region::getName).collect(Collectors.toSet()));
 
         Assert.assertThat(r.size(), Matchers.greaterThan(0));
         Assert.assertThat(r.toString(), Matchers.containsString("dynamic-region"));
-        assertEquals(RegionUtils.getRegions().size() + 1, r.size());
+        assertEquals(staticRegions.size() + 1, r.size());
+    }
+
+    @Test
+    public void descriptorImpl_doFillRegionItems_shouldDisplayRegionCodeWhenRegionDescriptionMissing() {
+        final String dynamicRegion = "dynamic-region";
+        AmazonEC2Client amazonEC2Client = mock(AmazonEC2Client.class);
+        when(ec2Api.connect(anyString(), nullable(String.class), nullable(String.class))).thenReturn(amazonEC2Client);
+        when(amazonEC2Client.describeRegions()).thenReturn(new DescribeRegionsResult().withRegions(new Region().withRegionName(dynamicRegion)));
+
+        final ListBoxModel regionsListBoxModel = new EC2FleetCloud.DescriptorImpl().doFillRegionItems("");
+        boolean isPresent = false;
+
+        for (final ListBoxModel.Option item : regionsListBoxModel) {
+            if (StringUtils.equals(item.value, dynamicRegion)) {
+                isPresent = true;
+                // verify that display name is same when description is missing
+                assertEquals(dynamicRegion, item.name);
+            }
+        }
+        if(!isPresent) {
+            fail("Dynamic Region not added to the list");
+        }
+    }
+
+    @Test
+    public void descriptorImpl_doFillRegionItems_shouldDisplayVirginiaDescription() {
+        final String regionName = "us-east-1";
+        final String displayName = "us-east-1 US East (N. Virginia)";
+        AmazonEC2Client amazonEC2Client = mock(AmazonEC2Client.class);
+        when(ec2Api.connect(anyString(), nullable(String.class), nullable(String.class))).thenReturn(amazonEC2Client);
+        when(amazonEC2Client.describeRegions()).thenReturn(new DescribeRegionsResult().withRegions(new Region().withRegionName(regionName)));
+
+        final ListBoxModel regionsListBoxModel = new EC2FleetCloud.DescriptorImpl().doFillRegionItems("");
+        boolean isPresent = false;
+
+        for (final ListBoxModel.Option item : regionsListBoxModel) {
+            if (StringUtils.equals(item.value, regionName)) {
+                isPresent = true;
+                assertEquals(displayName, item.name);
+            }
+        }
+        if(!isPresent) {
+            fail(String.format("%s not added to the region list", regionName));
+        }
     }
 
     @Test

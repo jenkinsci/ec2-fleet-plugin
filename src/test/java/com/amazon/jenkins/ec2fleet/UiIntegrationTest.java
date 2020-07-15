@@ -26,6 +26,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Detailed guides https://jenkins.io/doc/developer/testing/
@@ -190,6 +191,55 @@ public class UiIntegrationTest {
 
         assertEquals("a", j.jenkins.clouds.get(0).name);
         assertEquals("FleetCloud", j.jenkins.clouds.get(1).name);
+    }
+
+    @Test
+    public void shouldContainRegionValueInRegionLabel() throws IOException, SAXException {
+        EC2FleetCloud cloud1 = new EC2FleetCloud(null, null, "uh", null, null, null,
+                null, null, null, null, false, false,
+                0, 0, 0, 0, true, false,
+                false, 0, 0, false,
+                10, false);
+        j.jenkins.clouds.add(cloud1);
+
+        HtmlPage page = j.createWebClient().goTo("configure");
+
+        final List<DomElement> regionDropDown = getElementsByNameWithoutJdk(page, "_.region");
+
+        for (final DomElement regionElement : regionDropDown.get(0).getChildElements()) {
+            final String displayName = regionElement.getAttributes().getNamedItem("label").getTextContent();
+            final String value = regionElement.getAttributes().getNamedItem("value").getTextContent();
+            assertTrue(displayName.contains(value));
+        }
+    }
+
+    @Test
+    public void shouldHaveRegionCodeAndRegionDescriptionInRegionLabel() throws IOException, SAXException {
+        final String regionName = "us-east-1";
+        final String displayName = "us-east-1 US East (N. Virginia)";
+        EC2FleetCloud cloud1 = new EC2FleetCloud(null, null, "uh", null, null, null,
+                null, null, null, null, false, false,
+                0, 0, 0, 0, true, false,
+                false, 0, 0, false,
+                10, false);
+        j.jenkins.clouds.add(cloud1);
+
+        HtmlPage page = j.createWebClient().goTo("configure");
+        boolean isPresent = false;
+
+        final List<DomElement> regionDropDown = getElementsByNameWithoutJdk(page, "_.region");
+
+        for (final DomElement regionElement : regionDropDown.get(0).getChildElements()) {
+            final String label = regionElement.getAttributes().getNamedItem("label").getTextContent();
+            final String value = regionElement.getAttributes().getNamedItem("value").getTextContent();
+            if(StringUtils.equals(value, regionName)) {
+                isPresent = true;
+                assertEquals(displayName, label);
+            }
+        }
+        if (!isPresent) {
+            fail(String.format("%s is missing among the regions", regionName));
+        }
     }
 
     @Test
