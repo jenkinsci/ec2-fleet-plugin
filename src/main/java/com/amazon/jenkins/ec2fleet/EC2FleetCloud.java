@@ -769,7 +769,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
          */
         @SuppressFBWarnings(
                 value = {"DE_MIGHT_IGNORE", "WMI_WRONG_MAP_ITERATOR"},
-                justification = "Ignore API exceptions and key iterator is intended")
+                justification = "Ignore API exceptions and key iterator is really intended")
         public ListBoxModel doFillRegionItems(@QueryParameter final String awsCredentialsId) {
             // to keep user consistent order tree map, default value to regionCode (eg. us-east-1)
             final TreeMap<String, String> regionDisplayNames = new TreeMap<>();
