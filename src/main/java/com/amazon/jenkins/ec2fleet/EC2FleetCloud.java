@@ -768,7 +768,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
          * @return <code>ListBoxModel</code> with label and values
          */
         @SuppressFBWarnings(
-                value = {"DE_MIGHT_IGNORE, WMI_WRONG_MAP_ITERATOR"},
+                value = {"DE_MIGHT_IGNORE", "WMI_WRONG_MAP_ITERATOR"},
                 justification = "Ignore API exceptions and key iterator is intended")
         public ListBoxModel doFillRegionItems(@QueryParameter final String awsCredentialsId) {
             // to keep user consistent order tree map, default value to regionCode (eg. us-east-1)
