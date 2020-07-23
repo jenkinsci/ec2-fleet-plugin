@@ -14,6 +14,7 @@
         <f:textbox field="oldId" />
     </f:invisibleEntry>
 
+    <f:description>Select AWS Credentials or leave set to none to use <a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html">AWS EC2 Instance Role</a></f:description>
     <f:entry title="${%AWS Credentials}" field="awsCredentialsId">
       <c:select/>
     </f:entry>

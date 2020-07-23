@@ -52,7 +52,7 @@ Minimum configuration just Image ID
 
 # Configuration
 
-1. Create AWS User
+1. Create AWS User. _Alternatively, you can use an [AWS EC2 instance role](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html)_
 1. Add Inline User Permissions
 ```json
 {

@@ -67,12 +67,14 @@ Go to [AWS account](http://aws.amazon.com/ec2/) and follow instructions
 
 #### 2. Create IAM User
 
-Specify ```programmatic access``` during creation, and record credentials 
-which will be used by Jenkins EC2 Fleet Plugin to connect to your Spot Fleet
- 
+Specify ```programmatic access``` during creation, and record credentials
+which will be used by Jenkins EC2 Fleet Plugin to connect to your Spot Fleet.
+
+*Alternatively, this may use [AWS EC2 instance roles](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html)*
+
 #### 3. Configure User permissions
 
-Add inline policy to the user to allow it use EC2 Spot Fleet and Auto Scaling Group
+Add inline policy to the user or instance role to allow it use EC2 Spot Fleet and Auto Scaling Group
 [AWS documentation about that](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-fleet-requests.html#spot-fleet-prerequisites)
 
 ```json
@@ -118,17 +120,18 @@ https://docs.aws.amazon.com/autoscaling/ec2/userguide/GettingStartedTutorial.htm
 
 Once the fleet is launched, you can set it up by adding a new **EC2 Fleet** cloud in the Jenkins
 
-1. Goto ```Manage Jenkins > Plugin Manager``` 
+1. Goto ```Manage Jenkins > Plugin Manager```
 1. Install ```EC2 Fleet Jenkins Plugin```
 1. Goto ```Manage Jenkins > Configure System```
 1. Click ```Add a new cloud``` and select ```Amazon EC2 Fleet```
-1. Configure credentials and specify EC2 Spot Fleet or Auto Scaling Group which you want to use
+1. Configure AWS credentials, or alternatively leave empty to use the EC2 instance role
+1. Specify EC2 Spot Fleet or Auto Scaling Group which you want to use
 
 ## Scaling
 You can specify the scaling limits in your cloud settings. By default, Jenkins will try to scale fleet up
 if there are enough tasks waiting in the build queue and scale down idle nodes after a specified idleness period.
 
-You can use the History tab in the AWS console to view the scaling history. 
+You can use the History tab in the AWS console to view the scaling history.
 
 ## Groovy
 

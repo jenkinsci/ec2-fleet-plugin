@@ -11,7 +11,7 @@
 | Property        | Type           | Required  | Description |
 |-------------------|---|---|---|
 | name              |string|yes|ec2-fleet|
-| awsCredentialsId  |string|yes||
+| awsCredentialsId  |string|no, default ```null```|[Leave blank to use AWS EC2 instance role](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html)|
 | computerConnector |object|yes|for example ```sshConnector```|
 | region            |string|yes|```us-east-2```, full [list](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html)|
 | fleet   |string|yes|my-fleet|
@@ -48,11 +48,10 @@ jenkins:
   clouds:
     - ec2Fleet:
         name: ec2-fleet
-        awsCredentialsId: xx
         computerConnector:
             ssh:
                 credentialsId: cred
-                sshHostKeyVerificationStrategy: 
+                sshHostKeyVerificationStrategy:
                   NonVerifyingKeyVerificationStrategy
         region: us-east-2
         fleet: my-fleet
