@@ -78,28 +78,41 @@ Add inline policy to the user or instance role to allow it use EC2 Spot Fleet an
 [AWS documentation about that](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-fleet-requests.html#spot-fleet-prerequisites)
 
 ```json
-  {
-      "Version": "2012-10-17",
-      "Statement": [
-          {
-              "Effect": "Allow",
-              "Action": [
-                  "ec2:*",
-                  "autoscaling:*"
-              ],
-              "Resource": "*"
-          },
-          {
-              "Effect": "Allow",
-              "Action": [
-                "iam:ListRoles",
-                "iam:PassRole",
-                "iam:ListInstanceProfiles"
-              ],
-              "Resource": "*"
-          }
-      ]
-  }
+{
+   "Version":"2012-10-17",
+   "Statement":[
+      {
+         "Effect":"Allow",
+         "Action":[
+            "ec2:DescribeSpotFleetInstances",
+            "ec2:ModifySpotFleetRequest",
+            "ec2:CreateTags",
+            "ec2:DescribeRegions",
+            "ec2:iDescribeInstances",
+            "ec2:DescribeInstanceStatus",
+            "ec2:DescribeSpotFleetRequests"
+         ],
+         "Resource":"*"
+      },
+      {
+         "Effect":"Allow",
+         "Action":[
+            "autoscaling:DescribeAutoScalingGroups",
+            "autoscaling:UpdateAutoScalingGroup"
+         ],
+         "Resource":"*"
+      },
+      {
+         "Effect":"Allow",
+         "Action":[
+            "iam:ListInstanceProfiles",
+            "iam:ListRoles",
+            "iam:PassRole"
+         ],
+         "Resource":"*"
+      }
+   ]
+}
 ```
 
 #### 4. Create EC2 Fleet / Auto-Scaling Group
