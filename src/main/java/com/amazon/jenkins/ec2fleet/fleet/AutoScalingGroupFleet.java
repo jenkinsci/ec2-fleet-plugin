@@ -99,7 +99,7 @@ public class AutoScalingGroupFleet implements EC2Fleet {
         throw new UnsupportedOperationException();
     }
 
-    private AmazonAutoScalingClient createClient(
+    public AmazonAutoScalingClient createClient(
             final String awsCredentialsId, final String regionName, final String endpoint) {
         final AmazonWebServicesCredentials credentials = AWSCredentialsHelper.getCredentials(awsCredentialsId, Jenkins.getInstance());
         final ClientConfiguration clientConfiguration = AWSUtils.getClientConfiguration(endpoint);
