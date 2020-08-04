@@ -23,6 +23,7 @@ import hudson.model.Node;
 import hudson.model.labels.LabelAtom;
 import hudson.slaves.ComputerConnector;
 import hudson.slaves.NodeProvisioner;
+import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import jenkins.model.Nodes;
@@ -42,10 +43,12 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -1407,6 +1410,44 @@ public class EC2FleetCloudTest {
 
         Assert.assertThat(staticRegions.size(), Matchers.greaterThan(0));
         assertEquals(staticRegions.size(), r.size());
+    }
+
+    @Test
+    public void descriptorImpl_doTestConnection_NoMissingPermissions() throws Exception {
+        final AwsPermissionChecker awsPermissionChecker = mock(AwsPermissionChecker.class);
+        when(awsPermissionChecker.getMissingPermissions(null)).thenReturn(new ArrayList<>());
+        PowerMockito.whenNew(AwsPermissionChecker.class).withAnyArguments().thenReturn(awsPermissionChecker);
+
+        final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doTestConnection(null, null, null, null);
+
+        Assert.assertTrue(formValidation.getMessage().contains("Success"));
+    }
+
+    @Test
+    public void descriptorImpl_doTestConnection_missingDecribeInstancePermission() throws Exception {
+        final AwsPermissionChecker awsPermissionChecker = mock(AwsPermissionChecker.class);
+        when(awsPermissionChecker.getMissingPermissions(null)).thenReturn(Collections.singletonList(AwsPermissionChecker.FleetAPI.DescribeInstances.name()));
+        PowerMockito.whenNew(AwsPermissionChecker.class).withAnyArguments().thenReturn(awsPermissionChecker);
+
+        final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doTestConnection(null, null, null, null);
+
+        Assert.assertThat(formValidation.getMessage(), Matchers.containsString(AwsPermissionChecker.FleetAPI.DescribeInstances.name()));
+    }
+
+    @Test
+    public void descriptorImpl_doTestConnection_missingMultiplePermissions() throws Exception {
+        final List<String> missingPermissions = new ArrayList<>();
+        missingPermissions.add(AwsPermissionChecker.FleetAPI.DescribeInstances.name());
+        missingPermissions.add(AwsPermissionChecker.FleetAPI.CreateTags.name());
+
+        final AwsPermissionChecker awsPermissionChecker = mock(AwsPermissionChecker.class);
+        when(awsPermissionChecker.getMissingPermissions(null)).thenReturn(missingPermissions);
+        PowerMockito.whenNew(AwsPermissionChecker.class).withAnyArguments().thenReturn(awsPermissionChecker);
+
+        final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doTestConnection(null, null, null, null);
+
+        Assert.assertThat(formValidation.getMessage(), Matchers.containsString(AwsPermissionChecker.FleetAPI.DescribeInstances.name()));
+        Assert.assertThat(formValidation.getMessage(), Matchers.containsString(AwsPermissionChecker.FleetAPI.CreateTags.name()));
     }
 
     @Test

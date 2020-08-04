@@ -15,3 +15,8 @@ supported.
     If you are not sure about your fleet check its type by API or
     check if <code>Maintain target capacity</code> enabled in UI for this spot fleet.
 </p>
+<p>
+    <b>AWS Permissions: </b> Plugin requires certain AWS permissions for managing resources. You can check missing permissions by clicking <b>Test Connection</b> button.
+    Test Connection button does not validate certain listed permissions such as TerminateInstances and UpdateAutoScalingGroup due to API restrictions.
+    Check out <a href="https://github.com/jenkinsci/ec2-fleet-plugin/blob/master/README.md"> README</a> for inline IAM Policy.
+</p>

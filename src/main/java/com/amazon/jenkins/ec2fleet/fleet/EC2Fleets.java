@@ -1,6 +1,7 @@
 package com.amazon.jenkins.ec2fleet.fleet;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.commons.lang.StringUtils;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.Arrays;
@@ -28,11 +29,15 @@ public class EC2Fleets {
     public static EC2Fleet get(final String id) {
         if (GET != null) return GET;
 
-        if (id.startsWith(EC2_SPOT_FLEET_PREFIX)) {
+        if (isEC2Fleet(id)) {
             return EC2_SPOT_FLEET;
         } else {
             return new AutoScalingGroupFleet();
         }
+    }
+
+    public static boolean isEC2Fleet(final String fleet) {
+        return StringUtils.startsWith(fleet, EC2_SPOT_FLEET_PREFIX);
     }
 
     @VisibleForTesting

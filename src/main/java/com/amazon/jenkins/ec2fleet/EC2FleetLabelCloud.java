@@ -868,13 +868,19 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
                 @QueryParameter final String region,
                 @QueryParameter final String endpoint,
                 @QueryParameter final String fleet) {
-            try {
-                // read state to check if we have access
-                EC2Fleets.get(fleet).getState(awsCredentialsId, region, endpoint, fleet);
-            } catch (final Exception ex) {
-                return FormValidation.error(ex.getMessage());
+            // Check if any missing AWS Permissions
+            final AwsPermissionChecker awsPermissionChecker = new AwsPermissionChecker(awsCredentialsId, region, endpoint);
+            final List<String> missingPermissions = awsPermissionChecker.getMissingPermissions(fleet);
+            // TODO: DryRun does not work as expected for TerminateInstances and does not exists for UpdateAutoScalingGroup
+            final String disclaimer = String.format("Skipping validation for following permissions: %s, %s",
+                    AwsPermissionChecker.FleetAPI.TerminateInstances,
+                    AwsPermissionChecker.FleetAPI.UpdateAutoScalingGroup);
+            if(missingPermissions.isEmpty()) {
+                return FormValidation.ok(String.format("Success! %s", disclaimer));
             }
-            return FormValidation.ok("Success");
+            final String errorMessage = String.format("Following AWS permissions are missing: %s ", String.join(", ", missingPermissions));
+            LOGGER.log(Level.WARNING, String.format("[TestConnection] %s", errorMessage));
+            return FormValidation.error(String.format("%s %n %s", errorMessage, disclaimer));
         }
 
         @Override
