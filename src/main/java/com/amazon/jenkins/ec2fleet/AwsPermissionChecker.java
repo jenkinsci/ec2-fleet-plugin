@@ -86,7 +86,6 @@ public class AwsPermissionChecker {
         if(!hasDescribeAutoScalingGroupsPermission(asgClient)) {
             missingAsgPermissions.add(FleetAPI.DescribeAutoScalingGroups.name());
         }
-
         return missingAsgPermissions;
     }
 
