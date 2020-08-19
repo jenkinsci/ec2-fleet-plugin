@@ -56,6 +56,43 @@ public class IdleRetentionStrategyTest {
     }
 
     @Test
+    public void shouldScheduleExcessCapacityForTerminationIfIdle() {
+        when(cloud.hasExcessCapacity()).thenReturn(Boolean.TRUE);
+        when(slaveComputer.isIdle()).thenReturn(Boolean.TRUE);
+
+        new IdleRetentionStrategy().check(slaveComputer);
+
+        verify(slaveComputer, times(1)).getNode();
+        verify(cloud, times(1)).scheduleToTerminate(anyString());
+        verify(slaveComputer).setAcceptingTasks(false);
+    }
+
+    @Test
+    public void shouldNotScheduleExcessCapacityForTerminationIfBusy() {
+        when(cloud.hasExcessCapacity()).thenReturn(Boolean.TRUE);
+        when(slaveComputer.isIdle()).thenReturn(Boolean.FALSE);
+
+        new IdleRetentionStrategy().check(slaveComputer);
+
+        verify(slaveComputer, times(0)).getNode();
+        verify(cloud, times(0)).scheduleToTerminate(anyString());
+        verify(slaveComputer).setAcceptingTasks(true);
+    }
+
+    @Test
+    public void shouldNotScheduleTerminationIfNotExcessCapacity() {
+        when(cloud.hasExcessCapacity()).thenReturn(Boolean.FALSE);
+        when(slaveComputer.isIdle()).thenReturn(Boolean.TRUE);
+        when(cloud.getIdleMinutes()).thenReturn(0);
+
+        new IdleRetentionStrategy().check(slaveComputer);
+
+        verify(slaveComputer, times(0)).getNode();
+        verify(cloud, times(0)).scheduleToTerminate(anyString());
+        verify(slaveComputer).setAcceptingTasks(true);
+    }
+
+    @Test
     public void if_idle_time_configured_should_do_nothing_if_node_idle_less_time() {
         when(slaveComputer.getIdleStartMilliseconds()).thenReturn(System.currentTimeMillis());
 

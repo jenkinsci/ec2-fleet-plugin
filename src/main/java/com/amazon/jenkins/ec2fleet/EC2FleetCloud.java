@@ -343,6 +343,19 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     }
 
     @Override
+    public synchronized boolean hasExcessCapacity() {
+        if(stats == null) {
+            // Let plugin sync up with current state of fleet
+            return false;
+        }
+        if(stats.getNumDesired() - instanceIdsToTerminate.size() > maxSize) {
+            info("fleet has excess capacity of %s more than the max allowed: %s", stats.getNumDesired() - instanceIdsToTerminate.size(), maxSize);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
     public synchronized Collection<NodeProvisioner.PlannedNode> provision(final Label label, final int excessWorkload) {
         info("excessWorkload %s", excessWorkload);
 

@@ -50,7 +50,7 @@ public class IdleRetentionStrategy extends RetentionStrategy<SlaveComputer> {
         boolean justTerminated = false;
         fc.setAcceptingTasks(false);
         try {
-            if (fc.isIdle() && isIdleForTooLong(cloud, fc)) {
+            if(fc.isIdle() && (cloud.hasExcessCapacity() || isIdleForTooLong(cloud, fc))) {
                 // Find instance ID
                 Node compNode = fc.getNode();
                 if (compNode == null) {
@@ -59,7 +59,7 @@ public class IdleRetentionStrategy extends RetentionStrategy<SlaveComputer> {
 
                 final String instanceId = compNode.getNodeName();
                 if (cloud.scheduleToTerminate(instanceId)) {
-                    // Instance successfully terminated, so no longer accept tasks
+                    // Instance successfully scheduled for termination, so no longer accept tasks
                     shouldAcceptTasks = false;
                     justTerminated = true;
                 }

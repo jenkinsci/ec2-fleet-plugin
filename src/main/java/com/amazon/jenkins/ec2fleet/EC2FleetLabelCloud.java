@@ -257,6 +257,12 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
         return restrictUsage;
     }
 
+    @Override
+    public synchronized boolean hasExcessCapacity() {
+        //  TODO: Check if the current count of instances are greater than allowed
+        return Boolean.FALSE;
+    }
+
 //    @VisibleForTesting
 //    synchronized Set<NodeProvisioner.PlannedNode> getPlannedNodesCache() {
 //        return plannedNodesCache;
