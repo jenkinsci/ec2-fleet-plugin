@@ -78,7 +78,7 @@ public class IdleRetentionStrategyIntegrationTest extends IntegrationTest {
 
         final ArgumentCaptor<TerminateInstancesRequest> argument = ArgumentCaptor.forClass(TerminateInstancesRequest.class);
 
-        // IdleRetentionStrategy checks every 60 sections
+        // IdleRetentionStrategy checks every 60 seconds
         Thread.sleep(1000 * 60);
 
         // Make sure the scheduled for termination instances are terminated
@@ -108,7 +108,7 @@ public class IdleRetentionStrategyIntegrationTest extends IntegrationTest {
 
         final ArgumentCaptor<TerminateInstancesRequest> argument = ArgumentCaptor.forClass(TerminateInstancesRequest.class);
 
-        // IdleRetentionStrategy checks every 60 sections
+        // IdleRetentionStrategy checks every 60 seconds
         Thread.sleep(1000 * 60);
         cloud.update();
 
@@ -128,7 +128,7 @@ public class IdleRetentionStrategyIntegrationTest extends IntegrationTest {
 
         final ArgumentCaptor<TerminateInstancesRequest> argument = ArgumentCaptor.forClass(TerminateInstancesRequest.class);
 
-        // IdleRetentionStrategy checks every 60 sections and idle timeout is 60 seconds so keeping total above 120 seconds i.e. 30 * 5 = 150 seconds
+        // IdleRetentionStrategy checks every 60 seconds and idle timeout is 60 seconds so keeping total above 120 seconds i.e. 30 * 5 = 150 seconds
         int tries = 0;
         while (tries < 5){
             Thread.sleep(1000 * 30);
@@ -154,7 +154,7 @@ public class IdleRetentionStrategyIntegrationTest extends IntegrationTest {
 
         assertAtLeastOneNode();
 
-        // IdleRetentionStrategy checks every 60 sections and idle timeout is 60 seconds so keeping total above 120 seconds i.e. 30 * 5 = 150 seconds
+        // IdleRetentionStrategy checks every 60 seconds and idle timeout is 60 seconds so keeping total above 120 seconds i.e. 30 * 5 = 150 seconds
         int tries = 0;
         while (tries < 5){
             Thread.sleep(1000 * 30);
