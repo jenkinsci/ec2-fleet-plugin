@@ -120,7 +120,7 @@ public class IdleRetentionStrategyIntegrationTest extends IntegrationTest {
     public void shouldTerminateIdleNodesAfterIdleTimeout() throws Exception {
         final EC2FleetCloud cloud = new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
-                1, 0, 2, 1, false, true, false, 0, 0, false, 30, false);
+                1, 0, 2, 1, false, true, false, 0, 0, false, 99, false);
         j.jenkins.clouds.add(cloud);
         cloud.update();
 
@@ -128,9 +128,15 @@ public class IdleRetentionStrategyIntegrationTest extends IntegrationTest {
 
         final ArgumentCaptor<TerminateInstancesRequest> argument = ArgumentCaptor.forClass(TerminateInstancesRequest.class);
 
-        // IdleRetentionStrategy checks every 60 sections and idle timeout is 60 seconds.
-        Thread.sleep(1000 * 120);
-        cloud.update();
+        // IdleRetentionStrategy checks every 60 sections and idle timeout is 60 seconds so keeping total 120 seconds
+        int tries = 0;
+        // Not sleeping for 120 seconds because jenkins might kill the nodes due to timeout
+        while (tries < 5){
+            Thread.sleep(1000 * 30);
+            cloud.update();
+            tries += 1;
+        }
+
         verify((amazonEC2), times(1)).terminateInstances(argument.capture());
 
         final List<String> instanceIds = new ArrayList<String>();
@@ -149,9 +155,15 @@ public class IdleRetentionStrategyIntegrationTest extends IntegrationTest {
 
         assertAtLeastOneNode();
 
-        // IdleRetentionStrategy checks every 60 sections and idle timeout is 60 seconds.
-        Thread.sleep(1000 * 120);
-        cloud.update();
+        // IdleRetentionStrategy checks every 60 sections and idle timeout is 60 seconds so keeping total 120 seconds
+        int tries = 0;
+        // Not sleeping for 120 seconds because jenkins might kill the nodes due to timeout
+        while (tries < 5){
+            Thread.sleep(1000 * 30);
+            cloud.update();
+            tries += 1;
+        }
+
         verify((amazonEC2), times(0)).terminateInstances(any());
     }
 }
