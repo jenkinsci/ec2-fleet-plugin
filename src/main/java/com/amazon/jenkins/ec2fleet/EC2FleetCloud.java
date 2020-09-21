@@ -500,7 +500,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                     }
                 }
             });
-            info("Delete terminating nodes from Jenkins %s", currentInstanceIdsToTerminate);
+            info("Delete terminating nodes from Jenkins: %s", currentInstanceIdsToTerminate);
 
             Registry.getEc2Api().terminateInstances(ec2, currentInstanceIdsToTerminate);
             info("Instance(s): %s were terminated", currentInstanceIdsToTerminate);
