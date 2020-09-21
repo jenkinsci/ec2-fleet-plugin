@@ -68,7 +68,6 @@ public class EC2FleetNodeComputer extends SlaveComputer implements EC2FleetCloud
         final EC2FleetNode node = getNode();
         if (node != null) {
             final String instanceId = node.getNodeName();
-            node.
             final AbstractEC2FleetCloud cloud = node.getCloud();
             if (cloud != null && StringUtils.isNotBlank(instanceId)) {
                 cloud.scheduleToTerminate(instanceId);
