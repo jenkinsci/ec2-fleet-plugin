@@ -2,9 +2,12 @@ package com.amazon.jenkins.ec2fleet;
 
 import hudson.model.Slave;
 import hudson.slaves.SlaveComputer;
+import org.apache.commons.lang.StringUtils;
+import org.kohsuke.stapler.HttpResponse;
 
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.ThreadSafe;
+import java.io.IOException;
 
 /**
  * @see EC2FleetNode
@@ -54,4 +57,23 @@ public class EC2FleetNodeComputer extends SlaveComputer implements EC2FleetCloud
         return cloud;
     }
 
+    /**
+     * When the slave is deleted, schedule EC2 instance for termination
+     *
+     * @return HttpResponse
+     */
+    @Override
+    public HttpResponse doDoDelete() throws IOException {
+        checkPermission(DELETE);
+        final EC2FleetNode node = getNode();
+        if (node != null) {
+            final String instanceId = node.getNodeName();
+            node.
+            final AbstractEC2FleetCloud cloud = node.getCloud();
+            if (cloud != null && StringUtils.isNotBlank(instanceId)) {
+                cloud.scheduleToTerminate(instanceId);
+            }
+        }
+        return super.doDoDelete();
+    }
 }
