@@ -503,17 +503,17 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             info("Delete terminating nodes from Jenkins %s", currentInstanceIdsToTerminate);
 
             Registry.getEc2Api().terminateInstances(ec2, currentInstanceIdsToTerminate);
-            info("Instances %s were terminated with result", currentInstanceIdsToTerminate);
+            info("Instance(s): %s were terminated", currentInstanceIdsToTerminate);
         }
 
-        info("fleet instances %s", newStatus.getInstances());
+        info("fleet instances: %s", newStatus.getInstances());
 
         // Set up the lists of Jenkins nodes and fleet instances
         // currentFleetInstances contains instances currently in the fleet
         final Set<String> fleetInstances = new HashSet<>(newStatus.getInstances());
 
         final Map<String, Instance> described = Registry.getEc2Api().describeInstances(ec2, fleetInstances);
-        info("described instances %s", described.keySet());
+        info("described instances: %s", described.keySet());
 
         // currentJenkinsNodes contains all registered Jenkins nodes related to this cloud
         final Set<String> jenkinsInstances = new HashSet<>();
@@ -522,28 +522,31 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                 jenkinsInstances.add(node.getNodeName());
             }
         }
-        info("jenkins nodes %s", jenkinsInstances);
+        info("jenkins nodes: %s", jenkinsInstances);
 
         // contains Jenkins nodes that were once fleet instances but are no longer in the fleet
-        final Set<String> jenkinsNodesWithInstance = new HashSet<>(jenkinsInstances);
-        jenkinsNodesWithInstance.removeAll(fleetInstances);
-        info("jenkins nodes without instance %s", jenkinsNodesWithInstance);
-
+        final Set<String> jenkinsNodesWithoutInstance = new HashSet<>(jenkinsInstances);
+        jenkinsNodesWithoutInstance.removeAll(fleetInstances);
+        if(!jenkinsNodesWithoutInstance.isEmpty()) {
+            info("jenkins nodes without instance(s): %s", jenkinsNodesWithoutInstance);
+        }
         // terminatedFleetInstances contains fleet instances that are terminated, stopped, stopping, or shutting down
         final Set<String> terminatedFleetInstances = new HashSet<>(fleetInstances);
         // terminated are any current which cannot be described
         terminatedFleetInstances.removeAll(described.keySet());
-        info("terminated instances " + terminatedFleetInstances);
-
+        if(!terminatedFleetInstances.isEmpty()) {
+            info("terminated Fleet instance(s): %s", terminatedFleetInstances);
+        }
         // newFleetInstances contains running fleet instances that are not already Jenkins nodes
         final Map<String, Instance> newFleetInstances = new HashMap<>(described);
         for (final String instanceId : jenkinsInstances) newFleetInstances.remove(instanceId);
-        info("new instances " + newFleetInstances.keySet());
-
+        if(!newFleetInstances.isEmpty()) {
+            info("new instance(s): %s not yet registered as nodes in Jenkins", newFleetInstances.keySet());
+        }
         // update caches
         final List<String> jenkinsNodesToRemove = new ArrayList<>();
         jenkinsNodesToRemove.addAll(terminatedFleetInstances);
-        jenkinsNodesToRemove.addAll(jenkinsNodesWithInstance);
+        jenkinsNodesToRemove.addAll(jenkinsNodesWithoutInstance);
         // Remove dying fleet instances from Jenkins
         for (final String instance : jenkinsNodesToRemove) {
             info("Fleet (" + getLabelString() + ") no longer has the instance " + instance + ", removing from Jenkins.");
