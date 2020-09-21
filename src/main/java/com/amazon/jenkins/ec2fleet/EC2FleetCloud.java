@@ -822,7 +822,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                     // Update map only when description exists else leave default to region code eg. us-east-1
                     regionDisplayNames.put(regionName, regionDisplayName);
                 } catch (final IllegalArgumentException ex) {
-                    // Description missing in both enum and SDk, ignore and leave default
+                    // Description missing in both enum and SDK, ignore and leave default
                 }
                 model.add(new ListBoxModel.Option(regionDisplayNames.get(regionName), regionName));
             }
