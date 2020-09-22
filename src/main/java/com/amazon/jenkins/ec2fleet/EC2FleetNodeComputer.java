@@ -58,7 +58,7 @@ public class EC2FleetNodeComputer extends SlaveComputer implements EC2FleetCloud
     }
 
     /**
-     * When the slave is deleted, schedule EC2 instance for termination
+     * When the agent is deleted, schedule EC2 instance for termination
      *
      * @return HttpResponse
      */
