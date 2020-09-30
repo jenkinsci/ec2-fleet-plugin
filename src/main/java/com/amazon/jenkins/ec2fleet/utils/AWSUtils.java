@@ -1,4 +1,4 @@
-package com.amazon.jenkins.ec2fleet;
+package com.amazon.jenkins.ec2fleet.utils;
 
 import com.amazonaws.ClientConfiguration;
 import hudson.ProxyConfiguration;

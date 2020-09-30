@@ -1,6 +1,6 @@
 package com.amazon.jenkins.ec2fleet.fleet;
 
-import com.amazon.jenkins.ec2fleet.AWSUtils;
+import com.amazon.jenkins.ec2fleet.utils.AWSUtils;
 import com.amazon.jenkins.ec2fleet.FleetStateStats;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;

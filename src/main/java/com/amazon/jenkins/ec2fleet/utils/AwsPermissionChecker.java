@@ -1,5 +1,6 @@
-package com.amazon.jenkins.ec2fleet;
+package com.amazon.jenkins.ec2fleet.utils;
 
+import com.amazon.jenkins.ec2fleet.Registry;
 import com.amazon.jenkins.ec2fleet.fleet.AutoScalingGroupFleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;

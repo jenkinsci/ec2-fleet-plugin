@@ -1,4 +1,4 @@
-package com.amazon.jenkins.ec2fleet;
+package com.amazon.jenkins.ec2fleet.utils;
 
 import hudson.model.Node;
 import jenkins.model.Jenkins;

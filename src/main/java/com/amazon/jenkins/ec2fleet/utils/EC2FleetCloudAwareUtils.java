@@ -1,5 +1,7 @@
-package com.amazon.jenkins.ec2fleet;
+package com.amazon.jenkins.ec2fleet.utils;
 
+import com.amazon.jenkins.ec2fleet.AbstractEC2FleetCloud;
+import com.amazon.jenkins.ec2fleet.EC2FleetCloudAware;
 import hudson.model.Computer;
 import hudson.model.Node;
 import jenkins.model.Jenkins;

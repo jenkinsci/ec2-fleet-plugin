@@ -2,20 +2,18 @@ package com.amazon.jenkins.ec2fleet;
 
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 import com.amazon.jenkins.ec2fleet.fleet.EC2SpotFleet;
-import com.amazon.jenkins.ec2fleet.fleet.RegionInfo;
-import com.amazonaws.regions.RegionUtils;
-import com.amazonaws.regions.Regions;
+import com.amazon.jenkins.ec2fleet.utils.AwsPermissionChecker;
+import com.amazon.jenkins.ec2fleet.utils.EC2FleetCloudAwareUtils;
+import com.amazon.jenkins.ec2fleet.utils.JenkinsUtils;
+import com.amazon.jenkins.ec2fleet.utils.RegionHelper;
 import com.amazonaws.services.cloudformation.AmazonCloudFormation;
 import com.amazonaws.services.cloudformation.model.StackStatus;
 import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.model.DescribeRegionsResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.InstanceStateName;
 import com.amazonaws.services.ec2.model.KeyPairInfo;
-import com.amazonaws.services.ec2.model.Region;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
 import com.google.common.util.concurrent.SettableFuture;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.model.AbstractProject;
 import hudson.model.Computer;
@@ -48,14 +46,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
-import java.util.stream.Collectors;
 
 /**
  * @see CloudNanny
@@ -828,61 +823,8 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
             return AWSCredentialsHelper.doFillCredentialsIdItems(Jenkins.getInstance());
         }
 
-        /**
-         * Fill Regions
-         *
-         * Get region codes (e.g. us-east-1) from EC2 API and AWS SDK.
-         * However, API does not have region descriptions (such as us-east-1 - US East (N. Virginia))
-         * We fetch descriptions from our <code>RegionInfo</code> enum to avoid unnecessarily upgrading
-         * AWS Java SDK for newer regions and fallback to AWS Java SDK enum.
-         *
-         * @param awsCredentialsId aws credentials id
-         * @return <code>ListBoxModel</code> with label and values
-         */
-        @SuppressFBWarnings(
-                value = {"DE_MIGHT_IGNORE", "WMI_WRONG_MAP_ITERATOR"},
-                justification = "Ignore API exceptions and key iterator is really intended")
         public ListBoxModel doFillRegionItems(@QueryParameter final String awsCredentialsId) {
-            // to keep user consistent order tree map, default value to regionCode (eg. us-east-1)
-            final TreeMap<String, String> regionDisplayNames = new TreeMap<>();
-            try {
-                final AmazonEC2 client = Registry.getEc2Api().connect(awsCredentialsId, null, null);
-                final DescribeRegionsResult regions = client.describeRegions();
-                regionDisplayNames.putAll(regions.getRegions().stream()
-                        .collect(Collectors.toMap(Region::getRegionName, Region::getRegionName)));
-            } catch (final Exception ex) {
-                // ignore exception it could be case that credentials are not belong to default region
-                // which we are using to describe regions
-            }
-            // Add SDK regions as user can have latest SDK
-            regionDisplayNames.putAll(RegionUtils.getRegions().stream()
-                    .collect(Collectors.toMap(com.amazonaws.regions.Region::getName, com.amazonaws.regions.Region::getName)));
-            // Add regions from enum as user may have older SDK
-            regionDisplayNames.putAll(RegionInfo.getRegionNames().stream()
-                    .collect(Collectors.toMap(r -> r, r -> r)));
-
-            final ListBoxModel model = new ListBoxModel();
-            for (final String regionName : regionDisplayNames.keySet()) {
-                String regionDescription;
-                try {
-                    final RegionInfo region = RegionInfo.fromName(regionName);
-                    if (region != null) {
-                        regionDescription = region.getDescription();
-                    } else {
-                        // Fallback to SDK when region description not found in RegionInfo
-                        regionDescription = Regions.fromName(regionName).getDescription();
-                    }
-                    final String regionDisplayName = String.format("%s %s", regionName, regionDescription);
-
-                    // Update map only when description exists else leave default to region code eg. us-east-1
-                    regionDisplayNames.put(regionName, regionDisplayName);
-                } catch (final IllegalArgumentException ex) {
-                    // Description missing in both enum and SDk, ignore and leave default
-                }
-                model.add(new ListBoxModel.Option(regionDisplayNames.get(regionName), regionName));
-            }
-
-            return model;
+            return RegionHelper.getRegionsListBoxModel(awsCredentialsId);
         }
 
         public ListBoxModel doFillEc2KeyPairNameItems(

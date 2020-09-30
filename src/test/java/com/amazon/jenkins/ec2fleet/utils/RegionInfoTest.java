@@ -1,6 +1,6 @@
-package com.amazon.jenkins.ec2fleet.fleet;
+package com.amazon.jenkins.ec2fleet.utils;
 
-import com.amazon.jenkins.ec2fleet.fleet.RegionInfo;
+import com.amazon.jenkins.ec2fleet.utils.RegionInfo;
 import com.amazonaws.regions.Regions;
 
 import org.junit.Test;

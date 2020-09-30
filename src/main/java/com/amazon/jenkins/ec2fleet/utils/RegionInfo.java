@@ -1,4 +1,4 @@
-package com.amazon.jenkins.ec2fleet.fleet;
+package com.amazon.jenkins.ec2fleet.utils;
 
 import java.util.ArrayList;
 import java.util.List;
