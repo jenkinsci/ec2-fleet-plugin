@@ -18,6 +18,7 @@ import hudson.model.ParametersDefinitionProperty;
 import hudson.model.Result;
 import hudson.model.StringParameterDefinition;
 import hudson.model.StringParameterValue;
+import hudson.model.User;
 import hudson.model.labels.LabelAtom;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.slaves.OfflineCause;
@@ -89,7 +90,8 @@ public class AutoResubmitIntegrationTest extends IntegrationTest {
         assertQueueIsEmpty();
 
         System.out.println("disconnect node");
-        node.toComputer().disconnect(new OfflineCause.ChannelTermination(new UnsupportedOperationException("Test")));
+        // Regardless of cause for disconnect, we should resubmit the job
+        node.toComputer().disconnect(new OfflineCause.ByCLI("disconnect"));
 
         // due to test nature job could be failed if started or aborted as we call disconnect
         // in prod code it's not matter
@@ -146,6 +148,7 @@ public class AutoResubmitIntegrationTest extends IntegrationTest {
         assertQueueIsEmpty();
 
         System.out.println("disconnect node");
+        // Regardless of cause for disconnect, we should resubmit the job
         node.toComputer().disconnect(new OfflineCause.ChannelTermination(new UnsupportedOperationException("Test")));
 
         assertLastBuildResult(Result.FAILURE, Result.ABORTED);
@@ -178,7 +181,8 @@ public class AutoResubmitIntegrationTest extends IntegrationTest {
         assertQueueIsEmpty();
 
         System.out.println("disconnect node");
-        node.toComputer().disconnect(new OfflineCause.ChannelTermination(new UnsupportedOperationException("Test")));
+        // Regardless of cause for disconnect, we should resubmit the job
+        node.toComputer().disconnect(new OfflineCause.IdleOfflineCause());
 
         assertLastBuildResult(Result.FAILURE, Result.ABORTED);
 
