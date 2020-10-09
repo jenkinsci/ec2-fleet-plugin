@@ -42,6 +42,22 @@ the fleet within the specified price range. For more information, see
 - Allow custom EC2 API endpoint
 - Auto Fleet creation based on Job label [see](docs/LABEL-BASED-CONFIGURATION.md)
 
+## Comparison to EC2-Plugin
+
+[EC2-Plugin](https://plugins.jenkins.io/ec2/) is a similar Jenkins plugin that will request EC2 instances when excess jobs are
+detected. The main difference between the two plugins is that EC2-Fleet-Plugin uses EC2 Spot Fleet and ASG to request and manage
+instances instead of doing it manually with EC2 RunInstances. This gives EC2-Fleet-Plugin all the benefits of Spot Fleet and ASG:
+allocation strategies, automatic availability zone rebalancing (ASG only), access to launch configurations and launch templates
+, instance weighting, etc. 
+
+| EC2-Fleet-Plugin | EC2-Plugin |
+| --- | --- |
+| Supports On-Demand & Spot Instances | Supports On-Demand & Spot Instances |
+| Scales with EC2 Spot Fleet or ASG | Scales with RunInstances |
+| EC2 Spot Fleet and ASG Allocation Strategies | No Allocation Strategies |
+| Use launch config/template to set instance settings | Manually set instances settings within plugin |
+| Custom instance weighting | No custom instance weighting |
+
 # Change Log
 
 This plugin is using [SemVersion](https://semver.org/) which means that each plugin version looks like 
