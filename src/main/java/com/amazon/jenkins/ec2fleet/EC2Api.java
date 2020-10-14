@@ -30,11 +30,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("WeakerAccess")
 public class EC2Api {
+
+    private static final Logger LOGGER = Logger.getLogger(EC2Api.class.getName());
 
     private static final ImmutableSet<String> TERMINATED_STATES = ImmutableSet.of(
             InstanceStateName.Terminated.toString(),
@@ -131,11 +134,11 @@ public class EC2Api {
      */
     public void terminateInstances(final AmazonEC2 ec2, final Collection<String> instanceIds) {
         final List<String> temp = new ArrayList<>(instanceIds);
+        // Retry if termination failed due to NOT_FOUND_ERROR_CODE
         while (temp.size() > 0) {
-            // terminateInstances is idempotent so it can be called until it's successful
             try {
                 ec2.terminateInstances(new TerminateInstancesRequest(temp));
-                // clear as removed so we can finish
+                // clear after successful termination
                 temp.clear();
             } catch (AmazonEC2Exception exception) {
                 // if we cannot find instance, that's fine assume them as terminated
@@ -147,6 +150,10 @@ public class EC2Api {
                         throw exception;
                     }
                     temp.removeAll(notFoundInstanceIds);
+                } else {
+                    LOGGER.warning(String.format("Failed terminating EC2 instanceId(s): %s with following exception: %s",
+                            StringUtils.join(instanceIds, ","), exception.getMessage()));
+                    throw exception;
                 }
             }
         }

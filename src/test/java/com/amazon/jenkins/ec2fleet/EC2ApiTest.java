@@ -10,12 +10,14 @@ import com.amazonaws.services.ec2.model.InstanceState;
 import com.amazonaws.services.ec2.model.InstanceStateName;
 import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.Tag;
+import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Arrays;
@@ -366,6 +368,30 @@ public class EC2ApiTest {
     public void getEndpoint_returnStaticRegionEndpoint() {
         Assert.assertEquals("https://ec2.cn-north-1.amazonaws.com.cn",
                 new EC2Api().getEndpoint("cn-north-1", null));
+    }
+
+    @Test
+    public void testTerminateInstance() {
+        final EC2Api client = new EC2Api();
+
+        client.terminateInstances(amazonEC2, Arrays.asList("i-123"));
+
+        verify(amazonEC2, times(1)).terminateInstances(
+                Mockito.any(TerminateInstancesRequest.class));
+    }
+
+    @Test (expected = AmazonEC2Exception.class)
+    public void testTerminateInstanceRethrowException() {
+        final AmazonEC2Exception exception = new AmazonEC2Exception("You are not authorized to perform this operation");
+        exception.setErrorCode("403");
+        when(amazonEC2.terminateInstances(new TerminateInstancesRequest().withInstanceIds(Arrays.asList("i-123"))))
+                .thenThrow(exception);
+        final EC2Api client = new EC2Api();
+
+        client.terminateInstances(amazonEC2, Arrays.asList("i-123"));
+
+        verify(amazonEC2, times(1)).terminateInstances(
+                Mockito.any(TerminateInstancesRequest.class));
     }
 
 }
