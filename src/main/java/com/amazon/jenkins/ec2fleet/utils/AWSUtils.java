@@ -1,6 +1,7 @@
 package com.amazon.jenkins.ec2fleet.utils;
 
 import com.amazonaws.ClientConfiguration;
+import com.amazonaws.retry.PredefinedRetryPolicies;
 import hudson.ProxyConfiguration;
 import jenkins.model.Jenkins;
 
@@ -12,6 +13,7 @@ import java.net.URL;
 public final class AWSUtils {
 
     private static final String USER_AGENT_PREFIX = "ec2-fleet-plugin";
+    private static final int MAX_ERROR_RETRY = 5;
 
     /**
      * Create {@link ClientConfiguration} for AWS-SDK with proper inited
@@ -24,7 +26,8 @@ public final class AWSUtils {
      * @return client configuration
      */
     public static ClientConfiguration getClientConfiguration(final String endpoint) {
-        final ClientConfiguration clientConfiguration = new ClientConfiguration();
+        final ClientConfiguration clientConfiguration = new ClientConfiguration()
+                .withRetryPolicy(PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(MAX_ERROR_RETRY));
         clientConfiguration.setUserAgentPrefix(USER_AGENT_PREFIX);
 
         final ProxyConfiguration proxyConfig = Jenkins.getActiveInstance().proxy;
