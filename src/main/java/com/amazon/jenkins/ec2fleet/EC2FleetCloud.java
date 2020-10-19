@@ -134,7 +134,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     private final boolean noDelayProvision;
 
     /**
-     * {@link EC2FleetCloud#update()} updating this field, this is one thread
+     * {@link EC2FleetCloud#update()} Updating this field, this is one thread
      * related to {@link CloudNanny}. At the same time {@link IdleRetentionStrategy}
      * call {@link EC2FleetCloud#scheduleToTerminate(String)} to stop instance when it free
      * and use this field to know what capacity is current one.
