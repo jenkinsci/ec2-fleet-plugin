@@ -797,6 +797,9 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                 @QueryParameter final String endpoint,
                 @QueryParameter final String fleet) {
 
+            if (StringUtils.isBlank(awsCredentialsId)) {
+                return FormValidation.error("Select AWS Credentials to check permissions");
+            }
             // Check if any missing AWS Permissions
             final AwsPermissionChecker awsPermissionChecker = new AwsPermissionChecker(awsCredentialsId, region, endpoint);
             final List<String> missingPermissions = awsPermissionChecker.getMissingPermissions(fleet);
