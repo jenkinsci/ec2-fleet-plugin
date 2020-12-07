@@ -51,6 +51,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
@@ -1398,6 +1400,129 @@ public class EC2FleetCloudTest {
         Assert.assertSame(initialState, fleetCloud.getStats());
         verify(ec2Fleet, never()).modify(any(String.class), any(String.class), any(String.class), any(String.class), anyInt(), anyInt(), anyInt());
         verify(jenkins, never()).addNode(any(Node.class));
+    }
+
+    @Test
+    public void update_scheduledFuturesExecutesAfterTimeout() throws IOException, InterruptedException {
+        // given
+        when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
+
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
+                        Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+
+        final int timeout = 1;
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
+                "", "", "", null, null, false,
+                false, 0, 0, 10, 1, true,
+                false, false, timeout, 0, false,
+                1, false);
+
+        fleetCloud.setStats(new FleetStateStats("", 5, FleetStateStats.State.active(),
+                Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+
+        // when
+        Collection<NodeProvisioner.PlannedNode> r = fleetCloud.provision(null, 1);
+        ScheduledFuture<?> scheduledFuture = fleetCloud.getPlannedNodeScheduledFutures().get(0);
+
+        // sleep for a little more than the timeout to let the scheduled future execute
+        Thread.sleep(TimeUnit.SECONDS.toMillis(fleetCloud.getScheduledFutureTimeoutSec()) + 200);
+
+        // then
+        Assert.assertTrue(scheduledFuture.isDone());
+    }
+
+    @Test
+    public void update_scheduledFuturesIsCancelledAfterUpdate() throws IOException, InterruptedException {
+        // given
+        when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
+
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
+                        Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+
+        final int timeout = 1;
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
+                "", "", "", null, null, false,
+                false, 0, 0, 10, 1, true,
+                false, false, timeout, 0, false,
+                10, false);
+
+        fleetCloud.setStats(new FleetStateStats("", 5, FleetStateStats.State.active(),
+                Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+
+        // when
+        Collection<NodeProvisioner.PlannedNode> r = fleetCloud.provision(null, 1);
+        ScheduledFuture<?> scheduledFuture = fleetCloud.getPlannedNodeScheduledFutures().get(0);
+
+        // call update before the timeout expires
+        fleetCloud.update();
+
+        // then
+        Assert.assertTrue(scheduledFuture.isCancelled());
+    }
+
+    @Test
+    public void removeScheduledFutures_success() {
+        // given
+        EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
+                "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
+                false, 0, 0, 1, 1, false,
+                true, false,
+                0, 0, true, 10, false);
+
+        ArrayList<ScheduledFuture<?>> scheduledFutures = new ArrayList<>();
+        scheduledFutures.add(mock(ScheduledFuture.class));
+        fleetCloud.setPlannedNodeScheduledFutures(scheduledFutures);
+
+        // when
+        boolean result = fleetCloud.removePlannedNodeScheduledFutures(1);
+
+        // then
+        Assert.assertEquals(0, fleetCloud.getPlannedNodeScheduledFutures().size());
+        Assert.assertTrue(result);
+    }
+
+    @Test
+    public void removeScheduledFutures_scheduledFutureIsEmpty() {
+        // given
+        EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
+                "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
+                false, 0, 0, 1, 1, false,
+                true, false,
+                0, 0, true, 10, false);
+
+        ArrayList<ScheduledFuture<?>> scheduledFutures = new ArrayList<>();
+        fleetCloud.setPlannedNodeScheduledFutures(scheduledFutures);
+
+        // when
+        boolean result = fleetCloud.removePlannedNodeScheduledFutures(1);
+
+        // then
+        Assert.assertFalse(result);
+    }
+
+    @Test
+    public void removeScheduledFutures_numToRemoveIsZero() {
+        // given
+        EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
+                "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
+                false, 0, 0, 1, 1, false,
+                true, false,
+                0, 0, true, 10, false);
+
+        ArrayList<ScheduledFuture<?>> scheduledFutures = new ArrayList<>();
+        scheduledFutures.add(mock(ScheduledFuture.class));
+        fleetCloud.setPlannedNodeScheduledFutures(scheduledFutures);
+
+        // when
+        boolean result = fleetCloud.removePlannedNodeScheduledFutures(0);
+
+        // then
+        Assert.assertEquals(1, fleetCloud.getPlannedNodeScheduledFutures().size());
+        Assert.assertFalse(result);
     }
 
     @Test

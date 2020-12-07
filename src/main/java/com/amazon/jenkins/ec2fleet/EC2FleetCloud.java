@@ -42,6 +42,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -65,6 +68,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
     private static final SimpleFormatter sf = new SimpleFormatter();
     private static final Logger LOGGER = Logger.getLogger(EC2FleetCloud.class.getName());
+    private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
 
     /**
      * Provide unique identifier for this instance of {@link EC2FleetCloud}, <code>transient</code>
@@ -150,6 +154,8 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     private transient Set<String> instanceIdsToTerminate;
 
     private transient Set<NodeProvisioner.PlannedNode> plannedNodesCache;
+
+    private transient ArrayList<ScheduledFuture<?>> plannedNodeScheduledFutures;
 
     @DataBoundConstructor
     public EC2FleetCloud(final String name,
@@ -240,6 +246,11 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         return initOnlineTimeoutSec == null ? DEFAULT_INIT_ONLINE_TIMEOUT_SEC : initOnlineTimeoutSec;
     }
 
+    public int getScheduledFutureTimeoutSec() {
+        // Wait 3 update cycles before timing out. Gives a little cushion in case fleet is under modification
+        return getCloudStatusIntervalSec() * 3;
+    }
+
     public int getCloudStatusIntervalSec() {
         return cloudStatusIntervalSec == null ? DEFAULT_CLOUD_STATUS_INTERVAL_SEC : cloudStatusIntervalSec;
     }
@@ -318,6 +329,14 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     }
 
     @VisibleForTesting
+    synchronized ArrayList<ScheduledFuture<?>> getPlannedNodeScheduledFutures() { return plannedNodeScheduledFutures; }
+
+    @VisibleForTesting
+    synchronized void setPlannedNodeScheduledFutures(final ArrayList<ScheduledFuture<?>> futures) {
+        this.plannedNodeScheduledFutures = futures;
+    }
+
+    @VisibleForTesting
     synchronized Set<String> getInstanceIdsToTerminate() {
         return instanceIdsToTerminate;
     }
@@ -382,17 +401,39 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         int toProvision = targetCapacity - cap;
         info("to provision = %s", toProvision);
 
-        if (toProvision < 1) return Collections.emptyList();
+        if (toProvision < 1) {
+            info("not provisioning, don't need any capacity");
+            return Collections.emptyList();
+        }
 
         toAdd += toProvision;
 
         final List<NodeProvisioner.PlannedNode> resultList = new ArrayList<>();
         for (int f = 0; f < toProvision; ++f) {
             // todo make name unique per fleet
+
+            final SettableFuture<Node> settableFuture = SettableFuture.create();
             final NodeProvisioner.PlannedNode plannedNode = new NodeProvisioner.PlannedNode(
-                    "FleetNode-" + f, SettableFuture.<Node>create(), this.numExecutors);
+                    "FleetNode-" + f, settableFuture, this.numExecutors);
+
             resultList.add(plannedNode);
             plannedNodesCache.add(plannedNode);
+
+            // create a ScheduledFuture that will cancel the planned node future after a timeout.
+            // This protects us from leaving planned nodes stranded within Jenkins NodeProvisioner when the Fleet
+            // is updated or removed before it can scale. After scaling, EC2FleetOnlineChecker will cancel the future
+            // if something happens to the Fleet.
+            final ScheduledFuture<?> scheduledFuture = EXECUTOR.schedule(() -> {
+                if (settableFuture.isDone()) {
+                    return;
+                }
+                info("scaling timeout reached, removing node from Jenkins's plannedCapacitySnapshot");
+                // with set(null) Jenkins will remove future from plannedCapacity without making a fuss
+                    settableFuture.set(null);
+                return;
+                },
+                getScheduledFutureTimeoutSec(), TimeUnit.SECONDS);
+            plannedNodeScheduledFutures.add(scheduledFuture);
         }
         return resultList;
     }
@@ -445,11 +486,14 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             toAdd = toAdd - currentToAdd;
             stats = currentState;
 
+            removePlannedNodeScheduledFutures(currentToAdd);
+
             // since data could be changed between two sync blocks we need to recalculate target capacity
             final int updatedTargetCapacity = Math.max(0,
                     stats.getNumDesired() - instanceIdsToTerminate.size() + toAdd);
             // limit planned pool according to real target capacity
             while (plannedNodesCache.size() > updatedTargetCapacity) {
+                info("planned nodes %s are greater than the targetCapacity %s, cancelling node", plannedNodesCache.size(), updatedTargetCapacity);
                 final Iterator<NodeProvisioner.PlannedNode> iterator = plannedNodesCache.iterator();
                 final NodeProvisioner.PlannedNode plannedNodeToCancel = iterator.next();
                 iterator.remove();
@@ -458,6 +502,23 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             }
             return stats;
         }
+    }
+
+    public boolean removePlannedNodeScheduledFutures(final int numToRemove) {
+        if (numToRemove < 1) {
+            return false;
+        }
+        Iterator<ScheduledFuture<?>> iterator = plannedNodeScheduledFutures.iterator();
+        for (int i = 0; i < numToRemove; i++) {
+            if(!iterator.hasNext()){
+                fine("expected a scheduled future to exist but no more are present");
+                return false;
+            }
+            ScheduledFuture<?> nextFuture = iterator.next();
+            nextFuture.cancel(true);
+            iterator.remove();
+        }
+        return true;
     }
 
     private void updateByState(
@@ -551,7 +612,10 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         // Update the label for all Jenkins nodes in the fleet instance cache
         for (final String instanceId : jenkinsInstances) {
             final Node node = jenkins.getNode(instanceId);
-            if (node == null) continue;
+            if (node == null) {
+                info("Skipping label update, the jenkins node for instance %s was null", instanceId);
+                continue;
+            }
 
             if (!labelString.equals(node.getLabelString())) {
                 try {
@@ -641,6 +705,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
         plannedNodesCache = new HashSet<>();
         instanceIdsToTerminate = new HashSet<>();
+        plannedNodeScheduledFutures = new ArrayList<>();
     }
 
     private void removeNode(final String instanceId) {
@@ -712,8 +777,10 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         // todo use plannedNodesCache in thread-safe way
         final SettableFuture<Node> future;
         if (plannedNodesCache.isEmpty()) {
+            // handle the case where we have new nodes the plugin didn't request
             future = SettableFuture.create();
         } else {
+            // handle the standard case where this node came from one of our scale up events
             final NodeProvisioner.PlannedNode plannedNode = plannedNodesCache.iterator().next();
             plannedNodesCache.remove(plannedNode);
             future = ((SettableFuture<Node>) plannedNode.future);

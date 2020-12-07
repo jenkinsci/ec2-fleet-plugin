@@ -40,20 +40,37 @@ public class NoDelayProvisionStrategy extends NodeProvisioner.Strategy {
 
         int currentDemand = snapshot.getQueueLength() - availableCapacity;
         LOGGER.log(Level.INFO,
-                "currentDemand {0} availableCapacity {1} (availableExecutors {2} connectingExecutors {3} plannedCapacitySnapshot {4} additionalPlannedCapacity {5})",
-                new Object[]{currentDemand, availableCapacity, snapshot.getAvailableExecutors(),
+                "label [{0}]: currentDemand {1} availableCapacity {2} (availableExecutors {3} connectingExecutors {4} plannedCapacitySnapshot {5} additionalPlannedCapacity {6})",
+                new Object[]{label, currentDemand, availableCapacity, snapshot.getAvailableExecutors(),
                         snapshot.getConnectingExecutors(), strategyState.getPlannedCapacitySnapshot(),
                         strategyState.getAdditionalPlannedCapacity()});
 
         for (final Cloud cloud : getClouds()) {
-            if (currentDemand < 1) break;
+            if (currentDemand < 1) {
+                LOGGER.log(Level.INFO, "label [{0}]: currentDemand is less than 1, not provisioning", label);
+                break;
+            }
 
-            if (!(cloud instanceof EC2FleetCloud)) continue;
-            if (!cloud.canProvision(label)) continue;
+            if (!(cloud instanceof EC2FleetCloud)) {
+                LOGGER.log(Level.INFO, "label [{0}]: cloud {1} is not an EC2FleetCloud, continuing...",
+                        new Object[]{label, cloud.getDisplayName()});
+                continue;
+            }
+            if (!cloud.canProvision(label)) {
+                LOGGER.log(Level.INFO, "label [{0}]: cloud {1} can not provision for label {1}, continuing...",
+                        new Object[]{label, cloud.getDisplayName()});
+                continue;
+            }
 
             final EC2FleetCloud ec2 = (EC2FleetCloud) cloud;
-            if (!ec2.isNoDelayProvision()) continue;
+            if (!ec2.isNoDelayProvision()) {
+                LOGGER.log(Level.INFO, "label [{0}]: cloud {1} does not use No Delay Provision Strategy, continuing...",
+                        new Object[]{label, cloud.getDisplayName()});
+                continue;
+            }
 
+            LOGGER.log(Level.INFO, "label [{0}]: cloud {1} can provision for this label",
+                    new Object[]{label, cloud.getDisplayName()});
             final Collection<NodeProvisioner.PlannedNode> plannedNodes = cloud.provision(label, currentDemand);
             for (NodeProvisioner.PlannedNode plannedNode : plannedNodes) {
                 currentDemand -= plannedNode.numExecutors;
