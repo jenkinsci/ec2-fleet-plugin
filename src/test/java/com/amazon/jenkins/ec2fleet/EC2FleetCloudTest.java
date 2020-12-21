@@ -135,6 +135,7 @@ public class EC2FleetCloudTest {
 
         PowerMockito.mockStatic(Jenkins.class);
         PowerMockito.when(Jenkins.get()).thenReturn(jenkins);
+        PowerMockito.when(Jenkins.getInstance()).thenReturn(jenkins);
     }
 
     @After

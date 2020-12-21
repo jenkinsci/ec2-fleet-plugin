@@ -35,6 +35,7 @@ public class EC2FleetNodeComputerTest {
     public void before() {
         PowerMockito.mockStatic(Jenkins.class);
         when(Jenkins.get()).thenReturn(jenkins);
+        when(Jenkins.getInstance()).thenReturn(jenkins);
         when(Queue.getInstance()).thenReturn(queue);
 
         when(slave.getNumExecutors()).thenReturn(1);
