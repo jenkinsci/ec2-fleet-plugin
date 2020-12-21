@@ -125,8 +125,6 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
                               final String awsCredentialsId,
                               final String region,
                               final String endpoint,
-                              final String fleet,
-                              final String labelString,
                               final String fsRoot,
                               final ComputerConnector computerConnector,
                               final boolean privateIpUsed,
@@ -139,7 +137,6 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
                               final boolean disableTaskResubmit,
                               final Integer initOnlineTimeoutSec,
                               final Integer initOnlineCheckIntervalSec,
-                              final boolean scaleExecutorsByWeight,
                               final Integer cloudStatusIntervalSec,
                               final boolean noDelayProvision,
                               final String ec2KeyPairName) {

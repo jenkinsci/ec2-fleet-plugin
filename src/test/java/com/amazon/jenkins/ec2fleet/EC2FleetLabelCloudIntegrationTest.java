@@ -30,9 +30,9 @@ public class EC2FleetLabelCloudIntegrationTest extends IntegrationTest {
         mockCloudFormationApi();
 
         EC2FleetLabelCloud cloud = new EC2FleetLabelCloud("FleetLabel", null, "credId", "region",
-                null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
+                null, null, new LocalComputerConnector(j), false, false,
                 0, 0, 0, 1, false,
-                false, 0, 0, false,
+                false, 0, 0,
                 2, false, "test1");
         j.jenkins.clouds.add(cloud);
 
@@ -59,9 +59,9 @@ public class EC2FleetLabelCloudIntegrationTest extends IntegrationTest {
         final AmazonCloudFormation amazonCloudFormation = mockCloudFormationApi();
 
         EC2FleetLabelCloud cloud = new EC2FleetLabelCloud("FleetLabel", null, "credId", "region",
-                null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
+                null, null, new LocalComputerConnector(j), false, false,
                 0, 0, 0, 1, false,
-                false, 0, 0, false,
+                false, 0, 0,
                 2, false, "test1");
         j.jenkins.clouds.add(cloud);
 
