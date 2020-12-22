@@ -29,7 +29,7 @@ public class CloudFormationApi {
 
     public AmazonCloudFormation connect(final String awsCredentialsId, final String regionName, final String endpoint) {
         final ClientConfiguration clientConfiguration = AWSUtils.getClientConfiguration(endpoint);
-        final AmazonWebServicesCredentials credentials = AWSCredentialsHelper.getCredentials(awsCredentialsId, Jenkins.get());
+        final AmazonWebServicesCredentials credentials = AWSCredentialsHelper.getCredentials(awsCredentialsId, Jenkins.getInstance());
         final AmazonCloudFormation client =
                 credentials != null ?
                         new AmazonCloudFormationClient(credentials, clientConfiguration) :

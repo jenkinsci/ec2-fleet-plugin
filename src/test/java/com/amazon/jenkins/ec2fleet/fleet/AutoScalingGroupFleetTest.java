@@ -58,7 +58,7 @@ public class AutoScalingGroupFleetTest {
         mockStatic(AWSUtils.class);
         mockStatic(AWSCredentialsHelper.class);
         mockStatic(Jenkins.class);
-        when(Jenkins.get()).thenReturn(jenkins);
+        when(Jenkins.getInstance()).thenReturn(jenkins);
         when(AWSUtils.getClientConfiguration(ENDPOINT)).thenReturn(clientConfiguration);
     }
 
@@ -161,7 +161,7 @@ public class AutoScalingGroupFleetTest {
         final int min = 1;
         final int max = 5;
 
-        when(Jenkins.get()).thenReturn(jenkins);
+        when(Jenkins.getInstance()).thenReturn(jenkins);
 
         when(AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
         ListBoxModel listBoxModel = new ListBoxModel();
@@ -186,7 +186,7 @@ public class AutoScalingGroupFleetTest {
 
     @Test (expected = IllegalArgumentException.class)
     public void getFleetStateStatesWithEmptyASGs() throws Exception {
-        when(Jenkins.get()).thenReturn(jenkins);
+        when(Jenkins.getInstance()).thenReturn(jenkins);
         when(AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
         PowerMockito.whenNew(AmazonAutoScalingClient.class)
                 .withArguments(amazonWebServicesCredentials, clientConfiguration)
@@ -205,7 +205,7 @@ public class AutoScalingGroupFleetTest {
     @Test
     public void getFleetStateStates() throws Exception {
         final int desiredCapacity = 5;
-        when(Jenkins.get()).thenReturn(jenkins);
+        when(Jenkins.getInstance()).thenReturn(jenkins);
         when(AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
         PowerMockito.whenNew(AmazonAutoScalingClient.class)
                 .withArguments(amazonWebServicesCredentials, clientConfiguration)

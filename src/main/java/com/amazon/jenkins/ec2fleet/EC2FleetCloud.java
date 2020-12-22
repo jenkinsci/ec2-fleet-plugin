@@ -463,7 +463,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     private void updateByState(
             final int currentToAdd, final Set<String> currentInstanceIdsToTerminate,
             final int targetCapacity, final FleetStateStats newStatus) {
-        final Jenkins jenkins = Jenkins.get();
+        final Jenkins jenkins = Jenkins.getInstance();
 
         final AmazonEC2 ec2 = Registry.getEc2Api().connect(getAwsCredentialsId(), region, endpoint);
 
@@ -644,7 +644,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     }
 
     private void removeNode(final String instanceId) {
-        final Jenkins jenkins = Jenkins.get();
+        final Jenkins jenkins = Jenkins.getInstance();
         // If this node is dying, remove it from Jenkins
         final Node n = jenkins.getNode(instanceId);
         if (n != null) {
@@ -705,7 +705,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         // Initialize our retention strategy
         node.setRetentionStrategy(new IdleRetentionStrategy());
 
-        final Jenkins jenkins = Jenkins.get();
+        final Jenkins jenkins = Jenkins.getInstance();
         // jenkins automatically remove old node with same name if any
         jenkins.addNode(node);
 
@@ -761,11 +761,11 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         }
 
         public List getComputerConnectorDescriptors() {
-            return Jenkins.get().getDescriptorList(ComputerConnector.class);
+            return Jenkins.getInstance().getDescriptorList(ComputerConnector.class);
         }
 
         public ListBoxModel doFillAwsCredentialsIdItems() {
-            return AWSCredentialsHelper.doFillCredentialsIdItems(Jenkins.get());
+            return AWSCredentialsHelper.doFillCredentialsIdItems(Jenkins.getInstance());
         }
 
         public ListBoxModel doFillRegionItems(@QueryParameter final String awsCredentialsId) {

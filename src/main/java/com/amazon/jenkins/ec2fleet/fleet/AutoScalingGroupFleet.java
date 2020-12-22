@@ -101,7 +101,7 @@ public class AutoScalingGroupFleet implements EC2Fleet {
 
     public AmazonAutoScalingClient createClient(
             final String awsCredentialsId, final String regionName, final String endpoint) {
-        final AmazonWebServicesCredentials credentials = AWSCredentialsHelper.getCredentials(awsCredentialsId, Jenkins.get());
+        final AmazonWebServicesCredentials credentials = AWSCredentialsHelper.getCredentials(awsCredentialsId, Jenkins.getInstance());
         final ClientConfiguration clientConfiguration = AWSUtils.getClientConfiguration(endpoint);
         final AmazonAutoScalingClient client =
                 credentials != null ?

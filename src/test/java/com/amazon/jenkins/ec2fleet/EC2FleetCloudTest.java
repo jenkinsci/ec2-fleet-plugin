@@ -134,7 +134,7 @@ public class EC2FleetCloudTest {
         PowerMockito.mockStatic(LabelFinder.class);
 
         PowerMockito.mockStatic(Jenkins.class);
-        PowerMockito.when(Jenkins.get()).thenReturn(jenkins);
+        PowerMockito.when(Jenkins.getInstance()).thenReturn(jenkins);
     }
 
     @After
@@ -1419,18 +1419,18 @@ public class EC2FleetCloudTest {
         when(awsPermissionChecker.getMissingPermissions(null)).thenReturn(new ArrayList<>());
         PowerMockito.whenNew(AwsPermissionChecker.class).withAnyArguments().thenReturn(awsPermissionChecker);
 
-        final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doTestConnection(null, null, null, null);
+        final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doTestConnection("credentials", null, null, null);
 
         Assert.assertTrue(formValidation.getMessage().contains("Success"));
     }
 
     @Test
-    public void descriptorImpl_doTestConnection_missingDecribeInstancePermission() throws Exception {
+    public void descriptorImpl_doTestConnection_missingDescribeInstancePermission() throws Exception {
         final AwsPermissionChecker awsPermissionChecker = mock(AwsPermissionChecker.class);
         when(awsPermissionChecker.getMissingPermissions(null)).thenReturn(Collections.singletonList(AwsPermissionChecker.FleetAPI.DescribeInstances.name()));
         PowerMockito.whenNew(AwsPermissionChecker.class).withAnyArguments().thenReturn(awsPermissionChecker);
 
-        final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doTestConnection(null, null, null, null);
+        final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doTestConnection("credentials", null, null, null);
 
         Assert.assertThat(formValidation.getMessage(), Matchers.containsString(AwsPermissionChecker.FleetAPI.DescribeInstances.name()));
     }
@@ -1445,7 +1445,7 @@ public class EC2FleetCloudTest {
         when(awsPermissionChecker.getMissingPermissions(null)).thenReturn(missingPermissions);
         PowerMockito.whenNew(AwsPermissionChecker.class).withAnyArguments().thenReturn(awsPermissionChecker);
 
-        final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doTestConnection(null, null, null, null);
+        final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doTestConnection("credentials", null, null, null);
 
         Assert.assertThat(formValidation.getMessage(), Matchers.containsString(AwsPermissionChecker.FleetAPI.DescribeInstances.name()));
         Assert.assertThat(formValidation.getMessage(), Matchers.containsString(AwsPermissionChecker.FleetAPI.CreateTags.name()));
@@ -1665,7 +1665,7 @@ public class EC2FleetCloudTest {
         when(labelFinder.iterator()).thenReturn(Collections.emptyIterator());
         PowerMockito.when(LabelFinder.all()).thenReturn(labelFinder);
 
-        // mocking part of node creation process Jenkins.get().getLabelAtom(l)
+        // mocking part of node creation process Jenkins.getInstance().getLabelAtom(l)
         when(jenkins.getLabelAtom(anyString())).thenReturn(new LabelAtom("mock-label"));
     }
 
