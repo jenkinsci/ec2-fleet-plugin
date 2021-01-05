@@ -184,6 +184,8 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
     @Test
     public void should_not_allow_jenkins_to_provision_if_address_not_available() throws Exception {
+        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Running);
+
         ComputerLauncher computerLauncher = mock(ComputerLauncher.class);
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);

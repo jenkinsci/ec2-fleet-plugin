@@ -493,7 +493,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                     stats.getNumDesired() - instanceIdsToTerminate.size() + toAdd);
             // limit planned pool according to real target capacity
             while (plannedNodesCache.size() > updatedTargetCapacity) {
-                info("planned nodes %s are greater than the targetCapacity %s, cancelling node", plannedNodesCache.size(), updatedTargetCapacity);
+                info("planned nodes %s are greater than the targetCapacity %s, canceling node", plannedNodesCache.size(), updatedTargetCapacity);
                 final Iterator<NodeProvisioner.PlannedNode> iterator = plannedNodesCache.iterator();
                 final NodeProvisioner.PlannedNode plannedNodeToCancel = iterator.next();
                 iterator.remove();
