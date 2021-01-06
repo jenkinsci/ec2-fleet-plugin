@@ -569,6 +569,8 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         final Set<String> fleetInstances = new HashSet<>(newStatus.getInstances());
 
         final Map<String, Instance> described = Registry.getEc2Api().describeInstances(ec2, fleetInstances);
+        // Sometimes described includes just deleted instances
+        described.keySet().removeAll(currentInstanceIdsToTerminate);
         info("described instances: %s", described.keySet());
 
         // currentJenkinsNodes contains all registered Jenkins nodes related to this cloud
