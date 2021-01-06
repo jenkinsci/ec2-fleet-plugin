@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -689,8 +690,11 @@ public class EC2FleetCloudTest {
                 .withPublicIpAddress("p-ip")
                 .withInstanceId("i-0");
 
+        final HashMap<String, Instance> instanceIdMap = new HashMap<>();
+        instanceIdMap.put("i-0", instance);
+
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
-                ImmutableMap.of("i-0", instance));
+                instanceIdMap);
 
         PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
@@ -727,9 +731,12 @@ public class EC2FleetCloudTest {
 
         final Instance instance1 = new Instance().withPublicIpAddress("p-ip").withInstanceId("i-0");
         final Instance instance2 = new Instance().withPublicIpAddress("p-ip").withInstanceId("i-1");
+        final HashMap<String, Instance> instanceIdMap = new HashMap<>();
+        instanceIdMap.put("i-0", instance1);
+        instanceIdMap.put("i-1", instance2);
 
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
-                ImmutableMap.of("i-0", instance1, "i-1", instance2));
+                instanceIdMap);
 
         PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
@@ -761,9 +768,11 @@ public class EC2FleetCloudTest {
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
         final Instance instance1 = new Instance().withPublicIpAddress("p-ip").withInstanceId("i-0");
+        final HashMap<String, Instance> instanceIdMap = new HashMap<>();
+        instanceIdMap.put("i-0", instance1);
 
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
-                ImmutableMap.of("i-0", instance1));
+                instanceIdMap);
 
         PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
@@ -800,8 +809,11 @@ public class EC2FleetCloudTest {
                 .withPublicIpAddress("p-ip")
                 .withInstanceId("i-0");
 
+        final HashMap<String, Instance> instanceIdMap = new HashMap<>();
+        instanceIdMap.put("i-0", instance);
+
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
-                ImmutableMap.of("i-0", instance));
+                instanceIdMap);
 
         PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
@@ -839,9 +851,11 @@ public class EC2FleetCloudTest {
         final Instance instance = new Instance()
                 .withPublicIpAddress("p-ip")
                 .withInstanceId("i-0");
+        final HashMap<String, Instance> instanceIdMap = new HashMap<>();
+        instanceIdMap.put("i-0", instance);
 
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
-                ImmutableMap.of("i-0", instance));
+                instanceIdMap);
 
         mockNodeCreatingPart();
 
@@ -877,9 +891,11 @@ public class EC2FleetCloudTest {
                 .withPublicIpAddress("p-ip")
                 .withInstanceType(instanceType)
                 .withInstanceId("i-0");
+        final HashMap<String, Instance> instanceIdMap = new HashMap<>();
+        instanceIdMap.put("i-0", instance);
 
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
-                ImmutableMap.of("i-0", instance));
+                instanceIdMap);
 
         PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
@@ -1044,9 +1060,11 @@ public class EC2FleetCloudTest {
                 .withPublicIpAddress("p-ip")
                 .withInstanceType(instanceType)
                 .withInstanceId("i-0");
+        final HashMap<String, Instance> instanceIdMap = new HashMap<>();
+        instanceIdMap.put("i-0", instance);
 
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
-                ImmutableMap.of("i-0", instance));
+                instanceIdMap);
 
         final FleetStateStats initState = new FleetStateStats("fleetId", 5,
                 FleetStateStats.State.active(),
@@ -1088,8 +1106,11 @@ public class EC2FleetCloudTest {
                 .withInstanceType(instanceType)
                 .withInstanceId("i-0");
 
+        final HashMap<String, Instance> instanceIdMap = new HashMap<>();
+        instanceIdMap.put("i-0", instance);
+
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
-                ImmutableMap.of("i-0", instance));
+                instanceIdMap);
 
         final FleetStateStats initState = new FleetStateStats("fleetId", 5,
                 FleetStateStats.State.active(),
@@ -1129,8 +1150,11 @@ public class EC2FleetCloudTest {
                 .withInstanceType(instanceType)
                 .withInstanceId(instanceId);
 
+        final HashMap<String, Instance> instanceIdMap = new HashMap<>();
+        instanceIdMap.put(instanceId, instance);
+
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
-                ImmutableMap.of(instanceId, instance));
+                instanceIdMap);
 
         PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
@@ -1168,8 +1192,11 @@ public class EC2FleetCloudTest {
                 .withInstanceType(instanceType)
                 .withInstanceId(instanceId);
 
+        final HashMap<String, Instance> instanceIdMap = new HashMap<>();
+        instanceIdMap.put(instanceId, instance);
+
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
-                ImmutableMap.of(instanceId, instance));
+                instanceIdMap);
 
         PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
@@ -1207,8 +1234,11 @@ public class EC2FleetCloudTest {
                 .withInstanceType(instanceType)
                 .withInstanceId(instanceId);
 
+        final HashMap<String, Instance> instanceIdMap = new HashMap<>();
+        instanceIdMap.put(instanceId, instance);
+
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
-                ImmutableMap.of(instanceId, instance));
+                instanceIdMap);
 
         PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
@@ -1246,8 +1276,11 @@ public class EC2FleetCloudTest {
                 .withInstanceType(instanceType)
                 .withInstanceId(instanceId);
 
+        final HashMap<String, Instance> instanceIdMap = new HashMap<>();
+        instanceIdMap.put(instanceId, instance);
+
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
-                ImmutableMap.of(instanceId, instance));
+                instanceIdMap);
 
         PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
@@ -1285,8 +1318,11 @@ public class EC2FleetCloudTest {
                 .withInstanceType(instanceType)
                 .withInstanceId(instanceId);
 
+        final HashMap<String, Instance> instanceIdMap = new HashMap<>();
+        instanceIdMap.put(instanceId, instance);
+
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
-                ImmutableMap.of(instanceId, instance));
+                instanceIdMap);
 
         PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
@@ -1328,8 +1364,11 @@ public class EC2FleetCloudTest {
                 .withInstanceType(instanceType)
                 .withInstanceId(instanceId);
 
+        final HashMap<String, Instance> instanceIdMap = new HashMap<>();
+        instanceIdMap.put(instanceId, instance);
+
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
-                ImmutableMap.of(instanceId, instance));
+                instanceIdMap);
 
         PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
@@ -1367,8 +1406,11 @@ public class EC2FleetCloudTest {
                 .withInstanceType(instanceType)
                 .withInstanceId(instanceId);
 
+        final HashMap<String, Instance> instanceIdMap = new HashMap<>();
+        instanceIdMap.put(instanceId, instance);
+
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
-                ImmutableMap.of(instanceId, instance));
+                instanceIdMap);
 
         final FleetStateStats stats = new FleetStateStats("fleetId", 0,
                 FleetStateStats.State.modifying(""),
