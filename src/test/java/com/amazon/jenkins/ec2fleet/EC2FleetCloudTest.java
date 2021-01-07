@@ -416,7 +416,7 @@ public class EC2FleetCloudTest {
                 10, false);
 
         fleetCloud.setStats(new FleetStateStats("", 1, FleetStateStats.State.active(),
-                Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+                ImmutableSet.of("z"), Collections.<String, Double>emptyMap()));
 
         // when
         boolean r = fleetCloud.scheduleToTerminate("z");
@@ -441,7 +441,7 @@ public class EC2FleetCloudTest {
                 10, false);
 
         fleetCloud.setStats(new FleetStateStats("", 2, FleetStateStats.State.active(),
-                Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+                ImmutableSet.of("z", "z1"), Collections.<String, Double>emptyMap()));
 
         // when
         boolean r = fleetCloud.scheduleToTerminate("z");
@@ -467,7 +467,7 @@ public class EC2FleetCloudTest {
                 10, false);
 
         fleetCloud.setStats(new FleetStateStats("", 2, FleetStateStats.State.active(),
-                Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+                ImmutableSet.of("z-1", "z-2"), Collections.<String, Double>emptyMap()));
 
         // when
         boolean r1 = fleetCloud.scheduleToTerminate("z-1");
@@ -495,7 +495,7 @@ public class EC2FleetCloudTest {
                 10, false);
 
         fleetCloud.setStats(new FleetStateStats("", 3, FleetStateStats.State.active(),
-                Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+                ImmutableSet.of("z1", "z2", "z3"), Collections.<String, Double>emptyMap()));
 
         // when
         boolean r1 = fleetCloud.scheduleToTerminate("z1");

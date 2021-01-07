@@ -106,7 +106,7 @@ public final class FleetStateStats {
     @Nonnull
     private final String fleetId;
     @Nonnegative
-    private final int numActive;
+    private int numActive;
     @Nonnegative
     private final int numDesired;
     @Nonnull
@@ -145,6 +145,11 @@ public final class FleetStateStats {
 
     public int getNumActive() {
         return numActive;
+    }
+
+    // Fleet does not immediately display the active instances and syncs up eventually
+    public void setNumActive(final int activeCount) {
+        numActive = activeCount;
     }
 
     public int getNumDesired() {

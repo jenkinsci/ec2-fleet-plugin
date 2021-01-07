@@ -571,6 +571,9 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         final Map<String, Instance> described = Registry.getEc2Api().describeInstances(ec2, fleetInstances);
         info("described instances: %s", described.keySet());
 
+        // Fleet takes a while to display terminated instances. Update stats with current view of active instance count
+        newStatus.setNumActive(described.size());
+
         // currentJenkinsNodes contains all registered Jenkins nodes related to this cloud
         final Set<String> jenkinsInstances = new HashSet<>();
         for (final Node node : jenkins.getNodes()) {
@@ -679,7 +682,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         }
 
         // We can't remove instances beyond minSize
-        if (minSize > 0 && stats.getNumDesired() - instanceIdsToTerminate.size() <= minSize) {
+        if (minSize > 0 && stats.getNumActive() - instanceIdsToTerminate.size() <= minSize) {
             info("Not terminating %s because we need a minimum of %s instances running.", instanceId, minSize);
             return false;
         }
