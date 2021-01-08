@@ -19,4 +19,7 @@ public class LazyUuid {
         return value;
     }
 
+    public synchronized void setValue(String value) {
+        this.value = value;
+    }
 }

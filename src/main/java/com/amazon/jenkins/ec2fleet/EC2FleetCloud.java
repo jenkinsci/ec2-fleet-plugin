@@ -208,6 +208,9 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         this.noDelayProvision = noDelayProvision;
 
         if (StringUtils.isNotEmpty(oldId)) {
+            id.setValue(oldId);
+            this.stats = EC2Fleets.get(fleet).getState(
+                    getAwsCredentialsId(), region, endpoint, getFleet());
             // existent cloud was modified, let's re-assign all dependencies of old cloud instance
             // to new one
             EC2FleetCloudAwareUtils.reassign(oldId, this);
