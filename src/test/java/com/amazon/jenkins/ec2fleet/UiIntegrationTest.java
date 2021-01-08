@@ -1,24 +1,32 @@
 package com.amazon.jenkins.ec2fleet;
 
+import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
+import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
+import com.amazonaws.services.ec2.AmazonEC2;
+
 import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlFormUtil;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlTextInput;
+import com.google.common.collect.ImmutableSet;
 import hudson.PluginWrapper;
 import hudson.model.Node;
 import hudson.slaves.Cloud;
 import hudson.slaves.NodeProperty;
 import org.apache.commons.lang.StringUtils;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.mockito.Mockito;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -27,6 +35,11 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 /**
  * Detailed guides https://jenkins.io/doc/developer/testing/
@@ -39,6 +52,19 @@ public class UiIntegrationTest {
 
     @ClassRule
     public static BuildWatcher bw = new BuildWatcher();
+
+    @Before
+    public void before() {
+        final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
+        EC2Fleets.setGet(ec2Fleet);
+        final EC2Api ec2Api = spy(EC2Api.class);
+        Registry.setEc2Api(ec2Api);
+        final AmazonEC2 amazonEC2 = mock(AmazonEC2.class);
+
+        when(ec2Fleet.getState(anyString(), anyString(), nullable(String.class), anyString()))
+                .thenReturn(new FleetStateStats("", 2, FleetStateStats.State.active(), ImmutableSet.of("i-1", "i-2"), Collections.emptyMap()));
+        when(ec2Api.connect(anyString(), anyString(), Mockito.nullable(String.class))).thenReturn(amazonEC2);
+    }
 
     @Test
     public void shouldFindThePluginByShortName() {
