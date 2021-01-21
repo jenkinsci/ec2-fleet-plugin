@@ -66,6 +66,8 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     private static final int DEFAULT_INIT_ONLINE_TIMEOUT_SEC = 3 * 60;
     private static final int DEFAULT_INIT_ONLINE_CHECK_INTERVAL_SEC = 15;
 
+    private static final int DEFAULT_MAX_TOTAL_USES = -1;
+
     private static final SimpleFormatter sf = new SimpleFormatter();
     private static final Logger LOGGER = Logger.getLogger(EC2FleetCloud.class.getName());
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
@@ -274,7 +276,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     }
 
     public int getMaxTotalUses() {
-        return maxTotalUses;
+        return maxTotalUses == null ? DEFAULT_MAX_TOTAL_USES : maxTotalUses;
     }
 
     public String getFleet() {
@@ -780,7 +782,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         final Node.Mode nodeMode = restrictUsage ? Node.Mode.EXCLUSIVE : Node.Mode.NORMAL;
         final EC2FleetNode node = new EC2FleetNode(instanceId, "Fleet slave for " + instanceId,
                 effectiveFsRoot, effectiveNumExecutors, nodeMode, labelString, new ArrayList<NodeProperty<?>>(),
-                this, computerLauncher, maxTotalUses);
+                this, computerLauncher, getMaxTotalUses());
 
         // Initialize our retention strategy
         node.setRetentionStrategy(new EC2RetentionStrategy());
