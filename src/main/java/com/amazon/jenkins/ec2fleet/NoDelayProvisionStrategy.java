@@ -38,7 +38,7 @@ public class NoDelayProvisionStrategy extends NodeProvisioner.Strategy {
                         + strategyState.getAdditionalPlannedCapacity();  // capacity added by previous strategies _this round_
 
         int currentDemand = snapshot.getQueueLength() - availableCapacity;
-        LOGGER.log(Level.INFO,
+        LOGGER.log(currentDemand < 1 ? Level.FINE : Level.INFO,
                 "label [{0}]: currentDemand {1} availableCapacity {2} (availableExecutors {3} connectingExecutors {4} plannedCapacitySnapshot {5} additionalPlannedCapacity {6})",
                 new Object[]{label, currentDemand, availableCapacity, snapshot.getAvailableExecutors(),
                         snapshot.getConnectingExecutors(), strategyState.getPlannedCapacitySnapshot(),
@@ -46,24 +46,24 @@ public class NoDelayProvisionStrategy extends NodeProvisioner.Strategy {
 
         for (final Cloud cloud : getClouds()) {
             if (currentDemand < 1) {
-                LOGGER.log(Level.INFO, "label [{0}]: currentDemand is less than 1, not provisioning", label);
+                LOGGER.log(Level.FINE, "label [{0}]: currentDemand is less than 1, not provisioning", label);
                 break;
             }
 
             if (!(cloud instanceof EC2FleetCloud)) {
-                LOGGER.log(Level.INFO, "label [{0}]: cloud {1} is not an EC2FleetCloud, continuing...",
+                LOGGER.log(Level.FINE, "label [{0}]: cloud {1} is not an EC2FleetCloud, continuing...",
                         new Object[]{label, cloud.getDisplayName()});
                 continue;
             }
             if (!cloud.canProvision(label)) {
-                LOGGER.log(Level.INFO, "label [{0}]: cloud {1} can not provision for label {1}, continuing...",
+                LOGGER.log(Level.FINE, "label [{0}]: cloud {1} can not provision for label {1}, continuing...",
                         new Object[]{label, cloud.getDisplayName()});
                 continue;
             }
 
             final EC2FleetCloud ec2 = (EC2FleetCloud) cloud;
             if (!ec2.isNoDelayProvision()) {
-                LOGGER.log(Level.INFO, "label [{0}]: cloud {1} does not use No Delay Provision Strategy, continuing...",
+                LOGGER.log(Level.FINE, "label [{0}]: cloud {1} does not use No Delay Provision Strategy, continuing...",
                         new Object[]{label, cloud.getDisplayName()});
                 continue;
             }

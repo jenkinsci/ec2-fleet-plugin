@@ -54,8 +54,8 @@ public class CloudNanny extends PeriodicWork {
                 // Update the cluster states
                 fleetCloud.update();
             } catch (Exception e) {
-                // could bad configuration or real exception, we can't do too much here
-                LOGGER.log(Level.INFO, String.format("Error during fleet %s stats update", fleetCloud.name), e);
+                // could be a bad configuration or a real exception, we can't do too much here
+                LOGGER.log(Level.INFO, String.format("Error during fleet '%s' stats update", fleetCloud.name), e);
             }
         }
     }

@@ -374,7 +374,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             return false;
         }
         if(stats.getNumDesired() - instanceIdsToTerminate.size() > maxSize) {
-            info("fleet has excess capacity of %s more than the max allowed: %s", stats.getNumDesired() - instanceIdsToTerminate.size(), maxSize);
+            info("Fleet has excess capacity of %s more than the max allowed: %s", stats.getNumDesired() - instanceIdsToTerminate.size(), maxSize);
             return true;
         }
         return false;
@@ -382,22 +382,22 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
     @Override
     public synchronized Collection<NodeProvisioner.PlannedNode> provision(final Label label, final int excessWorkload) {
-        info("excessWorkload %s", excessWorkload);
+        fine("excessWorkload %s", excessWorkload);
 
         if (stats == null) {
-            info("No first update, skip provision");
+            info("First update not completed, still setting configuring cloud state. Skipping provision");
             return Collections.emptyList();
         }
 
         final int cap = stats.getNumDesired() + toAdd;
 
         if (cap >= getMaxSize()) {
-            info("max %s reached, no more provision", getMaxSize());
+            info("Max instance size '%s' reached. Skipping provision", getMaxSize());
             return Collections.emptyList();
         }
 
         if (!stats.getState().isActive()) {
-            info("fleet in %s not active state", stats.getState().getDetailed());
+            info("Fleet is in a non-active state '%s'. Skipping provision", stats.getState().getDetailed());
             return Collections.emptyList();
         }
 
@@ -410,10 +410,10 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         int targetCapacity = Math.min(cap + weightedExcessWorkload, getMaxSize());
 
         int toProvision = targetCapacity - cap;
-        info("to provision = %s", toProvision);
+        fine("to provision = %s", toProvision);
 
         if (toProvision < 1) {
-            info("not provisioning, don't need any capacity");
+            info("toProvision is less than 1. Skipping provision");
             return Collections.emptyList();
         }
 
@@ -438,7 +438,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                 if (completableFuture.isDone()) {
                     return;
                 }
-                info("scaling timeout reached, removing node from Jenkins's plannedCapacitySnapshot");
+                info("Scaling timeout reached, removing node from Jenkins's plannedCapacitySnapshot");
                 // with complete(null) Jenkins will remove future from plannedCapacity without making a fuss
                     completableFuture.complete(null);
                 return;
@@ -455,39 +455,31 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
      * @return current state
      */
     public FleetStateStats update() {
-        info("start");
+        fine("start cloud %s", this);
 
+        // Make a snapshot of current cloud state to work with.
+        // We should always work with the snapshot since data could be modified in another thread
+        FleetStateStats currentState = EC2Fleets.get(fleet).getState(
+                getAwsCredentialsId(), region, endpoint, getFleet());
+
+        // Some Fleet implementations (e.g. EC2SpotFleet) reflect their state only at the end of modification
+        if (currentState.getState().isModifying()) {
+            info("Fleet '%s' is currently under modification. Skipping update", currentState.getFleetId());
+            synchronized (this) {
+                return stats;
+            }
+        }
         final int currentToAdd;
         final Set<String> currentInstanceIdsToTerminate;
-
-        // make snapshot of current state to work with
-        // this method should always work with snapshot
-        // as data could be modified
         synchronized (this) {
             currentToAdd = toAdd;
             currentInstanceIdsToTerminate = new HashSet<>(instanceIdsToTerminate);
         }
 
-        // we check state to make sure that fleet not in modification state
-        // if it's under modification let stop immediately and don't update state
-        // because some fleet implementation like (EC2SpotFleet) reflects state only at the end
-        // of modification, see EC2SpotFleet doc
-        FleetStateStats currentState = EC2Fleets.get(fleet).getState(
-                getAwsCredentialsId(), region, endpoint, getFleet());
-        if (currentState.getState().isModifying()) {
-            info("Fleet under modification, try update later, %s", currentState.getState().getDetailed());
-            synchronized (this) {
-                return stats;
-            }
-        }
-
-        // fleet could be updated outside of plugin, we should be ready that
-        // real target capacity is zero or less then plugin thinks and make sure
-        // new target capacity will not be negative
+        // Ensure target capacity is not negative (covers capacity updates from outside the plugin)
         final int targetCapacity = Math.max(0,
                 currentState.getNumDesired() - currentInstanceIdsToTerminate.size() + currentToAdd);
         currentState = new FleetStateStats(currentState, targetCapacity);
-
         updateByState(currentToAdd, currentInstanceIdsToTerminate, targetCapacity, currentState);
 
         // lock and update state of plugin, so terminate or provision could work with new state of world
@@ -495,6 +487,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             instanceIdsToTerminate.removeAll(currentInstanceIdsToTerminate);
             // toAdd only grows outside of this method, so we can subtract
             toAdd = toAdd - currentToAdd;
+            fine("setting stats");
             stats = currentState;
 
             removePlannedNodeScheduledFutures(currentToAdd);
@@ -504,7 +497,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                     stats.getNumDesired() - instanceIdsToTerminate.size() + toAdd);
             // limit planned pool according to real target capacity
             while (plannedNodesCache.size() > updatedTargetCapacity) {
-                info("planned nodes %s are greater than the targetCapacity %s, canceling node", plannedNodesCache.size(), updatedTargetCapacity);
+                info("Planned number of nodes '%s' is greater than the targetCapacity '%s'. Canceling a node", plannedNodesCache.size(), updatedTargetCapacity);
                 final Iterator<NodeProvisioner.PlannedNode> iterator = plannedNodesCache.iterator();
                 final NodeProvisioner.PlannedNode plannedNodeToCancel = iterator.next();
                 iterator.remove();
@@ -522,7 +515,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         Iterator<ScheduledFuture<?>> iterator = plannedNodeScheduledFutures.iterator();
         for (int i = 0; i < numToRemove; i++) {
             if(!iterator.hasNext()){
-                fine("expected a scheduled future to exist but no more are present");
+                fine("Expected a scheduled future to exist but no more are present");
                 return false;
             }
             ScheduledFuture<?> nextFuture = iterator.next();
@@ -539,13 +532,15 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
         final AmazonEC2 ec2 = Registry.getEc2Api().connect(getAwsCredentialsId(), region, endpoint);
 
+        // Modify target capacity when an instance is removed or added, even if the value of target capacity doesn't change.
+        // For example, if we remove an instance and add an instance the net change is 0, but we still make the API call.
+        // This lets us update the fleet settings with NoTermination policy, which lets us terminate instances on our own
+        // todo - call when targetcapacity is smaller than minsize
         if (currentToAdd > 0 || currentInstanceIdsToTerminate.size() > 0) {
             // todo fix negative value
-            // we do update any time even real capacity was not update like remove one add one to
-            // update fleet settings with NoTermination so we can terminate instances on our own
             EC2Fleets.get(fleet).modify(
                     getAwsCredentialsId(), region, endpoint, fleet, targetCapacity, minSize, maxSize);
-            info("Update fleet target capacity to %s", targetCapacity);
+            info("Set target capacity to '%s'", targetCapacity);
         }
 
         if (currentInstanceIdsToTerminate.size() > 0) {
@@ -561,59 +556,56 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                             try {
                                 jenkins.removeNode(node);
                             } catch (IOException e) {
-                                warning("unable remove node %s from Jenkins, skip, just terminate EC2 instance", instanceId);
+                                warning("Failed to remove node '%s' from Jenkins before termination", instanceId);
                             }
                         }
                     }
                 }
             });
-            info("Delete terminating nodes from Jenkins: %s", currentInstanceIdsToTerminate);
-
+            info("Terminating nodes: %s", currentInstanceIdsToTerminate);
             Registry.getEc2Api().terminateInstances(ec2, currentInstanceIdsToTerminate);
-            info("Instance(s): %s were terminated", currentInstanceIdsToTerminate);
         }
 
-        info("fleet instances: %s", newStatus.getInstances());
+        fine("Fleet instances: %s", newStatus.getInstances());
 
         // Set up the lists of Jenkins nodes and fleet instances
-        // currentFleetInstances contains instances currently in the fleet
         final Set<String> fleetInstances = new HashSet<>(newStatus.getInstances());
-
         final Map<String, Instance> described = Registry.getEc2Api().describeInstances(ec2, fleetInstances);
+
         // Sometimes described includes just deleted instances
         described.keySet().removeAll(currentInstanceIdsToTerminate);
-        info("described instances: %s", described.keySet());
+        fine("Described instances: %s", described.keySet());
 
         // Fleet takes a while to display terminated instances. Update stats with current view of active instance count
         newStatus.setNumActive(described.size());
 
-        // currentJenkinsNodes contains all registered Jenkins nodes related to this cloud
         final Set<String> jenkinsInstances = new HashSet<>();
         for (final Node node : jenkins.getNodes()) {
             if (node instanceof EC2FleetNode && ((EC2FleetNode) node).getCloud() == this) {
                 jenkinsInstances.add(node.getNodeName());
             }
         }
-        info("jenkins nodes: %s", jenkinsInstances);
+        fine("Jenkins nodes: %s", jenkinsInstances);
 
         // contains Jenkins nodes that were once fleet instances but are no longer in the fleet
         final Set<String> jenkinsNodesWithoutInstance = new HashSet<>(jenkinsInstances);
         jenkinsNodesWithoutInstance.removeAll(fleetInstances);
         if(!jenkinsNodesWithoutInstance.isEmpty()) {
-            info("jenkins nodes without instance(s): %s", jenkinsNodesWithoutInstance);
+            fine("Jenkins nodes without instance(s): %s", jenkinsNodesWithoutInstance);
         }
         // terminatedFleetInstances contains fleet instances that are terminated, stopped, stopping, or shutting down
         final Set<String> terminatedFleetInstances = new HashSet<>(fleetInstances);
+
         // terminated are any current which cannot be described
         terminatedFleetInstances.removeAll(described.keySet());
         if(!terminatedFleetInstances.isEmpty()) {
-            info("terminated Fleet instance(s): %s", terminatedFleetInstances);
+            fine("Terminated Fleet instance(s): %s", terminatedFleetInstances);
         }
         // newFleetInstances contains running fleet instances that are not already Jenkins nodes
         final Map<String, Instance> newFleetInstances = new HashMap<>(described);
         for (final String instanceId : jenkinsInstances) newFleetInstances.remove(instanceId);
         if(!newFleetInstances.isEmpty()) {
-            info("new instance(s): %s not yet registered as nodes in Jenkins", newFleetInstances.keySet());
+            fine("New instance(s) not yet registered as nodes in Jenkins: %s ", newFleetInstances.keySet());
         }
         // update caches
         final List<String> jenkinsNodesToRemove = new ArrayList<>();
@@ -628,33 +620,33 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         for (final String instanceId : jenkinsInstances) {
             final Node node = jenkins.getNode(instanceId);
             if (node == null) {
-                info("Skipping label update, the jenkins node for instance %s was null", instanceId);
+                info("Skipping label update, the Jenkins node for instance '%s' was null", instanceId);
                 continue;
             }
 
             if (!labelString.equals(node.getLabelString())) {
                 try {
-                    info("Updating label on node %s to \"%s\".", instanceId, labelString);
+                    info("Updating label on node '%s' to \"%s\".", instanceId, labelString);
                     node.setLabelString(labelString);
                 } catch (final Exception ex) {
-                    warning(ex, "Unable to set label on node %s", instanceId);
+                    warning(ex, "Failed to set label on node '%s': ", instanceId, ex.toString());
                 }
             }
         }
 
         // If we have new instances - create nodes for them!
         if (newFleetInstances.size() > 0) {
-            // we tag new instances to help users to identify instances launched from plugin managed fleets
-            // if failed we are fine to skip this call
+            // We tag new instances to help users to identify instances launched from plugin managed fleets.
+            // If it fails we are fine to skip this call
             try {
                 Registry.getEc2Api().tagInstances(ec2, newFleetInstances.keySet(),
                         EC2_INSTANCE_CLOUD_NAME_TAG, name);
             } catch (final Exception e) {
-                warning(e, "failed to tag new instances %s, skip", newFleetInstances.keySet());
+                warning(e, "Failed to tag new instances: %s", newFleetInstances.keySet());
             }
 
-            // addNewSlave will call addNode which call queue lock
-            // we speed up this by getting one lock for all nodes to all
+            // addNewSlave will call addNode which calls queue lock.
+            // We speed up this by getting one lock for all nodes to all
             Queue.withLock(new Runnable() {
                 @Override
                 public void run() {
@@ -686,20 +678,22 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
      * @return <code>true</code> if node scheduled to delete, otherwise <code>false</code>
      */
     public synchronized boolean scheduleToTerminate(final String instanceId) {
-        info("Attempting to terminate instance: %s", instanceId);
-
         if (stats == null) {
-            info("First update not done, skip termination");
+            info("First update not done, skipping termination scheduling for '%s'", instanceId);
             return false;
         }
 
         // We can't remove instances beyond minSize
+        // todo - delete the instance if it uses 'maxTotalUses' and is out of uses
         if (minSize > 0 && stats.getNumActive() - instanceIdsToTerminate.size() <= minSize) {
-            info("Not terminating %s because we need a minimum of %s instances running.", instanceId, minSize);
+            info("Not scheduling instance '%s' for termination because we need a minimum of %s instance(s) running", instanceId, minSize);
+            fine("cloud: %s, instanceIdsToTerminate: %s", this, instanceIdsToTerminate);
             return false;
         }
 
+        info("Scheduling instance '%s' for termination on cloud %s", instanceId, this);
         instanceIdsToTerminate.add(instanceId);
+        fine("InstanceIdsToTerminate: %s", instanceIdsToTerminate);
         return true;
     }
 
@@ -729,10 +723,10 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         final Node n = jenkins.getNode(instanceId);
         if (n != null) {
             try {
-                info("Fleet (" + getLabelString() + ") no longer has the instance " + instanceId + ", removing from Jenkins.");
+                info("Fleet '%s' no longer has the instance '%s'. Removing instance from Jenkins", getLabelString(), instanceId);
                 jenkins.removeNode(n);
             } catch (final Exception ex) {
-                throw new IllegalStateException(String.format("Error removing node %s", instanceId), ex);
+                throw new IllegalStateException(String.format("Error removing instance '%s' from Jenkins", instanceId), ex);
             }
         }
     }
@@ -754,8 +748,8 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         // Check if we have the address to use. Nodes don't get it immediately.
         if (address == null) {
             if (!privateIpUsed) {
-                info("%s instance public IP address not assigned, it could take some time or" +
-                        " Spot Request is not configured to assign public IPs", instance.getInstanceId());
+                info("Instance '%s' public IP address not assigned. Either it could take some time or" +
+                        " the Spot Request is not configured to assign public IPs", instance.getInstanceId());
             }
             return; // wait more time, probably IP address not yet assigned
         }
@@ -802,8 +796,8 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             future = ((CompletableFuture<Node>) plannedNode.future);
         }
 
-        // use getters for timeout and interval as they provide default value
-        // when user just install new version and did't recreate fleet
+        // Use getters for timeout and interval as they provide a default value
+        // when a user installs a new plugin version and doesn't recreate the cloud
         EC2FleetOnlineChecker.start(node, future,
                 TimeUnit.SECONDS.toMillis(getInitOnlineTimeoutSec()),
                 TimeUnit.SECONDS.toMillis(getInitOnlineCheckIntervalSec()));
