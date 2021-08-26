@@ -476,11 +476,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             currentInstanceIdsToTerminate = new HashSet<>(instanceIdsToTerminate);
         }
 
-        // Ensure target capacity is not negative (covers capacity updates from outside the plugin)
-        final int targetCapacity = Math.max(0,
-                currentState.getNumDesired() - currentInstanceIdsToTerminate.size() + currentToAdd);
-        currentState = new FleetStateStats(currentState, targetCapacity);
-        updateByState(currentToAdd, currentInstanceIdsToTerminate, targetCapacity, currentState);
+        currentState = updateByState(currentToAdd, currentInstanceIdsToTerminate, currentState);
 
         // lock and update state of plugin, so terminate or provision could work with new state of world
         synchronized (this) {
@@ -525,23 +521,25 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         return true;
     }
 
-    private void updateByState(
-            final int currentToAdd, final Set<String> currentInstanceIdsToTerminate,
-            final int targetCapacity, final FleetStateStats newStatus) {
+    private FleetStateStats updateByState(
+            final int currentToAdd, final Set<String> currentInstanceIdsToTerminate, final FleetStateStats currentState) {
         final Jenkins jenkins = Jenkins.get();
-
         final AmazonEC2 ec2 = Registry.getEc2Api().connect(getAwsCredentialsId(), region, endpoint);
+
+        // Ensure target capacity is not negative (covers capacity updates from outside the plugin)
+        final int targetCapacity = Math.max(Math.max(0, minSize),
+                currentState.getNumDesired() - currentInstanceIdsToTerminate.size() + currentToAdd);
 
         // Modify target capacity when an instance is removed or added, even if the value of target capacity doesn't change.
         // For example, if we remove an instance and add an instance the net change is 0, but we still make the API call.
         // This lets us update the fleet settings with NoTermination policy, which lets us terminate instances on our own
-        // todo - call when targetcapacity is smaller than minsize
-        if (currentToAdd > 0 || currentInstanceIdsToTerminate.size() > 0) {
-            // todo fix negative value
+        if (currentToAdd > 0 || currentInstanceIdsToTerminate.size() > 0 || targetCapacity != currentState.getNumDesired()) {
             EC2Fleets.get(fleet).modify(
                     getAwsCredentialsId(), region, endpoint, fleet, targetCapacity, minSize, maxSize);
             info("Set target capacity to '%s'", targetCapacity);
         }
+
+        final FleetStateStats updatedState = new FleetStateStats(currentState, targetCapacity);
 
         if (currentInstanceIdsToTerminate.size() > 0) {
             // internally removeNode lock on queue to correctly update node list
@@ -566,10 +564,10 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             Registry.getEc2Api().terminateInstances(ec2, currentInstanceIdsToTerminate);
         }
 
-        fine("Fleet instances: %s", newStatus.getInstances());
+        fine("Fleet instances: %s", updatedState.getInstances());
 
         // Set up the lists of Jenkins nodes and fleet instances
-        final Set<String> fleetInstances = new HashSet<>(newStatus.getInstances());
+        final Set<String> fleetInstances = new HashSet<>(updatedState.getInstances());
         final Map<String, Instance> described = Registry.getEc2Api().describeInstances(ec2, fleetInstances);
 
         // Sometimes described includes just deleted instances
@@ -577,7 +575,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         fine("Described instances: %s", described.keySet());
 
         // Fleet takes a while to display terminated instances. Update stats with current view of active instance count
-        newStatus.setNumActive(described.size());
+        updatedState.setNumActive(described.size());
 
         final Set<String> jenkinsInstances = new HashSet<>();
         for (final Node node : jenkins.getNodes()) {
@@ -652,7 +650,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                 public void run() {
                     try {
                         for (final Instance instance : newFleetInstances.values()) {
-                            addNewSlave(ec2, instance, newStatus);
+                            addNewSlave(ec2, instance, updatedState);
                         }
                     } catch (final Exception ex) {
                         warning(ex, "Unable to set label on node");
@@ -660,6 +658,8 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                 }
             });
         }
+
+        return updatedState;
     }
 
     /**

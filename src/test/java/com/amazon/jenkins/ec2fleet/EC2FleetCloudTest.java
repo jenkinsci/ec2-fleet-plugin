@@ -1562,6 +1562,26 @@ public class EC2FleetCloudTest {
     }
 
     @Test
+    public void update_shouldScaleUpToMinSize() {
+        // given
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
+                        Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
+                "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
+                false, 0, 1, 1, 1, false,
+                true, "-1", false,
+                0, 0, true, 10, false);
+
+        // when
+        fleetCloud.update();
+
+        // then
+        Assert.assertEquals(fleetCloud.getStats().getNumDesired(), 1);
+    }
+
+    @Test
     public void removeScheduledFutures_success() {
         // given
         EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
