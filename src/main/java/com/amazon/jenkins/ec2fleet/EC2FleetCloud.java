@@ -705,9 +705,20 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
     @Override
     public boolean canProvision(final Label label) {
-        boolean result = fleet != null && (label == null || Label.parse(this.labelString).containsAll(label.listAtoms()));
-        fine("CanProvision called on fleet: \"" + this.labelString + "\" wanting: \"" + (label == null ? "(unspecified)" : label.getName()) + "\". Returning " + result + ".");
-        return result;
+        fine("CanProvision called on fleet: \"" + this.labelString + "\" wanting: \"" + (label == null ? "(unspecified)" : label.getName()) + "\".");
+        if (fleet == null) {
+            fine("Fleet/ASG for cloud is null, returning false");
+            return false;
+        }
+        if (this.restrictUsage && labelString != null && label == null) {
+            fine("RestrictUsage is enabled while label is null, returning false");
+            return false;
+        }
+        if (label != null && !Label.parse(this.labelString).containsAll(label.listAtoms())) {
+            fine("Label '%s' not found within Fleet's labels '%s', returning false", label, this.labelString);
+            return false;
+        }
+        return true;
     }
 
     private Object readResolve() {

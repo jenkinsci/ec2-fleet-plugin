@@ -17,6 +17,7 @@ import com.amazonaws.services.ec2.model.Region;
 import com.amazonaws.services.ec2.model.SpotFleetRequestConfig;
 import com.amazonaws.services.ec2.model.SpotFleetRequestConfigData;
 import hudson.ExtensionList;
+import hudson.model.Label;
 import hudson.model.LabelFinder;
 import hudson.model.Node;
 import hudson.model.labels.LabelAtom;
@@ -141,6 +142,62 @@ public class EC2FleetCloudTest {
     @After
     public void after() {
         Registry.setEc2Api(new EC2Api());
+    }
+
+    @Test
+    public void canProvision_fleetIsNull(){
+        EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
+                "", null, "", null, null, false,
+                false, 0, 0, 10, 1, true,
+                false, "-1", false, 0, 0, false,
+                10, false);
+
+        Label label = new LabelAtom("momo");
+        boolean result = fleetCloud.canProvision(label);
+        Assert.assertFalse(result);
+    }
+
+    @Test
+    public void canProvision_restrictUsageLabelIsNull(){
+        EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
+                "", "", "", null, null, false,
+                false, 0, 0, 10, 1, true,
+                true, "-1", false, 0, 0, false,
+                10, false);
+
+        Label label = null;
+        boolean result = fleetCloud.canProvision(label);
+        Assert.assertFalse(result);
+    }
+
+    @Test
+    public void canProvision_LabelNotInLabelString(){
+        EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
+                "", "", "", null, null, false,
+                false, 0, 0, 10, 1, true,
+                false, "-1", false, 0, 0, false,
+                10, false);
+
+        Label label = new LabelAtom("momo");
+        boolean result = fleetCloud.canProvision(label);
+        Assert.assertFalse(result);
+    }
+
+    @Test
+    public void canProvision_LabelInLabelString(){
+        EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
+                "", "", "label1 momo", null, null, false,
+                false, 0, 0, 10, 1, true,
+                false, "-1", false, 0, 0, false,
+                10, false);
+
+        // have to mock these for the Label.parse(...) call otherwise we get an NPE
+        when(jenkins.getLabelAtom("momo")).thenReturn(new LabelAtom("momo"));
+        when(jenkins.getLabelAtom("label1")).thenReturn(new LabelAtom("label1"));
+
+        Label label = new LabelAtom("momo");
+        boolean result = fleetCloud.canProvision(label);
+        Assert.assertTrue(result);
     }
 
     @Test
