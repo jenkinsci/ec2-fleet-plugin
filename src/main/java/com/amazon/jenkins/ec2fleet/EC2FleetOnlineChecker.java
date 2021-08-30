@@ -70,7 +70,7 @@ class EC2FleetOnlineChecker implements Runnable {
 
         if (timeout < 1 || interval < 1) {
             future.complete(node);
-            LOGGER.log(Level.INFO, String.format("%s connection check disabled, resolve planned node", node.getNodeName()));
+            LOGGER.log(Level.INFO, String.format("Node '%s' connection check disabled. Resolving planned node", node.getNodeName()));
             return;
         }
 
@@ -78,22 +78,22 @@ class EC2FleetOnlineChecker implements Runnable {
         if (computer != null) {
             if (computer.isOnline()) {
                 future.complete(node);
-                LOGGER.log(Level.INFO, String.format("%s connected, resolve planned node", node.getNodeName()));
+                LOGGER.log(Level.INFO, String.format("Node '%s' connected. Resolving planned node", node.getNodeName()));
                 return;
             }
         }
 
         if (System.currentTimeMillis() - start > timeout) {
             future.completeExceptionally(new IllegalStateException(
-                    "Fail to provision node, cannot connect to " + node.getNodeName() + " in " + timeout + " msec"));
+                    "Failed to provision node. Could not connect to node '" + node.getNodeName() + "' before timeout (" + timeout + "ms)"));
             return;
         }
 
         if (computer == null) {
-            LOGGER.log(Level.INFO, String.format("%s no connection, wait before retry", node.getNodeName()));
+            LOGGER.log(Level.INFO, String.format("No connection to node '%s'. Waiting before retry", node.getNodeName()));
         } else {
             computer.connect(false);
-            LOGGER.log(Level.INFO, String.format("%s no connection, connect and wait before retry", node.getNodeName()));
+            LOGGER.log(Level.INFO, String.format("No connection to node '%s'. Attempting to connect and waiting before retry", node.getNodeName()));
         }
         EXECUTOR.schedule(this, interval, TimeUnit.MILLISECONDS);
     }

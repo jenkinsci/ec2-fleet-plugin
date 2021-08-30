@@ -36,12 +36,12 @@ public class EC2RetentionStrategy extends RetentionStrategy<SlaveComputer> imple
         final EC2FleetNodeComputer fc = (EC2FleetNodeComputer) computer;
         final AbstractEC2FleetCloud cloud = fc.getCloud();
 
-        LOGGER.log(Level.INFO, "Check if node idle " + computer.getName());
+        LOGGER.fine(String.format("Checking if node '%s' is idle ", computer.getName()));
 
         // in some multi-thread edge cases cloud could be null for some time, just be ok with that
         if (cloud == null) {
-            LOGGER.warning("Edge case cloud is null for computer " + fc.getDisplayName()
-                    + " should be autofixed in a few minutes, if no please create issue for plugin");
+            LOGGER.warning("Cloud is null for computer " + fc.getDisplayName()
+                    + ". This should be autofixed in a few minutes, if not please create an issue for the plugin");
             return RE_CHECK_IN_MINUTE;
         }
 
@@ -131,7 +131,7 @@ public class EC2RetentionStrategy extends RetentionStrategy<SlaveComputer> imple
             if (ec2FleetNode != null) {
                 final AbstractEC2FleetCloud cloud = ec2FleetNode.getCloud();
                 if (computer.countBusy() <= 1 && !computer.isAcceptingTasks()) {
-                    LOGGER.info("Agent " + ec2FleetNode.getNodeName() + " is terminated due to maxTotalUses (" + ec2FleetNode.getMaxTotalUses() + ")");
+                    LOGGER.info("Calling scheduleToTerminate for node " + ec2FleetNode.getNodeName() + " due to maxTotalUses (" + ec2FleetNode.getMaxTotalUses() + ")");
                     computer.setAcceptingTasks(false);
                     cloud.scheduleToTerminate(ec2FleetNode.getNodeName());
                 } else {

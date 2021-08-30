@@ -77,8 +77,8 @@ public class EC2FleetAutoResubmitComputerLauncher extends DelegatingComputerLaun
         // in some multi-thread edge cases cloud could be null for some time, just be ok with that
         final AbstractEC2FleetCloud cloud = ((EC2FleetNodeComputer) computer).getCloud();
         if (cloud == null) {
-            LOGGER.warning("Edge case cloud is null for computer " + computer.getDisplayName()
-                    + " should be autofixed in a few minutes, if no please create issue for plugin");
+            LOGGER.warning("Cloud is null for computer " + computer.getDisplayName()
+                    + ". This should be autofixed in a few minutes, if not please create an issue for the plugin");
             return;
         }
 

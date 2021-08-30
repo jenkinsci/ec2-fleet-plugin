@@ -73,7 +73,7 @@ public class EC2FleetOnlineCheckerTest {
             future.get();
             Assert.fail();
         } catch (InterruptedException | ExecutionException e) {
-            Assert.assertEquals("Fail to provision node, cannot connect to i-1 in 100 msec", e.getCause().getMessage());
+            Assert.assertEquals("Failed to provision node. Could not connect to node 'i-1' before timeout (100ms)", e.getCause().getMessage());
             Assert.assertEquals(IllegalStateException.class, e.getCause().getClass());
             verify(computer, atLeast(2)).isOnline();
         }
