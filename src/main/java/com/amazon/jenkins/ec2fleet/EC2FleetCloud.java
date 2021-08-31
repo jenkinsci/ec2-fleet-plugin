@@ -198,7 +198,10 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         this.idleMinutes = idleMinutes;
         this.privateIpUsed = privateIpUsed;
         this.alwaysReconnect = alwaysReconnect;
-        this.minSize = minSize;
+        if (minSize < 0) {
+            warning("Cloud parameter 'minSize' can't be less than 0, setting to 0");
+        }
+        this.minSize = Math.max(0, minSize);
         this.maxSize = maxSize;
         this.maxTotalUses = StringUtils.isBlank(maxTotalUses) ? -1 : Integer.parseInt(maxTotalUses);
         this.numExecutors = Math.max(numExecutors, 1);
@@ -527,7 +530,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         final AmazonEC2 ec2 = Registry.getEc2Api().connect(getAwsCredentialsId(), region, endpoint);
 
         // Ensure target capacity is not negative (covers capacity updates from outside the plugin)
-        final int targetCapacity = Math.max(Math.max(0, minSize),
+        final int targetCapacity = Math.max(minSize,
                 currentState.getNumDesired() - currentInstanceIdsToTerminate.size() + currentToAdd);
 
         // Modify target capacity when an instance is removed or added, even if the value of target capacity doesn't change.
