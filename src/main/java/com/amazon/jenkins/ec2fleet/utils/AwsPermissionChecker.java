@@ -58,10 +58,10 @@ public class AwsPermissionChecker {
 
     private List<String> getMissingPermissionsForEC2Fleet(final AmazonEC2 ec2Client, final String fleet) {
         final List<String> missingEC2FleetPermissions = new ArrayList<>();
-        if(!hasDescribeSpotFleetRequestsPermission(ec2Client)) {
+        if(!hasDescribeSpotFleetRequestsPermission(ec2Client, fleet)) {
             missingEC2FleetPermissions.add(FleetAPI.DescribeSpotFleetRequests.name());
         }
-        if(!hasDescribeSpotFleetInstancesPermission(ec2Client)) {
+        if(!hasDescribeSpotFleetInstancesPermission(ec2Client, fleet)) {
             missingEC2FleetPermissions.add(FleetAPI.DescribeSpotFleetInstances.name());
         }
         if(!hasModifySpotFleetRequestPermission(ec2Client, fleet)) {
@@ -95,13 +95,13 @@ public class AwsPermissionChecker {
         return dryRunResult.getDryRunResponse().getStatusCode() != UNAUTHORIZED_STATUS_CODE;
     }
 
-    private boolean hasDescribeSpotFleetInstancesPermission(final AmazonEC2 ec2Client) {
-        final DryRunResult<DescribeSpotFleetInstancesRequest> dryRunResult = ec2Client.dryRun(new DescribeSpotFleetInstancesRequest());
+    private boolean hasDescribeSpotFleetInstancesPermission(final AmazonEC2 ec2Client, final String fleet) {
+        final DryRunResult<DescribeSpotFleetInstancesRequest> dryRunResult = ec2Client.dryRun(new DescribeSpotFleetInstancesRequest().withSpotFleetRequestId(fleet));
         return dryRunResult.getDryRunResponse().getStatusCode() != UNAUTHORIZED_STATUS_CODE;
     }
 
-    private boolean hasDescribeSpotFleetRequestsPermission(final AmazonEC2 ec2Client) {
-        final DryRunResult<DescribeSpotFleetRequestsRequest> dryRunResult = ec2Client.dryRun(new DescribeSpotFleetRequestsRequest());
+    private boolean hasDescribeSpotFleetRequestsPermission(final AmazonEC2 ec2Client, final String fleet) {
+        final DryRunResult<DescribeSpotFleetRequestsRequest> dryRunResult = ec2Client.dryRun(new DescribeSpotFleetRequestsRequest().withSpotFleetRequestIds(fleet));
         return dryRunResult.getDryRunResponse().getStatusCode() != UNAUTHORIZED_STATUS_CODE;
     }
 
