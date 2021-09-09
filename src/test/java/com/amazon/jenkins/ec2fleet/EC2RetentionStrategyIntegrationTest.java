@@ -81,7 +81,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
         final ArgumentCaptor<TerminateInstancesRequest> argument = ArgumentCaptor.forClass(TerminateInstancesRequest.class);
 
         // Nodes take a minute to become idle
-        Thread.sleep(1000 * 60);
+        Thread.sleep(1000 * 61);
         // Manually trigger the retention check because it's super flaky whether it actually gets triggered
         for (final Node node : j.jenkins.getNodes()) {
             if (node instanceof EC2FleetNode && ((EC2FleetNode) node).getCloud() == cloud) {
@@ -119,7 +119,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
         final ArgumentCaptor<TerminateInstancesRequest> argument = ArgumentCaptor.forClass(TerminateInstancesRequest.class);
 
         // Nodes take a minute to become idle
-        Thread.sleep(1000 * 60);
+        Thread.sleep(1000 * 61);
         // Manually trigger the retention check because it's super flaky whether it actually gets triggered
         for (final Node node : j.jenkins.getNodes()) {
             if (node instanceof EC2FleetNode && ((EC2FleetNode) node).getCloud() == cloud) {
@@ -146,7 +146,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
         final ArgumentCaptor<TerminateInstancesRequest> argument = ArgumentCaptor.forClass(TerminateInstancesRequest.class);
 
         // Nodes take a minute to become idle
-        Thread.sleep(1000 * 60);
+        Thread.sleep(1000 * 61);
         // Manually trigger the retention check because it's super flaky whether it actually gets triggered
         for (final Node node : j.jenkins.getNodes()) {
             if (node instanceof EC2FleetNode && ((EC2FleetNode) node).getCloud() == cloud) {
@@ -175,7 +175,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
         assertAtLeastOneNode();
 
         // Nodes take a minute to become idle
-        Thread.sleep(1000 * 60);
+        Thread.sleep(1000 * 61);
         // Manually trigger the retention check because it's super flaky whether it actually gets triggered
         for (final Node node : j.jenkins.getNodes()) {
             if (node instanceof EC2FleetNode && ((EC2FleetNode) node).getCloud() == cloud) {
