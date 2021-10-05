@@ -18,6 +18,9 @@
     <jenkins.version>2.235.5</jenkins.version>
     <java.level>8</java.level>
     <configuration-as-code.version>1.51</configuration-as-code.version>
+    <aws-sdk.version>1.11.687</aws-sdk.version>
+    <aws-credentials.version>1.26</aws-credentials.version>
+    <powermock.version>2.0.5</powermock.version>
   </properties>
 
   <name>EC2 Fleet Jenkins Plugin</name>
@@ -83,12 +86,12 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>aws-java-sdk</artifactId>
-      <version>1.11.341</version>
+      <version>${aws-sdk.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>aws-credentials</artifactId>
-      <version>1.24</version>
+      <version>${aws-credentials.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -99,7 +102,7 @@
     <dependency>
       <groupId>org.powermock</groupId>
       <artifactId>powermock-module-junit4</artifactId>
-      <version>2.0.5</version>
+      <version>${powermock.version}</version>
       <scope>test</scope>
       <exclusions>
         <!-- use old version, parent required new one -->
@@ -112,7 +115,7 @@
     <dependency>
       <groupId>org.powermock</groupId>
       <artifactId>powermock-api-mockito2</artifactId>
-      <version>2.0.5</version>
+      <version>${powermock.version}</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
