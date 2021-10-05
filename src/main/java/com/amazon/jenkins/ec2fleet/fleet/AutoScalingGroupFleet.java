@@ -1,7 +1,7 @@
 package com.amazon.jenkins.ec2fleet.fleet;
 
-import com.amazon.jenkins.ec2fleet.utils.AWSUtils;
 import com.amazon.jenkins.ec2fleet.FleetStateStats;
+import com.amazon.jenkins.ec2fleet.utils.AWSUtils;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.RegionUtils;
@@ -10,6 +10,9 @@ import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsResult;
 import com.amazonaws.services.autoscaling.model.Instance;
+import com.amazonaws.services.autoscaling.model.LaunchTemplate;
+import com.amazonaws.services.autoscaling.model.LaunchTemplateOverrides;
+import com.amazonaws.services.autoscaling.model.MixedInstancesPolicy;
 import com.amazonaws.services.autoscaling.model.UpdateAutoScalingGroupRequest;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
 import com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentials;
@@ -24,7 +27,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @ThreadSafe
 public class AutoScalingGroupFleet implements EC2Fleet {
@@ -86,12 +91,19 @@ public class AutoScalingGroupFleet implements EC2Fleet {
             instanceIds.add(instance.getInstanceId());
         }
 
+        Map<String, Double> instanceWeights = Optional.ofNullable(group.getMixedInstancesPolicy())
+                .map(MixedInstancesPolicy::getLaunchTemplate)
+                .map(LaunchTemplate::getOverrides)
+                .map(overrides -> overrides.stream()
+                        .collect(Collectors.toMap(LaunchTemplateOverrides::getInstanceType,
+                                override -> Double.parseDouble(override.getWeightedCapacity()))))
+                .orElse(Collections.emptyMap());
+
         return new FleetStateStats(
                 id, group.getDesiredCapacity(),
                 // status could be null which is active
                 FleetStateStats.State.active(StringUtils.defaultIfEmpty(group.getStatus(), "active")),
-                // auto scaling groups don't support weight, may be in future
-                instanceIds, Collections.<String, Double>emptyMap());
+                instanceIds, instanceWeights);
     }
 
     @Override

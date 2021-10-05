@@ -4,15 +4,16 @@ import com.amazon.jenkins.ec2fleet.utils.AWSUtils;
 import com.amazon.jenkins.ec2fleet.FleetStateStats;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
-import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
-import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
-import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsResult;
+import com.amazonaws.services.autoscaling.model.*;
 import com.amazonaws.services.autoscaling.model.Instance;
-import com.amazonaws.services.autoscaling.model.UpdateAutoScalingGroupRequest;
+import com.amazonaws.services.autoscaling.model.LaunchTemplate;
+import com.amazonaws.services.autoscaling.model.LaunchTemplateOverrides;
+import com.amazonaws.services.ec2.model.*;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
 import com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentials;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,10 +22,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -227,5 +225,53 @@ public class AutoScalingGroupFleetTest {
         assertEquals(ASG_NAME, result.getFleetId());
         assertEquals(FleetStateStats.State.active(), result.getState());
         assertEquals(1, result.getInstances().size());
+    }
+
+    @Test
+    public void getFleetStatesWithASGInstanceWeights() throws Exception {
+        final int desiredCapacity = 5;
+        when(Jenkins.get()).thenReturn(jenkins);
+        when(AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
+        PowerMockito.whenNew(AmazonAutoScalingClient.class)
+                .withArguments(amazonWebServicesCredentials, clientConfiguration)
+                .thenReturn(autoScalingClient);
+
+
+        final DescribeAutoScalingGroupsRequest describeAutoScalingGroupsRequest = new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(ASG_NAME);
+        final AutoScalingGroup asg = new AutoScalingGroup()
+                .withAutoScalingGroupName(ASG_NAME)
+                .withDesiredCapacity(desiredCapacity)
+                .withMixedInstancesPolicy(new MixedInstancesPolicy()
+                        .withLaunchTemplate(new LaunchTemplate()
+                                .withOverrides(
+                                        new LaunchTemplateOverrides()
+                                                .withInstanceType("t3.small")
+                                                .withWeightedCapacity("1"),
+                                        new LaunchTemplateOverrides()
+                                                .withInstanceType("t3.large")
+                                                .withWeightedCapacity("2"),
+                                        new LaunchTemplateOverrides()
+                                                .withInstanceType("t3.xlarge")
+                                                .withWeightedCapacity("4.3")
+                                )
+                        )
+                )
+                .withInstances(Collections.singleton(new Instance().withInstanceId("i-123")));
+
+        final DescribeAutoScalingGroupsResult describeAutoScalingGroupsResult = new DescribeAutoScalingGroupsResult().withAutoScalingGroups(asg);
+        when(autoScalingClient.describeAutoScalingGroups(describeAutoScalingGroupsRequest)).thenReturn(describeAutoScalingGroupsResult);
+
+        final FleetStateStats result = new AutoScalingGroupFleet().getState(CREDS_ID, REGION, ENDPOINT, ASG_NAME);
+
+        final Map<String, Double> expectedWeights = new LinkedHashMap<>();
+        expectedWeights.put("t3.small", 1d);
+        expectedWeights.put("t3.large", 2d);
+        expectedWeights.put("t3.xlarge", 4.3d);
+
+        assertEquals(desiredCapacity, result.getNumDesired());
+        assertEquals(ASG_NAME, result.getFleetId());
+        assertEquals(FleetStateStats.State.active(), result.getState());
+        assertEquals(1, result.getInstances().size());
+        assertEquals(result.getInstanceTypeWeights(), expectedWeights);
     }
 }
