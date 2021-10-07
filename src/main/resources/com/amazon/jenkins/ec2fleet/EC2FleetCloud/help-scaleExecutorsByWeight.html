@@ -5,11 +5,6 @@ information to scale the number of executors per node. Instead, Jenkins will jus
 configuration field <code>Number of Executors</code>.
 
 <p>
-    <b>Note:</b> The plugin only supports scaling from weight with EC2 Spot Fleet.
-    There is an open [issue](https://github.com/jenkinsci/ec2-fleet-plugin/issues/186) for ASG weight scaling support.
-</p>
-
-<p>
     When checked, the plugin consumes instance weight information provided by a Launch Specification
     and uses it to scale the node's number of executors from configuration field <code>Number of Executors</code>.
     <b>Note:</b> current implementation doesn't support Launch Template, only Launch Specification.
