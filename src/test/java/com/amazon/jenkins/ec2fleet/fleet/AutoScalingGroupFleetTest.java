@@ -1,14 +1,34 @@
 package com.amazon.jenkins.ec2fleet.fleet;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.amazon.jenkins.ec2fleet.FleetStateStats;
 import com.amazon.jenkins.ec2fleet.utils.AWSUtils;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
-import com.amazonaws.services.autoscaling.model.*;
+import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
+import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
+import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsResult;
 import com.amazonaws.services.autoscaling.model.Instance;
 import com.amazonaws.services.autoscaling.model.LaunchTemplate;
 import com.amazonaws.services.autoscaling.model.LaunchTemplateOverrides;
-import com.amazonaws.services.ec2.model.*;
+import com.amazonaws.services.autoscaling.model.MixedInstancesPolicy;
+import com.amazonaws.services.autoscaling.model.UpdateAutoScalingGroupRequest;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
 import com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentials;
 import hudson.util.ListBoxModel;
@@ -20,23 +40,6 @@ import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ AWSUtils.class, AWSCredentialsHelper.class, AutoScalingGroupFleet.class, Jenkins.class })
