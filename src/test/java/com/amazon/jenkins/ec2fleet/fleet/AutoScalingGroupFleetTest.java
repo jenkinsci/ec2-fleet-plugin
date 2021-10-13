@@ -259,7 +259,6 @@ public class AutoScalingGroupFleetTest {
                                                 .withWeightedCapacity("2"),
                                         new LaunchTemplateOverrides()
                                                 .withInstanceType("t3.xlarge")
-                                                .withWeightedCapacity("4.3")
                                 )
                         )
                 )
@@ -273,7 +272,6 @@ public class AutoScalingGroupFleetTest {
         final Map<String, Double> expectedWeights = new LinkedHashMap<>();
         expectedWeights.put("t3.small", 1d);
         expectedWeights.put("t3.large", 2d);
-        expectedWeights.put("t3.xlarge", 4.3d);
 
         assertEquals(desiredCapacity, result.getNumDesired());
         assertEquals(ASG_NAME, result.getFleetId());

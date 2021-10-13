@@ -95,6 +95,7 @@ public class AutoScalingGroupFleet implements EC2Fleet {
                 .map(MixedInstancesPolicy::getLaunchTemplate)
                 .map(LaunchTemplate::getOverrides)
                 .map(overrides -> overrides.stream()
+                        .filter(o -> o.getWeightedCapacity() != null)
                         .collect(Collectors.toMap(LaunchTemplateOverrides::getInstanceType,
                                 override -> Double.parseDouble(override.getWeightedCapacity()))))
                 .orElse(Collections.emptyMap());
