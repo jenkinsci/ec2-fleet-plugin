@@ -39,7 +39,5 @@ etc.
 Paste only eC2Fleet part from plugin configuration. Mask all security concerning details. You can download it from Manage Jenkins > Configuration as Code > Download Configuration >
 ``
 
-
-
 **Anything else unique about your setup?**
 <Yes…/No>
