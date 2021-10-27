@@ -391,9 +391,9 @@ public class EC2FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
+        // Don't set the status
         PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
-                .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
-                        Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+                .thenReturn(null);
 
         EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
                 "", "", "", null, null, false,
@@ -414,9 +414,9 @@ public class EC2FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
+        // Don't set the status
         PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
-                .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
-                        Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+                .thenReturn(null);
 
         EC2FleetCloud fleetCloud = new EC2FleetCloud(null, null, "credId", null, "region",
                 "", "", "", null, null, false,

@@ -107,7 +107,7 @@ public class UiIntegrationTest {
 
     @Test
     public void shouldReplaceCloudForNodesAfterConfigurationSave() throws Exception {
-        EC2FleetCloud cloud = new EC2FleetCloud(null, null, null, null, null, null, null,
+        EC2FleetCloud cloud = new EC2FleetCloud(null, null, null, null, null, null, "",
                 null, null, null, false, false,
                 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0, false,

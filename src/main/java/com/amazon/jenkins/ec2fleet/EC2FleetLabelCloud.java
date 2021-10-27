@@ -190,6 +190,12 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
         return id.getValue();
     }
 
+    @Override
+    public String getFleet() {
+        // TODO: We need a way to map existing node/computer's cloud reference rather than relying on oldId
+        return null;
+    }
+
     public boolean isDisableTaskResubmit() {
         return disableTaskResubmit;
     }

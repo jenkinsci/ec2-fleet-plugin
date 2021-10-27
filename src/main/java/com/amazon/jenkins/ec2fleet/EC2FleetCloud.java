@@ -214,13 +214,11 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         this.cloudStatusIntervalSec = cloudStatusIntervalSec;
         this.noDelayProvision = noDelayProvision;
 
-        if (StringUtils.isNotEmpty(oldId)) {
-            id.setValue(oldId);
+        if (fleet != null) {
             this.stats = EC2Fleets.get(fleet).getState(
                     getAwsCredentialsId(), region, endpoint, getFleet());
-            // existent cloud was modified, let's re-assign all dependencies of old cloud instance
-            // to new one
-            EC2FleetCloudAwareUtils.reassign(oldId, this);
+            // Reassign existing nodes/computer with new reference of cloud
+            EC2FleetCloudAwareUtils.reassign(fleet, this);
         }
     }
 
@@ -281,6 +279,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         return maxTotalUses == null ? DEFAULT_MAX_TOTAL_USES : maxTotalUses;
     }
 
+    @Override
     public String getFleet() {
         return fleet;
     }

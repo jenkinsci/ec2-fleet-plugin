@@ -20,4 +20,5 @@ public abstract class AbstractEC2FleetCloud extends Cloud {
 
     public abstract String getOldId();
 
+    public abstract String getFleet();
 }

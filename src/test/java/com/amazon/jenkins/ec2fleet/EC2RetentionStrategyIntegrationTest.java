@@ -108,14 +108,20 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
         List<QueueTaskFuture> rs = enqueTask(10, 90);
         triggerSuggestReviewNow();
 
-        final EC2FleetCloud cloud = new EC2FleetCloud(null, null, "credId", null, "region",
+        EC2FleetCloud cloud = new EC2FleetCloud(null, "null", "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
-                1, 0, 0, 1, false, true, "-1", false, 0, 0, false, 999, false);
-        cloud.update();
+                1, 2, 2, 1, false, true, "-1", false, 0, 0, false, 999, false);
         j.jenkins.clouds.add(cloud);
+        cloud.update();
 
         assertAtLeastOneNode();
-
+        cloud = new EC2FleetCloud(null, null, "credId", null, "region",
+                null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
+                1, 0, 0, 1, false, true, "-1", false, 0, 0, false, 99, false);
+        j.jenkins.clouds.clear();
+        j.jenkins.clouds.add(cloud);
+        assertAtLeastOneNode();
+        cloud.update();
         final ArgumentCaptor<TerminateInstancesRequest> argument = ArgumentCaptor.forClass(TerminateInstancesRequest.class);
 
         // Nodes take a minute to become idle

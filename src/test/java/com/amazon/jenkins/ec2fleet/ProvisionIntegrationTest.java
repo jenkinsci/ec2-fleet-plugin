@@ -57,6 +57,11 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         ComputerLauncher computerLauncher = mock(ComputerLauncher.class);
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
+        final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
+        EC2Fleets.setGet(ec2Fleet);
+        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
+                new FleetStateStats("", 0, FleetStateStats.State.active(), Collections.emptySet(),
+                        Collections.<String, Double>emptyMap()));
 
         EC2FleetCloud cloud = new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
@@ -67,13 +72,6 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
         final EC2Api ec2Api = spy(EC2Api.class);
         Registry.setEc2Api(ec2Api);
-
-        final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
-        EC2Fleets.setGet(ec2Fleet);
-
-        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
-                new FleetStateStats("", 0, FleetStateStats.State.active(), Collections.emptySet(),
-                        Collections.<String, Double>emptyMap()));
 
         AmazonEC2 amazonEC2 = mock(AmazonEC2.class);
         when(ec2Api.connect(anyString(), anyString(), Mockito.nullable(String.class))).thenReturn(amazonEC2);
@@ -129,16 +127,16 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         ComputerLauncher computerLauncher = mock(ComputerLauncher.class);
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
-
+        final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
+        EC2Fleets.setGet(ec2Fleet);
+        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
+                new FleetStateStats("", 0, FleetStateStats.State.active(),
+                        Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
         EC2FleetCloud cloud = spy(new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 1, true, false,
                 "-1", false, 300, 15, false,
                 2, false));
-
-        // provide init state
-        cloud.setStats(new FleetStateStats("", 0, FleetStateStats.State.active(),
-                Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
         j.jenkins.clouds.add(cloud);
 
@@ -147,6 +145,8 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         List<QueueTaskFuture> rs = enqueTask(1);
 
         final String labelString = "momo";
+        // Allow Jenkins to sync `stats` object. Removing this calls provision twice as stats remains null on first try
+        Thread.sleep(TimeUnit.SECONDS.toMillis(2));
         triggerSuggestReviewNow(labelString);
 
         Thread.sleep(TimeUnit.MINUTES.toMillis(2));
@@ -161,7 +161,11 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         ComputerLauncher computerLauncher = mock(ComputerLauncher.class);
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
-
+        final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
+        EC2Fleets.setGet(ec2Fleet);
+        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
+                new FleetStateStats("", 0, FleetStateStats.State.active(),
+                        Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
         final EC2FleetCloud cloud = spy(new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 1, true, false,
@@ -246,7 +250,11 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         ComputerLauncher computerLauncher = mock(ComputerLauncher.class);
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
-
+        final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
+        EC2Fleets.setGet(ec2Fleet);
+        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
+                new FleetStateStats("", 0, FleetStateStats.State.active(),
+                        Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
         EC2FleetCloud cloud = new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 1, true, false,
@@ -279,7 +287,11 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         ComputerLauncher computerLauncher = mock(ComputerLauncher.class);
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
-
+        final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
+        EC2Fleets.setGet(ec2Fleet);
+        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
+                new FleetStateStats("", 0, FleetStateStats.State.active(),
+                        Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
         EC2FleetCloud cloud = new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 2, 1, true, false,
