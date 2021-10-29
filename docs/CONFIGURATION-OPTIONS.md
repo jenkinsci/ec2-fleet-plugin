@@ -14,7 +14,7 @@ Always Reconnect | Reconnect to offline nodes unless they've been terminated. | 
 Restrict usage | Only allow jobs that have a matching label to use this fleet. If unchecked, the fleet will be considered for any pending job. | disabled
 Label | The string value of the label that will restrict job placement. | <blank>
 Jenkins Filesystem Root | Location of the Jenkins Filesystem Root. If left blank, a new directory will be made under the default directory. | `/tmp/jenkins-<RANDOM UUID>`
-Number of Executors | The number of executors per instance. Change in number of executors will only affect future instances and existing instances (if any) will remain unaffected. | 1
+Number of Executors | The number of executors per instance. Changing the number of executors will only affect future instances and existing instances (if any) will remain unaffected. | 1
 Scale Executors by Weight | Multiply the number of executors on an instance by the weight of the instance in the Spot Fleet. Good for Spot Fleets with instances of various sizes. | disabled
 Max Idle Minutes Before Scaledown | After this amount of time an idle instance will be scheduled for termination. **If set to 0, instances will never be terminated**. | 0
 Minimum Cluster Size | The lower limit on the number of instances the fleet can have. Uses instance weight, when applicable. Should be set equal to the ASG or Spot Fleet max instances. | 1
@@ -40,7 +40,7 @@ Private IP | Connect to an instance using its private ip address instead of its 
 Always Reconnect | Reconnect to offline nodes unless they've been terminated. | disabled
 Restrict usage | Only allow jobs that have a matching label to use this fleet. If unchecked, the fleet will be considered for any pending job. | disabled
 Jenkins Filesystem Root | Location of the Jenkins Filesystem Root. If left blank, a new directory will be made under the default directory. | `/tmp/jenkins-<RANDOM UUID>`
-Number of Executors | The number of executors per instance. Change in number of executors will only affect future instances and existing instances (if any) will remain unaffected. | 1
+Number of Executors | The number of executors per instance. Changing the number of executors will only affect future instances and existing instances (if any) will remain unaffected. | 1
 Max Idle Minutes Before Scaledown | After this amount of time an idle instance will be scheduled for termination. **If set to 0, instances will never be terminated**. | 0
 Minimum Cluster Size | The lower limit on the number of instances the fleet can have. Uses instance weight, when applicable. Should be set equal to the ASG or Spot Fleet max instances. | 1
 Maximum Cluster Size | The upper limit on the number of instances the fleet can have. Uses instance weight, when applicable. Should be set equal to the ASG or Spot Fleet max instances. | 1
