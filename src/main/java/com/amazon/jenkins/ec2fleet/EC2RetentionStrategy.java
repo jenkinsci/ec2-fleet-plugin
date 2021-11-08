@@ -106,6 +106,7 @@ public class EC2RetentionStrategy extends RetentionStrategy<SlaveComputer> imple
                 } else if (maxTotalUses <= 1) {
                     LOGGER.info("maxTotalUses drained - suspending agent after current build " + computer.getName());
                     computer.setAcceptingTasks(false);
+                    ec2FleetNode.setMaxTotalUses(ec2FleetNode.getMaxTotalUses() - 1);
                 } else {
                     ec2FleetNode.setMaxTotalUses(ec2FleetNode.getMaxTotalUses() - 1);
                     LOGGER.info("Agent " + computer.getName() + " has " + ec2FleetNode.getMaxTotalUses() + " builds left");
