@@ -45,8 +45,12 @@ public class EC2FleetNodeComputer extends SlaveComputer implements EC2FleetCloud
     public String getDisplayName() {
         if(cloud != null) {
             final String displayName = String.format("%s %s", cloud.getDisplayName(), name);
-            if (getNode() != null && getNode().getMaxTotalUses() != -1) {
-                return String.format("%s Builds left: %d ", displayName, getNode().getMaxTotalUses());
+            final EC2FleetNode node = getNode();
+            if(node != null) {
+                final int totalUses = node.getMaxTotalUses();
+                if(totalUses != -1) {
+                    return String.format("%s Builds left: %d ", displayName, getNode().getMaxTotalUses());
+                }
             }
             return displayName;
         }
