@@ -28,7 +28,10 @@ public class EC2FleetNodeComputer extends SlaveComputer implements EC2FleetCloud
 
     @Override
     public EC2FleetNode getNode() {
-        return (EC2FleetNode) super.getNode();
+        if(super.getNode() != null) {
+            return (EC2FleetNode) super.getNode();
+        }
+        return null;
     }
 
     /**
@@ -48,7 +51,7 @@ public class EC2FleetNodeComputer extends SlaveComputer implements EC2FleetCloud
             return displayName;
         }
         // in some multi-thread edge cases cloud could be null for some time, just be ok with that
-        return "unknown fleet";
+        return "unknown fleet" + " " + name;
     }
 
     /**
