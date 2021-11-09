@@ -28,10 +28,7 @@ public class EC2FleetNodeComputer extends SlaveComputer implements EC2FleetCloud
 
     @Override
     public EC2FleetNode getNode() {
-        if(super.getNode() != null) {
-            return (EC2FleetNode) super.getNode();
-        }
-        return null;
+        return (EC2FleetNode) super.getNode();
     }
 
     /**
