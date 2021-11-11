@@ -581,7 +581,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
         final Set<String> jenkinsInstances = new HashSet<>();
         for (final Node node : jenkins.getNodes()) {
-            if (node instanceof EC2FleetNode && ((EC2FleetNode) node).getCloud() == this) {
+            if (node instanceof EC2FleetNode && ((EC2FleetNode) node).getCloud().getFleet().equals(fleet)) {
                 jenkinsInstances.add(node.getNodeName());
             }
         }
