@@ -142,8 +142,8 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     /**
      * {@link EC2FleetCloud#update()} updating this field, this is one thread
      * related to {@link CloudNanny}. At the same time {@link EC2RetentionStrategy}
-     * call {@link EC2FleetCloud#scheduleToTerminate(String)} to stop instance when it free
-     * and use this field to know what capacity is current one.
+     * call {@link EC2FleetCloud#scheduleToTerminate(String, boolean)} to terminate instance when it is free
+     * and uses this field to know the current capacity.
      * <p>
      * It could be situation that <code>stats</code> is outdated and plugin will make wrong decision,
      * however refresh time is low and probability of this event is low. We preferred to reduce amount of calls
@@ -665,11 +665,12 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     }
 
     /**
-     * Schedule Jenkins Node and EC2 instance to termination. Check first if target capacity more
-     * then <code>minSize</code> otherwise reject termination.
+     * Schedules Jenkins Node and EC2 instance for termination.
+     * If <code>force</code> is false, check if target capacity more than <code>minSize</code> otherwise reject termination.
+     * Else if <code>force</code> is true, schedule instance for termination even if it breaches <code>minSize</code>
      * <p>
-     * Real termination will happens in {@link EC2FleetCloud#update()} which periodically called by
-     * {@link CloudNanny}. So it could be some lag between decision that node should be terminated
+     * Real termination will happens in {@link EC2FleetCloud#update()} which is periodically called by
+     * {@link CloudNanny}. So there could be some lag between the decision to terminate the node
      * and actual termination, you can find max lag size in {@link CloudNanny#getRecurrencePeriod()}
      * <p>
      * This method doesn't do real termination to reduce load for Jenkins in case when multiple nodes should be
@@ -677,23 +678,22 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
      * to AWS EC2 API which takes some time and block cloud class.
      *
      * @param instanceId node name or instance ID
-     * @return <code>true</code> if node scheduled to delete, otherwise <code>false</code>
+     * @param force terminate instance even if it breaches min size constraint
+     * @return <code>true</code> if node scheduled for termination, otherwise <code>false</code>
      */
-    public synchronized boolean scheduleToTerminate(final String instanceId) {
+    public synchronized boolean scheduleToTerminate(final String instanceId, final boolean force) {
         if (stats == null) {
             info("First update not done, skipping termination scheduling for '%s'", instanceId);
             return false;
         }
-
-        // We can't remove instances beyond minSize
-        // todo - delete the instance if it uses 'maxTotalUses' and is out of uses
-        if (minSize > 0 && stats.getNumActive() - instanceIdsToTerminate.size() <= minSize) {
+        // We can't remove instances beyond minSize unless force true
+        if (!force && (minSize > 0 && stats.getNumActive() - instanceIdsToTerminate.size() <= minSize)) {
             info("Not scheduling instance '%s' for termination because we need a minimum of %s instance(s) running", instanceId, minSize);
             fine("cloud: %s, instanceIdsToTerminate: %s", this, instanceIdsToTerminate);
             return false;
         }
 
-        info("Scheduling instance '%s' for termination on cloud %s", instanceId, this);
+        info("Scheduling instance '%s' for termination on cloud %s with force: %b", instanceId, this, force);
         instanceIdsToTerminate.add(instanceId);
         fine("InstanceIdsToTerminate: %s", instanceIdsToTerminate);
         return true;

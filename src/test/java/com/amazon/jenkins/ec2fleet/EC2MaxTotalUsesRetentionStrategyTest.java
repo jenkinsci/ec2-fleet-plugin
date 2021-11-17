@@ -39,12 +39,12 @@ public class EC2MaxTotalUsesRetentionStrategyTest {
                 rs.taskCompleted(executor, null, 0);
             }
             if (usageCount == 1) {
-                verify(cloud, times(1)).scheduleToTerminate("name");
+                verify(cloud, times(1)).scheduleToTerminate("name", true);
             } else if (usageCount == 0) {
                 // We would have called terminate twice: 0 & 1
-                verify(cloud, times(2)).scheduleToTerminate("name");
+                verify(cloud, times(2)).scheduleToTerminate("name", true);
             } else {
-                verify(cloud, times(0)).scheduleToTerminate("name");
+                verify(cloud, times(0)).scheduleToTerminate("name", true);
             }
             usageCount--;
         }
@@ -68,6 +68,6 @@ public class EC2MaxTotalUsesRetentionStrategyTest {
         if (!computer.isAcceptingTasks()) {
             rs.taskCompleted(executor, null, 0);
         }
-        verify(cloud, times(0)).scheduleToTerminate("name");
+        verify(cloud, times(0)).scheduleToTerminate("name", true);
     }
 }

@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -50,7 +51,7 @@ public class EC2RetentionStrategyTest {
         new EC2RetentionStrategy().check(slaveComputer);
 
         verify(slaveComputer, times(0)).getNode();
-        verify(cloud, times(0)).scheduleToTerminate(anyString());
+        verify(cloud, times(0)).scheduleToTerminate(anyString(), anyBoolean());
         verify(slaveComputer).setAcceptingTasks(false);
         verify(slaveComputer).setAcceptingTasks(true);
     }
@@ -63,7 +64,7 @@ public class EC2RetentionStrategyTest {
         new EC2RetentionStrategy().check(slaveComputer);
 
         verify(slaveComputer, times(1)).getNode();
-        verify(cloud, times(1)).scheduleToTerminate(anyString());
+        verify(cloud, times(1)).scheduleToTerminate(anyString(), anyBoolean());
         verify(slaveComputer).setAcceptingTasks(false);
     }
 
@@ -75,7 +76,7 @@ public class EC2RetentionStrategyTest {
         new EC2RetentionStrategy().check(slaveComputer);
 
         verify(slaveComputer, times(0)).getNode();
-        verify(cloud, times(0)).scheduleToTerminate(anyString());
+        verify(cloud, times(0)).scheduleToTerminate(anyString(), anyBoolean());
         verify(slaveComputer).setAcceptingTasks(true);
     }
 
@@ -88,7 +89,7 @@ public class EC2RetentionStrategyTest {
         new EC2RetentionStrategy().check(slaveComputer);
 
         verify(slaveComputer, times(0)).getNode();
-        verify(cloud, times(0)).scheduleToTerminate(anyString());
+        verify(cloud, times(0)).scheduleToTerminate(anyString(), anyBoolean());
         verify(slaveComputer).setAcceptingTasks(true);
     }
 
@@ -99,7 +100,7 @@ public class EC2RetentionStrategyTest {
         new EC2RetentionStrategy().check(slaveComputer);
 
         verify(slaveComputer, never()).getNode();
-        verify(cloud, never()).scheduleToTerminate(anyString());
+        verify(cloud, never()).scheduleToTerminate(anyString(), anyBoolean());
         verify(slaveComputer).setAcceptingTasks(false);
         verify(slaveComputer).setAcceptingTasks(true);
     }
@@ -111,7 +112,7 @@ public class EC2RetentionStrategyTest {
         new EC2RetentionStrategy().check(slaveComputer);
 
         verify(slaveComputer, times(0)).getNode();
-        verify(cloud, times(0)).scheduleToTerminate(anyString());
+        verify(cloud, times(0)).scheduleToTerminate(anyString(), anyBoolean());
         verify(slaveComputer).setAcceptingTasks(false);
         verify(slaveComputer).setAcceptingTasks(true);
     }
@@ -120,7 +121,7 @@ public class EC2RetentionStrategyTest {
     public void if_idle_time_configured_should_terminate_node_if_idle_time_more_then_allowed() {
         new EC2RetentionStrategy().check(slaveComputer);
 
-        verify(cloud, times(1)).scheduleToTerminate("n-a");
+        verify(cloud, times(1)).scheduleToTerminate("n-a", false);
         verify(slaveComputer, times(1)).setAcceptingTasks(true);
         verify(slaveComputer, times(1)).setAcceptingTasks(false);
     }
@@ -131,7 +132,7 @@ public class EC2RetentionStrategyTest {
 
         new EC2RetentionStrategy().check(slaveComputer);
 
-        verify(cloud, times(0)).scheduleToTerminate(anyString());
+        verify(cloud, times(0)).scheduleToTerminate(anyString(), anyBoolean());
         verify(slaveComputer, times(0)).setAcceptingTasks(true);
         verify(slaveComputer, times(0)).setAcceptingTasks(false);
     }
@@ -143,7 +144,7 @@ public class EC2RetentionStrategyTest {
 
         new EC2RetentionStrategy().check(slaveComputer);
 
-        verify(cloud, never()).scheduleToTerminate("n-a");
+        verify(cloud, never()).scheduleToTerminate("n-a", false);
         verify(slaveComputer, times(1)).setAcceptingTasks(true);
         verify(slaveComputer, times(1)).setAcceptingTasks(false);
     }
@@ -154,21 +155,21 @@ public class EC2RetentionStrategyTest {
 
         new EC2RetentionStrategy().check(slaveComputer);
 
-        verify(cloud, never()).scheduleToTerminate("n-a");
+        verify(cloud, never()).scheduleToTerminate("n-a", false);
         verify(slaveComputer, times(1)).setAcceptingTasks(true);
         verify(slaveComputer, times(1)).setAcceptingTasks(false);
     }
 
     @Test
     public void if_exception_happen_during_termination_should_throw_it_and_restore_task_accepting() {
-        when(cloud.scheduleToTerminate(anyString())).thenThrow(new IllegalArgumentException("test"));
+        when(cloud.scheduleToTerminate(anyString(), anyBoolean())).thenThrow(new IllegalArgumentException("test"));
 
         try {
             new EC2RetentionStrategy().check(slaveComputer);
             fail();
         } catch (IllegalArgumentException e) {
             assertEquals("test", e.getMessage());
-            verify(cloud, times(1)).scheduleToTerminate("n-a");
+            verify(cloud, times(1)).scheduleToTerminate("n-a", false);
             verify(slaveComputer).setAcceptingTasks(false);
             verify(slaveComputer).setAcceptingTasks(true);
         }

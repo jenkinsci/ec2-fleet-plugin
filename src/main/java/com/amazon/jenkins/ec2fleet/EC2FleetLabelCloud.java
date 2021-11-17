@@ -560,7 +560,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
         }
     }
 
-    public synchronized boolean scheduleToTerminate(final String instanceId) {
+    public synchronized boolean scheduleToTerminate(final String instanceId, boolean force) {
         info("Attempting to terminate instance: %s", instanceId);
 
         final Node node = Jenkins.getActiveInstance().getNode(instanceId);
@@ -572,14 +572,14 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
             return false;
         }
 
-        // We can't remove instances beyond minSize
+        // We can't remove instances beyond minSize unless force is true
         final EC2FleetLabelParameters parameters = new EC2FleetLabelParameters(node.getLabelString());
         final int minSize = parameters.getIntOrDefault("minSize", this.minSize);
-        if (minSize > 0 && state.stats.getNumDesired() - state.instanceIdsToTerminate.size() <= minSize) {
+        if (!force && (minSize > 0 && state.stats.getNumDesired() - state.instanceIdsToTerminate.size() <= minSize)) {
             info("Not terminating %s because we need a minimum of %s instances running.", instanceId, minSize);
             return false;
         }
-
+        info("Scheduling instance '%s' for termination on cloud %s with force: %b", instanceId, this, force);
         state.instanceIdsToTerminate.add(instanceId);
         return true;
     }

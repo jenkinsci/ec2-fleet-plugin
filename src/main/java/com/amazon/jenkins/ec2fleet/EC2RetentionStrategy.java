@@ -61,7 +61,7 @@ public class EC2RetentionStrategy extends RetentionStrategy<SlaveComputer> imple
                 }
 
                 final String instanceId = compNode.getNodeName();
-                if (cloud.scheduleToTerminate(instanceId)) {
+                if (cloud.scheduleToTerminate(instanceId, false)) {
                     // Instance successfully scheduled for termination, so no longer accept tasks
                     shouldAcceptTasks = false;
                     justTerminated = true;
@@ -134,7 +134,8 @@ public class EC2RetentionStrategy extends RetentionStrategy<SlaveComputer> imple
                 if (computer.countBusy() <= 1 && !computer.isAcceptingTasks()) {
                     LOGGER.info("Calling scheduleToTerminate for node " + ec2FleetNode.getNodeName() + " due to maxTotalUses (" + ec2FleetNode.getMaxTotalUses() + ")");
                     computer.setAcceptingTasks(false);
-                    cloud.scheduleToTerminate(ec2FleetNode.getNodeName());
+                    // Schedule instance for termination even if it breaches min size constraint
+                    cloud.scheduleToTerminate(ec2FleetNode.getNodeName(), true);
                 } else {
                     if (ec2FleetNode.getMaxTotalUses() == 1) {
                         LOGGER.info("Agent " + ec2FleetNode.getNodeName() + " is still in use by more than one (" + computer.countBusy() + ") executors.");

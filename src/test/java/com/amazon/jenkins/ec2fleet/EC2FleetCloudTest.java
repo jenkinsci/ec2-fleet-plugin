@@ -425,7 +425,7 @@ public class EC2FleetCloudTest {
                 10, false);
 
         // when
-        boolean r = fleetCloud.scheduleToTerminate("z");
+        boolean r = fleetCloud.scheduleToTerminate("z", false);
 
         // then
         assertFalse(r);
@@ -450,7 +450,7 @@ public class EC2FleetCloudTest {
                 Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
         // when
-        boolean r = fleetCloud.scheduleToTerminate("z");
+        boolean r = fleetCloud.scheduleToTerminate("z", false);
 
         // then
         assertFalse(r);
@@ -475,7 +475,7 @@ public class EC2FleetCloudTest {
                 Collections.singleton("z"), Collections.<String, Double>emptyMap()));
 
         // when
-        boolean r = fleetCloud.scheduleToTerminate("z");
+        boolean r = fleetCloud.scheduleToTerminate("z", false);
 
         // then
         assertFalse(r);
@@ -500,7 +500,7 @@ public class EC2FleetCloudTest {
                 new HashSet<>(Arrays.asList("z", "z1")), Collections.<String, Double>emptyMap()));
 
         // when
-        boolean r = fleetCloud.scheduleToTerminate("z");
+        boolean r = fleetCloud.scheduleToTerminate("z", false);
 
         // then
         assertTrue(r);
@@ -526,8 +526,8 @@ public class EC2FleetCloudTest {
                 new HashSet<>(Arrays.asList("z-1", "z-2")), Collections.<String, Double>emptyMap()));
 
         // when
-        boolean r1 = fleetCloud.scheduleToTerminate("z-1");
-        boolean r2 = fleetCloud.scheduleToTerminate("z-2");
+        boolean r1 = fleetCloud.scheduleToTerminate("z-1", false);
+        boolean r2 = fleetCloud.scheduleToTerminate("z-2", false);
 
         // then
         assertTrue(r1);
@@ -554,9 +554,9 @@ public class EC2FleetCloudTest {
                 new HashSet<>(Arrays.asList("z1", "z2", "z3")), Collections.<String, Double>emptyMap()));
 
         // when
-        boolean r1 = fleetCloud.scheduleToTerminate("z1");
-        boolean r2 = fleetCloud.scheduleToTerminate("z2");
-        boolean r3 = fleetCloud.scheduleToTerminate("z3");
+        boolean r1 = fleetCloud.scheduleToTerminate("z1", false);
+        boolean r2 = fleetCloud.scheduleToTerminate("z2", false);
+        boolean r3 = fleetCloud.scheduleToTerminate("z3", false);
 
         // then
         assertTrue(r1);
@@ -635,7 +635,7 @@ public class EC2FleetCloudTest {
         fleetCloud.setStats(currentState);
 
         fleetCloud.provision(null, 2);
-        fleetCloud.scheduleToTerminate("i-1");
+        fleetCloud.scheduleToTerminate("i-1", false);
 
         // when
         fleetCloud.update();
@@ -665,7 +665,7 @@ public class EC2FleetCloudTest {
                 Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
         for (int i = 0; i < 10; i++) fleetCloud.provision(null, 1);
-        for (int i = 0; i < 10; i++) fleetCloud.scheduleToTerminate("i-" + i);
+        for (int i = 0; i < 10; i++) fleetCloud.scheduleToTerminate("i-" + i, false);
         for (int i = 0; i < 10; i++) fleetCloud.provision(null, 1);
 
         // when
@@ -696,7 +696,7 @@ public class EC2FleetCloudTest {
                 Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
         for (int i = 0; i < 10; i++) fleetCloud.provision(null, 1);
-        for (int i = 0; i < 5; i++) fleetCloud.scheduleToTerminate("i-" + i);
+        for (int i = 0; i < 5; i++) fleetCloud.scheduleToTerminate("i-" + i, false);
 
         // when
         fleetCloud.update();
@@ -725,8 +725,8 @@ public class EC2FleetCloudTest {
         fleetCloud.setStats(new FleetStateStats("", 4, FleetStateStats.State.active(),
                 Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
-        fleetCloud.scheduleToTerminate("i-1");
-        fleetCloud.scheduleToTerminate("i-2");
+        fleetCloud.scheduleToTerminate("i-1", false);
+        fleetCloud.scheduleToTerminate("i-2", false);
 
         // when
         fleetCloud.update();
@@ -1001,8 +1001,8 @@ public class EC2FleetCloudTest {
 
         doNothing().when(jenkins).addNode(any(Node.class));
 
-        fleetCloud.scheduleToTerminate("i-0");
-        fleetCloud.scheduleToTerminate("i-1");
+        fleetCloud.scheduleToTerminate("i-0", false);
+        fleetCloud.scheduleToTerminate("i-1", false);
 
         // when
         fleetCloud.update();
@@ -1184,7 +1184,7 @@ public class EC2FleetCloudTest {
 
         doNothing().when(jenkins).addNode(any(Node.class));
 
-        fleetCloud.scheduleToTerminate("i-0");
+        fleetCloud.scheduleToTerminate("i-0", false);
 
         // when
         fleetCloud.update();
