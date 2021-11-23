@@ -65,7 +65,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
         EC2FleetCloud cloud = new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
-                0, 0, 0, 1, true, false,
+                0, 0, 0, 0, 1, true, false,
                 "-1", false, 0, 0, false,
                 2, false);
         j.jenkins.clouds.add(cloud);
@@ -99,7 +99,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
         EC2FleetCloud cloud = new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
-                0, 0, 10, 1, true, false,
+                0, 0, 10, 0, 1, true, false,
                 "-1", false, 0, 0, false,
                 2, false);
         j.jenkins.clouds.add(cloud);
@@ -134,7 +134,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
         EC2FleetCloud cloud = spy(new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
-                0, 0, 10, 1, true, false,
+                0, 0, 10, 0, 1, true, false,
                 "-1", false, 300, 15, false,
                 2, false));
 
@@ -168,7 +168,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
         final EC2FleetCloud cloud = spy(new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
-                0, 0, 10, 1, true, false,
+                0, 0, 10, 0, 1, true, false,
                 "-1", false, 0, 0, false,
                 10, false));
         j.jenkins.clouds.add(cloud);
@@ -196,7 +196,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
         EC2FleetCloud cloud = spy(new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
-                0, 0, 10, 1, true, false,
+                0, 0, 10, 0, 1, true, false,
                 "-1", false, 0, 0, false,
                 10, false));
 
@@ -257,7 +257,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
         EC2FleetCloud cloud = new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
-                0, 0, 10, 1, true, false,
+                0, 0, 10, 0, 1, true, false,
                 "-1", false, 0, 0, false,
                 2, false);
         j.jenkins.clouds.add(cloud);
@@ -294,7 +294,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
         EC2FleetCloud cloud = new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
-                0, 0, 2, 1, true, false,
+                0, 0, 2, 0, 1, true, false,
                 "-1", false, 0, 0, false,
                 2, false);
         j.jenkins.clouds.add(cloud);
@@ -325,7 +325,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         final ComputerConnector computerConnector = new LocalComputerConnector(j);
         final EC2FleetCloud cloud = new EC2FleetCloud(null, null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
-                1, 0, 5, 1, true, false,
+                1, 0, 5, 0, 1, true, false,
                 "-1", false, 0, 0, false,
                 10, false);
         j.jenkins.clouds.add(cloud);

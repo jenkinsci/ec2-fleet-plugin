@@ -41,7 +41,7 @@ public class ProvisionPerformanceTest extends IntegrationTest {
         final ComputerConnector computerConnector = new LocalComputerConnector(j);
         final EC2FleetCloudWithMeter cloud = new EC2FleetCloudWithMeter(null, null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
-                1, 0, workers, 1, true, false,
+                1, 0, workers, 0, 1, true, false,
                 false, 0, 0, false,
                 2, false);
         j.jenkins.clouds.add(cloud);

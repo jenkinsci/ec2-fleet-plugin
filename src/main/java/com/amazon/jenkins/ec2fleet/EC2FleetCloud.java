@@ -120,6 +120,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     private final Integer idleMinutes;
     private final int minSize;
     private final int maxSize;
+    private final int minSpareSize;
     private final int numExecutors;
     private final boolean addNodeOnlyIfRunning;
     private final boolean restrictUsage;
@@ -175,6 +176,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                          final Integer idleMinutes,
                          final int minSize,
                          final int maxSize,
+                         final int minSpareSize,
                          final int numExecutors,
                          final boolean addNodeOnlyIfRunning,
                          final boolean restrictUsage,
@@ -203,6 +205,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         }
         this.minSize = Math.max(0, minSize);
         this.maxSize = maxSize;
+        this.minSpareSize = Math.max(0, minSpareSize);
         this.maxTotalUses = StringUtils.isBlank(maxTotalUses) ? -1 : Integer.parseInt(maxTotalUses);
         this.numExecutors = Math.max(numExecutors, 1);
         this.addNodeOnlyIfRunning = addNodeOnlyIfRunning;
@@ -318,6 +321,10 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
     public int getMinSize() {
         return minSize;
+    }
+
+    public int getMinSpareSize() {
+        return minSpareSize;
     }
 
     public int getNumExecutors() {
@@ -530,7 +537,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
         // Ensure target capacity is not negative (covers capacity updates from outside the plugin)
         final int targetCapacity = Math.max(minSize,
-                currentState.getNumDesired() - currentInstanceIdsToTerminate.size() + currentToAdd);
+                Math.min(maxSize, currentState.getNumDesired() - currentInstanceIdsToTerminate.size() + currentToAdd + minSpareSize));
 
         // Modify target capacity when an instance is removed or added, even if the value of target capacity doesn't change.
         // For example, if we remove an instance and add an instance the net change is 0, but we still make the API call.
