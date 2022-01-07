@@ -1,6 +1,6 @@
 package com.amazon.jenkins.ec2fleet;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Interface to mark object that it's require cloud change update. Jenkins always creates
@@ -18,6 +18,6 @@ public interface EC2FleetCloudAware {
 
     AbstractEC2FleetCloud getCloud();
 
-    void setCloud(@Nonnull AbstractEC2FleetCloud cloud);
+    void setCloud(@NonNull AbstractEC2FleetCloud cloud);
 
 }

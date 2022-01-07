@@ -5,7 +5,7 @@ import hudson.slaves.ComputerConnector;
 import hudson.slaves.ComputerLauncher;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URISyntaxException;
@@ -17,7 +17,7 @@ import java.net.URISyntaxException;
  */
 class LocalComputerConnector extends ComputerConnector implements Serializable {
 
-    @Nonnull
+    @NonNull
     private transient final JenkinsRule j;
 
     LocalComputerConnector(final JenkinsRule j) {
@@ -25,7 +25,7 @@ class LocalComputerConnector extends ComputerConnector implements Serializable {
     }
 
     @Override
-    public ComputerLauncher launch(@Nonnull String host, TaskListener listener) throws IOException {
+    public ComputerLauncher launch(@NonNull String host, TaskListener listener) throws IOException {
         System.out.println("Creating computer launcher");
         try {
             return j.createComputerLauncher(null);

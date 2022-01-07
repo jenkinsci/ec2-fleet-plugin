@@ -2,15 +2,15 @@ package com.amazon.jenkins.ec2fleet;
 
 import jenkins.model.CauseOfInterruption;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 public class EC2TerminationCause extends CauseOfInterruption {
 
-    @Nonnull
+    @NonNull
     private final String nodeName;
 
     @SuppressWarnings("WeakerAccess")
-    public EC2TerminationCause(@Nonnull String nodeName) {
+    public EC2TerminationCause(@NonNull String nodeName) {
         this.nodeName = nodeName;
     }
 

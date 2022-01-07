@@ -10,7 +10,7 @@ import hudson.slaves.EphemeralNode;
 import hudson.slaves.NodeProperty;
 import hudson.slaves.RetentionStrategy;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.util.List;
 
@@ -53,7 +53,7 @@ public class EC2FleetNode extends Slave implements EphemeralNode, EC2FleetCloudA
      * {@inheritDoc}
      */
     @Override
-    public void setCloud(@Nonnull AbstractEC2FleetCloud cloud) {
+    public void setCloud(@NonNull AbstractEC2FleetCloud cloud) {
         this.cloud = cloud;
     }
 

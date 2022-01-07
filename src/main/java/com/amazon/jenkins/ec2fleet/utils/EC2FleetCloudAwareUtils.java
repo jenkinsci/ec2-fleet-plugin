@@ -7,7 +7,7 @@ import hudson.model.Node;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.logging.Logger;
 
 /**
@@ -18,7 +18,7 @@ public class EC2FleetCloudAwareUtils {
 
     private static final Logger LOGGER = Logger.getLogger(EC2FleetCloudAwareUtils.class.getName());
 
-    public static void reassign(final @Nonnull String id, @Nonnull final AbstractEC2FleetCloud cloud) {
+    public static void reassign(final @NonNull String id, @NonNull final AbstractEC2FleetCloud cloud) {
         if (Jenkins.getActiveInstance() != null ) {
             if (Jenkins.getActiveInstance().getComputers() != null) {
                 for (final Computer computer : Jenkins.getActiveInstance().getComputers()) {

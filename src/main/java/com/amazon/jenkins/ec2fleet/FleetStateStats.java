@@ -4,7 +4,7 @@ import com.amazonaws.services.ec2.model.BatchState;
 import hudson.model.Label;
 
 import javax.annotation.Nonnegative;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.Map;
 import java.util.Objects;
@@ -103,23 +103,23 @@ public final class FleetStateStats {
 
     }
 
-    @Nonnull
+    @NonNull
     private final String fleetId;
     @Nonnegative
     private int numActive;
     @Nonnegative
     private final int numDesired;
-    @Nonnull
+    @NonNull
     private final State state;
-    @Nonnull
+    @NonNull
     private final Set<String> instances;
-    @Nonnull
+    @NonNull
     private final Map<String, Double> instanceTypeWeights;
 
-    public FleetStateStats(final @Nonnull String fleetId,
-                           final int numDesired, final @Nonnull State state,
-                           final @Nonnull Set<String> instances,
-                           final @Nonnull Map<String, Double> instanceTypeWeights) {
+    public FleetStateStats(final @NonNull String fleetId,
+                           final int numDesired, final @NonNull State state,
+                           final @NonNull Set<String> instances,
+                           final @NonNull Map<String, Double> instanceTypeWeights) {
         this.fleetId = fleetId;
         this.numActive = instances.size();
         this.numDesired = numDesired;
@@ -128,7 +128,7 @@ public final class FleetStateStats {
         this.instanceTypeWeights = instanceTypeWeights;
     }
 
-    public FleetStateStats(final @Nonnull FleetStateStats stats,
+    public FleetStateStats(final @NonNull FleetStateStats stats,
                            final int numDesired) {
         this.fleetId = stats.fleetId;
         this.numActive = stats.instances.size();
@@ -138,7 +138,7 @@ public final class FleetStateStats {
         this.instanceTypeWeights = stats.instanceTypeWeights;
     }
 
-    @Nonnull
+    @NonNull
     public String getFleetId() {
         return fleetId;
     }
@@ -156,17 +156,17 @@ public final class FleetStateStats {
         return numDesired;
     }
 
-    @Nonnull
+    @NonNull
     public State getState() {
         return state;
     }
 
-    @Nonnull
+    @NonNull
     public Set<String> getInstances() {
         return instances;
     }
 
-    @Nonnull
+    @NonNull
     public Map<String, Double> getInstanceTypeWeights() {
         return instanceTypeWeights;
     }

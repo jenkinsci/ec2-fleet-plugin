@@ -5,7 +5,7 @@ import hudson.slaves.SlaveComputer;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.HttpResponse;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import javax.annotation.concurrent.ThreadSafe;
 import java.io.IOException;
 
@@ -20,7 +20,7 @@ public class EC2FleetNodeComputer extends SlaveComputer implements EC2FleetCloud
 
     private volatile AbstractEC2FleetCloud cloud;
 
-    public EC2FleetNodeComputer(final Slave slave, @Nonnull final String name, @Nonnull final AbstractEC2FleetCloud cloud) {
+    public EC2FleetNodeComputer(final Slave slave, @NonNull final String name, @NonNull final AbstractEC2FleetCloud cloud) {
         super(slave);
         this.name = name;
         this.cloud = cloud;
@@ -37,7 +37,7 @@ public class EC2FleetNodeComputer extends SlaveComputer implements EC2FleetCloud
      *
      * @return node display name
      */
-    @Nonnull
+    @NonNull
     @Override
     public String getDisplayName() {
         if(cloud != null) {
@@ -59,7 +59,7 @@ public class EC2FleetNodeComputer extends SlaveComputer implements EC2FleetCloud
      * {@inheritDoc}
      */
     @Override
-    public void setCloud(@Nonnull final AbstractEC2FleetCloud cloud) {
+    public void setCloud(@NonNull final AbstractEC2FleetCloud cloud) {
         this.cloud = cloud;
     }
 
