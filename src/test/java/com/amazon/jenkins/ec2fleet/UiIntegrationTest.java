@@ -43,16 +43,14 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 /**
- * Detailed guides https://jenkins.io/doc/developer/testing/
- * https://wiki.jenkins.io/display/JENKINS/Unit+Test#UnitTest-DealingwithproblemsinJavaScript
+ * Detailed guides https://jenkins.io/doc/developer/testing/ https://wiki.jenkins.io/display/JENKINS/Unit+Test#UnitTest-DealingwithproblemsinJavaScript
  */
 public class UiIntegrationTest {
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
-
     @ClassRule
     public static BuildWatcher bw = new BuildWatcher();
+    @Rule
+    public JenkinsRule j = new JenkinsRule();
 
     @Before
     public void before() {
@@ -77,7 +75,7 @@ public class UiIntegrationTest {
     public void shouldShowAsHiddenCloudIdAsOldId() throws IOException, SAXException {
         Cloud cloud = new EC2FleetCloud(null, null, null, null, null, null, null,
                 null, null, null, false, false,
-                0, 0, 0, 0, true, false,
+                0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0, false,
                 10, false);
         j.jenkins.clouds.add(cloud);
@@ -91,7 +89,7 @@ public class UiIntegrationTest {
     public void shouldShowNodeConfigurationPage() throws Exception {
         EC2FleetCloud cloud = new EC2FleetCloud(null, null, null, null, null, null, null,
                 null, null, null, false, false,
-                0, 0, 0, 0, true, false,
+                0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0, false,
                 10, false);
         j.jenkins.clouds.add(cloud);
@@ -109,7 +107,7 @@ public class UiIntegrationTest {
     public void shouldReplaceCloudForNodesAfterConfigurationSave() throws Exception {
         EC2FleetCloud cloud = new EC2FleetCloud(null, null, null, null, null, null, "",
                 null, null, null, false, false,
-                0, 0, 0, 0, true, false,
+                0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0, false,
                 10, false);
         j.jenkins.clouds.add(cloud);
@@ -135,7 +133,7 @@ public class UiIntegrationTest {
     public void shouldShowInConfigurationClouds() throws IOException, SAXException {
         Cloud cloud = new EC2FleetCloud(null, null, null, null, null, null, null,
                 null, null, null, false, false,
-                0, 0, 0, 0, true, false,
+                0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0, false,
                 10, false);
         j.jenkins.clouds.add(cloud);
@@ -149,14 +147,14 @@ public class UiIntegrationTest {
     public void shouldShowMultipleClouds() throws IOException, SAXException {
         Cloud cloud1 = new EC2FleetCloud("a", null, null, null, null, null,
                 null, null, null, null, false, false,
-                0, 0, 0, 0, true, false,
+                0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0, false,
                 10, false);
         j.jenkins.clouds.add(cloud1);
 
         Cloud cloud2 = new EC2FleetCloud("b", null, null, null, null, null,
                 null, null, null, null, false, false,
-                0, 0, 0, 0, true, false,
+                0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0, false,
                 10, false);
         j.jenkins.clouds.add(cloud2);
@@ -173,14 +171,14 @@ public class UiIntegrationTest {
     public void shouldShowMultipleCloudsWithDefaultName() throws IOException, SAXException {
         Cloud cloud1 = new EC2FleetCloud(null, null, null, null, null, null,
                 null, null, null, null, false, false,
-                0, 0, 0, 0, true, false,
+                0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0, false,
                 10, false);
         j.jenkins.clouds.add(cloud1);
 
         Cloud cloud2 = new EC2FleetCloud(null, null, null, null, null, null,
                 null, null, null, null, false, false,
-                0, 0, 0, 0, true, false,
+                0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0, false,
                 10, false);
         j.jenkins.clouds.add(cloud2);
@@ -197,14 +195,14 @@ public class UiIntegrationTest {
     public void shouldUpdateProperCloudWhenMultiple() throws IOException, SAXException {
         EC2FleetCloud cloud1 = new EC2FleetCloud(null, null, null, null, null, null,
                 null, null, null, null, false, false,
-                0, 0, 0, 0, true, false,
+                0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0, false,
                 10, false);
         j.jenkins.clouds.add(cloud1);
 
         EC2FleetCloud cloud2 = new EC2FleetCloud(null, null, null, null, null, null,
                 null, null, null, null, false, false,
-                0, 0, 0, 0, true, false,
+                0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0, false,
                 10, false);
         j.jenkins.clouds.add(cloud2);
@@ -224,7 +222,7 @@ public class UiIntegrationTest {
     public void shouldContainRegionValueInRegionLabel() throws IOException, SAXException {
         EC2FleetCloud cloud1 = new EC2FleetCloud(null, null, "uh", null, null, null,
                 null, null, null, null, false, false,
-                0, 0, 0, 0, true, false,
+                0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0, false,
                 10, false);
         j.jenkins.clouds.add(cloud1);
@@ -246,7 +244,7 @@ public class UiIntegrationTest {
         final String displayName = "us-east-1 US East (N. Virginia)";
         EC2FleetCloud cloud1 = new EC2FleetCloud(null, null, "uh", null, null, null,
                 null, null, null, null, false, false,
-                0, 0, 0, 0, true, false,
+                0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0, false,
                 10, false);
         j.jenkins.clouds.add(cloud1);
@@ -259,7 +257,7 @@ public class UiIntegrationTest {
         for (final DomElement regionElement : regionDropDown.get(0).getChildElements()) {
             final String label = regionElement.getAttributes().getNamedItem("label").getTextContent();
             final String value = regionElement.getAttributes().getNamedItem("value").getTextContent();
-            if(StringUtils.equals(value, regionName)) {
+            if (StringUtils.equals(value, regionName)) {
                 isPresent = true;
                 assertEquals(displayName, label);
             }
@@ -273,14 +271,14 @@ public class UiIntegrationTest {
     public void shouldGetFirstWhenMultipleCloudWithSameName() {
         EC2FleetCloud cloud1 = new EC2FleetCloud(null, null, null, null, null, null,
                 null, null, null, null, false, false,
-                0, 0, 0, 0, true, false,
+                0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0, false,
                 10, false);
         j.jenkins.clouds.add(cloud1);
 
         EC2FleetCloud cloud2 = new EC2FleetCloud(null, null, null, null, null, null,
                 null, null, null, null, false, false,
-                0, 0, 0, 0, true, false,
+                0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0, false,
                 10, false);
         j.jenkins.clouds.add(cloud2);
@@ -292,14 +290,14 @@ public class UiIntegrationTest {
     public void shouldGetProperWhenMultipleWithDiffName() {
         EC2FleetCloud cloud1 = new EC2FleetCloud("a", null, null, null, null, null,
                 null, null, null, null, false, false,
-                0, 0, 0, 0, true, false,
+                0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0, false,
                 10, false);
         j.jenkins.clouds.add(cloud1);
 
         EC2FleetCloud cloud2 = new EC2FleetCloud("b", null, null, null, null, null,
                 null, null, null, null, false, false,
-                0, 0, 0, 0, true, false,
+                0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0, false,
                 10, false);
         j.jenkins.clouds.add(cloud2);

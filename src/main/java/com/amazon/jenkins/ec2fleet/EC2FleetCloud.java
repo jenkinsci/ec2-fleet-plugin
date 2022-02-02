@@ -120,6 +120,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     private final Integer idleMinutes;
     private final int minSize;
     private final int maxSize;
+    private final int minSpareSize;
     private final int numExecutors;
     private final boolean addNodeOnlyIfRunning;
     private final boolean restrictUsage;
@@ -175,6 +176,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                          final Integer idleMinutes,
                          final int minSize,
                          final int maxSize,
+                         final int minSpareSize,
                          final int numExecutors,
                          final boolean addNodeOnlyIfRunning,
                          final boolean restrictUsage,
@@ -203,6 +205,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         }
         this.minSize = Math.max(0, minSize);
         this.maxSize = maxSize;
+        this.minSpareSize = Math.max(0, minSpareSize);
         this.maxTotalUses = StringUtils.isBlank(maxTotalUses) ? -1 : Integer.parseInt(maxTotalUses);
         this.numExecutors = Math.max(numExecutors, 1);
         this.addNodeOnlyIfRunning = addNodeOnlyIfRunning;
@@ -318,6 +321,10 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
     public int getMinSize() {
         return minSize;
+    }
+
+    public int getMinSpareSize() {
+        return minSpareSize;
     }
 
     public int getNumExecutors() {
@@ -474,6 +481,15 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         final int currentToAdd;
         final Set<String> currentInstanceIdsToTerminate;
         synchronized (this) {
+            if(minSpareSize > 0) {
+                // Check spare instances by considering FleetStateStats#getNumDesired so we account for newer instances which are in progress
+                final int currentSpareInstanceCount = getCurrentSpareInstanceCount(currentState, currentState.getNumDesired());
+                final int additionalSpareInstancesRequired = minSpareSize - currentSpareInstanceCount;
+                fine("currentSpareInstanceCount: %s additionalSpareInstancesRequired: %s", currentSpareInstanceCount, additionalSpareInstancesRequired);
+                if (additionalSpareInstancesRequired > 0) {
+                    toAdd = toAdd + additionalSpareInstancesRequired;
+                }
+            }
             currentToAdd = toAdd;
             currentInstanceIdsToTerminate = new HashSet<>(instanceIdsToTerminate);
         }
@@ -530,7 +546,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
         // Ensure target capacity is not negative (covers capacity updates from outside the plugin)
         final int targetCapacity = Math.max(minSize,
-                currentState.getNumDesired() - currentInstanceIdsToTerminate.size() + currentToAdd);
+                Math.min(maxSize, currentState.getNumDesired() - currentInstanceIdsToTerminate.size() + currentToAdd));
 
         // Modify target capacity when an instance is removed or added, even if the value of target capacity doesn't change.
         // For example, if we remove an instance and add an instance the net change is 0, but we still make the API call.
@@ -666,7 +682,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
     /**
      * Schedules Jenkins Node and EC2 instance for termination.
-     * If <code>force</code> is false, check if target capacity more than <code>minSize</code> otherwise reject termination.
+     * If <code>force</code> is false, check if target capacity more than <code>minSize</code> or less than <code>minSpareSize</code> otherwise reject termination.
      * Else if <code>force</code> is true, schedule instance for termination even if it breaches <code>minSize</code>
      * <p>
      * Real termination will happens in {@link EC2FleetCloud#update()} which is periodically called by
@@ -686,13 +702,22 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             info("First update not done, skipping termination scheduling for '%s'", instanceId);
             return false;
         }
-        // We can't remove instances beyond minSize unless force true
-        if (!force && (minSize > 0 && stats.getNumActive() - instanceIdsToTerminate.size() <= minSize)) {
-            info("Not scheduling instance '%s' for termination because we need a minimum of %s instance(s) running", instanceId, minSize);
-            fine("cloud: %s, instanceIdsToTerminate: %s", this, instanceIdsToTerminate);
-            return false;
+        // We can't remove instances beyond minSize or minSpareSize unless force true
+        if(!force) {
+            if (minSize > 0 && stats.getNumActive() - instanceIdsToTerminate.size() <= minSize) {
+                info("Not scheduling instance '%s' for termination because we need a minimum of %s instance(s) running", instanceId, minSize);
+                fine("cloud: %s, instanceIdsToTerminate: %s", this, instanceIdsToTerminate);
+                return false;
+            }
+            if (minSpareSize > 0) {
+                // Check spare instances by considering FleetStateStats#getNumActive as we want to consider only running instances
+                final int currentSpareInstanceCount = getCurrentSpareInstanceCount(stats, stats.getNumActive());
+                if (currentSpareInstanceCount - instanceIdsToTerminate.size() <= minSpareSize) {
+                    info("Not scheduling instance '%s' for termination because we need a minimum of %s spare instance(s) running", instanceId, minSpareSize);
+                    return false;
+                }
+            }
         }
-
         info("Scheduling instance '%s' for termination on cloud %s with force: %b", instanceId, this, force);
         instanceIdsToTerminate.add(instanceId);
         fine("InstanceIdsToTerminate: %s", instanceIdsToTerminate);
@@ -814,6 +839,25 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         EC2FleetOnlineChecker.start(node, future,
                 TimeUnit.SECONDS.toMillis(getInitOnlineTimeoutSec()),
                 TimeUnit.SECONDS.toMillis(getInitOnlineCheckIntervalSec()));
+    }
+
+    private int getCurrentSpareInstanceCount(final FleetStateStats currentState, final int countOfInstances) {
+        final int currentSpareInstanceCount = 0;
+        if(minSpareSize > 0) {
+            final Jenkins jenkins = Jenkins.get();
+            int currentBusyInstances = 0;
+            for (final Computer computer : jenkins.getComputers()) {
+                if (computer instanceof EC2FleetNodeComputer && !computer.isIdle()) {
+                    final Node compNode = computer.getNode();
+                    if (compNode == null) {
+                        continue;
+                    }
+                    currentBusyInstances++;
+                }
+            }
+            return countOfInstances - currentBusyInstances;
+        }
+        return 0;
     }
 
     private String getLogPrefix() {

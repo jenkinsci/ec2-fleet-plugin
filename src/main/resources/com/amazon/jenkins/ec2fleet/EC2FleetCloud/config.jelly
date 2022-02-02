@@ -92,6 +92,10 @@
       <f:number clazz="required positive-number" default="1" />
     </f:entry>
 
+    <f:entry title="${%Minimum Spare Size}" field="minSpareSize">
+        <f:number clazz="required number" min="0" default="0" />
+    </f:entry>
+
     <f:entry title="${%Maximum Total Uses}" field="maxTotalUses">
         <!-- use `textbox` here as `number` defaults to 0 when left blank.
         Zero as maxTotalUses would indicate that the builds wouldn't be scheduled at all -->

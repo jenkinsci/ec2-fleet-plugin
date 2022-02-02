@@ -55,7 +55,7 @@ public class NoDelayProvisionStrategyPerformanceTest extends IntegrationTest {
         final String label = "momo";
         final EC2FleetCloudWithHistory cloud = new EC2FleetCloudWithHistory(null, null, "credId", null, "region",
                 null, "fId", label, null, computerConnector, false, false,
-                1, 0, maxWorkers, 1, true, false,
+                1, 0, maxWorkers, 0, 1, true, false,
                 false, 0, 0, false,
                 15, noDelay);
         j.jenkins.clouds.add(cloud);
