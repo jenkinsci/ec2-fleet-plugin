@@ -682,8 +682,8 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
     /**
      * Schedules Jenkins Node and EC2 instance for termination.
-     * If <code>force</code> is false, check if target capacity more than <code>minSize</code> or less than <code>minSpareSize</code> otherwise reject termination.
-     * Else if <code>force</code> is true, schedule instance for termination even if it breaches <code>minSize</code>
+     * If <code>force</code> is false and target capacity falls below <code>minSize</code> OR <code>minSpareSize</code> thresholds, then reject termination.
+     * Else if <code>force</code> is true, schedule instance for termination even if it breaches <code>minSize</code> OR <code>minSpareSize</code>
      * <p>
      * Real termination will happens in {@link EC2FleetCloud#update()} which is periodically called by
      * {@link CloudNanny}. So there could be some lag between the decision to terminate the node
