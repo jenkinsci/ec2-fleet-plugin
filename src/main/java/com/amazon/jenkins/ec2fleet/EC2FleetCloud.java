@@ -468,7 +468,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         fine("start cloud %s", this);
 
         // Make a snapshot of current cloud state to work with.
-        // We should always work with ]the snapshot since data could be modified in another thread
+        // We should always work with the snapshot since data could be modified in another thread
         FleetStateStats currentState = EC2Fleets.get(fleet).getState(
                 getAwsCredentialsId(), region, endpoint, getFleet());
 
