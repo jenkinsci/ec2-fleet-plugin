@@ -95,40 +95,50 @@ Add an inline policy to the IAM user or EC2 instance role to allow it to use EC2
 
 ```json
 {
-   "Version":"2012-10-17",
-   "Statement":[
-      {
-         "Effect":"Allow",
-         "Action":[
-            "ec2:DescribeSpotFleetInstances",
-            "ec2:ModifySpotFleetRequest",
-            "ec2:CreateTags",
-            "ec2:DescribeRegions",
-            "ec2:DescribeInstances",
-            "ec2:TerminateInstances",
-            "ec2:DescribeInstanceStatus",
-            "ec2:DescribeSpotFleetRequests"
-         ],
-         "Resource":"*"
-      },
-      {
-         "Effect":"Allow",
-         "Action":[
-            "autoscaling:DescribeAutoScalingGroups",
-            "autoscaling:UpdateAutoScalingGroup"
-         ],
-         "Resource":"*"
-      },
-      {
-         "Effect":"Allow",
-         "Action":[
-            "iam:ListInstanceProfiles",
-            "iam:ListRoles",
-            "iam:PassRole"
-         ],
-         "Resource":"*"
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeSpotFleetInstances",
+        "ec2:ModifySpotFleetRequest",
+        "ec2:CreateTags",
+        "ec2:DescribeRegions",
+        "ec2:DescribeInstances",
+        "ec2:TerminateInstances",
+        "ec2:DescribeInstanceStatus",
+        "ec2:DescribeSpotFleetRequests"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "autoscaling:DescribeAutoScalingGroups",
+        "autoscaling:UpdateAutoScalingGroup"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iam:ListInstanceProfiles",
+        "iam:ListRoles",
+        "iam:PassRole"
+      ],
+      "Resource": [
+        "*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "iam:PassedToService": [
+            "ec2.amazonaws.com",
+            "ec2.amazonaws.com.cn"
+          ]
+        }
       }
-   ]
+    }
+  ]
 }
 ```
 
