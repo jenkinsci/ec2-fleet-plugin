@@ -52,6 +52,11 @@
       <name>Jerad C</name>
       <email>jeradc@amazon.com</email>
     </developer>
+    <developer>
+      <id>snay2</id>
+      <name>Steve Nay</name>
+      <email>stevnay@amazon.com</email>
+    </developer>
   </developers>
 
   <scm>
