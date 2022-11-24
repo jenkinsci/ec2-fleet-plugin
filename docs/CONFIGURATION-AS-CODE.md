@@ -49,7 +49,7 @@ jenkins:
     - ec2Fleet:
         name: ec2-fleet
         computerConnector:
-            ssh:
+            sshConnector:
                 credentialsId: cred
                 sshHostKeyVerificationStrategy:
                   NonVerifyingKeyVerificationStrategy
