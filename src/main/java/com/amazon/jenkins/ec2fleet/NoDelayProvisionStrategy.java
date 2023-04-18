@@ -31,18 +31,13 @@ public class NoDelayProvisionStrategy extends NodeProvisioner.Strategy {
         final Label label = strategyState.getLabel();
 
         final LoadStatistics.LoadStatisticsSnapshot snapshot = strategyState.getSnapshot();
-        final int availableCapacity =
-                snapshot.getAvailableExecutors()   // live executors
-                        + snapshot.getConnectingExecutors()  // executors present but not yet connected
-                        + strategyState.getPlannedCapacitySnapshot()     // capacity added by previous strategies from previous rounds
-                        + strategyState.getAdditionalPlannedCapacity();  // capacity added by previous strategies _this round_
+        final int availableCapacity = snapshot.getOnlineExecutors() + snapshot.getConnectingExecutors() - snapshot.getBusyExecutors()
 
         int currentDemand = snapshot.getQueueLength() - availableCapacity;
         LOGGER.log(currentDemand < 1 ? Level.FINE : Level.INFO,
-                "label [{0}]: currentDemand {1} availableCapacity {2} (availableExecutors {3} connectingExecutors {4} plannedCapacitySnapshot {5} additionalPlannedCapacity {6})",
-                new Object[]{label, currentDemand, availableCapacity, snapshot.getAvailableExecutors(),
-                        snapshot.getConnectingExecutors(), strategyState.getPlannedCapacitySnapshot(),
-                        strategyState.getAdditionalPlannedCapacity()});
+                "label [{0}]: currentDemand {1} availableCapacity {2} (onlineExecutors {3} connectingExecutors {4} busyExecutors {5} queueLength {6})",
+                new Object[]{label, currentDemand, availableCapacity, snapshot.getOnlineExecutors(),
+                        snapshot.getConnectingExecutors(), snapshot.getBusyExecutors(), snapshot.getQueueLength()});
 
         for (final Cloud cloud : getClouds()) {
             if (currentDemand < 1) {
