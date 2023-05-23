@@ -31,7 +31,7 @@ public class NoDelayProvisionStrategy extends NodeProvisioner.Strategy {
         final Label label = strategyState.getLabel();
 
         final LoadStatistics.LoadStatisticsSnapshot snapshot = strategyState.getSnapshot();
-        final int availableCapacity = snapshot.getOnlineExecutors() + snapshot.getConnectingExecutors() - snapshot.getBusyExecutors()
+        final int availableCapacity = snapshot.getOnlineExecutors() + snapshot.getConnectingExecutors() - snapshot.getBusyExecutors();
 
         int currentDemand = snapshot.getQueueLength() - availableCapacity;
         LOGGER.log(currentDemand < 1 ? Level.FINE : Level.INFO,
