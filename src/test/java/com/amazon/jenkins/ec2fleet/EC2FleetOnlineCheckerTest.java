@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 
@@ -41,7 +41,7 @@ public class EC2FleetOnlineCheckerTest {
 
     @Before
     public void before() throws Exception {
-        when(node.getNodeName()).thenReturn("i-1");
+        when(node.getDisplayName()).thenReturn("MockEC2FleetCloud i-1");
 
         PowerMockito.mockStatic(Jenkins.class);
 
@@ -73,7 +73,7 @@ public class EC2FleetOnlineCheckerTest {
             future.get();
             Assert.fail();
         } catch (InterruptedException | ExecutionException e) {
-            Assert.assertEquals("Failed to provision node. Could not connect to node 'i-1' before timeout (100ms)", e.getCause().getMessage());
+            Assert.assertEquals("Failed to provision node. Could not connect to node '" + node.getDisplayName() + "' before timeout (100ms)", e.getCause().getMessage());
             Assert.assertEquals(IllegalStateException.class, e.getCause().getClass());
             verify(computer, atLeast(2)).isOnline();
         }
@@ -93,17 +93,15 @@ public class EC2FleetOnlineCheckerTest {
         EC2FleetOnlineChecker.start(node, future, 0, 0);
 
         Assert.assertSame(node, future.get());
-        verifyZeroInteractions(computer);
+        verifyNoInteractions(computer);
     }
 
     @Test
     public void shouldSuccessfullyFinishAndNoWaitIfIntervalIsZero() throws ExecutionException, InterruptedException {
-        PowerMockito.when(computer.isOnline()).thenReturn(true);
-
         EC2FleetOnlineChecker.start(node, future, 10, 0);
 
         Assert.assertSame(node, future.get());
-        verifyZeroInteractions(computer);
+        verifyNoInteractions(computer);
     }
 
     @Test

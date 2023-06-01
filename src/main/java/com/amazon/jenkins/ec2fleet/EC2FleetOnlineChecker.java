@@ -70,7 +70,7 @@ class EC2FleetOnlineChecker implements Runnable {
 
         if (timeout < 1 || interval < 1) {
             future.complete(node);
-            LOGGER.log(Level.INFO, String.format("Node '%s' connection check disabled. Resolving planned node", node.getNodeName()));
+            LOGGER.log(Level.INFO, String.format("Node '%s' connection check disabled. Resolving planned node", node.getDisplayName()));
             return;
         }
 
@@ -78,22 +78,22 @@ class EC2FleetOnlineChecker implements Runnable {
         if (computer != null) {
             if (computer.isOnline()) {
                 future.complete(node);
-                LOGGER.log(Level.INFO, String.format("Node '%s' connected. Resolving planned node", node.getNodeName()));
+                LOGGER.log(Level.INFO, String.format("Node '%s' connected. Resolving planned node", node.getDisplayName()));
                 return;
             }
         }
 
         if (System.currentTimeMillis() - start > timeout) {
             future.completeExceptionally(new IllegalStateException(
-                    "Failed to provision node. Could not connect to node '" + node.getNodeName() + "' before timeout (" + timeout + "ms)"));
+                    "Failed to provision node. Could not connect to node '" + node.getDisplayName() + "' before timeout (" + timeout + "ms)"));
             return;
         }
 
         if (computer == null) {
-            LOGGER.log(Level.INFO, String.format("No connection to node '%s'. Waiting before retry", node.getNodeName()));
+            LOGGER.log(Level.INFO, String.format("No connection to node '%s'. Waiting before retry", node.getDisplayName()));
         } else {
             computer.connect(false);
-            LOGGER.log(Level.INFO, String.format("No connection to node '%s'. Attempting to connect and waiting before retry", node.getNodeName()));
+            LOGGER.log(Level.INFO, String.format("No connection to node '%s'. Attempting to connect and waiting before retry", node.getDisplayName()));
         }
         EXECUTOR.schedule(this, interval, TimeUnit.MILLISECONDS);
     }

@@ -62,8 +62,10 @@ public class EC2RetentionStrategy extends RetentionStrategy<SlaveComputer> imple
 
                 final String instanceId = compNode.getNodeName();
                 if (cloud.scheduleToTerminate(instanceId, false)) {
-                    // Instance successfully scheduled for termination, so no longer accept tasks
+                    // Instance successfully scheduled for termination, so no longer accept tasks (i.e. suspended)
                     shouldAcceptTasks = false;
+                    LOGGER.fine(String.format("Suspended node %s after scheduling instance for termination.",
+                            compNode.getDisplayName(), instanceId));
                     justTerminated = true;
                 }
             }
@@ -88,10 +90,19 @@ public class EC2RetentionStrategy extends RetentionStrategy<SlaveComputer> imple
     private boolean isIdleForTooLong(final AbstractEC2FleetCloud cloud, final Computer computer) {
         final int idleMinutes = cloud.getIdleMinutes();
         if (idleMinutes <= 0) return false;
+
         final long idleTime = System.currentTimeMillis() - computer.getIdleStartMilliseconds();
         final long maxIdle = TimeUnit.MINUTES.toMillis(idleMinutes);
-        LOGGER.log(Level.INFO, "Instance: " + computer.getDisplayName() + " Age: " + idleTime + " Max Age:" + maxIdle);
-        return idleTime > maxIdle;
+        final boolean isIdleForTooLong = idleTime > maxIdle;
+
+        // TODO: use Jenkins terminology in logs
+        if (isIdleForTooLong) {
+            LOGGER.log(Level.INFO, "Instance {0} has been idle for too long (Age: {1}, Max Age: {2}).", new Object[]{computer.getDisplayName(), String.valueOf(idleTime), String.valueOf(maxIdle)});
+        } else {
+            LOGGER.log(Level.INFO, "Instance:" + computer.getDisplayName() + " Age: " + idleTime + " Max Age:" + maxIdle);
+        }
+
+        return isIdleForTooLong;
     }
 
     @Override
