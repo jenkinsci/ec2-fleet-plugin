@@ -47,6 +47,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
@@ -72,6 +73,9 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     private static final SimpleFormatter sf = new SimpleFormatter();
     private static final Logger LOGGER = Logger.getLogger(EC2FleetCloud.class.getName());
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
+
+    // Counter to keep track of planned nodes per EC2FleetCloud, used in node's display name
+    private transient AtomicInteger plannedNodeCounter = new AtomicInteger(1);
 
     /**
      * Provide unique identifier for this instance of {@link EC2FleetCloud}, <code>transient</code>
@@ -391,6 +395,13 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         return false;
     }
 
+    private synchronized int getNextPlannedNodeCounter() {
+        if (plannedNodeCounter == null) {
+            plannedNodeCounter = new AtomicInteger(1);
+        }
+        return plannedNodeCounter.getAndIncrement();
+    }
+
     @Override
     public synchronized Collection<NodeProvisioner.PlannedNode> provision(@Nonnull final Cloud.CloudState cloudState, final int excessWorkload) {
         fine("excessWorkload %s", excessWorkload);
@@ -432,11 +443,9 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
         final List<NodeProvisioner.PlannedNode> resultList = new ArrayList<>();
         for (int f = 0; f < toProvision; ++f) {
-            // todo make name unique per fleet
-
             final CompletableFuture<Node> completableFuture = new CompletableFuture<>();
             final NodeProvisioner.PlannedNode plannedNode = new NodeProvisioner.PlannedNode(
-                    "FleetNode-" + f, completableFuture, this.numExecutors);
+                    String.format("FleetNode-%s-%d", getDisplayName(), getNextPlannedNodeCounter()), completableFuture, this.numExecutors);
 
             resultList.add(plannedNode);
             plannedNodesCache.add(plannedNode);
@@ -451,7 +460,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                 }
                 info("Scaling timeout reached, removing node from Jenkins's plannedCapacitySnapshot");
                 // with complete(null) Jenkins will remove future from plannedCapacity without making a fuss
-                    completableFuture.complete(null);
+                completableFuture.complete(null);
                 return;
                 },
                 getScheduledFutureTimeoutSec(), TimeUnit.SECONDS);
@@ -664,7 +673,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             }
 
             // addNewSlave will call addNode which calls queue lock.
-            // We speed up this by getting one lock for all nodes to all
+            // We speed this up by getting one lock for all nodes to add
             Queue.withLock(new Runnable() {
                 @Override
                 public void run() {
@@ -782,8 +791,9 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         final String instanceId = instance.getInstanceId();
 
         // instance state check enabled and not running, skip adding
-        if (addNodeOnlyIfRunning && InstanceStateName.Running != InstanceStateName.fromValue(instance.getState().getName()))
+        if (addNodeOnlyIfRunning && InstanceStateName.Running != InstanceStateName.fromValue(instance.getState().getName())) {
             return;
+        }
 
         final String address = privateIpUsed ? instance.getPrivateIpAddress() : instance.getPublicIpAddress();
         // Check if we have the address to use. Nodes don't get it immediately.
