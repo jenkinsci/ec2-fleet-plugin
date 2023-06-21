@@ -149,7 +149,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     /**
      * {@link EC2FleetCloud#update()} updating this field, this is one thread
      * related to {@link CloudNanny}. At the same time {@link EC2RetentionStrategy}
-     * call {@link EC2FleetCloud#scheduleToTerminate(String, boolean)} to terminate instance when it is free
+     * call {@link EC2FleetCloud#scheduleToTerminate(String, boolean, EC2AgentTerminationReason)} to terminate instance when it is free
      * and uses this field to know the current capacity.
      * <p>
      * It could be situation that <code>stats</code> is outdated and plugin will make wrong decision,
@@ -160,7 +160,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
     private transient int toAdd;
 
-    private transient Set<String> instanceIdsToTerminate;
+    private transient Map<String, EC2AgentTerminationReason> instanceIdsToTerminate;
 
     private transient Set<NodeProvisioner.PlannedNode> plannedNodesCache;
 
@@ -363,7 +363,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     }
 
     // Visible for testing
-    synchronized Set<String> getInstanceIdsToTerminate() {
+    synchronized Map<String, EC2AgentTerminationReason> getInstanceIdsToTerminate() {
         return instanceIdsToTerminate;
     }
 
@@ -490,7 +490,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             }
         }
         final int currentToAdd;
-        final Set<String> currentInstanceIdsToTerminate;
+        final Map<String, EC2AgentTerminationReason> currentInstanceIdsToTerminate;
         synchronized (this) {
             if(minSpareSize > 0) {
                 // Check spare instances by considering FleetStateStats#getNumDesired so we account for newer instances which are in progress
@@ -502,14 +502,14 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                 }
             }
             currentToAdd = toAdd;
-            currentInstanceIdsToTerminate = new HashSet<>(instanceIdsToTerminate);
+            currentInstanceIdsToTerminate = new HashMap<>(instanceIdsToTerminate);
         }
 
         currentState = updateByState(currentToAdd, currentInstanceIdsToTerminate, currentState);
 
         // lock and update state of plugin, so terminate or provision could work with new state of world
         synchronized (this) {
-            instanceIdsToTerminate.removeAll(currentInstanceIdsToTerminate);
+            instanceIdsToTerminate.keySet().removeAll(currentInstanceIdsToTerminate.keySet());
             // toAdd only grows outside of this method, so we can subtract
             toAdd = toAdd - currentToAdd;
             fine("setting stats");
@@ -551,7 +551,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     }
 
     private FleetStateStats updateByState(
-            final int currentToAdd, final Set<String> currentInstanceIdsToTerminate, final FleetStateStats currentState) {
+            final int currentToAdd, final Map<String, EC2AgentTerminationReason> currentInstanceIdsToTerminate, final FleetStateStats currentState) {
         final Jenkins jenkins = Jenkins.get();
         final AmazonEC2 ec2 = Registry.getEc2Api().connect(getAwsCredentialsId(), region, endpoint);
 
@@ -577,20 +577,21 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             Queue.withLock(new Runnable() {
                 @Override
                 public void run() {
-                    for (final String instanceId : currentInstanceIdsToTerminate) {
+                    info("Removing Jenkins nodes before terminating corresponding EC2 instances");
+                    for (final String instanceId : currentInstanceIdsToTerminate.keySet()) {
                         final Node node = jenkins.getNode(instanceId);
                         if (node != null) {
                             try {
                                 jenkins.removeNode(node);
                             } catch (IOException e) {
-                                warning("Failed to remove node '%s' from Jenkins before termination", instanceId);
+                                warning("Failed to remove node '%s' from Jenkins before termination.", instanceId);
                             }
                         }
                     }
                 }
             });
-            info("Terminating nodes: %s", currentInstanceIdsToTerminate);
-            Registry.getEc2Api().terminateInstances(ec2, currentInstanceIdsToTerminate);
+            Registry.getEc2Api().terminateInstances(ec2, currentInstanceIdsToTerminate.keySet());
+            info("Terminated instances: %s", currentInstanceIdsToTerminate);
         }
 
         fine("Fleet instances: %s", updatedState.getInstances());
@@ -600,7 +601,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         final Map<String, Instance> described = Registry.getEc2Api().describeInstances(ec2, fleetInstances);
 
         // Sometimes described includes just deleted instances
-        described.keySet().removeAll(currentInstanceIdsToTerminate);
+        described.keySet().removeAll(currentInstanceIdsToTerminate.keySet());
         fine("Described instances: %s", described.keySet());
 
         // Fleet takes a while to display terminated instances. Update stats with current view of active instance count
@@ -693,8 +694,8 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
     /**
      * Schedules Jenkins Node and EC2 instance for termination.
-     * If <code>force</code> is false and target capacity falls below <code>minSize</code> OR <code>minSpareSize</code> thresholds, then reject termination.
-     * Else if <code>force</code> is true, schedule instance for termination even if it breaches <code>minSize</code> OR <code>minSpareSize</code>
+     * If <code>overrideOtherSettings</code> is false and target capacity falls below <code>minSize</code> OR <code>minSpareSize</code> thresholds, then reject termination.
+     * Else if <code>overrideOtherSettings</code> is true, schedule instance for termination even if it breaches <code>minSize</code> OR <code>minSpareSize</code>
      * <p>
      * Real termination will happens in {@link EC2FleetCloud#update()} which is periodically called by
      * {@link CloudNanny}. So there could be some lag between the decision to terminate the node
@@ -705,16 +706,18 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
      * to AWS EC2 API which takes some time and block cloud class.
      *
      * @param instanceId node name or instance ID
-     * @param force terminate instance even if it breaches min size constraint
+     * @param overrideOtherSettings terminate instance even if it breaches min size constraint
+     * @param reason reason for termination
      * @return <code>true</code> if node scheduled for termination, otherwise <code>false</code>
      */
-    public synchronized boolean scheduleToTerminate(final String instanceId, final boolean force) {
+    public synchronized boolean scheduleToTerminate(final String instanceId, final boolean overrideOtherSettings,
+                                                    final EC2AgentTerminationReason reason) {
         if (stats == null) {
             info("First update not done, skipping termination scheduling for '%s'", instanceId);
             return false;
         }
-        // We can't remove instances beyond minSize or minSpareSize unless force true
-        if(!force) {
+        // We can't remove instances beyond minSize or minSpareSize unless overrideOtherSettings true
+        if(!overrideOtherSettings) {
             if (minSize > 0 && stats.getNumActive() - instanceIdsToTerminate.size() <= minSize) {
                 info("Not scheduling instance '%s' for termination because we need a minimum of %s instance(s) running", instanceId, minSize);
                 fine("cloud: %s, instanceIdsToTerminate: %s", this, instanceIdsToTerminate);
@@ -729,8 +732,8 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                 }
             }
         }
-        info("Scheduling instance '%s' for termination on cloud %s with force: %b", instanceId, this, force);
-        instanceIdsToTerminate.add(instanceId);
+        info("Scheduling instance '%s' for termination on cloud %s because of reason: %s", instanceId, this, reason);
+        instanceIdsToTerminate.put(instanceId, reason);
         fine("InstanceIdsToTerminate: %s", instanceIdsToTerminate);
         return true;
     }
@@ -763,7 +766,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         id = new LazyUuid();
 
         plannedNodesCache = new HashSet<>();
-        instanceIdsToTerminate = new HashSet<>();
+        instanceIdsToTerminate = new HashMap<>();
         plannedNodeScheduledFutures = new ArrayList<>();
     }
 

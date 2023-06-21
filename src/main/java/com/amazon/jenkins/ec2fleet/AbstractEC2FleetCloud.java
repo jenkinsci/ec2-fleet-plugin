@@ -16,7 +16,7 @@ public abstract class AbstractEC2FleetCloud extends Cloud {
 
     public abstract boolean hasExcessCapacity();
 
-    public abstract boolean scheduleToTerminate(String instanceId, boolean force);
+    public abstract boolean scheduleToTerminate(String instanceId, boolean overrideOtherSettings, EC2AgentTerminationReason reason);
 
     public abstract String getOldId();
 

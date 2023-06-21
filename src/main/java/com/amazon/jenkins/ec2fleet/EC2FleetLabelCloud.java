@@ -354,13 +354,13 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
         int toAdd;
         final Set<NodeProvisioner.PlannedNode> plannedNodes;
         final Set<NodeProvisioner.PlannedNode> plannedNodesToRemove;
-        final Set<String> instanceIdsToTerminate;
+        final Map<String, EC2AgentTerminationReason> instanceIdsToTerminate;
 
         public State(String fleetId) {
             this.fleetId = fleetId;
             this.plannedNodes = new HashSet<>();
             this.plannedNodesToRemove = new HashSet<>();
-            this.instanceIdsToTerminate = new HashSet<>();
+            this.instanceIdsToTerminate = new HashMap<>();
         }
 
         public State(State state) {
@@ -370,7 +370,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
             this.targetCapacity = state.targetCapacity;
             this.toAdd = state.toAdd;
             this.plannedNodesToRemove = new HashSet<>(state.plannedNodesToRemove);
-            this.instanceIdsToTerminate = new HashSet<>(state.instanceIdsToTerminate);
+            this.instanceIdsToTerminate = new HashMap<>(state.instanceIdsToTerminate);
         }
     }
 
@@ -405,7 +405,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
                 final State state = states.get(entry.getKey());
 
                 state.stats = entry.getValue().stats;
-                state.instanceIdsToTerminate.removeAll(entry.getValue().instanceIdsToTerminate);
+                state.instanceIdsToTerminate.keySet().removeAll(entry.getValue().instanceIdsToTerminate.keySet());
                 // toAdd only grow outside of this method, so we can subtract
                 state.toAdd = state.toAdd - entry.getValue().toAdd;
                 // remove released planned nodes
@@ -438,9 +438,9 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
             }
         }
 
-        final List<String> instanceIdsToRemove = new ArrayList<>();
+        final Map<String, EC2AgentTerminationReason> instanceIdsToRemove = new HashMap<>();
         for (State state : states.values()) {
-            instanceIdsToRemove.addAll(state.instanceIdsToTerminate);
+            instanceIdsToRemove.putAll(state.instanceIdsToTerminate);
         }
 
         if (instanceIdsToRemove.size() > 0) {
@@ -450,13 +450,14 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
             Queue.withLock(new Runnable() {
                 @Override
                 public void run() {
-                    for (final String instanceId : instanceIdsToRemove) {
+                    info("Removing Jenkins nodes before terminating corresponding EC2 instances");
+                    for (final String instanceId : instanceIdsToRemove.keySet()) {
                         final Node node = jenkins.getNode(instanceId);
                         if (node != null) {
                             try {
                                 jenkins.removeNode(node);
                             } catch (IOException e) {
-                                warning("unable remove node %s from Jenkins, skip, just terminate EC2 instance", instanceId);
+                                warning("unable to remove node %s from Jenkins, skip, just terminate EC2 instance", instanceId);
                             }
                         }
                     }
@@ -464,7 +465,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
             });
             info("Delete terminating nodes from Jenkins %s", instanceIdsToRemove);
 
-            Registry.getEc2Api().terminateInstances(ec2, instanceIdsToRemove);
+            Registry.getEc2Api().terminateInstances(ec2, instanceIdsToRemove.keySet());
             info("Instances %s were terminated with result", instanceIdsToRemove);
         }
 
@@ -562,7 +563,9 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
         }
     }
 
-    public synchronized boolean scheduleToTerminate(final String instanceId, boolean force) {
+    @Override
+    public synchronized boolean scheduleToTerminate(final String instanceId, final boolean overrideOtherSettings,
+                                                    final EC2AgentTerminationReason terminationReason) {
         info("Attempting to terminate instance: %s", instanceId);
 
         final Node node = Jenkins.get().getNode(instanceId);
@@ -574,19 +577,19 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
             return false;
         }
 
-        // We can't remove instances beyond minSize unless force is true
+        // We can't remove instances beyond minSize unless overrideOtherSettings is true
         final EC2FleetLabelParameters parameters = new EC2FleetLabelParameters(node.getLabelString());
         final int minSize = parameters.getIntOrDefault("minSize", this.minSize);
-        if (!force && (minSize > 0 && state.stats.getNumDesired() - state.instanceIdsToTerminate.size() <= minSize)) {
+        if (!overrideOtherSettings && (minSize > 0 && state.stats.getNumDesired() - state.instanceIdsToTerminate.size() <= minSize)) {
             info("Not terminating %s because we need a minimum of %s instances running.", instanceId, minSize);
             return false;
         }
-        info("Scheduling instance '%s' for termination on cloud %s with force: %b", instanceId, this, force);
-        state.instanceIdsToTerminate.add(instanceId);
+        info("Scheduling instance '%s' for termination on cloud %s because of reason: %s", instanceId, this, terminationReason);
+        state.instanceIdsToTerminate.put(instanceId, terminationReason);
         return true;
     }
 
-    // sync as we are using modifyable state
+    // sync as we are using modifiable state
     @Override
     public synchronized boolean canProvision(final Cloud.CloudState cloudState) {
         final Label label = cloudState.getLabel();
