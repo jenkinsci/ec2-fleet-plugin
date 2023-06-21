@@ -126,7 +126,6 @@ public class EC2RetentionStrategy extends RetentionStrategy<SlaveComputer> imple
                 } else if (maxTotalUses <= 1) {
                     LOGGER.info("maxTotalUses drained - suspending agent after current build " + computer.getName());
                     computer.setAcceptingTasks(false);
-                    ec2FleetNode.setMaxTotalUses(ec2FleetNode.getMaxTotalUses() - 1);
                 } else {
                     ec2FleetNode.setMaxTotalUses(ec2FleetNode.getMaxTotalUses() - 1);
                     LOGGER.info("Agent " + computer.getName() + " has " + ec2FleetNode.getMaxTotalUses() + " builds left");
@@ -153,13 +152,8 @@ public class EC2RetentionStrategy extends RetentionStrategy<SlaveComputer> imple
                 final AbstractEC2FleetCloud cloud = ec2FleetNode.getCloud();
                 if (computer.countBusy() <= 1 && !computer.isAcceptingTasks()) {
                     LOGGER.info("Calling scheduleToTerminate for node " + ec2FleetNode.getNodeName() + " due to maxTotalUses (" + ec2FleetNode.getMaxTotalUses() + ")");
-                    computer.setAcceptingTasks(false);
-                    // Schedule instance for termination even if it breaches min size constraint
+                    // Schedule instance for termination even if it breaches minSize and minSpareSize constraints
                     cloud.scheduleToTerminate(ec2FleetNode.getNodeName(), true, EC2AgentTerminationReason.MAX_TOTAL_USES_EXHAUSTED);
-                } else {
-                    if (ec2FleetNode.getMaxTotalUses() == 1) {
-                        LOGGER.info("Agent " + ec2FleetNode.getNodeName() + " is still in use by more than one (" + computer.countBusy() + ") executors.");
-                    }
                 }
             }
         }
