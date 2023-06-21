@@ -9,7 +9,6 @@ import hudson.model.Slave;
 import hudson.model.TaskListener;
 import hudson.model.queue.SubTask;
 import hudson.slaves.ComputerLauncher;
-import hudson.slaves.OfflineCause;
 import jenkins.model.Jenkins;
 import org.junit.Before;
 import org.junit.Test;
@@ -163,8 +162,8 @@ public class EC2FleetAutoResubmitComputerLauncherTest {
     public void taskCompleted_should_abort_executors_during_resubmit() {
         new EC2FleetAutoResubmitComputerLauncher(baseComputerLauncher)
                 .afterDisconnect(computer, taskListener);
-        verify(executor1).interrupt(Result.ABORTED, new EC2TerminationCause("i-12"));
-        verify(executor2).interrupt(Result.ABORTED, new EC2TerminationCause("i-12"));
+        verify(executor1).interrupt(Result.ABORTED, new EC2ExecutorInterruptionCause("i-12"));
+        verify(executor2).interrupt(Result.ABORTED, new EC2ExecutorInterruptionCause("i-12"));
     }
 
     @Test

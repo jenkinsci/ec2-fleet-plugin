@@ -94,7 +94,7 @@ public class EC2FleetAutoResubmitComputerLauncher extends DelegatingComputerLaun
             for (Executor executor : executors) {
                 final Queue.Executable executable = executor.getCurrentExecutable();
                 if (executable != null) {
-                    executor.interrupt(Result.ABORTED, new EC2TerminationCause(computer.getDisplayName()));
+                    executor.interrupt(Result.ABORTED, new EC2ExecutorInterruptionCause(computer.getDisplayName()));
 
                     final SubTask subTask = executable.getParent();
                     final Queue.Task task = subTask.getOwnerTask();

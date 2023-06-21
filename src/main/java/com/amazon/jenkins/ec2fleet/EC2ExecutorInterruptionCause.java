@@ -4,13 +4,13 @@ import jenkins.model.CauseOfInterruption;
 
 import javax.annotation.Nonnull;
 
-public class EC2TerminationCause extends CauseOfInterruption {
+public class EC2ExecutorInterruptionCause extends CauseOfInterruption {
 
     @Nonnull
     private final String nodeName;
 
     @SuppressWarnings("WeakerAccess")
-    public EC2TerminationCause(@Nonnull String nodeName) {
+    public EC2ExecutorInterruptionCause(@Nonnull String nodeName) {
         this.nodeName = nodeName;
     }
 
@@ -22,7 +22,7 @@ public class EC2TerminationCause extends CauseOfInterruption {
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        EC2TerminationCause that = (EC2TerminationCause) o;
+        EC2ExecutorInterruptionCause that = (EC2ExecutorInterruptionCause) o;
         return nodeName.equals(that.nodeName);
     }
 
