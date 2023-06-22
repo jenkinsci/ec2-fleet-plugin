@@ -564,7 +564,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
     }
 
     @Override
-    public synchronized boolean scheduleToTerminate(final String instanceId, final boolean overrideOtherSettings,
+    public synchronized boolean scheduleToTerminate(final String instanceId, final boolean ignoreMinConstraints,
                                                     final EC2AgentTerminationReason terminationReason) {
         info("Attempting to terminate instance: %s", instanceId);
 
@@ -577,10 +577,10 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
             return false;
         }
 
-        // We can't remove instances beyond minSize unless overrideOtherSettings is true
+        // We can't remove instances beyond minSize unless ignoreMinConstraints is true
         final EC2FleetLabelParameters parameters = new EC2FleetLabelParameters(node.getLabelString());
         final int minSize = parameters.getIntOrDefault("minSize", this.minSize);
-        if (!overrideOtherSettings && (minSize > 0 && state.stats.getNumDesired() - state.instanceIdsToTerminate.size() <= minSize)) {
+        if (!ignoreMinConstraints && (minSize > 0 && state.stats.getNumDesired() - state.instanceIdsToTerminate.size() <= minSize)) {
             info("Not terminating %s because we need a minimum of %s instances running.", instanceId, minSize);
             return false;
         }

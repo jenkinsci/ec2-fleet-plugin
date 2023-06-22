@@ -694,8 +694,8 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
     /**
      * Schedules Jenkins Node and EC2 instance for termination.
-     * If <code>overrideOtherSettings</code> is false and target capacity falls below <code>minSize</code> OR <code>minSpareSize</code> thresholds, then reject termination.
-     * Else if <code>overrideOtherSettings</code> is true, schedule instance for termination even if it breaches <code>minSize</code> OR <code>minSpareSize</code>
+     * If <code>ignoreMinConstraints</code> is false and target capacity falls below <code>minSize</code> OR <code>minSpareSize</code> thresholds, then reject termination.
+     * Else if <code>ignoreMinConstraints</code> is true, schedule instance for termination even if it breaches <code>minSize</code> OR <code>minSpareSize</code>
      * <p>
      * Real termination will happens in {@link EC2FleetCloud#update()} which is periodically called by
      * {@link CloudNanny}. So there could be some lag between the decision to terminate the node
@@ -706,18 +706,18 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
      * to AWS EC2 API which takes some time and block cloud class.
      *
      * @param instanceId node name or instance ID
-     * @param overrideOtherSettings terminate instance even if it breaches min size constraint
+     * @param ignoreMinConstraints terminate instance even if it breaches min size constraint
      * @param reason reason for termination
      * @return <code>true</code> if node scheduled for termination, otherwise <code>false</code>
      */
-    public synchronized boolean scheduleToTerminate(final String instanceId, final boolean overrideOtherSettings,
+    public synchronized boolean scheduleToTerminate(final String instanceId, final boolean ignoreMinConstraints,
                                                     final EC2AgentTerminationReason reason) {
         if (stats == null) {
             info("First update not done, skipping termination scheduling for '%s'", instanceId);
             return false;
         }
-        // We can't remove instances beyond minSize or minSpareSize unless overrideOtherSettings true
-        if(!overrideOtherSettings) {
+        // We can't remove instances beyond minSize or minSpareSize unless ignoreMinConstraints true
+        if(!ignoreMinConstraints) {
             if (minSize > 0 && stats.getNumActive() - instanceIdsToTerminate.size() <= minSize) {
                 info("Not scheduling instance '%s' for termination because we need a minimum of %s instance(s) running", instanceId, minSize);
                 fine("cloud: %s, instanceIdsToTerminate: %s", this, instanceIdsToTerminate);
