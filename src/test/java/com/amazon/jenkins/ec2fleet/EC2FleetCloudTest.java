@@ -427,7 +427,7 @@ public class EC2FleetCloudTest {
                 10, false);
 
         // when
-        boolean r = fleetCloud.scheduleToTerminate("z", false);
+        boolean r = fleetCloud.scheduleToTerminate("z", false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
 
         // then
         assertFalse(r);
@@ -452,7 +452,7 @@ public class EC2FleetCloudTest {
                 Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
         // when
-        boolean r = fleetCloud.scheduleToTerminate("z", false);
+        boolean r = fleetCloud.scheduleToTerminate("z", false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
 
         // then
         assertFalse(r);
@@ -477,7 +477,7 @@ public class EC2FleetCloudTest {
                 Collections.singleton("z"), Collections.<String, Double>emptyMap()));
 
         // when
-        boolean r = fleetCloud.scheduleToTerminate("z", false);
+        boolean r = fleetCloud.scheduleToTerminate("z", false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
 
         // then
         assertFalse(r);
@@ -503,7 +503,7 @@ public class EC2FleetCloudTest {
                 Collections.singleton("z"), Collections.<String, Double>emptyMap()));
 
         // when
-        boolean r = fleetCloud.scheduleToTerminate("z", false);
+        boolean r = fleetCloud.scheduleToTerminate("z", false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
 
         // then
         assertFalse(r);
@@ -528,11 +528,11 @@ public class EC2FleetCloudTest {
                 new HashSet<>(Arrays.asList("z", "z1")), Collections.<String, Double>emptyMap()));
 
         // when
-        boolean r = fleetCloud.scheduleToTerminate("z", false);
+        boolean r = fleetCloud.scheduleToTerminate("z", false, EC2AgentTerminationReason.MAX_TOTAL_USES_EXHAUSTED);
 
         // then
         assertTrue(r);
-        assertEquals(Collections.singleton("z"), fleetCloud.getInstanceIdsToTerminate());
+        assertEquals(Collections.singletonMap("z", EC2AgentTerminationReason.MAX_TOTAL_USES_EXHAUSTED), fleetCloud.getInstanceIdsToTerminate());
     }
 
     @Test
@@ -554,13 +554,16 @@ public class EC2FleetCloudTest {
                 new HashSet<>(Arrays.asList("z-1", "z-2")), Collections.<String, Double>emptyMap()));
 
         // when
-        boolean r1 = fleetCloud.scheduleToTerminate("z-1", false);
-        boolean r2 = fleetCloud.scheduleToTerminate("z-2", false);
+        boolean r1 = fleetCloud.scheduleToTerminate("z-1", false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
+        boolean r2 = fleetCloud.scheduleToTerminate("z-2", false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
 
         // then
         assertTrue(r1);
         assertTrue(r2);
-        assertEquals(new HashSet<>(Arrays.asList("z-1", "z-2")), fleetCloud.getInstanceIdsToTerminate());
+        assertEquals(new HashMap<String, EC2AgentTerminationReason>(){{
+            put("z-1", EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
+            put("z-2", EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
+        }}, fleetCloud.getInstanceIdsToTerminate());
     }
 
     @Test
@@ -582,15 +585,18 @@ public class EC2FleetCloudTest {
                 new HashSet<>(Arrays.asList("z1", "z2", "z3")), Collections.<String, Double>emptyMap()));
 
         // when
-        boolean r1 = fleetCloud.scheduleToTerminate("z1", false);
-        boolean r2 = fleetCloud.scheduleToTerminate("z2", false);
-        boolean r3 = fleetCloud.scheduleToTerminate("z3", false);
+        boolean r1 = fleetCloud.scheduleToTerminate("z1", false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
+        boolean r2 = fleetCloud.scheduleToTerminate("z2", false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
+        boolean r3 = fleetCloud.scheduleToTerminate("z3", false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
 
         // then
         assertTrue(r1);
         assertTrue(r2);
         assertFalse(r3);
-        assertEquals(new HashSet<>(Arrays.asList("z1", "z2")), fleetCloud.getInstanceIdsToTerminate());
+        assertEquals(new HashMap<String, EC2AgentTerminationReason>(){{
+            put("z1", EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
+            put("z2", EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
+        }}, fleetCloud.getInstanceIdsToTerminate());
     }
 
     @Test
@@ -663,7 +669,7 @@ public class EC2FleetCloudTest {
         fleetCloud.setStats(currentState);
 
         fleetCloud.provision(new Cloud.CloudState(null, 0), 2);
-        fleetCloud.scheduleToTerminate("i-1", false);
+        fleetCloud.scheduleToTerminate("i-1", false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
 
         // when
         fleetCloud.update();
@@ -693,7 +699,7 @@ public class EC2FleetCloudTest {
                 Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
         for (int i = 0; i < 10; i++) fleetCloud.provision(new Cloud.CloudState(null, 0), 1);
-        for (int i = 0; i < 10; i++) fleetCloud.scheduleToTerminate("i-" + i, false);
+        for (int i = 0; i < 10; i++) fleetCloud.scheduleToTerminate("i-" + i, false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
         for (int i = 0; i < 10; i++) fleetCloud.provision(new Cloud.CloudState(null, 0), 1);
 
         // when
@@ -724,7 +730,7 @@ public class EC2FleetCloudTest {
                 Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
         for (int i = 0; i < 10; i++) fleetCloud.provision(new Cloud.CloudState(null, 0), 1);
-        for (int i = 0; i < 5; i++) fleetCloud.scheduleToTerminate("i-" + i, false);
+        for (int i = 0; i < 5; i++) fleetCloud.scheduleToTerminate("i-" + i, false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
 
         // when
         fleetCloud.update();
@@ -753,8 +759,8 @@ public class EC2FleetCloudTest {
         fleetCloud.setStats(new FleetStateStats("", 4, FleetStateStats.State.active(),
                 Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
-        fleetCloud.scheduleToTerminate("i-1", false);
-        fleetCloud.scheduleToTerminate("i-2", false);
+        fleetCloud.scheduleToTerminate("i-1", false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
+        fleetCloud.scheduleToTerminate("i-2", false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
 
         // when
         fleetCloud.update();
@@ -1029,8 +1035,8 @@ public class EC2FleetCloudTest {
 
         doNothing().when(jenkins).addNode(any(Node.class));
 
-        fleetCloud.scheduleToTerminate("i-0", false);
-        fleetCloud.scheduleToTerminate("i-1", false);
+        fleetCloud.scheduleToTerminate("i-0", false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
+        fleetCloud.scheduleToTerminate("i-1", false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
 
         // when
         fleetCloud.update();
@@ -1212,7 +1218,7 @@ public class EC2FleetCloudTest {
 
         doNothing().when(jenkins).addNode(any(Node.class));
 
-        fleetCloud.scheduleToTerminate("i-0", false);
+        fleetCloud.scheduleToTerminate("i-0", false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
 
         // when
         fleetCloud.update();

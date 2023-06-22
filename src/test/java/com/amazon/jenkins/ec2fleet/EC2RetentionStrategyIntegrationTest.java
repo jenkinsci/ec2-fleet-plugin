@@ -11,13 +11,18 @@ import com.amazonaws.services.ec2.model.InstanceStateName;
 import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.amazonaws.services.ec2.model.TerminateInstancesResult;
+import hudson.model.Executor;
 import hudson.model.Node;
+import hudson.model.Queue;
 import hudson.model.queue.QueueTaskFuture;
+import hudson.security.AccessControlled;
+import jenkins.model.Jenkins;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;

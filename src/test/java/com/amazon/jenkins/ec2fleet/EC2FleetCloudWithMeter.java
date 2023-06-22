@@ -42,9 +42,9 @@ public class EC2FleetCloudWithMeter extends EC2FleetCloud {
     }
 
     @Override
-    public boolean scheduleToTerminate(final String instanceId, boolean force) {
+    public boolean scheduleToTerminate(final String instanceId, boolean force, EC2AgentTerminationReason reason) {
         try (Meter.Shot s = removeMeter.start()) {
-            return super.scheduleToTerminate(instanceId, force);
+            return super.scheduleToTerminate(instanceId, force, reason);
         }
     }
 
