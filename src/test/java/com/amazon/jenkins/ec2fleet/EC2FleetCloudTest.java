@@ -1892,7 +1892,8 @@ public class EC2FleetCloudTest {
         ListBoxModel r = new EC2FleetCloud.DescriptorImpl().doFillFleetItems(
                 false, "", "", "", "");
 
-        assertEquals(0, r.size());
+        assertEquals(1, r.size());
+        assertEquals("empty", r.get(0).value);
     }
 
     @Test
@@ -1904,7 +1905,8 @@ public class EC2FleetCloudTest {
         ListBoxModel r = new EC2FleetCloud.DescriptorImpl().doFillFleetItems(
                 false, "", "", "", "");
 
-        assertEquals(0, r.size());
+        assertEquals(1, r.size());
+        assertEquals("empty", r.get(0).value);
         verify(ec2SpotFleet).describe("", "", "", r, "", false);
         verify(autoScalingGroupFleet).describe("", "", "", r, "", false);
     }
@@ -1921,7 +1923,8 @@ public class EC2FleetCloudTest {
         ListBoxModel r = new EC2FleetCloud.DescriptorImpl().doFillFleetItems(
                 false, "", "", "", "");
 
-        assertEquals(0, r.size());
+        assertEquals(1, r.size());
+        assertEquals("empty", r.get(0).value);
     }
 
     @Test
