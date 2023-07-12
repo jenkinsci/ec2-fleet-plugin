@@ -861,7 +861,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         final EC2FleetAutoResubmitComputerLauncher computerLauncher = new EC2FleetAutoResubmitComputerLauncher(
                 computerConnector.launch(address, TaskListener.NULL));
         final Node.Mode nodeMode = restrictUsage ? Node.Mode.EXCLUSIVE : Node.Mode.NORMAL;
-        final EC2FleetNode node = new EC2FleetNode(instanceId, "Fleet slave for " + instanceId,
+        final EC2FleetNode node = new EC2FleetNode(instanceId, "Fleet node for " + instanceId,
                 effectiveFsRoot, effectiveNumExecutors, nodeMode, labelString, new ArrayList<NodeProperty<?>>(),
                 this, computerLauncher, maxTotalUses);
 
