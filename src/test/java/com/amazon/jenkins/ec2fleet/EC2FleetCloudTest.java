@@ -27,6 +27,7 @@ import hudson.slaves.Cloud;
 import hudson.slaves.ComputerConnector;
 import hudson.slaves.NodeProvisioner;
 import hudson.util.FormValidation;
+import hudson.util.FormValidation.Kind;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import jenkins.model.Nodes;
@@ -1893,7 +1894,7 @@ public class EC2FleetCloudTest {
                 false, "", "", "", "");
 
         assertEquals(1, r.size());
-        assertEquals("empty", r.get(0).value);
+        assertEquals("", r.get(0).value);
     }
 
     @Test
@@ -1906,7 +1907,7 @@ public class EC2FleetCloudTest {
                 false, "", "", "", "");
 
         assertEquals(1, r.size());
-        assertEquals("empty", r.get(0).value);
+        assertEquals("", r.get(0).value);
         verify(ec2SpotFleet).describe("", "", "", r, "", false);
         verify(autoScalingGroupFleet).describe("", "", "", r, "", false);
     }
@@ -1924,7 +1925,20 @@ public class EC2FleetCloudTest {
                 false, "", "", "", "");
 
         assertEquals(1, r.size());
-        assertEquals("empty", r.get(0).value);
+        assertEquals("", r.get(0).value);
+    }
+
+    @Test
+    public void descriptorImpl_doCheckFleet_default() {
+        FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doCheckFleet("");
+        assertEquals(formValidation.kind, Kind.ERROR);
+    }
+
+    @Test
+    public void descriptorImpl_doCheckFleet_nonDefault() {
+        FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doCheckFleet("ASG1");
+        assertEquals(formValidation.kind, Kind.OK);
+
     }
 
     @Test

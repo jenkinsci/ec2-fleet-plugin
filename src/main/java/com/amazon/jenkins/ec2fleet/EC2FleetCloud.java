@@ -978,7 +978,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                                              @QueryParameter final String awsCredentialsId,
                                              @QueryParameter final String fleet) {
             final ListBoxModel model = new ListBoxModel();
-            model.add(0, new Option("- please select -", "empty"));
+            model.add(0, new Option("- please select -", "", true));
             try {
                 for (final EC2Fleet EC2Fleet : EC2Fleets.all()) {
                     EC2Fleet.describe(
@@ -990,6 +990,14 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             }
 
             return model;
+        }
+
+        public FormValidation doCheckFleet(@QueryParameter final String fleet) {
+            if (StringUtils.isEmpty(fleet)) {
+                return FormValidation.error("Please Select a Valid EC2 Fleet");
+            } else {
+                return FormValidation.ok();
+            }
         }
 
         public FormValidation doTestConnection(
