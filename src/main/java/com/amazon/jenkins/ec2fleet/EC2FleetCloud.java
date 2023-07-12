@@ -994,7 +994,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
         public FormValidation doCheckFleet(@QueryParameter final String fleet) {
             if (StringUtils.isEmpty(fleet)) {
-                return FormValidation.error("Please Select a Valid EC2 Fleet");
+                return FormValidation.error("Please select a valid EC2 Fleet");
             } else {
                 return FormValidation.ok();
             }
