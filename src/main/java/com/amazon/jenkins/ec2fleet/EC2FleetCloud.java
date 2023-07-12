@@ -23,6 +23,7 @@ import hudson.slaves.NodeProperty;
 import hudson.slaves.NodeProvisioner;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import hudson.util.ListBoxModel.Option;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
@@ -977,6 +978,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                                              @QueryParameter final String awsCredentialsId,
                                              @QueryParameter final String fleet) {
             final ListBoxModel model = new ListBoxModel();
+            model.add(0, new Option("- please select -", "empty"));
             try {
                 for (final EC2Fleet EC2Fleet : EC2Fleets.all()) {
                     EC2Fleet.describe(
