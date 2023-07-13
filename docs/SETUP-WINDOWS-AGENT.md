@@ -1,9 +1,9 @@
-# Windows Slave with EC2 Fleet Plugin
+# Windows Agent with EC2 Fleet Plugin
 
 This guide describes how to configure Windows EC2 Instance to be good for run
-as Slave for EC2 Fleet Jenkins Plugin. At the end of this guide you 
+as Agent for EC2 Fleet Jenkins Plugin. At the end of this guide you 
 will get AWS EC2 AMI (Image) which could be used for Auto Scaling Group
-or EC2 Spot Fleet to run Windows slaves.
+or EC2 Spot Fleet to run Windows agents.
 
 **Big thanks to @Michenux for help to find all details**
 
@@ -11,7 +11,7 @@ or EC2 Spot Fleet to run Windows slaves.
 https://github.com/jenkinsci/ssh-slaves-plugin/blob/master/doc/CONFIGURE.md#launch-windows-slaves-using-microsoft-openssh
 
 **Note** This guide uses Windows DCOM technology (not open ssh) it doesn't work over NAT,
-so Jenkins Master EC2 Instance should be placed in same VPC as Slaves managed by EC2 Fleet Plugin.
+so Jenkins Master EC2 Instance should be placed in same VPC as Agents managed by EC2 Fleet Plugin.
 
 ## Run EC2 Instance with Windows
 
@@ -93,7 +93,7 @@ so Jenkins Master EC2 Instance should be placed in same VPC as Slaves managed by
 
 1. Goto to AWS Console and create image of preconfigured instance
 
-## Before using this AMI for Jenkins Slave
+## Before using this AMI for Jenkins Agent
 
 - Make sure you required traffic could go to Windows from Jenkins. You can find
 required ports above in ```Configure Firewall``` section

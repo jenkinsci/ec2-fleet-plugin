@@ -55,7 +55,7 @@ public class EC2FleetAutoResubmitComputerLauncherTest {
     private Queue.Executable executable2;
 
     @Mock
-    private Slave slave;
+    private Slave agent;
 
     @Mock
     private EC2FleetNodeComputer computer;
@@ -95,7 +95,7 @@ public class EC2FleetAutoResubmitComputerLauncherTest {
         when(Jenkins.get()).thenReturn(jenkins);
         when(Queue.getInstance()).thenReturn(queue);
 
-        when(slave.getNumExecutors()).thenReturn(1);
+        when(agent.getNumExecutors()).thenReturn(1);
 
         when(fleetNode.getDisplayName()).thenReturn("fleet node name");
 

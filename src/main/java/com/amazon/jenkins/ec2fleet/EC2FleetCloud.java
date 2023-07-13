@@ -707,14 +707,14 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                 warning(e, "Failed to tag new instances: %s", newFleetInstances.keySet());
             }
 
-            // addNewSlave will call addNode which calls queue lock.
+            // addNewAgent will call addNode which calls queue lock.
             // We speed this up by getting one lock for all nodes to add
             Queue.withLock(new Runnable() {
                 @Override
                 public void run() {
                     try {
                         for (final Instance instance : newFleetInstances.values()) {
-                            addNewSlave(ec2, instance, updatedState);
+                            addNewAgent(ec2, instance, updatedState);
                         }
                     } catch (final Exception ex) {
                         warning(ex, "Unable to set label on node");
@@ -824,7 +824,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
      * @param ec2      ec2 client
      * @param instance instance
      */
-    private void addNewSlave(final AmazonEC2 ec2, final Instance instance, FleetStateStats stats) throws Exception {
+    private void addNewAgent(final AmazonEC2 ec2, final Instance instance, FleetStateStats stats) throws Exception {
         final String instanceId = instance.getInstanceId();
 
         // instance state check enabled and not running, skip adding
@@ -861,7 +861,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         final EC2FleetAutoResubmitComputerLauncher computerLauncher = new EC2FleetAutoResubmitComputerLauncher(
                 computerConnector.launch(address, TaskListener.NULL));
         final Node.Mode nodeMode = restrictUsage ? Node.Mode.EXCLUSIVE : Node.Mode.NORMAL;
-        final EC2FleetNode node = new EC2FleetNode(instanceId, "Fleet node for " + instanceId,
+        final EC2FleetNode node = new EC2FleetNode(instanceId, "Fleet agent for " + instanceId,
                 effectiveFsRoot, effectiveNumExecutors, nodeMode, labelString, new ArrayList<NodeProperty<?>>(),
                 this, computerLauncher, maxTotalUses);
 

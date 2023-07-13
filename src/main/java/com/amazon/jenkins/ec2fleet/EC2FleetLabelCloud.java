@@ -546,14 +546,14 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
                     warning(e, "failed to tag new instances %s, skip", newFleetInstances.keySet());
                 }
 
-                // addNewSlave will call addNode which call queue lock
+                // addNewAgent will call addNode which call queue lock
                 // we speed up this by getting one lock for all nodes to all
                 Queue.withLock(new Runnable() {
                     @Override
                     public void run() {
                         try {
                             for (final Instance instance : newFleetInstances.values()) {
-                                addNewSlave(ec2, instance, entry.getKey(), state);
+                                addNewAgent(ec2, instance, entry.getKey(), state);
                             }
                         } catch (final Exception ex) {
                             warning(ex, "Unable to set label on node");
@@ -612,7 +612,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
         states = new HashMap<>();
     }
 
-    private void addNewSlave(
+    private void addNewAgent(
             final AmazonEC2 ec2, final Instance instance, final String labelString, final State state) throws Exception {
         final String instanceId = instance.getInstanceId();
 
@@ -651,7 +651,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
                 computerConnector.launch(address, TaskListener.NULL));
         final Node.Mode nodeMode = restrictUsage ? Node.Mode.EXCLUSIVE : Node.Mode.NORMAL;
         //TODO: Add maxTotalUses to EC2FleetLabelCloud similar to EC2FleetCloud
-        final EC2FleetNode node = new EC2FleetNode(instanceId, "Fleet node for " + instanceId,
+        final EC2FleetNode node = new EC2FleetNode(instanceId, "Fleet agent for " + instanceId,
                 effectiveFsRoot, effectiveNumExecutors, nodeMode, labelString, new ArrayList<NodeProperty<?>>(),
                 this, computerLauncher, -1);
 

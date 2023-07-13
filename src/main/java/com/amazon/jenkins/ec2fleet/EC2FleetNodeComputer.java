@@ -20,8 +20,8 @@ public class EC2FleetNodeComputer extends SlaveComputer implements EC2FleetCloud
     private volatile AbstractEC2FleetCloud cloud;
     private boolean isMarkedForDeletion;
 
-    public EC2FleetNodeComputer(final Slave slave, @Nonnull final String name, @Nonnull final AbstractEC2FleetCloud cloud) {
-        super(slave);
+    public EC2FleetNodeComputer(final Slave agent, @Nonnull final String name, @Nonnull final AbstractEC2FleetCloud cloud) {
+        super(agent);
         this.name = name;
         this.cloud = cloud;
         this.isMarkedForDeletion = false;

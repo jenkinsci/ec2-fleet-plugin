@@ -26,7 +26,7 @@ import java.util.logging.Logger;
  *  * how {@link EC2FleetNodeComputer}s are launched
  *  * how {@link EC2FleetNodeComputer}s connect to agents {@link EC2FleetNode}
  *
- * This is wrapper for {@link ComputerLauncher} to get notification when slave was disconnected
+ * This is wrapper for {@link ComputerLauncher} to get notification when agent was disconnected
  * and automatically resubmit {@link hudson.model.Queue.Task} if reason is unexpected termination
  * which usually means EC2 instance was interrupted.
  * <p>
@@ -55,9 +55,9 @@ public class EC2FleetAutoResubmitComputerLauncher extends DelegatingComputerLaun
      * <p>
      * EC2 Fleet plugin overrides this method to detect jobs which were failed because of
      * EC2 instance was terminated/stopped. It could be manual stop or because of Spot marked.
-     * In all cases as soon as job aborted because of broken connection and slave is offline
+     * In all cases as soon as job aborted because of broken connection and agent is offline
      * it will try to resubmit aborted job back to the queue, so user doesn't need to do that manually
-     * and another slave could take it.
+     * and another agent could take it.
      * <p>
      * Implementation details
      * <p>

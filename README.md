@@ -19,9 +19,9 @@ automatically scaling the capacity with the load.
   * [Setup](#setup)
   * [Scaling](#scaling)
   * [Groovy](#groovy)
-  * [Preconfigure Slave](#preconfigure-slave)
+  * [Preconfigure Agent](#preconfigure-agent)
   * [Label Based Configuration (beta)](docs/LABEL-BASED-CONFIGURATION.md)
-  * [Windows Slave](docs/SETUP-WINDOWS-SLAVE.md)
+  * [Windows Agent](docs/SETUP-WINDOWS-AGENT.md)
   * [Configuration As Code](docs/CONFIGURATION-AS-CODE.md)
 * [Development](#development)
 
@@ -276,9 +276,9 @@ jenkins.clouds.add(ec2FleetCloud)
 jenkins.save()
 ```
 
-## Preconfigure Slave
+## Preconfigure Agent
 
-Sometimes you need to prepare a slave (an EC2 instance) before Jenkins can use it.
+Sometimes you need to prepare an agent (an EC2 instance) before Jenkins can use it.
 For example, you need to install some software which is required by your builds like Maven, etc.
 
 For those cases you have a few options, described below:
@@ -313,7 +313,7 @@ launcher can be found [here](https://github.com/jenkinsci/ssh-slaves-plugin/blob
 1. Open Jenkins
 1. Go to ```Manage Jenkins > Configure System```
 1. Find proper fleet configuration and click ```Advanced...``` for SSH Launcher
-1. Add checking command into field ```Prefix Start Slave Command```
+1. Add checking command into field ```Prefix Start Agent Command```
    - example ```java -version && ```
 1. To apply for existing instances, restart Jenkins or Delete Nodes from Jenkins so they will be reconnected
 
