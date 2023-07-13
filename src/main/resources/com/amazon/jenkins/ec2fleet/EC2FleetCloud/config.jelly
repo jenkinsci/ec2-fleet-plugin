@@ -31,7 +31,7 @@
 
     <f:description>Fleet list will be available once region and credentials are specified. Only maintain supported, see help</f:description>
     <f:entry title="${%EC2 Fleet}" field="fleet">
-        <f:select checkMethod="post"/>
+        <f:select/>
     </f:entry>
 
     <f:validateButton title="${%Test Connection}" progress="${%Testing...}" method="testConnection" with="awsCredentialsId,region,fleet" />
