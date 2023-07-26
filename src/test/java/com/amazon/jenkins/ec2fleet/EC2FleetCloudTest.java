@@ -1889,6 +1889,18 @@ public class EC2FleetCloudTest {
     }
 
     @Test
+    public void descriptorImpl_doCheckFleetName_validName() {
+        FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doCheckFleet("FleetCloud");
+        assertEquals(formValidation.kind, Kind.OK);
+    }
+
+    @Test
+    public void descriptorImpl_doCheckFleetName_invalidName() {
+        FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doCheckFleet(null);
+        assertEquals(formValidation.kind, Kind.ERROR);
+    }
+
+    @Test
     public void descriptorImpl_doFillFleetItems_returnEmptyListIfNoEmptyEC2Fleet() {
         ListBoxModel r = new EC2FleetCloud.DescriptorImpl().doFillFleetItems(
                 false, "", "", "", "");

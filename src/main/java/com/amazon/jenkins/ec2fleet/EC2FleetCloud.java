@@ -958,7 +958,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             return FormValidation.error("Maximum Total Uses must be greater or equal to -1");
         }
 
-        public FormValidation doCheckCloudName(@QueryParameter final String name) {
+        public FormValidation doCheckName(@QueryParameter final String name) {
             try {
                 Jenkins.checkGoodName(name);
             } catch (Failure e) {

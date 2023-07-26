@@ -5,9 +5,9 @@
          xmlns:c="/lib/credentials">
 
     <f:description>A unique name for this EC2 Fleet cloud</f:description>
-    <f:description>Warning: Cloud name is used to track agents belonging to this cloud. Please do not modify an existing cloud's name. See <a href="https://github.com/jenkinsci/ec2-fleet-plugin/issues/382">this issue</a> for details</f:description>
+    <f:description>Warning: Cloud name is used to track agents belonging to this cloud. Once set, it will be be unmodifiable. See <a href="https://github.com/jenkinsci/ec2-fleet-plugin/issues/387">this issue</a> for details</f:description>
     <f:entry title="${%Name}" field="name">
-        <f:textbox default="FleetCloud"/>
+      <f:textbox readonly="${instance != null ? 'readonly' : null}"/>
     </f:entry>
 
     <f:description>Select AWS Credentials or leave set to none to use <a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html">AWS EC2 Instance Role</a></f:description>

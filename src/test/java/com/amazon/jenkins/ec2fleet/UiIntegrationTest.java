@@ -112,6 +112,7 @@ public class UiIntegrationTest {
         HtmlFormUtil.submit(form);
 
         final Cloud newCloud = j.jenkins.clouds.get(0);
+        assertNotNull(newCloud);
         assertNotSame(cloud, newCloud);
         assertSame(newCloud, ((EC2FleetNode) j.jenkins.getNode("mock")).getCloud());
     }
@@ -293,30 +294,18 @@ public class UiIntegrationTest {
         assertSame(cloud2, j.jenkins.getCloud("b"));
     }
 
-    // This is expected behavior until https://github.com/jenkinsci/ec2-fleet-plugin/issues/382 is addressed.
-    // Current mitigation in place: A warning message is displayed next to the cloud name field in the UI.
-    // No mitigation for configuration as code users.
     @Test
-    public void verifyCloudNameNotReplacedWhenChangedForNodesAfterConfigurationSave() throws Exception {
+    public void verifyCloudNameReadOnlyAfterCloudCreated() throws Exception {
         EC2FleetCloud cloud = new EC2FleetCloud("test-cloud", null, null, null, null, "",
-                "label", null, null, false, false,
-                0, 0, 0, 0, 0, true, false,
-                "-1", false, 0, 0, false,
-                10, false);
+            "label", null, null, false, false,
+            0, 0, 0, 0, 0, true, false,
+            "-1", false, 0, 0, false,
+            10, false);
         j.jenkins.clouds.add(cloud);
 
-        j.jenkins.addNode(new EC2FleetNode("mock", "", "", 1,
-                Node.Mode.EXCLUSIVE, "", new ArrayList<NodeProperty<?>>(), cloud.name,
-                j.createComputerLauncher(null), -1));
-
         HtmlPage page = j.createWebClient().goTo("configureClouds");
-        HtmlForm form = page.getFormByName("config");
 
-        ((HtmlTextInput) IntegrationTest.getElementsByNameWithoutJdk(page, "_.name").get(0)).setText("new-cloud-name");
-        HtmlFormUtil.submit(form);
-
-        final Cloud newCloud = j.jenkins.clouds.get(0);
-        assertNotSame(cloud, newCloud);
-        assertNotSame(newCloud.name, ((EC2FleetNode) j.jenkins.getNode("mock")).getCloudName());
+        List<DomElement> elementsByName = IntegrationTest.getElementsByNameWithoutJdk(page, "_.name");
+        assertTrue(((HtmlTextInput) elementsByName.get(0)).isReadOnly());
     }
 }
