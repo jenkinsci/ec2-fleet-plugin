@@ -10,6 +10,8 @@ import hudson.model.TaskListener;
 import hudson.model.queue.SubTask;
 import hudson.slaves.ComputerLauncher;
 import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,9 +23,11 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import java.util.Arrays;
 import java.util.Collections;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -31,7 +35,7 @@ import static org.mockito.Mockito.withSettings;
 
 @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Jenkins.class, Queue.class})
+@PrepareForTest({Jenkins.class, Queue.class, WorkflowJob.class, WorkflowRun.class})
 public class EC2FleetAutoResubmitComputerLauncherTest {
 
     @Mock
@@ -83,6 +87,12 @@ public class EC2FleetAutoResubmitComputerLauncherTest {
 
     @Mock
     private EC2FleetCloud cloud;
+
+    @Mock
+    private WorkflowJob workflowJob;
+
+    @Mock
+    private WorkflowRun workflowRun;
 
     @Before
     public void before() {
@@ -174,6 +184,18 @@ public class EC2FleetAutoResubmitComputerLauncherTest {
                 .afterDisconnect(computer, taskListener);
         verify(queue).schedule2(eq(task1), anyInt(), eq(Arrays.asList(action1)));
         verifyZeroInteractions(queue);
+    }
+
+    @Test
+    public void taskCompleted_should_resubmit_task_with_failed_build_actions() {
+        when(subTask1.getOwnerTask()).thenReturn(workflowJob);
+        when(workflowJob.getLastFailedBuild()).thenReturn(workflowRun);
+        when(workflowRun.getActions(any())).thenReturn((Collections.singletonList(action1)));
+        when(computer.getExecutors()).thenReturn(Arrays.asList(executor1));
+        new EC2FleetAutoResubmitComputerLauncher(baseComputerLauncher)
+            .afterDisconnect(computer, taskListener);
+        verify(queue).schedule2(eq(workflowJob), anyInt(), eq(Arrays.asList(action1)));
+        verify(workflowRun, times(1)).getActions(any());
     }
 
 }
