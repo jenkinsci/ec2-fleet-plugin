@@ -188,7 +188,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                          final boolean scaleExecutorsByWeight,
                          final Integer cloudStatusIntervalSec,
                          final boolean noDelayProvision) {
-        super(StringUtils.isBlank(name) ? DEFAULT_FLEET_CLOUD_ID : name);
+        super(EC2FleetCloudUtil.getValidName(DEFAULT_FLEET_CLOUD_ID, name));
         init();
         this.credentialsId = credentialsId;
         this.awsCredentialsId = awsCredentialsId;

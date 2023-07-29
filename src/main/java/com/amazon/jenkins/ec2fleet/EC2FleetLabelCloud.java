@@ -123,7 +123,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
                               final Integer cloudStatusIntervalSec,
                               final boolean noDelayProvision,
                               final String ec2KeyPairName) {
-        super(StringUtils.isBlank(name) ? DEFAULT_FLEET_CLOUD_ID : name);
+        super(EC2FleetCloudUtil.getValidName(DEFAULT_FLEET_CLOUD_ID, name));
         init();
         this.awsCredentialsId = awsCredentialsId;
         this.region = region;

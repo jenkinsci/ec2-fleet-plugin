@@ -22,8 +22,6 @@ import java.util.logging.Logger;
 public class EC2FleetNode extends Slave implements EphemeralNode {
     private static final Logger LOGGER = Logger.getLogger(EC2FleetNode.class.getName());
 
-    // TODO: Update cloud name on user-initiated change.
-    // Current mitigation in place: A warning message is include in cloud name field's description.
     private String cloudName;
 
     private String instanceId;
