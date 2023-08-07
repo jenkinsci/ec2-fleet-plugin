@@ -226,28 +226,29 @@ AWSCredentialsImpl awsCredentials = new AWSCredentialsImpl(
   config.secretKey,
   "my aws credentials"
 )
- 
+
 BasicSSHUserPrivateKey instanceCredentials = new BasicSSHUserPrivateKey(
   CredentialsScope.GLOBAL,
   "instance-ssh-key",
   "ec2-user",
   new DirectEntryPrivateKeySource(config.ec2PrivateKey),
-  "", 
+  "",
   "my private key to ssh ec2 for jenkins"
 )
- 
 // find detailed information about parameters on plugin config page or
 // https://github.com/jenkinsci/ec2-fleet-plugin/blob/master/src/main/java/com/amazon/jenkins/ec2fleet/EC2FleetCloud.java
 EC2FleetCloud ec2FleetCloud = new EC2FleetCloud(
-  "", // fleetCloudName 
+  "", // fleetCloudName
+  null,
   awsCredentials.id,
   "",
   config.region,
+  "",
   config.fleetId,
   "ec2-fleet",  // labels
   "", // fs root
-  new SSHConnector(22, 
-                   instanceCredentials.id, "", "", "", "", null, 0, 0, 
+  new SSHConnector(22,
+                   instanceCredentials.id, "", "", "", "", null, 0, 0,
                    // consult doc for line below, this one say no host verification, but you can use more strict mode
                    // https://github.com/jenkinsci/ssh-slaves-plugin/blob/master/src/main/java/hudson/plugins/sshslaves/verifiers/NonVerifyingKeyVerificationStrategy.java
                    new NonVerifyingKeyVerificationStrategy()),
@@ -256,11 +257,19 @@ EC2FleetCloud ec2FleetCloud = new EC2FleetCloud(
   config.idleMinutes, // if need to allow downscale set > 0 in min
   config.minSize, // minSize
   config.maxSize, // maxSize
+  0,
   config.numExecutors, // numExecutors
   false, // addNodeOnlyIfRunning
   false, // restrictUsage allow execute only jobs with proper label
+  "",
+  false,
+  180,
+  null,
+  false,
+  30,
+  true
 )
- 
+
 // get Jenkins instance
 Jenkins jenkins = Jenkins.get()
 // get credentials domain
