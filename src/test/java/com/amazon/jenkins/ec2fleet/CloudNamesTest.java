@@ -32,18 +32,24 @@ public class CloudNamesTest {
   }
 
   @Test
-  public void isExistingUnique_true() {
+  public void isDuplicated_false() {
     j.jenkins.clouds.add(new EC2FleetCloud("TestCloud", null, null, null, null, null,
         "test-label", null, null, false, false,
         0, 0, 0, 0, 0, true, false,
         "-1", false, 0, 0, false,
         10, false));
 
-    Assert.assertTrue(CloudNames.isExistingUnique("TestCloud"));
+    j.jenkins.clouds.add(new EC2FleetCloud("TestCloud2", null, null, null, null, null,
+        "test-label", null, null, false, false,
+        0, 0, 0, 0, 0, true, false,
+        "-1", false, 0, 0, false,
+        10, false));
+
+    Assert.assertFalse(CloudNames.isDuplicated("TestCloud"));
   }
 
   @Test
-  public void isExistingUnique_false() {
+  public void isDuplicated_true() {
     j.jenkins.clouds.add(new EC2FleetCloud("TestCloud", null, null, null, null, null,
         "test-label", null, null, false, false,
         0, 0, 0, 0, 0, true, false,
@@ -56,7 +62,7 @@ public class CloudNamesTest {
         "-1", false, 0, 0, false,
         10, false));
 
-    Assert.assertFalse(CloudNames.isExistingUnique("TestCloud"));
+    Assert.assertTrue(CloudNames.isDuplicated("TestCloud"));
   }
 
   @Test

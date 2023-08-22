@@ -863,6 +863,11 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
             if (Boolean.valueOf(isNewCloud) && !CloudNames.isUnique(name)) {
                 return FormValidation.error("Please choose a unique name. Existing clouds: " + Jenkins.get().clouds.stream().map(c -> c.name).collect(Collectors.joining(",")));
             }
+            else if (!Boolean.valueOf(isNewCloud) && CloudNames.isDuplicated(name)) {
+                Set<String> uniqueNames = new HashSet<>();
+                Jenkins.get().clouds.forEach(cloud -> {uniqueNames.add(cloud.name);});
+                return FormValidation.error("This cloud name is not unique. Please choose a unique name and click save. Existing clouds: " + uniqueNames);
+            }
 
             return FormValidation.ok();
         }
@@ -870,6 +875,8 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
         public String getDefaultCloudName() {
             return CloudNames.generateUnique(DEFAULT_FLEET_CLOUD_ID);
         }
+
+        public Boolean isExistingCloudDuplicated(@QueryParameter final String name) { return CloudNames.isDuplicated(name); }
 
         @Override
         public boolean configure(final StaplerRequest req, final JSONObject formData) throws FormException {
