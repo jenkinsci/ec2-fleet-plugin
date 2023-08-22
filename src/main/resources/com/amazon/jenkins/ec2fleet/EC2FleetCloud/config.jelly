@@ -13,7 +13,7 @@
 
     <f:entry title="${%Name}" field="name">
         <j:choose>
-            <j:when test="${instance != null}">
+            <j:when test="${instance != null and descriptor.isExistingCloudUnique(instance.name)}">
                 <!-- Warning: Using <j:set var="readOnlyMode" value="true"/> instead of readOnlyTextbox shows some weird, hard-to-debug behavior where it makes the name null for existing clouds when a new cloud is created.-->
                 <f:readOnlyTextbox/>
             </j:when>

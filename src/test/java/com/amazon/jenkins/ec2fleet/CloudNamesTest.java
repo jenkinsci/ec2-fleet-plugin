@@ -32,6 +32,34 @@ public class CloudNamesTest {
   }
 
   @Test
+  public void isExistingUnique_true() {
+    j.jenkins.clouds.add(new EC2FleetCloud("TestCloud", null, null, null, null, null,
+        "test-label", null, null, false, false,
+        0, 0, 0, 0, 0, true, false,
+        "-1", false, 0, 0, false,
+        10, false));
+
+    Assert.assertTrue(CloudNames.isExistingUnique("TestCloud"));
+  }
+
+  @Test
+  public void isExistingUnique_false() {
+    j.jenkins.clouds.add(new EC2FleetCloud("TestCloud", null, null, null, null, null,
+        "test-label", null, null, false, false,
+        0, 0, 0, 0, 0, true, false,
+        "-1", false, 0, 0, false,
+        10, false));
+
+    j.jenkins.clouds.add(new EC2FleetCloud("TestCloud", null, null, null, null, null,
+        "test-label", null, null, false, false,
+        0, 0, 0, 0, 0, true, false,
+        "-1", false, 0, 0, false,
+        10, false));
+
+    Assert.assertFalse(CloudNames.isExistingUnique("TestCloud"));
+  }
+
+  @Test
   public void generateUnique_noSuffix() {
     Assert.assertEquals("FleetCloud", CloudNames.generateUnique("FleetCloud"));
   }

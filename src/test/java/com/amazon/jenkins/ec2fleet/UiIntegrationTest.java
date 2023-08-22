@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
@@ -307,5 +308,25 @@ public class UiIntegrationTest {
 
         List<DomElement> elementsByName = IntegrationTest.getElementsByNameWithoutJdk(page, "_.name");
         assertTrue(((HtmlTextInput) elementsByName.get(0)).isReadOnly());
+    }
+
+    @Test
+    public void verifyExistingDuplicateCloudNamesEditable() throws Exception {
+        j.jenkins.clouds.add(new EC2FleetCloud("test-cloud", null, null, null, null, "",
+            "label", null, null, false, false,
+            0, 0, 0, 0, 0, true, false,
+            "-1", false, 0, 0, false,
+            10, false));
+        j.jenkins.clouds.add(new EC2FleetCloud("test-cloud", null, null, null, null, "",
+            "label", null, null, false, false,
+            0, 0, 0, 0, 0, true, false,
+            "-1", false, 0, 0, false,
+            10, false));
+
+        HtmlPage page = j.createWebClient().goTo("configureClouds");
+
+        List<DomElement> elementsByName = IntegrationTest.getElementsByNameWithoutJdk(page, "_.name");
+        assertFalse(((HtmlTextInput) elementsByName.get(0)).isReadOnly());
+        assertFalse(((HtmlTextInput) elementsByName.get(1)).isReadOnly());
     }
 }
