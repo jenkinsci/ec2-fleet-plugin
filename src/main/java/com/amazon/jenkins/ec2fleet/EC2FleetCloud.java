@@ -1002,7 +1002,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             return CloudNames.generateUnique(DEFAULT_FLEET_CLOUD_ID);
         }
 
-        public Boolean isExistingCloudDuplicated(@QueryParameter final String name) { return CloudNames.isDuplicated(name); }
+        public Boolean isExistingCloudNameDuplicated(@QueryParameter final String name) { return CloudNames.isDuplicated(name); }
 
         public FormValidation doCheckFleet(@QueryParameter final String fleet) {
             if (StringUtils.isEmpty(fleet)) {
