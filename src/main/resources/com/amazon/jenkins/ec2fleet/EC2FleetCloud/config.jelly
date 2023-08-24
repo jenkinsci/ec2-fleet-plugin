@@ -58,7 +58,7 @@
       <f:checkbox />
     </f:entry>
 
-    <f:description>Always reconnect to offline nodes</f:description>
+    <f:description>Always reconnect to offline nodes after instance reboot or connection loss</f:description>
     <f:entry title="${%Always Reconnect}" field="alwaysReconnect">
       <f:checkbox />
     </f:entry>

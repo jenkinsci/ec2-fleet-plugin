@@ -18,7 +18,7 @@
 | endpoint|string|no|Set only if you need to use custome endpoint ```http://a.com```|
 | fsRoot  |string|no|my-root|
 | privateIpUsed|boolean|no, default ```false```|connect to EC2 instance by private id instead of public|
-| alwaysReconnect|boolean|no, default ```false```||
+| alwaysReconnect|boolean|no, default ```false```|if ```true``` always reconnect to offline nodes after instance reboot or connection loss|
 | labelString |string|yes||
 | idleMinutes |int|no, default ```0```||
 | minSize     |int|no, default ```0```||

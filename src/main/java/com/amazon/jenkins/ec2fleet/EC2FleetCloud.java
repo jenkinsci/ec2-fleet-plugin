@@ -313,6 +313,10 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         return minSpareSize;
     }
 
+    public int getMaxTotalUses() {
+        return maxTotalUses;
+    }
+
     public int getNumExecutors() {
         return numExecutors;
     }
