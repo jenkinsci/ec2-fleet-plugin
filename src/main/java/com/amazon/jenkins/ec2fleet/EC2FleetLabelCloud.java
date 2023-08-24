@@ -876,7 +876,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
             return CloudNames.generateUnique(DEFAULT_FLEET_CLOUD_ID);
         }
 
-        public Boolean isExistingCloudDuplicated(@QueryParameter final String name) { return CloudNames.isDuplicated(name); }
+        public Boolean isExistingCloudNameDuplicated(@QueryParameter final String name) { return CloudNames.isDuplicated(name); }
 
         @Override
         public boolean configure(final StaplerRequest req, final JSONObject formData) throws FormException {
