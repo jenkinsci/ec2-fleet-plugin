@@ -28,6 +28,7 @@ import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -101,43 +102,43 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
      * Will be deleted in future when usage for old version <= 1.1.9 will be totally dropped.
      */
     @Deprecated
-    private final String credentialsId;
+    private String credentialsId;
 
-    private final String awsCredentialsId;
+    private String awsCredentialsId;
     private final String region;
-    private final String endpoint;
+    private String endpoint;
 
     /**
      * In fact fleet ID, not name or anything else
      */
     private final String fleet;
-    private final String fsRoot;
+    private String fsRoot;
     private final ComputerConnector computerConnector;
-    private final boolean privateIpUsed;
-    private final boolean alwaysReconnect;
+    private boolean privateIpUsed;
+    private boolean alwaysReconnect;
     private final String labelString;
-    private final Integer idleMinutes;
-    private final int minSize;
-    private final int maxSize;
-    private final int minSpareSize;
-    private final int numExecutors;
-    private final boolean addNodeOnlyIfRunning;
-    private final boolean restrictUsage;
-    private final boolean scaleExecutorsByWeight;
-    private final Integer initOnlineTimeoutSec;
-    private final Integer initOnlineCheckIntervalSec;
-    private final Integer cloudStatusIntervalSec;
-    private final Integer maxTotalUses;
+    private Integer idleMinutes;
+    private int minSize;
+    private int maxSize;
+    private int minSpareSize;
+    private int numExecutors;
+    private boolean addNodeOnlyIfRunning;
+    private boolean restrictUsage;
+    private boolean scaleExecutorsByWeight;
+    private Integer initOnlineTimeoutSec;
+    private Integer initOnlineCheckIntervalSec;
+    private Integer cloudStatusIntervalSec;
+    private Integer maxTotalUses;
 
     /**
      * @see EC2FleetAutoResubmitComputerLauncher
      */
-    private final boolean disableTaskResubmit;
+    private boolean disableTaskResubmit;
 
     /**
      * @see NoDelayProvisionStrategy
      */
-    private final boolean noDelayProvision;
+    private boolean noDelayProvision;
 
     /**
      * {@link EC2FleetCloud#update()} updating this field, this is one thread
@@ -228,6 +229,11 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         return noDelayProvision;
     }
 
+    @DataBoundSetter
+    public void setNoDelayProvision(boolean noDelayProvision) {
+        this.noDelayProvision = noDelayProvision;
+    }
+
     /**
      * Deprecated.Use {@link EC2FleetCloud#awsCredentialsId}
      *
@@ -240,12 +246,36 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         return StringUtils.isNotBlank(awsCredentialsId) ? awsCredentialsId : credentialsId;
     }
 
+    @DataBoundSetter
+    public void setAwsCredentialsId(String awsCredentialsId) {
+        this.awsCredentialsId = awsCredentialsId;
+    }
+
+    public String getCredentialsId() {
+        return credentialsId;
+    }
+
+    @DataBoundSetter
+    public void setCredentialsId(String credentialsId) {
+        this.credentialsId = credentialsId;
+    }
+
     public boolean isDisableTaskResubmit() {
         return disableTaskResubmit;
     }
 
+    @DataBoundSetter
+    public void setDisableTaskResubmit(boolean disableTaskResubmit) {
+        this.disableTaskResubmit = disableTaskResubmit;
+    }
+
     public int getInitOnlineTimeoutSec() {
         return initOnlineTimeoutSec == null ? DEFAULT_INIT_ONLINE_TIMEOUT_SEC : initOnlineTimeoutSec;
+    }
+
+    @DataBoundSetter
+    public void setInitOnlineTimeoutSec(Integer initOnlineTimeoutSec) {
+        this.initOnlineTimeoutSec = initOnlineTimeoutSec;
     }
 
     public int getScheduledFutureTimeoutSec() {
@@ -257,8 +287,18 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         return cloudStatusIntervalSec == null ? DEFAULT_CLOUD_STATUS_INTERVAL_SEC : cloudStatusIntervalSec;
     }
 
+    @DataBoundSetter
+    public void setCloudStatusIntervalSec(Integer cloudStatusIntervalSec) {
+        this.cloudStatusIntervalSec = cloudStatusIntervalSec;
+    }
+
     public int getInitOnlineCheckIntervalSec() {
         return initOnlineCheckIntervalSec == null ? DEFAULT_INIT_ONLINE_CHECK_INTERVAL_SEC : initOnlineCheckIntervalSec;
+    }
+
+    @DataBoundSetter
+    public void setInitOnlineCheckIntervalSec(Integer initOnlineCheckIntervalSec) {
+        this.initOnlineCheckIntervalSec = initOnlineCheckIntervalSec;
     }
 
     public String getRegion() {
@@ -269,6 +309,11 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         return endpoint;
     }
 
+    @DataBoundSetter
+    public void setEndpoint(String endpoint) {
+        this.endpoint = endpoint;
+    }
+
     public String getFleet() {
         return fleet;
     }
@@ -277,8 +322,18 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         return fsRoot;
     }
 
+    @DataBoundSetter
+    public void setFsRoot(String fsRoot) {
+        this.fsRoot = fsRoot;
+    }
+
     public boolean isAddNodeOnlyIfRunning() {
         return addNodeOnlyIfRunning;
+    }
+
+    @DataBoundSetter
+    public void setAddNodeOnlyIfRunning(boolean addNodeOnlyIfRunning) {
+        this.addNodeOnlyIfRunning = addNodeOnlyIfRunning;
     }
 
     public ComputerConnector getComputerConnector() {
@@ -289,8 +344,18 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         return privateIpUsed;
     }
 
+    @DataBoundSetter
+    public void setPrivateIpUsed(boolean privateIpUsed) {
+        this.privateIpUsed = privateIpUsed;
+    }
+
     public boolean isAlwaysReconnect() {
         return alwaysReconnect;
+    }
+
+    @DataBoundSetter
+    public void setAlwaysReconnect(boolean alwaysReconnect) {
+        this.alwaysReconnect = alwaysReconnect;
     }
 
     public String getLabelString() {
@@ -301,28 +366,81 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         return (idleMinutes != null) ? idleMinutes : 0;
     }
 
+    @DataBoundSetter
+    public void setIdleMinutes(int idleMinutes) {
+        this.idleMinutes = Math.max(0, idleMinutes);
+    }
+
     public int getMaxSize() {
-        return maxSize;
+        return Math.max(1, maxSize);
+    }
+
+    @DataBoundSetter
+    public void setMaxSize(int maxSize) {
+        if (maxSize < minSize) {
+            int newMaxSize = Math.max(1, minSize);
+            warning("Cloud parameter 'maxSize' can't be less than 'minSize' or 1, setting to %d", newMaxSize);
+            maxSize = newMaxSize;
+        }
+        this.maxSize = Math.max(1, maxSize);
     }
 
     public int getMinSize() {
         return minSize;
     }
 
-    public int getMinSpareSize() {
+    @DataBoundSetter
+    public void setMinSize(int minSize) {
+        if (minSize < 0) {
+            warning("Cloud parameter 'minSize' can't be less than 0, setting to 0");
+        }
+        minSize = Math.max(0, minSize);
+        //TODO: This validation is only in place for unit tests since constructor is run twice on CasC load but not
+        // for unit tests
+        if (minSize > maxSize) {
+            warning("Cloud parameter 'minSize' cannot be greater than 'maxSize', setting 'maxSize' to %d. " +
+                    "Ignore this if caused after a CasC load.", minSize);
+            this.maxSize = minSize;
+        }
+        this.minSize = minSize;
+    }
+
+    public synchronized int getMinSpareSize() {
         return minSpareSize;
     }
 
+    @DataBoundSetter
+    public synchronized void setMinSpareSize(int minSpareSize) {
+        this.minSpareSize = Math.max(0, minSpareSize);
+    }
+
     public int getMaxTotalUses() {
-        return maxTotalUses;
+        return maxTotalUses == null ? DEFAULT_MAX_TOTAL_USES : maxTotalUses;
+    }
+
+    @DataBoundSetter
+    public void setMaxTotalUses(String maxTotalUses) {
+        if (StringUtils.isNotBlank(maxTotalUses)) {
+            this.maxTotalUses = Integer.parseInt(maxTotalUses);
+        }
     }
 
     public int getNumExecutors() {
-        return numExecutors;
+        return Math.max(numExecutors, 1);
+    }
+
+    @DataBoundSetter
+    public void setNumExecutors(int numExecutors) {
+        this.numExecutors = Math.max(numExecutors, 1);
     }
 
     public boolean isScaleExecutorsByWeight() {
         return scaleExecutorsByWeight;
+    }
+
+    @DataBoundSetter
+    public void setScaleExecutorsByWeight(boolean scaleExecutorsByWeight) {
+        this.scaleExecutorsByWeight = scaleExecutorsByWeight;
     }
 
     public String getJvmSettings() {
@@ -331,6 +449,11 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
     public boolean isRestrictUsage() {
         return restrictUsage;
+    }
+
+    @DataBoundSetter
+    public void setRestrictUsage(boolean restrictUsage) {
+        this.restrictUsage = restrictUsage;
     }
 
     // Visible for testing
