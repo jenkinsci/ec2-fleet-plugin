@@ -55,21 +55,15 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.util.stream.Collectors;
 
+import static com.amazon.jenkins.ec2fleet.CloudConstants.*;
+
 /**
  * @see CloudNanny
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
 
-    public static final String EC2_INSTANCE_TAG_NAMESPACE = "ec2-fleet-plugin";
-    public static final String EC2_INSTANCE_CLOUD_NAME_TAG = EC2_INSTANCE_TAG_NAMESPACE + ":cloud-name";
-
     public static final String BASE_DEFAULT_FLEET_CLOUD_ID = "FleetCloudLabel";
-
-    public static final int DEFAULT_CLOUD_STATUS_INTERVAL_SEC = 10;
-
-    private static final int DEFAULT_INIT_ONLINE_TIMEOUT_SEC = 3 * 60;
-    private static final int DEFAULT_INIT_ONLINE_CHECK_INTERVAL_SEC = 15;
 
 //    private static final String NEW_EC2_KEY_PAIR_VALUE = "- New Key Pair -";
 
@@ -82,16 +76,16 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
 
     private String fsRoot;
     private final ComputerConnector computerConnector;
-    private boolean privateIpUsed;
-    private boolean alwaysReconnect;
-    private Integer idleMinutes;
-    private int minSize;
-    private int maxSize;
-    private int numExecutors;
-    private boolean restrictUsage;
-    private Integer initOnlineTimeoutSec;
-    private Integer initOnlineCheckIntervalSec;
-    private Integer cloudStatusIntervalSec;
+    private boolean privateIpUsed = DEFAULT_PRIVATE_IP_USED;
+    private boolean alwaysReconnect = DEFAULT_ALWAYS_RECONNECT;
+    private int idleMinutes = DEFAULT_IDLE_MINUTES;
+    private int minSize = DEFAULT_MIN_SIZE;
+    private int maxSize = DEFAULT_MAX_SIZE;
+    private int numExecutors = DEFAULT_NUM_EXECUTORS;
+    private boolean restrictUsage = DEFAULT_RESTRICT_USAGE;
+    private Integer initOnlineTimeoutSec = DEFAULT_INIT_ONLINE_TIMEOUT_SEC;
+    private Integer initOnlineCheckIntervalSec = DEFAULT_INIT_ONLINE_CHECK_INTERVAL_SEC;
+    private Integer cloudStatusIntervalSec = DEFAULT_CLOUD_STATUS_INTERVAL_SEC;
     private final String ec2KeyPairName;
 
     /**
@@ -180,7 +174,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
     }
 
     public int getInitOnlineTimeoutSec() {
-        return initOnlineTimeoutSec == null ? DEFAULT_INIT_ONLINE_TIMEOUT_SEC : initOnlineTimeoutSec;
+        return initOnlineTimeoutSec;
     }
 
     @DataBoundSetter
@@ -189,7 +183,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
     }
 
     public int getCloudStatusIntervalSec() {
-        return cloudStatusIntervalSec == null ? DEFAULT_CLOUD_STATUS_INTERVAL_SEC : cloudStatusIntervalSec;
+        return cloudStatusIntervalSec;
     }
 
     @DataBoundSetter
@@ -198,7 +192,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
     }
 
     public int getInitOnlineCheckIntervalSec() {
-        return initOnlineCheckIntervalSec == null ? DEFAULT_INIT_ONLINE_CHECK_INTERVAL_SEC : initOnlineCheckIntervalSec;
+        return initOnlineCheckIntervalSec;
     }
 
     @DataBoundSetter
@@ -251,7 +245,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
     }
 
     public int getIdleMinutes() {
-        return (idleMinutes != null) ? idleMinutes : 0;
+        return idleMinutes;
     }
 
     @DataBoundSetter
@@ -260,7 +254,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
     }
 
     public int getMaxSize() {
-        return Math.max(1, maxSize);
+        return maxSize;
     }
 
     @DataBoundSetter
@@ -294,7 +288,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
     }
 
     public int getNumExecutors() {
-        return Math.max(numExecutors, 1);
+        return numExecutors;
     }
 
     @DataBoundSetter

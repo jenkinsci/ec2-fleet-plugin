@@ -56,6 +56,8 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.util.stream.Collectors;
 
+import static com.amazon.jenkins.ec2fleet.CloudConstants.*;
+
 /**
  * The {@link EC2FleetCloud} contains the main configuration values used while creating Jenkins nodes.
  * EC2FleetCloud can represent either an AWS EC2 Spot Fleet or an AWS AutoScalingGroup.
@@ -71,17 +73,7 @@ import java.util.stream.Collectors;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
-    public static final String EC2_INSTANCE_TAG_NAMESPACE = "ec2-fleet-plugin";
-    public static final String EC2_INSTANCE_CLOUD_NAME_TAG = EC2_INSTANCE_TAG_NAMESPACE + ":cloud-name";
-
     public static final String BASE_DEFAULT_FLEET_CLOUD_ID = "FleetCloud";
-
-    public static final int DEFAULT_CLOUD_STATUS_INTERVAL_SEC = 10;
-
-    private static final int DEFAULT_INIT_ONLINE_TIMEOUT_SEC = 3 * 60;
-    private static final int DEFAULT_INIT_ONLINE_CHECK_INTERVAL_SEC = 15;
-
-    private static final int DEFAULT_MAX_TOTAL_USES = -1;
 
     private static final SimpleFormatter sf = new SimpleFormatter();
     private static final Logger LOGGER = Logger.getLogger(EC2FleetCloud.class.getName());
@@ -114,21 +106,21 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     private final String fleet;
     private String fsRoot;
     private final ComputerConnector computerConnector;
-    private boolean privateIpUsed;
-    private boolean alwaysReconnect;
+    private boolean privateIpUsed = DEFAULT_PRIVATE_IP_USED;
+    private boolean alwaysReconnect = DEFAULT_ALWAYS_RECONNECT;
     private final String labelString;
-    private Integer idleMinutes;
-    private int minSize;
-    private int maxSize;
-    private int minSpareSize;
-    private int numExecutors;
-    private boolean addNodeOnlyIfRunning;
-    private boolean restrictUsage;
-    private boolean scaleExecutorsByWeight;
-    private Integer initOnlineTimeoutSec;
-    private Integer initOnlineCheckIntervalSec;
-    private Integer cloudStatusIntervalSec;
-    private Integer maxTotalUses;
+    private int idleMinutes = DEFAULT_IDLE_MINUTES;
+    private int minSize = DEFAULT_MIN_SIZE;
+    private int maxSize = DEFAULT_MAX_SIZE;
+    private int minSpareSize = DEFAULT_MIN_SPARE_SIZE;
+    private int numExecutors = DEFAULT_NUM_EXECUTORS;
+    private boolean addNodeOnlyIfRunning = DEFAULT_ADD_NODE_ONLY_IF_RUNNING;
+    private boolean restrictUsage = DEFAULT_RESTRICT_USAGE;
+    private boolean scaleExecutorsByWeight = DEFAULT_SCALE_EXECUTORS_BY_WEIGHT;
+    private Integer initOnlineTimeoutSec = DEFAULT_INIT_ONLINE_TIMEOUT_SEC;
+    private Integer initOnlineCheckIntervalSec = DEFAULT_INIT_ONLINE_CHECK_INTERVAL_SEC;
+    private Integer cloudStatusIntervalSec = DEFAULT_CLOUD_STATUS_INTERVAL_SEC;
+    private Integer maxTotalUses = DEFAULT_MAX_TOTAL_USES;
 
     /**
      * @see EC2FleetAutoResubmitComputerLauncher
@@ -270,7 +262,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     }
 
     public int getInitOnlineTimeoutSec() {
-        return initOnlineTimeoutSec == null ? DEFAULT_INIT_ONLINE_TIMEOUT_SEC : initOnlineTimeoutSec;
+        return initOnlineTimeoutSec;
     }
 
     @DataBoundSetter
@@ -284,7 +276,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     }
 
     public int getCloudStatusIntervalSec() {
-        return cloudStatusIntervalSec == null ? DEFAULT_CLOUD_STATUS_INTERVAL_SEC : cloudStatusIntervalSec;
+        return cloudStatusIntervalSec;
     }
 
     @DataBoundSetter
@@ -293,7 +285,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     }
 
     public int getInitOnlineCheckIntervalSec() {
-        return initOnlineCheckIntervalSec == null ? DEFAULT_INIT_ONLINE_CHECK_INTERVAL_SEC : initOnlineCheckIntervalSec;
+        return initOnlineCheckIntervalSec;
     }
 
     @DataBoundSetter
@@ -363,7 +355,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     }
 
     public int getIdleMinutes() {
-        return (idleMinutes != null) ? idleMinutes : 0;
+        return idleMinutes;
     }
 
     @DataBoundSetter
@@ -372,7 +364,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     }
 
     public int getMaxSize() {
-        return Math.max(1, maxSize);
+        return maxSize;
     }
 
     @DataBoundSetter
@@ -415,7 +407,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     }
 
     public int getMaxTotalUses() {
-        return maxTotalUses == null ? DEFAULT_MAX_TOTAL_USES : maxTotalUses;
+        return maxTotalUses;
     }
 
     @DataBoundSetter
@@ -426,7 +418,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     }
 
     public int getNumExecutors() {
-        return Math.max(numExecutors, 1);
+        return numExecutors;
     }
 
     @DataBoundSetter
