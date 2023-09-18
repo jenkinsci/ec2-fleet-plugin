@@ -61,7 +61,7 @@ public class EC2FleetCloudConfigurationAsCodeTest {
         assertEquals(cloud.getLabelString(), null);
         assertEquals(cloud.getIdleMinutes(), 0);
         assertEquals(cloud.getMinSize(), 0);
-        assertEquals(cloud.getMaxSize(), 0);
+        assertEquals(cloud.getMaxSize(), 1);
         assertEquals(cloud.getNumExecutors(), 1);
         assertEquals(cloud.isAddNodeOnlyIfRunning(), false);
         assertEquals(cloud.isRestrictUsage(), false);
@@ -115,5 +115,26 @@ public class EC2FleetCloudConfigurationAsCodeTest {
             assertTrue(cloud.name.startsWith(EC2FleetCloud.BASE_DEFAULT_FLEET_CLOUD_ID));
             assertEquals(("FleetCloud".length() + CloudNames.SUFFIX_LENGTH + 1), cloud.name.length());
         }
+    }
+
+    @Test
+    @ConfiguredWithCode("EC2FleetCloud/credentials-id-configuration-as-code.yml")
+    public void configurationWithCredentialsId() {
+        assertEquals(jenkinsRule.jenkins.clouds.size(), 1);
+        EC2FleetCloud cloud = (EC2FleetCloud) jenkinsRule.jenkins.clouds.getByName("ec2-fleet");
+
+        assertEquals("ec2-fleet", cloud.name);
+        assertEquals(cloud.getCredentialsId(), "cred");
+    }
+
+    @Test
+    @ConfiguredWithCode("EC2FleetCloud/max-less-than-min-configuration-as-code.yml")
+    public void configurationWithMaxSizeLessThanMinSize() {
+        assertEquals(jenkinsRule.jenkins.clouds.size(), 1);
+        EC2FleetCloud cloud = (EC2FleetCloud) jenkinsRule.jenkins.clouds.getByName("ec2-fleet");
+
+        assertEquals("ec2-fleet", cloud.name);
+        assertEquals(cloud.getMinSize(), 10);
+        assertEquals(cloud.getMaxSize(), 10);
     }
 }
