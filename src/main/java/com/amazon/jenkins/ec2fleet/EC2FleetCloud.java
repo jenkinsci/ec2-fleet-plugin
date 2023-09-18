@@ -158,6 +158,28 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     @DataBoundConstructor
     public EC2FleetCloud(@Nonnull final String name,
                          final String awsCredentialsId,
+                         final String region,
+                         final String fleet,
+                         final ComputerConnector computerConnector,
+                         final String labelString) {
+        super(StringUtils.isNotBlank(name) ? name : CloudNames.generateUnique(BASE_DEFAULT_FLEET_CLOUD_ID));
+        init();
+        //TODO: eventually move this out of this constructor since it is not technically a required field
+        setAwsCredentialsId(awsCredentialsId);
+        this.region = region;
+        this.fleet = fleet;
+        this.computerConnector = computerConnector;
+        this.labelString = labelString;
+
+        if (fleet != null) {
+            this.stats = EC2Fleets.get(fleet).getState(
+                    getAwsCredentialsId(), region, endpoint, getFleet());
+        }
+    }
+
+    @Deprecated
+    public EC2FleetCloud(@Nonnull final String name,
+                         final String awsCredentialsId,
                          final @Deprecated String credentialsId,
                          final String region,
                          final String endpoint,
@@ -167,7 +189,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                          final ComputerConnector computerConnector,
                          final boolean privateIpUsed,
                          final boolean alwaysReconnect,
-                         final Integer idleMinutes,
+                         final int idleMinutes,
                          final int minSize,
                          final int maxSize,
                          final int minSpareSize,
@@ -181,35 +203,26 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                          final boolean scaleExecutorsByWeight,
                          final Integer cloudStatusIntervalSec,
                          final boolean noDelayProvision) {
-        super(StringUtils.isNotBlank(name) ? name : CloudNames.generateUnique(BASE_DEFAULT_FLEET_CLOUD_ID));
-        init();
+        this(name, awsCredentialsId, region, fleet, computerConnector, labelString);
         this.credentialsId = credentialsId;
-        this.awsCredentialsId = awsCredentialsId;
-        this.region = region;
-        this.endpoint = endpoint;
-        this.fleet = fleet;
-        this.fsRoot = fsRoot;
-        this.computerConnector = computerConnector;
-        this.labelString = labelString;
-        this.idleMinutes = idleMinutes;
-        this.privateIpUsed = privateIpUsed;
-        this.alwaysReconnect = alwaysReconnect;
-        if (minSize < 0) {
-            warning("Cloud parameter 'minSize' can't be less than 0, setting to 0");
-        }
-        this.minSize = Math.max(0, minSize);
-        this.maxSize = maxSize;
-        this.minSpareSize = Math.max(0, minSpareSize);
-        this.maxTotalUses = StringUtils.isBlank(maxTotalUses) ? DEFAULT_MAX_TOTAL_USES : Integer.parseInt(maxTotalUses);
-        this.numExecutors = Math.max(numExecutors, 1);
-        this.addNodeOnlyIfRunning = addNodeOnlyIfRunning;
-        this.restrictUsage = restrictUsage;
-        this.scaleExecutorsByWeight = scaleExecutorsByWeight;
-        this.disableTaskResubmit = disableTaskResubmit;
-        this.initOnlineTimeoutSec = initOnlineTimeoutSec;
-        this.initOnlineCheckIntervalSec = initOnlineCheckIntervalSec;
-        this.cloudStatusIntervalSec = cloudStatusIntervalSec;
-        this.noDelayProvision = noDelayProvision;
+        setEndpoint(endpoint);
+        setFsRoot(fsRoot);
+        setPrivateIpUsed(privateIpUsed);
+        setAlwaysReconnect(alwaysReconnect);
+        setIdleMinutes(idleMinutes);
+        setMinSize(minSize);
+        setMaxSize(maxSize);
+        setMinSpareSize(minSpareSize);
+        setMaxTotalUses(maxTotalUses);
+        setNumExecutors(numExecutors);
+        setAddNodeOnlyIfRunning(addNodeOnlyIfRunning);
+        setRestrictUsage(restrictUsage);
+        setScaleExecutorsByWeight(scaleExecutorsByWeight);
+        setDisableTaskResubmit(disableTaskResubmit);
+        setInitOnlineTimeoutSec(initOnlineTimeoutSec);
+        setInitOnlineCheckIntervalSec(initOnlineCheckIntervalSec);
+        setCloudStatusIntervalSec(cloudStatusIntervalSec);
+        setNoDelayProvision(noDelayProvision);
 
         if (fleet != null) {
             this.stats = EC2Fleets.get(fleet).getState(

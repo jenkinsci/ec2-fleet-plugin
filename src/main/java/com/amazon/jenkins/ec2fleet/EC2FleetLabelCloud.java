@@ -101,6 +101,18 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
     private transient Map<String, State> states;
 
     @DataBoundConstructor
+    public EC2FleetLabelCloud(@Nonnull final String name,
+                              final String region,
+                              final ComputerConnector computerConnector,
+                              final String ec2KeyPairName) {
+        super(StringUtils.isNotBlank(name) ? name : CloudNames.generateUnique(BASE_DEFAULT_FLEET_CLOUD_ID));
+        init();
+        this.region = region;
+        this.computerConnector = computerConnector;
+        this.ec2KeyPairName = ec2KeyPairName;
+    }
+
+    @Deprecated
     public EC2FleetLabelCloud(final String name,
                               final String awsCredentialsId,
                               final String region,
@@ -109,7 +121,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
                               final ComputerConnector computerConnector,
                               final boolean privateIpUsed,
                               final boolean alwaysReconnect,
-                              final Integer idleMinutes,
+                              final int idleMinutes,
                               final Integer minSize,
                               final Integer maxSize,
                               final Integer numExecutors,
@@ -120,26 +132,22 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
                               final Integer cloudStatusIntervalSec,
                               final boolean noDelayProvision,
                               final String ec2KeyPairName) {
-        super(StringUtils.isNotBlank(name) ? name : CloudNames.generateUnique(BASE_DEFAULT_FLEET_CLOUD_ID));
-        init();
-        this.awsCredentialsId = awsCredentialsId;
-        this.region = region;
-        this.endpoint = endpoint;
-        this.fsRoot = fsRoot;
-        this.computerConnector = computerConnector;
-        this.idleMinutes = idleMinutes;
-        this.privateIpUsed = privateIpUsed;
-        this.alwaysReconnect = alwaysReconnect;
-        this.minSize = minSize;
-        this.maxSize = maxSize;
-        this.numExecutors = numExecutors;
-        this.restrictUsage = restrictUsage;
-        this.disableTaskResubmit = disableTaskResubmit;
-        this.initOnlineTimeoutSec = initOnlineTimeoutSec;
-        this.initOnlineCheckIntervalSec = initOnlineCheckIntervalSec;
-        this.cloudStatusIntervalSec = cloudStatusIntervalSec;
-        this.noDelayProvision = noDelayProvision;
-        this.ec2KeyPairName = ec2KeyPairName;
+        this(name, region, computerConnector, ec2KeyPairName);
+        setAwsCredentialsId(awsCredentialsId);
+        setEndpoint(endpoint);
+        setFsRoot(fsRoot);
+        setPrivateIpUsed(privateIpUsed);
+        setAlwaysReconnect(alwaysReconnect);
+        setIdleMinutes(idleMinutes);
+        setMinSize(minSize);
+        setMaxSize(maxSize);
+        setNumExecutors(numExecutors);
+        setRestrictUsage(restrictUsage);
+        setDisableTaskResubmit(disableTaskResubmit);
+        setInitOnlineTimeoutSec(initOnlineTimeoutSec);
+        setInitOnlineCheckIntervalSec(initOnlineCheckIntervalSec);
+        setCloudStatusIntervalSec(cloudStatusIntervalSec);
+        setNoDelayProvision(noDelayProvision);
     }
 
     public String getEc2KeyPairName() {
