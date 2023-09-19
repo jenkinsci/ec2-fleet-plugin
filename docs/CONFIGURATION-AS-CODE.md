@@ -8,38 +8,61 @@
 
 [Definition](https://github.com/jenkinsci/ec2-fleet-plugin/blob/master/src/main/java/com/amazon/jenkins/ec2fleet/EC2FleetCloud.java#L156-L179)
 
-| Property                   | Type    | Required                                 | Description                                                                                                                       |
-|----------------------------|---------|------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
-| name                       | string  | yes, default ```""```                    | A unique name for Jenkins cloud. "" signals the plugin to generate a unique default name for the Cloud. e.g. FleetCloud-jBGChqOP  |
-| awsCredentialsId           | string  | no, default ```null```                   | [Leave blank to use AWS EC2 instance role](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html)    |
-| computerConnector          | object  | yes                                      | for example ```sshConnector```                                                                                                    |
-| region                     | string  | yes                                      | ```us-east-2```, full [list](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html)    |
-| fleet                      | string  | yes                                      | my-fleet                                                                                                                          |
-| endpoint                   | string  | no                                       | Set only if you need to use custome endpoint ```http://a.com```                                                                   |
-| fsRoot                     | string  | no                                       | my-root                                                                                                                           |
-| privateIpUsed              | boolean | no, default ```false```                  | connect to EC2 instance by private id instead of public                                                                           |
-| alwaysReconnect            | boolean | no, default ```false```                  ||
-| labelString                | string  | yes                                      ||
-| idleMinutes                | int     | no, default ```0```                      ||
-| minSize                    | int     | no, default ```0```                      ||
-| maxSize                    | int     | no, default ```0```                      ||
-| minSpareSize               | int     | no, default ```0```                      || minimum number of instances allowed to be idle, ready to pickup work. maxSize overrides minSpareSize. Such instances are exempted from 'Max Idle Minutes Before Scaledown' config.
-| maxTotalUses               | int     | no, default ```-1``` i.e. unlimited uses || maximum number of times a node can be used. Overrides minSize and minSpareSize, if set.
-| numExecutors               | int     | no, default ```1```                      ||
-| addNodeOnlyIfRunning       | boolean | no, default ```false```                  ||
-| restrictUsage              | boolean | no, default ```false```                  | if ```true``` fleet nodes will executed only jobs with same label                                                                 |
-| scaleExecutorsByWeight     | boolean | no, default ```false```                  ||
-| disableTaskResubmit        | boolean | no, default ```false```                  ||
-| initOnlineTimeoutSec       | int     | no, default ```180```                    ||
-| initOnlineCheckIntervalSec | int     | no, default ```15```                     ||
-| cloudStatusIntervalSec     | int     | no, default ```10```                     ||
-| noDelayProvision           | boolean | no, default ```false```                  ||
+| Property                   | Type    | Required                                 | Description                                                                                                                      |
+|----------------------------|---------|------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| name                       | string  | yes, default ```"FleetCloud-XXXXXXXX"``` | A unique name for Jenkins cloud. "" signals the plugin to generate a unique default name for the Cloud. e.g. FleetCloud-jBGChqOP |
+| awsCredentialsId           | string  | no, default ```null```                   | [Leave blank to use AWS EC2 instance role](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html)   |
+| computerConnector          | object  | yes                                      | for example ```sshConnector```                                                                                                   |
+| region                     | string  | yes                                      | ```us-east-2```, full [list](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html)   |
+| fleet                      | string  | yes                                      | my-fleet                                                                                                                         |
+| endpoint                   | string  | no                                       | Set only if you need to use custom endpoint ```http://a.com```                                                                   |
+| fsRoot                     | string  | no                                       | my-root                                                                                                                          |
+| privateIpUsed              | boolean | no, default ```false```                  | connect to EC2 instance by private id instead of public                                                                          |
+| alwaysReconnect            | boolean | no, default ```false```                  |                                                                                                                                  |
+| labelString                | string  | yes                                      |                                                                                                                                  |
+| idleMinutes                | int     | no, default ```0```                      |                                                                                                                                  |
+| minSize                    | int     | no, default ```0```                      |                                                                                                                                  |
+| maxSize                    | int     | no, default ```1```                      |                                                                                                                                  |
+| minSpareSize               | int     | no, default ```0```                      |                                                                                                                                  | minimum number of instances allowed to be idle, ready to pickup work. maxSize overrides minSpareSize. Such instances are exempted from 'Max Idle Minutes Before Scaledown' config.
+| maxTotalUses               | int     | no, default ```-1``` i.e. unlimited uses |                                                                                                                                  | maximum number of times a node can be used. Overrides minSize and minSpareSize, if set.
+| numExecutors               | int     | no, default ```1```                      |                                                                                                                                  |
+| addNodeOnlyIfRunning       | boolean | no, default ```false```                  |                                                                                                                                  |
+| restrictUsage              | boolean | no, default ```false```                  | if ```true``` fleet nodes will executed only jobs with same label                                                                |
+| scaleExecutorsByWeight     | boolean | no, default ```false```                  |                                                                                                                                  |
+| disableTaskResubmit        | boolean | no, default ```false```                  |                                                                                                                                  |
+| initOnlineTimeoutSec       | int     | no, default ```180```                    |                                                                                                                                  |
+| initOnlineCheckIntervalSec | int     | no, default ```15```                     |                                                                                                                                  |
+| cloudStatusIntervalSec     | int     | no, default ```10```                     |                                                                                                                                  |
+| noDelayProvision           | boolean | no, default ```false```                  |                                                                                                                                  |
 
 ## EC2FleetLabelCloud
 
 More about this type [here](LABEL-BASED-CONFIGURATION.md)
 
 [Definition](https://github.com/jenkinsci/ec2-fleet-plugin/blob/master/src/main/java/com/amazon/jenkins/ec2fleet/EC2FleetLabelCloud.java#L123-L145)
+
+| Property                   | Type    | Required                                      | Description                                                                                                                             |
+|----------------------------|---------|-----------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| name                       | string  | yes, default ```"FleetCloudLabel-XXXXXXXX"``` | A unique name for Jenkins cloud. "" signals the plugin to generate a unique default name for the Cloud. e.g. `FleetCloudLabel-jBGChqOP` |
+| awsCredentialsId           | string  | no, default ```null```                        | [Leave blank to use AWS EC2 instance role](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html)          |
+| computerConnector          | object  | yes                                           | for example ```sshConnector```                                                                                                          |
+| region                     | string  | yes                                           | ```us-east-2```, full [list](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html)          |
+| endpoint                   | string  | no                                            | Set only if you need to use custom endpoint ```http://a.com```                                                                          |
+| fsRoot                     | string  | no                                            | my-root                                                                                                                                 |
+| privateIpUsed              | boolean | no, default ```false```                       | connect to EC2 instance by private id instead of public                                                                                 |
+| alwaysReconnect            | boolean | no, default ```false```                       |                                                                                                                                         |
+| idleMinutes                | int     | no, default ```0```                           |                                                                                                                                         |
+| minSize                    | int     | no, default ```0```                           |                                                                                                                                         |
+| maxSize                    | int     | no, default ```1```                           |                                                                                                                                         |
+| maxTotalUses               | int     | no, default ```-1``` i.e. unlimited uses      |                                                                                                                                         | maximum number of times a node can be used. Overrides minSize and minSpareSize, if set.
+| numExecutors               | int     | no, default ```1```                           |                                                                                                                                         |
+| restrictUsage              | boolean | no, default ```false```                       | if ```true``` fleet nodes will executed only jobs with same label                                                                       |
+| disableTaskResubmit        | boolean | no, default ```false```                       |                                                                                                                                         |
+| initOnlineTimeoutSec       | int     | no, default ```180```                         |                                                                                                                                         |
+| initOnlineCheckIntervalSec | int     | no, default ```15```                          |                                                                                                                                         |
+| cloudStatusIntervalSec     | int     | no, default ```10```                          |                                                                                                                                         |
+| noDelayProvision           | boolean | no, default ```false```                       |                                                                                                                                         |
+| ec2KeyPairName             | string  | yes                                           | AWS EC2 SSH Key-Pair Name                                                                                                               |
 
 ## Examples
 
@@ -49,7 +72,7 @@ More about this type [here](LABEL-BASED-CONFIGURATION.md)
 jenkins:
   clouds:
     - ec2Fleet:
-        name: ec2-fleet
+        name: ""
         computerConnector:
             sshConnector:
                 credentialsId: cred
@@ -57,8 +80,7 @@ jenkins:
                   NonVerifyingKeyVerificationStrategy
         region: us-east-2
         fleet: my-fleet
-        minSize: 1
-        maxSize: 10
+        labelString: ""
 ```
 
 ### EC2FleetCloud (All properties)
@@ -81,6 +103,7 @@ jenkins:
         labelString: myLabel
         idleMinutes: 33
         minSize: 15
+        minSpareSize: 20
         maxSize: 90
         numExecutors: 12
         addNodeOnlyIfRunning: true
@@ -91,4 +114,49 @@ jenkins:
         cloudStatusIntervalSec: 11
         disableTaskResubmit: true
         noDelayProvision: true
+```
+
+### EC2FleetLabelCloud (min set of properties)
+
+```yaml
+jenkins:
+  clouds:
+    - ec2FleetLabel:
+        name: ""
+        computerConnector:
+            sshConnector:
+                credentialsId: cred
+                sshHostKeyVerificationStrategy:
+                  NonVerifyingKeyVerificationStrategy
+        region: us-east-2
+        ec2KeyPairName: ec2KeyPair
+```
+
+### EC2FleetLabelCloud (All properties)
+
+```yaml
+jenkins:
+  clouds:
+    - ec2FleetLabel:
+        name: ec2-fleet-label
+        awsCredentialsId: xx
+        computerConnector:
+            sshConnector:
+                credentialsId: cred
+        region: us-east-2
+        endpoint: http://a.com
+        fsRoot: my-root
+        privateIpUsed: true
+        alwaysReconnect: true
+        idleMinutes: 33
+        minSize: 15
+        maxSize: 90
+        numExecutors: 12
+        restrictUsage: true
+        initOnlineTimeoutSec: 181
+        initOnlineCheckIntervalSec: 13
+        cloudStatusIntervalSec: 11
+        disableTaskResubmit: true
+        noDelayProvision: true
+        ec2KeyPairName: ec2KeyPair
 ```
