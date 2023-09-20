@@ -94,7 +94,7 @@
     </f:entry>
 
     <f:entry title="${%Minimum Cluster Size}" field="minSize">
-      <f:number clazz="required number" min="0" default="1" />
+      <f:number clazz="required number" min="0" default="0" />
     </f:entry>
 
     <f:entry title="${%Maximum Cluster Size}" field="maxSize">
