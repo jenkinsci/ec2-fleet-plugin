@@ -22,7 +22,7 @@ public class EC2CreateFleet implements EC2Fleet {
                 final String curFleetId = fleetData.getFleetId();
                 final boolean selected = ObjectUtils.nullSafeEquals(selectedId, curFleetId);
                 if (selected || showAll || isActiveAndMaintain(fleetData)) {
-                    final String displayStr = "EC2 Spot Fleet - " + curFleetId +
+                    final String displayStr = "EC2 Create Fleet - " + curFleetId +
                             " (" + fleetData.getFleetState() + ")" +
                             " (" + fleetData.getType() + ")";
                     model.add(new ListBoxModel.Option(displayStr, curFleetId, selected));
@@ -62,27 +62,13 @@ public class EC2CreateFleet implements EC2Fleet {
     public FleetStateStats getState(String awsCredentialsId, String regionName, String endpoint, String id) {
         final AmazonEC2 ec2 = Registry.getEc2Api().connect(awsCredentialsId, regionName, endpoint);
 
-        String token = null;
-        final Set<String> instances = new HashSet<>();
-        do {
-            final DescribeFleetInstancesRequest request = new DescribeFleetInstancesRequest();
-            request.setFleetId(id);
-            request.setNextToken(token);
-            final DescribeFleetInstancesResult result = ec2.describeFleetInstances(request);
-            for (final ActiveInstance instance : result.getActiveInstances()) {
-                instances.add(instance.getInstanceId());
-            }
-
-            token = result.getNextToken();
-        } while (token != null);
-
         final DescribeFleetsRequest request = new DescribeFleetsRequest();
         request.setFleetIds(Collections.singleton(id));
-        final DescribeFleetsResult fleet = ec2.describeFleets(request);
-        if (fleet.getFleets().isEmpty())
-            throw new IllegalStateException("Fleet " + id + " can't be described");
+        final DescribeFleetsResult result = ec2.describeFleets(request);
+        if (result.getFleets().isEmpty())
+            throw new IllegalStateException("Fleet " + id + " doesn't exist");
 
-        final FleetData fleetData = fleet.getFleets().get(0);
+        final FleetData fleetData = result.getFleets().get(0);
         final List<FleetLaunchTemplateConfig> templateConfigs = fleetData.getLaunchTemplateConfigs();
 
         // Index configured instance types by weight:
@@ -94,7 +80,7 @@ public class EC2CreateFleet implements EC2Fleet {
 
                 final Double instanceWeight = launchOverrides.getWeightedCapacity();
                 final Double existingWeight = instanceTypeWeights.get(instanceType);
-                if (instanceWeight == null || (existingWeight != null && existingWeight > instanceWeight)) {
+                if (instanceWeight == null || (existingWeight != null && existingWeight >= instanceWeight)) {
                     continue;
                 }
                 instanceTypeWeights.put(instanceType, instanceWeight);
@@ -107,8 +93,25 @@ public class EC2CreateFleet implements EC2Fleet {
                         isActive(fleetData),
                         isModifying(fleetData),
                         fleetData.getFleetState()),
-                instances,
+                getActiveFleetInstances(ec2, id),
                 instanceTypeWeights);
+    }
+
+    private Set<String> getActiveFleetInstances(AmazonEC2 ec2, String fleetId) {
+        String token = null;
+        final Set<String> instances = new HashSet<>();
+        do {
+            final DescribeFleetInstancesRequest request = new DescribeFleetInstancesRequest();
+            request.setFleetId(fleetId);
+            request.setNextToken(token);
+            final DescribeFleetInstancesResult result = ec2.describeFleetInstances(request);
+            for (final ActiveInstance instance : result.getActiveInstances()) {
+                instances.add(instance.getInstanceId());
+            }
+
+            token = result.getNextToken();
+        } while (token != null);
+        return instances;
     }
 
     private static class State {
@@ -129,25 +132,14 @@ public class EC2CreateFleet implements EC2Fleet {
         }
 
         for (State state : states) {
-            String token = null;
-            state.instances = new HashSet<>();
-            do {
-                final DescribeFleetInstancesRequest request = new DescribeFleetInstancesRequest();
-                request.setFleetId(state.id);
-                request.setNextToken(token);
-                final DescribeFleetInstancesResult result = ec2.describeFleetInstances(request);
-                for (final ActiveInstance instance : result.getActiveInstances()) {
-                    state.instances.add(instance.getInstanceId());
-                }
-
-                token = result.getNextToken();
-            } while (token != null);
+            state.instances = getActiveFleetInstances(ec2, state.id);
         }
 
         final DescribeFleetsRequest request = new DescribeFleetsRequest();
         request.setFleetIds(ids);
-        final DescribeFleetsResult fleet = ec2.describeFleets(request);
-        for (FleetData fleetData: fleet.getFleets()) {
+        final DescribeFleetsResult result = ec2.describeFleets(request);
+
+        for (FleetData fleetData: result.getFleets()) {
             for (State state : states) {
                 if (state.id.equals(fleetData.getFleetId())) state.fleetData = fleetData;
             }
@@ -155,14 +147,16 @@ public class EC2CreateFleet implements EC2Fleet {
 
         Map<String, FleetStateStats> r = new HashMap<>();
         for (State state : states) {
-            r.put(state.id, new FleetStateStats(state.id,
-                    state.fleetData.getTargetCapacitySpecification().getTotalTargetCapacity(),
-                    new FleetStateStats.State(
-                            isActive(state.fleetData),
-                            isModifying(state.fleetData),
-                            state.fleetData.getFleetState()),
-                    state.instances,
-                    Collections.<String, Double>emptyMap()));
+            if(state.fleetData != null) {
+                r.put(state.id, new FleetStateStats(state.id,
+                        state.fleetData.getTargetCapacitySpecification().getTotalTargetCapacity(),
+                        new FleetStateStats.State(
+                                isActive(state.fleetData),
+                                isModifying(state.fleetData),
+                                state.fleetData.getFleetState()),
+                        state.instances,
+                        Collections.<String, Double>emptyMap()));
+            }
         }
         return r;
     }
