@@ -18,7 +18,7 @@ A clear and concise description of what the bug is.
 etc.
 
 ** Logs **
-Tip: See this guide to configure a logger in Jenkins UI. Please attach `fine` logs if you think they are relevant.
+Tip: See [this guide](https://www.jenkins.io/doc/book/system-administration/viewing-logs/#logs-in-jenkins) to configure a logger in Jenkins UI. Please attach `fine` logs if you think they are relevant.
 
 
 ## Environment Details
