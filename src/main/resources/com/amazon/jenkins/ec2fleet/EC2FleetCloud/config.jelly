@@ -79,14 +79,13 @@
       <f:textbox />
     </f:entry>
 
-    <f:description>Number of executors per instance</f:description>
+    <f:description>Testing Number of executors per instance</f:description>
     <f:entry title="${%Number of Executors}" field="numExecutors">
       <f:textbox clazz="required positive-number" default="1" />
     </f:entry>
 
-    <f:entry title="${%Scale Executors by Weight}" field="scaleExecutorsByWeight">
-      <f:checkbox />
-    </f:entry>
+
+    <f:dropdownDescriptorSelector field="executorScaler" descriptors="${descriptor.getExecutorScalerDescriptors()}" title="Scale Executors"/>
 
     <f:description>How long to keep an idle node. If set to 0, never scale down</f:description>
     <f:entry title="${%Max Idle Minutes Before Scaledown}" field="idleMinutes">

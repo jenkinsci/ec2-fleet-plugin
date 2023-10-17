@@ -1,0 +1,9 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+    <f:entry title="vCPU(s) Per Executor" field="vCpuPerExecutor">
+        <f:number clazz="required number" default="0"/>
+    </f:entry>
+    <f:entry title="Memory(GiB) Per Executor" field="memoryGiBPerExecutor">
+        <f:number clazz="required number" default="0"/>
+    </f:entry>
+</j:jelly>
