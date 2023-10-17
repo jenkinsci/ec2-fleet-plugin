@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.mockito.ArgumentMatchers.any;
 
-public class EC2FleetLabelCloudIntegrationTest extends IntegrationTest {
+public class FleetLabelCloudIntegrationTest extends IntegrationTest {
 
     @BeforeClass
     public static void beforeClass() {
@@ -29,7 +29,7 @@ public class EC2FleetLabelCloudIntegrationTest extends IntegrationTest {
         mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Running);
         mockCloudFormationApi();
 
-        EC2FleetLabelCloud cloud = new EC2FleetLabelCloud("FleetLabel", "credId", "region",
+        FleetLabelCloud cloud = new FleetLabelCloud("FleetLabel", "credId", "region",
                 null, null, new LocalComputerConnector(j), false, false,
                 0, 0, 0, 1, false,
                 false, 0, 0,
@@ -58,7 +58,7 @@ public class EC2FleetLabelCloudIntegrationTest extends IntegrationTest {
         mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Running);
         final AmazonCloudFormation amazonCloudFormation = mockCloudFormationApi();
 
-        EC2FleetLabelCloud cloud = new EC2FleetLabelCloud("FleetLabel", "credId", "region",
+        FleetLabelCloud cloud = new FleetLabelCloud("FleetLabel", "credId", "region",
                 null, null, new LocalComputerConnector(j), false, false,
                 0, 0, 0, 1, false,
                 false, 0, 0,

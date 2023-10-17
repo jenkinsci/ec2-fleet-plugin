@@ -10,12 +10,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @see EC2FleetCloud
- * @see EC2FleetStatusWidget
+ * @see FleetCloud
+ * @see FleetStatusWidget
  */
 @Extension
 @SuppressWarnings("unused")
-public class EC2FleetStatusWidgetUpdater extends PeriodicWork {
+public class FleetStatusWidgetUpdater extends PeriodicWork {
 
     @Override
     public long getRecurrencePeriod() {
@@ -30,21 +30,21 @@ public class EC2FleetStatusWidgetUpdater extends PeriodicWork {
      */
     @Override
     protected void doRun() {
-        final List<EC2FleetStatusInfo> info = new ArrayList<>();
+        final List<FleetStatusInfo> info = new ArrayList<>();
         for (final Cloud cloud : getClouds()) {
-            if (!(cloud instanceof EC2FleetCloud)) continue;
-            final EC2FleetCloud fleetCloud = (EC2FleetCloud) cloud;
+            if (!(cloud instanceof FleetCloud)) continue;
+            final FleetCloud fleetCloud = (FleetCloud) cloud;
             final FleetStateStats stats = fleetCloud.getStats();
             // could be when plugin just started and not yet updated, ok to skip
             if (stats == null) continue;
 
-            info.add(new EC2FleetStatusInfo(
+            info.add(new FleetStatusInfo(
                     fleetCloud.getFleet(), stats.getState().getDetailed(), fleetCloud.getLabelString(),
                     stats.getNumActive(), stats.getNumDesired()));
         }
 
         for (final Widget w : getWidgets()) {
-            if (w instanceof EC2FleetStatusWidget) ((EC2FleetStatusWidget) w).setStatusList(info);
+            if (w instanceof FleetStatusWidget) ((FleetStatusWidget) w).setStatusList(info);
         }
     }
 

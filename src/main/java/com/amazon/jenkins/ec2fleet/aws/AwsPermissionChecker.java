@@ -2,7 +2,7 @@ package com.amazon.jenkins.ec2fleet.aws;
 
 import com.amazon.jenkins.ec2fleet.Registry;
 import com.amazon.jenkins.ec2fleet.fleet.AutoScalingGroupFleet;
-import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
+import com.amazon.jenkins.ec2fleet.fleet.Fleets;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.model.AmazonAutoScalingException;
 import com.amazonaws.services.ec2.AmazonEC2;
@@ -46,28 +46,28 @@ public class AwsPermissionChecker {
         final AmazonEC2 ec2Client = Registry.getEc2Api().connect(awsCrendentialsId, regionName, endpoint);
         final List<String> missingPermissions = new ArrayList<>(getMissingCommonPermissions(ec2Client));
         if(StringUtils.isBlank(fleet)) { // Since we don't know the fleet type, show permissions for both
-            missingPermissions.addAll(getMissingPermissionsForEC2Fleet(ec2Client, fleet));
+            missingPermissions.addAll(getMissingPermissionsForFleet(ec2Client, fleet));
             missingPermissions.addAll(getMissingPermissionsForASG());
-        } else if(EC2Fleets.isEC2Fleet(fleet)) {
-            missingPermissions.addAll(getMissingPermissionsForEC2Fleet(ec2Client, fleet));
+        } else if(Fleets.isSpotFleet(fleet)) {
+            missingPermissions.addAll(getMissingPermissionsForFleet(ec2Client, fleet));
         } else {
             missingPermissions.addAll(getMissingPermissionsForASG());
         }
         return missingPermissions;
     }
 
-    private List<String> getMissingPermissionsForEC2Fleet(final AmazonEC2 ec2Client, final String fleet) {
-        final List<String> missingEC2FleetPermissions = new ArrayList<>();
+    private List<String> getMissingPermissionsForFleet(final AmazonEC2 ec2Client, final String fleet) {
+        final List<String> missingFleetPermissions = new ArrayList<>();
         if(!hasDescribeSpotFleetRequestsPermission(ec2Client, fleet)) {
-            missingEC2FleetPermissions.add(FleetAPI.DescribeSpotFleetRequests.name());
+            missingFleetPermissions.add(FleetAPI.DescribeSpotFleetRequests.name());
         }
         if(!hasDescribeSpotFleetInstancesPermission(ec2Client, fleet)) {
-            missingEC2FleetPermissions.add(FleetAPI.DescribeSpotFleetInstances.name());
+            missingFleetPermissions.add(FleetAPI.DescribeSpotFleetInstances.name());
         }
         if(!hasModifySpotFleetRequestPermission(ec2Client, fleet)) {
-            missingEC2FleetPermissions.add(FleetAPI.ModifySpotFleetRequest.name());
+            missingFleetPermissions.add(FleetAPI.ModifySpotFleetRequest.name());
         }
-        return missingEC2FleetPermissions;
+        return missingFleetPermissions;
     }
 
     private List<String> getMissingCommonPermissions(final AmazonEC2 ec2Client) {

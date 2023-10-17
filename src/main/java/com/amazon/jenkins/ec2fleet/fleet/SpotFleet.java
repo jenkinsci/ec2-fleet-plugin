@@ -31,7 +31,7 @@ import java.util.Set;
  * https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-fleet-requests.html#spot-fleet-states
  */
 @ThreadSafe
-public class EC2SpotFleet implements EC2Fleet {
+public class SpotFleet implements Fleet {
 
     @Override
     public void describe(

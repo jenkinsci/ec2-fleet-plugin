@@ -22,23 +22,23 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * The {@link EC2FleetAutoResubmitComputerLauncher} is responsible for controlling:
- *  * how {@link EC2FleetNodeComputer}s are launched
- *  * how {@link EC2FleetNodeComputer}s connect to agents {@link EC2FleetNode}
+ * The {@link FleetAutoResubmitComputerLauncher} is responsible for controlling:
+ *  * how {@link FleetNodeComputer}s are launched
+ *  * how {@link FleetNodeComputer}s connect to agents {@link FleetNode}
  *
  * This is wrapper for {@link ComputerLauncher} to get notification when agent was disconnected
  * and automatically resubmit {@link hudson.model.Queue.Task} if reason is unexpected termination
  * which usually means EC2 instance was interrupted.
  * <p>
  * This is optional feature, it's enabled by default, but could be disabled by
- * {@link EC2FleetCloud#isDisableTaskResubmit()}
+ * {@link FleetCloud#isDisableTaskResubmit()}
  */
 @SuppressWarnings("WeakerAccess")
 @ThreadSafe
-public class EC2FleetAutoResubmitComputerLauncher extends DelegatingComputerLauncher {
+public class FleetAutoResubmitComputerLauncher extends DelegatingComputerLauncher {
 
     private static final Level LOG_LEVEL = Level.INFO;
-    private static final Logger LOGGER = Logger.getLogger(EC2FleetAutoResubmitComputerLauncher.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(FleetAutoResubmitComputerLauncher.class.getName());
 
     /**
      * Delay which will be applied when job {@link Queue#scheduleInternal(Queue.Task, int, List)}
@@ -46,7 +46,7 @@ public class EC2FleetAutoResubmitComputerLauncher extends DelegatingComputerLaun
      */
     private static final int RESCHEDULE_QUIET_PERIOD_SEC = 10;
 
-    public EC2FleetAutoResubmitComputerLauncher(final ComputerLauncher launcher) {
+    public FleetAutoResubmitComputerLauncher(final ComputerLauncher launcher) {
         super(launcher);
     }
 
@@ -72,14 +72,14 @@ public class EC2FleetAutoResubmitComputerLauncher extends DelegatingComputerLaun
      */
     @SuppressFBWarnings(
             value = "BC_UNCONFIRMED_CAST",
-            justification = "to ignore EC2FleetNodeComputer cast")
+            justification = "to ignore FleetNodeComputer cast")
     @Override
     public void afterDisconnect(final SlaveComputer computer, final TaskListener listener) {
         // according to jenkins docs could be null in edge cases, check ComputerLauncher.afterDisconnect
         if (computer == null) return;
 
         // in some multi-thread edge cases cloud could be null for some time, just be ok with that
-        final AbstractEC2FleetCloud cloud = ((EC2FleetNodeComputer) computer).getCloud();
+        final AbstractFleetCloud cloud = ((FleetNodeComputer) computer).getCloud();
         if (cloud == null) {
             LOGGER.warning("Cloud is null for computer " + computer.getDisplayName()
                     + ". This should be autofixed in a few minutes, if not please create an issue for the plugin");

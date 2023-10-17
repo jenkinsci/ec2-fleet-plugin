@@ -208,75 +208,75 @@ import hudson.plugins.sshslaves.verifiers.NonVerifyingKeyVerificationStrategy
 import com.cloudbees.plugins.credentials.*
 import com.cloudbees.plugins.credentials.domains.Domain
 import hudson.model.*
-import com.amazon.jenkins.ec2fleet.EC2FleetCloud
+import com.amazon.jenkins.ec2fleet.FleetCloud
 import jenkins.model.Jenkins
 
 // just modify this config other code just logic
 config = [
-    region: "us-east-1",
-    // EC2 Spot Fleet ID
-    // or Auto Scaling Group Name
-    fleetId: "...", 
-    idleMinutes: 10,
-    minSize: 0,
-    maxSize: 10,
-    numExecutors: 1,
-    awsKeyId: "...",
-    secretKey: "...",
-    ec2PrivateKey: '''-----BEGIN RSA PRIVATE KEY-----
+        region       : "us-east-1",
+        // EC2 Spot Fleet ID
+        // or Auto Scaling Group Name
+        fleetId      : "...",
+        idleMinutes  : 10,
+        minSize      : 0,
+        maxSize      : 10,
+        numExecutors : 1,
+        awsKeyId     : "...",
+        secretKey    : "...",
+        ec2PrivateKey: '''-----BEGIN RSA PRIVATE KEY-----
 ...
 -----END RSA PRIVATE KEY-----'''
 ]
 
 // https://github.com/jenkinsci/aws-credentials-plugin/blob/aws-credentials-1.23/src/main/java/com/cloudbees/jenkins/plugins/awscredentials/AWSCredentialsImpl.java
 AWSCredentialsImpl awsCredentials = new AWSCredentialsImpl(
-  CredentialsScope.GLOBAL,
-  "aws-credentials",
-  config.awsKeyId,
-  config.secretKey,
-  "my aws credentials"
+        CredentialsScope.GLOBAL,
+        "aws-credentials",
+        config.awsKeyId,
+        config.secretKey,
+        "my aws credentials"
 )
 
 BasicSSHUserPrivateKey instanceCredentials = new BasicSSHUserPrivateKey(
-  CredentialsScope.GLOBAL,
-  "instance-ssh-key",
-  "ec2-user",
-  new DirectEntryPrivateKeySource(config.ec2PrivateKey),
-  "",
-  "my private key to ssh ec2 for jenkins"
+        CredentialsScope.GLOBAL,
+        "instance-ssh-key",
+        "ec2-user",
+        new DirectEntryPrivateKeySource(config.ec2PrivateKey),
+        "",
+        "my private key to ssh ec2 for jenkins"
 )
 // find detailed information about parameters on plugin config page or
-// https://github.com/jenkinsci/ec2-fleet-plugin/blob/master/src/main/java/com/amazon/jenkins/ec2fleet/EC2FleetCloud.java
-EC2FleetCloud ec2FleetCloud = new EC2FleetCloud(
-  "", // fleetCloudName
-  null,
-  awsCredentials.id,
-  config.region,
-  "",
-  config.fleetId,
-  "ec2-fleet",  // labels
-  "", // fs root
-  new SSHConnector(22,
-                   instanceCredentials.id, "", "", "", "", null, 0, 0,
-                   // consult doc for line below, this one say no host verification, but you can use more strict mode
-                   // https://github.com/jenkinsci/ssh-slaves-plugin/blob/master/src/main/java/hudson/plugins/sshslaves/verifiers/NonVerifyingKeyVerificationStrategy.java
-                   new NonVerifyingKeyVerificationStrategy()),
-  false, // if need to use privateIpUsed
-  false, // if need alwaysReconnect
-  config.idleMinutes, // if need to allow downscale set > 0 in min
-  config.minSize, // minSize
-  config.maxSize, // maxSize
-  0,
-  config.numExecutors, // numExecutors
-  false, // addNodeOnlyIfRunning
-  false, // restrictUsage allow execute only jobs with proper label
-  "",
-  false,
-  180,
-  null,
-  false,
-  30,
-  true
+// https://github.com/jenkinsci/ec2-fleet-plugin/blob/master/src/main/java/com/amazon/jenkins/ec2fleet/FleetCloud.java
+FleetCloud ec2FleetCloud = new FleetCloud(
+        "", // fleetCloudName
+        null,
+        awsCredentials.id,
+        config.region,
+        "",
+        config.fleetId,
+        "ec2-fleet",  // labels
+        "", // fs root
+        new SSHConnector(22,
+                instanceCredentials.id, "", "", "", "", null, 0, 0,
+                // consult doc for line below, this one say no host verification, but you can use more strict mode
+                // https://github.com/jenkinsci/ssh-slaves-plugin/blob/master/src/main/java/hudson/plugins/sshslaves/verifiers/NonVerifyingKeyVerificationStrategy.java
+                new NonVerifyingKeyVerificationStrategy()),
+        false, // if need to use privateIpUsed
+        false, // if need alwaysReconnect
+        config.idleMinutes, // if need to allow downscale set > 0 in min
+        config.minSize, // minSize
+        config.maxSize, // maxSize
+        0,
+        config.numExecutors, // numExecutors
+        false, // addNodeOnlyIfRunning
+        false, // restrictUsage allow execute only jobs with proper label
+        "",
+        false,
+        180,
+        null,
+        false,
+        30,
+        true
 )
 
 // get Jenkins instance

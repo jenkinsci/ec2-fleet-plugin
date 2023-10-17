@@ -12,9 +12,9 @@ import java.util.logging.Logger;
 // todo make configurable
 @Extension
 @SuppressWarnings("unused")
-public class EC2FleetLabelUpdater extends PeriodicWork {
+public class FleetLabelUpdater extends PeriodicWork {
 
-    private static final Logger LOGGER = Logger.getLogger(EC2FleetLabelUpdater.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(FleetLabelUpdater.class.getName());
 
     @Override
     public long getRecurrencePeriod() {
@@ -24,8 +24,8 @@ public class EC2FleetLabelUpdater extends PeriodicWork {
     @Override
     protected void doRun() {
         for (Cloud cloud : Jenkins.get().clouds) {
-            if (!(cloud instanceof EC2FleetLabelCloud)) continue;
-            final EC2FleetLabelCloud ec2FleetLabelCloud = (EC2FleetLabelCloud) cloud;
+            if (!(cloud instanceof FleetLabelCloud)) continue;
+            final FleetLabelCloud ec2FleetLabelCloud = (FleetLabelCloud) cloud;
             try {
                 ec2FleetLabelCloud.updateStacks();
             } catch (Throwable t) {

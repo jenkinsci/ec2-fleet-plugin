@@ -25,13 +25,13 @@ import static org.mockito.Mockito.when;
 
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({EC2FleetOnlineChecker.class, EC2FleetNode.class, Jenkins.class, Computer.class})
-public class EC2FleetOnlineCheckerTest {
+@PrepareForTest({FleetOnlineChecker.class, FleetNode.class, Jenkins.class, Computer.class})
+public class FleetOnlineCheckerTest {
 
     private CompletableFuture<Node> future = new CompletableFuture<>();
 
     @Mock
-    private EC2FleetNode node;
+    private FleetNode node;
 
     @Mock
     private Computer computer;
@@ -41,7 +41,7 @@ public class EC2FleetOnlineCheckerTest {
 
     @Before
     public void before() throws Exception {
-        when(node.getDisplayName()).thenReturn("MockEC2FleetCloud i-1");
+        when(node.getDisplayName()).thenReturn("MockFleetCloud i-1");
 
         PowerMockito.mockStatic(Jenkins.class);
 
@@ -50,14 +50,14 @@ public class EC2FleetOnlineCheckerTest {
         // final method
         PowerMockito.when(node.toComputer()).thenReturn(computer);
 
-        PowerMockito.whenNew(EC2FleetNode.class).withAnyArguments().thenReturn(node);
+        PowerMockito.whenNew(FleetNode.class).withAnyArguments().thenReturn(node);
     }
 
     @Test
     public void shouldStopImmediatelyIfFutureIsCancelled() throws InterruptedException, ExecutionException {
         future.cancel(true);
 
-        EC2FleetOnlineChecker.start(node, future, 0, 0);
+        FleetOnlineChecker.start(node, future, 0, 0);
         try {
             future.get();
             Assert.fail();
@@ -68,7 +68,7 @@ public class EC2FleetOnlineCheckerTest {
 
     @Test
     public void shouldStopAndFailFutureIfTimeout() {
-        EC2FleetOnlineChecker.start(node, future, 100, 50);
+        FleetOnlineChecker.start(node, future, 100, 50);
         try {
             future.get();
             Assert.fail();
@@ -83,14 +83,14 @@ public class EC2FleetOnlineCheckerTest {
     public void shouldFinishWithNodeWhenSuccessfulConnect() throws InterruptedException, ExecutionException {
         PowerMockito.when(computer.isOnline()).thenReturn(true);
 
-        EC2FleetOnlineChecker.start(node, future, TimeUnit.MINUTES.toMillis(1), 0);
+        FleetOnlineChecker.start(node, future, TimeUnit.MINUTES.toMillis(1), 0);
 
         Assert.assertSame(node, future.get());
     }
 
     @Test
     public void shouldFinishWithNodeWhenTimeoutIsZeroWithoutCheck() throws InterruptedException, ExecutionException {
-        EC2FleetOnlineChecker.start(node, future, 0, 0);
+        FleetOnlineChecker.start(node, future, 0, 0);
 
         Assert.assertSame(node, future.get());
         verifyNoInteractions(computer);
@@ -98,7 +98,7 @@ public class EC2FleetOnlineCheckerTest {
 
     @Test
     public void shouldSuccessfullyFinishAndNoWaitIfIntervalIsZero() throws ExecutionException, InterruptedException {
-        EC2FleetOnlineChecker.start(node, future, 10, 0);
+        FleetOnlineChecker.start(node, future, 10, 0);
 
         Assert.assertSame(node, future.get());
         verifyNoInteractions(computer);
@@ -112,7 +112,7 @@ public class EC2FleetOnlineCheckerTest {
                 .thenReturn(false)
                 .thenReturn(true);
 
-        EC2FleetOnlineChecker.start(node, future, 100, 10);
+        FleetOnlineChecker.start(node, future, 100, 10);
 
         Assert.assertSame(node, future.get());
         verify(computer, times(3)).connect(false);
@@ -127,7 +127,7 @@ public class EC2FleetOnlineCheckerTest {
                 .thenReturn(null)
                 .thenReturn(computer);
 
-        EC2FleetOnlineChecker.start(node, future, 100, 10);
+        FleetOnlineChecker.start(node, future, 100, 10);
 
         Assert.assertSame(node, future.get());
         verify(computer, times(1)).isOnline();

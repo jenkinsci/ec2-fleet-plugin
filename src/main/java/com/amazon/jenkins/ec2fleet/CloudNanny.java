@@ -14,7 +14,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * {@link CloudNanny} is responsible for periodically running update (i.e. sync-state-with-AWS) cycles for {@link EC2FleetCloud}s.
+ * {@link CloudNanny} is responsible for periodically running update (i.e. sync-state-with-AWS) cycles for {@link FleetCloud}s.
  */
 @Extension
 @SuppressWarnings("unused")
@@ -23,7 +23,7 @@ public class CloudNanny extends PeriodicWork {
     private static final Logger LOGGER = Logger.getLogger(CloudNanny.class.getName());
 
     // the map should not hold onto fleet instances to allow deletion of fleets.
-    private final Map<EC2FleetCloud, AtomicInteger> recurrenceCounters = Collections.synchronizedMap(new WeakHashMap<>());
+    private final Map<FleetCloud, AtomicInteger> recurrenceCounters = Collections.synchronizedMap(new WeakHashMap<>());
 
     @Override
     public long getRecurrencePeriod() {
@@ -39,8 +39,8 @@ public class CloudNanny extends PeriodicWork {
     @Override
     protected void doRun() {
         for (final Cloud cloud : getClouds()) {
-            if (!(cloud instanceof EC2FleetCloud)) continue;
-            final EC2FleetCloud fleetCloud = (EC2FleetCloud) cloud;
+            if (!(cloud instanceof FleetCloud)) continue;
+            final FleetCloud fleetCloud = (FleetCloud) cloud;
 
             final AtomicInteger recurrenceCounter = getRecurrenceCounter(fleetCloud);
 
@@ -70,7 +70,7 @@ public class CloudNanny extends PeriodicWork {
         return Jenkins.get().clouds;
     }
 
-    private AtomicInteger getRecurrenceCounter(EC2FleetCloud fleetCloud) {
+    private AtomicInteger getRecurrenceCounter(FleetCloud fleetCloud) {
         AtomicInteger counter = new AtomicInteger(fleetCloud.getCloudStatusIntervalSec());
         // If a counter already exists, return the value, otherwise set the new counter value and return it.
         AtomicInteger existing = recurrenceCounters.putIfAbsent(fleetCloud, counter);

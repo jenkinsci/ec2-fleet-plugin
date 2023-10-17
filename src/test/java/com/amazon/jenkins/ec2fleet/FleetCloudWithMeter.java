@@ -7,13 +7,13 @@ import hudson.slaves.NodeProvisioner;
 import java.util.Collection;
 
 
-public class EC2FleetCloudWithMeter extends EC2FleetCloud {
+public class FleetCloudWithMeter extends FleetCloud {
 
     public final Meter updateMeter = new Meter("update");
     public final Meter provisionMeter = new Meter("provision");
     public final Meter removeMeter = new Meter("remove");
 
-    public EC2FleetCloudWithMeter(
+    public FleetCloudWithMeter(
             String name, String awsCredentialsId, String credentialsId, String region,
             String endpoint, String fleet, String labelString, String fsRoot, ComputerConnector computerConnector,
             boolean privateIpUsed, boolean alwaysReconnect, Integer idleMinutes, Integer minSize, Integer maxSize,

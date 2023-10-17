@@ -9,20 +9,20 @@ import java.util.List;
 
 /**
  * This class should be thread safe, consumed by Jenkins and updated
- * by {@link EC2FleetStatusWidgetUpdater}
+ * by {@link FleetStatusWidgetUpdater}
  */
 @Extension
 @ThreadSafe
-public class EC2FleetStatusWidget extends Widget {
+public class FleetStatusWidget extends Widget {
 
-    private volatile List<EC2FleetStatusInfo> statusList = Collections.emptyList();
+    private volatile List<FleetStatusInfo> statusList = Collections.emptyList();
 
-    public void setStatusList(final List<EC2FleetStatusInfo> statusList) {
+    public void setStatusList(final List<FleetStatusInfo> statusList) {
         this.statusList = statusList;
     }
 
     @SuppressWarnings("unused")
-    public List<EC2FleetStatusInfo> getStatusList() {
+    public List<FleetStatusInfo> getStatusList() {
         return statusList;
     }
 }

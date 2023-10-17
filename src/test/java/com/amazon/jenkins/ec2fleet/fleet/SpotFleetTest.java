@@ -35,7 +35,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
-public class EC2SpotFleetTest {
+public class SpotFleetTest {
 
     @Mock
     private AmazonEC2 ec2;
@@ -71,7 +71,7 @@ public class EC2SpotFleetTest {
         when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
                 .thenReturn(new DescribeSpotFleetRequestsResult());
 
-        new EC2SpotFleet().getState("cred", "region", "", "f");
+        new SpotFleet().getState("cred", "region", "", "f");
     }
 
     @Test
@@ -85,7 +85,7 @@ public class EC2SpotFleetTest {
                                                 new SpotFleetRequestConfigData()
                                                         .withTargetCapacity(12))));
 
-        FleetStateStats stats = new EC2SpotFleet().getState("cred", "region", "", "f-id");
+        FleetStateStats stats = new SpotFleet().getState("cred", "region", "", "f-id");
 
         Assert.assertEquals("f-id", stats.getFleetId());
         Assert.assertEquals(FleetStateStats.State.active(), stats.getState());
@@ -94,7 +94,7 @@ public class EC2SpotFleetTest {
 
     @Test
     public void getState_returnEmptyIfNoInstancesForFleet() {
-        FleetStateStats stats = new EC2SpotFleet().getState("cred", "region", "", "f");
+        FleetStateStats stats = new SpotFleet().getState("cred", "region", "", "f");
 
         Assert.assertEquals(Collections.emptySet(), stats.getInstances());
         Assert.assertEquals(0, stats.getNumActive());
@@ -108,7 +108,7 @@ public class EC2SpotFleetTest {
                                 new ActiveInstance().withInstanceId("i-1"),
                                 new ActiveInstance().withInstanceId("i-2")));
 
-        FleetStateStats stats = new EC2SpotFleet().getState("cred", "region", "", "f");
+        FleetStateStats stats = new SpotFleet().getState("cred", "region", "", "f");
 
         Assert.assertEquals(new HashSet<>(Arrays.asList("i-1", "i-2")), stats.getInstances());
         Assert.assertEquals(2, stats.getNumActive());
@@ -125,7 +125,7 @@ public class EC2SpotFleetTest {
                 .thenReturn(new DescribeSpotFleetInstancesResult()
                         .withActiveInstances(new ActiveInstance().withInstanceId("i-2")));
 
-        FleetStateStats stats = new EC2SpotFleet().getState("cred", "region", "", "f");
+        FleetStateStats stats = new SpotFleet().getState("cred", "region", "", "f");
 
         Assert.assertEquals(new HashSet<>(Arrays.asList("i-1", "i-2")), stats.getInstances());
         Assert.assertEquals(2, stats.getNumActive());
@@ -137,7 +137,7 @@ public class EC2SpotFleetTest {
 
     @Test
     public void getState_returnEmptyInstanceTypeWeightsIfNoInformation() {
-        FleetStateStats stats = new EC2SpotFleet().getState("cred", "region", "", "f");
+        FleetStateStats stats = new SpotFleet().getState("cred", "region", "", "f");
 
         Assert.assertEquals(Collections.emptyMap(), stats.getInstanceTypeWeights());
     }
@@ -154,7 +154,7 @@ public class EC2SpotFleetTest {
                                                 new SpotFleetLaunchSpecification().withInstanceType("t1").withWeightedCapacity(0.1),
                                                 new SpotFleetLaunchSpecification().withInstanceType("t2").withWeightedCapacity(12.0)))));
 
-        FleetStateStats stats = new EC2SpotFleet().getState("cred", "region", "", "f");
+        FleetStateStats stats = new SpotFleet().getState("cred", "region", "", "f");
 
         Map<String, Double> expected = new HashMap<>();
         expected.put("t1", 0.1);
@@ -174,7 +174,7 @@ public class EC2SpotFleetTest {
                                                 new SpotFleetLaunchSpecification().withInstanceType("t1"),
                                                 new SpotFleetLaunchSpecification().withWeightedCapacity(12.0)))));
 
-        FleetStateStats stats = new EC2SpotFleet().getState("cred", "region", "", "f");
+        FleetStateStats stats = new SpotFleet().getState("cred", "region", "", "f");
 
         Assert.assertEquals(Collections.emptyMap(), stats.getInstanceTypeWeights());
     }
@@ -197,7 +197,7 @@ public class EC2SpotFleetTest {
                 ));
         // when
         ListBoxModel model = new ListBoxModel();
-        new EC2SpotFleet().describe("cred", "region", "", model, "selected", true);
+        new SpotFleet().describe("cred", "region", "", model, "selected", true);
         // then
         Assert.assertEquals(
                 "[EC2 Spot Fleet - f1 (active) (maintain)=f1, EC2 Spot Fleet - f2 (modifying) (request)=f2]",
@@ -222,7 +222,7 @@ public class EC2SpotFleetTest {
                 ));
         // when
         ListBoxModel model = new ListBoxModel();
-        new EC2SpotFleet().describe("cred", "region", "", model, "selected", false);
+        new SpotFleet().describe("cred", "region", "", model, "selected", false);
         // then
         Assert.assertEquals(
                 "[EC2 Spot Fleet - f1 (active) (maintain)=f1]",
@@ -257,7 +257,7 @@ public class EC2SpotFleetTest {
                 ));
         // when
         ListBoxModel model = new ListBoxModel();
-        new EC2SpotFleet().describe("cred", "region", "", model, "selected", false);
+        new SpotFleet().describe("cred", "region", "", model, "selected", false);
         // then
         Assert.assertEquals(
                 "[EC2 Spot Fleet - f1 (active) (maintain)=f1]",
@@ -287,7 +287,7 @@ public class EC2SpotFleetTest {
                 ));
         // when
         ListBoxModel model = new ListBoxModel();
-        new EC2SpotFleet().describe("cred", "region", "", model, "selected", false);
+        new SpotFleet().describe("cred", "region", "", model, "selected", false);
         // then
         Assert.assertEquals(
                 "[EC2 Spot Fleet - f1 (active) (maintain)=f1, EC2 Spot Fleet - f2 (submitted) (maintain)=f2, EC2 Spot Fleet - f3 (modifying) (maintain)=f3]",

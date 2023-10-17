@@ -11,15 +11,15 @@ import java.io.IOException;
 import java.util.logging.Logger;
 
 /**
- * The {@link EC2FleetNodeComputer} represents the running state of {@link EC2FleetNode} that holds executors.
+ * The {@link FleetNodeComputer} represents the running state of {@link FleetNode} that holds executors.
  * @see hudson.model.Computer
  */
 @ThreadSafe
-public class EC2FleetNodeComputer extends SlaveComputer {
-    private static final Logger LOGGER = Logger.getLogger(EC2FleetNodeComputer.class.getName());
+public class FleetNodeComputer extends SlaveComputer {
+    private static final Logger LOGGER = Logger.getLogger(FleetNodeComputer.class.getName());
     private boolean isMarkedForDeletion;
 
-    public EC2FleetNodeComputer(final EC2FleetNode agent) {
+    public FleetNodeComputer(final FleetNode agent) {
         super(agent);
         this.isMarkedForDeletion = false;
     }
@@ -29,18 +29,18 @@ public class EC2FleetNodeComputer extends SlaveComputer {
     }
 
     @Override
-    public EC2FleetNode getNode() {
-        return (EC2FleetNode) super.getNode();
+    public FleetNode getNode() {
+        return (FleetNode) super.getNode();
     }
 
     @CheckForNull
     public String getInstanceId() {
-        EC2FleetNode node = getNode();
+        FleetNode node = getNode();
         return node == null ? null : node.getInstanceId();
     }
 
-    public AbstractEC2FleetCloud getCloud() {
-        final EC2FleetNode node = getNode();
+    public AbstractFleetCloud getCloud() {
+        final FleetNode node = getNode();
         return node == null ? null : node.getCloud();
     }
 
@@ -53,7 +53,7 @@ public class EC2FleetNodeComputer extends SlaveComputer {
     @Nonnull
     @Override
     public String getDisplayName() {
-        final EC2FleetNode node = getNode();
+        final FleetNode node = getNode();
         if(node != null) {
             final int totalUses = node.getMaxTotalUses();
             if(totalUses != -1) {
@@ -72,10 +72,10 @@ public class EC2FleetNodeComputer extends SlaveComputer {
     @Override
     public HttpResponse doDoDelete() throws IOException {
         checkPermission(DELETE);
-        final EC2FleetNode node = getNode();
+        final FleetNode node = getNode();
         if (node != null) {
             final String instanceId = node.getInstanceId();
-            final AbstractEC2FleetCloud cloud = node.getCloud();
+            final AbstractFleetCloud cloud = node.getCloud();
             if (cloud != null && StringUtils.isNotBlank(instanceId)) {
                 cloud.scheduleToTerminate(instanceId, false, EC2AgentTerminationReason.AGENT_DELETED);
                 // Persist a flag here as the cloud objects can be re-created on user-initiated changes, hence, losing track of instance ids scheduled to terminate.

@@ -1,13 +1,11 @@
 package com.amazon.jenkins.ec2fleet;
 
 import com.amazon.jenkins.ec2fleet.aws.EC2Api;
-import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
-import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
+import com.amazon.jenkins.ec2fleet.fleet.Fleet;
+import com.amazon.jenkins.ec2fleet.fleet.Fleets;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
-import com.amazonaws.services.ec2.model.DescribeSpotFleetRequestsRequest;
-import com.amazonaws.services.ec2.model.DescribeSpotFleetRequestsResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.InstanceState;
 import com.amazonaws.services.ec2.model.InstanceStateName;
@@ -43,13 +41,13 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
 
     @Before
     public void before() {
-        final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
-        EC2Fleets.setGet(ec2Fleet);
+        final Fleet fleet = mock(Fleet.class);
+        Fleets.setGet(fleet);
         final EC2Api ec2Api = spy(EC2Api.class);
         Registry.setEc2Api(ec2Api);
         amazonEC2 = mock(AmazonEC2.class);
 
-        when(ec2Fleet.getState(anyString(), anyString(), nullable(String.class), anyString()))
+        when(fleet.getState(anyString(), anyString(), nullable(String.class), anyString()))
                 .thenReturn(new FleetStateStats("", 2, FleetStateStats.State.active(), new HashSet<>(Arrays.asList("i-1", "i-2")), Collections.emptyMap()));
         when(ec2Api.connect(anyString(), anyString(), Mockito.nullable(String.class))).thenReturn(amazonEC2);
 
@@ -72,7 +70,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
 
     @Test
     public void shouldTerminateNodeMarkedForDeletion() throws Exception {
-        final EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
+        final FleetCloud cloud = new FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
                 1, 0, 0, 0, 1, false, true, "-1", false, 0, 0, false, 999, false);
         // Set initial jenkins nodes
@@ -81,8 +79,8 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
 
         assertAtLeastOneNode();
 
-        EC2FleetNode node = (EC2FleetNode) j.jenkins.getNode("i-1");
-        EC2FleetNodeComputer c = (EC2FleetNodeComputer) node.toComputer();
+        FleetNode node = (FleetNode) j.jenkins.getNode("i-1");
+        FleetNodeComputer c = (FleetNodeComputer) node.toComputer();
         c.doDoDelete(); // mark node for termination
         node.getRetentionStrategy().check(c);
 
@@ -96,7 +94,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
 
     @Test
     public void shouldTerminateExcessCapacity() throws Exception {
-        final EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
+        final FleetCloud cloud = new FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
                 1, 0, 0, 0, 1, false, true, "-1", false, 0, 0, false, 999, false);
         // Set initial jenkins nodes
@@ -111,8 +109,8 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
         Thread.sleep(1000 * 61);
         // Manually trigger the retention check because it's super flaky whether it actually gets triggered
         for (final Node node : j.jenkins.getNodes()) {
-            if (node instanceof EC2FleetNode && ((EC2FleetNode) node).getCloud() == cloud) {
-                EC2FleetNodeComputer computer = (EC2FleetNodeComputer) ((EC2FleetNode) node).getComputer();
+            if (node instanceof FleetNode && ((FleetNode) node).getCloud() == cloud) {
+                FleetNodeComputer computer = (FleetNodeComputer) ((FleetNode) node).getComputer();
                 new EC2RetentionStrategy().check(computer);
             }
         }
@@ -135,14 +133,14 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
         List<QueueTaskFuture> rs = enqueTask(10, 90);
         triggerSuggestReviewNow();
 
-        EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
+        FleetCloud cloud = new FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
                 1, 2, 2, 0, 1, false, true, "-1", false, 0, 0, false, 999, false);
         j.jenkins.clouds.add(cloud);
         cloud.update();
 
         assertAtLeastOneNode();
-        cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
+        cloud = new FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
                 1, 0, 0, 0, 1, false, true, "-1", false, 0, 0, false, 99, false);
         j.jenkins.clouds.clear();
@@ -154,8 +152,8 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
         Thread.sleep(1000 * 61);
         // Manually trigger the retention check because it's super flaky whether it actually gets triggered
         for (final Node node : j.jenkins.getNodes()) {
-            if (node instanceof EC2FleetNode && ((EC2FleetNode) node).getCloud() == cloud) {
-                EC2FleetNodeComputer computer = (EC2FleetNodeComputer) ((EC2FleetNode) node).getComputer();
+            if (node instanceof FleetNode && ((FleetNode) node).getCloud() == cloud) {
+                FleetNodeComputer computer = (FleetNodeComputer) ((FleetNode) node).getComputer();
                 new EC2RetentionStrategy().check(computer);
             }
         }
@@ -167,7 +165,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
 
     @Test
     public void shouldTerminateIdleNodesAfterIdleTimeout() throws Exception {
-        final EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
+        final FleetCloud cloud = new FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
                 1, 0, 2, 0, 1, false, true, "-1", false, 0, 0, false, 99, false);
         j.jenkins.clouds.add(cloud);
@@ -181,8 +179,8 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
         Thread.sleep(1000 * 61);
         // Manually trigger the retention check because it's super flaky whether it actually gets triggered
         for (final Node node : j.jenkins.getNodes()) {
-            if (node instanceof EC2FleetNode && ((EC2FleetNode) node).getCloud() == cloud) {
-                EC2FleetNodeComputer computer = (EC2FleetNodeComputer) ((EC2FleetNode) node).getComputer();
+            if (node instanceof FleetNode && ((FleetNode) node).getCloud() == cloud) {
+                FleetNodeComputer computer = (FleetNodeComputer) ((FleetNode) node).getComputer();
                 new EC2RetentionStrategy().check(computer);
             }
         }
@@ -198,7 +196,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
 
     @Test
     public void shouldNotTerminateBelowMinSize() throws Exception {
-        final EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
+        final FleetCloud cloud = new FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
                 1, 2, 5, 0, 1, false, true, "-1", false, 0, 0, false, 30, false);
         j.jenkins.clouds.add(cloud);
@@ -210,8 +208,8 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
         Thread.sleep(1000 * 61);
         // Manually trigger the retention check because it's super flaky whether it actually gets triggered
         for (final Node node : j.jenkins.getNodes()) {
-            if (node instanceof EC2FleetNode && ((EC2FleetNode) node).getCloud() == cloud) {
-                EC2FleetNodeComputer computer = (EC2FleetNodeComputer) ((EC2FleetNode) node).getComputer();
+            if (node instanceof FleetNode && ((FleetNode) node).getCloud() == cloud) {
+                FleetNodeComputer computer = (FleetNodeComputer) ((FleetNode) node).getComputer();
                 new EC2RetentionStrategy().check(computer);
             }
         }
@@ -222,7 +220,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
 
     @Test
     public void shouldNotTerminateBelowMinSpareSize() throws Exception {
-        final EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
+        final FleetCloud cloud = new FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
                 1, 0, 5, 2, 1, false, true, "-1", false, 0, 0, false, 30, false);
         j.jenkins.clouds.add(cloud);
@@ -234,8 +232,8 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
         Thread.sleep(1000 * 61);
         // Manually trigger the retention check because it's super flaky whether it actually gets triggered
         for (final Node node : j.jenkins.getNodes()) {
-            if (node instanceof EC2FleetNode && ((EC2FleetNode) node).getCloud() == cloud) {
-                EC2FleetNodeComputer computer = (EC2FleetNodeComputer) ((EC2FleetNode) node).getComputer();
+            if (node instanceof FleetNode && ((FleetNode) node).getCloud() == cloud) {
+                FleetNodeComputer computer = (FleetNodeComputer) ((FleetNode) node).getComputer();
                 new EC2RetentionStrategy().check(computer);
             }
         }
@@ -251,7 +249,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
         final int maxTotalUses = 2;
         final int taskSleepTime = 1;
 
-        EC2FleetCloud cloud = spy(new EC2FleetCloud("testCloud", "credId", null, "region",
+        FleetCloud cloud = spy(new FleetCloud("testCloud", "credId", null, "region",
                 null, "fId", label, null, new LocalComputerConnector(j), false, false,
                 0, 0, 10, 0, 1, false, true,
                 String.valueOf(maxTotalUses), true, 0, 0, false, 10, false));

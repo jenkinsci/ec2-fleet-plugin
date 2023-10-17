@@ -2,9 +2,9 @@ package com.amazon.jenkins.ec2fleet;
 
 import hudson.slaves.Cloud;
 
-public abstract class AbstractEC2FleetCloud extends Cloud {
+public abstract class AbstractFleetCloud extends Cloud {
 
-    protected AbstractEC2FleetCloud(String name) {
+    protected AbstractFleetCloud(String name) {
         super(name);
     }
 

@@ -8,11 +8,11 @@ import java.util.Collection;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 
-public class EC2FleetCloudWithHistory extends EC2FleetCloud {
+public class FleetCloudWithHistory extends FleetCloud {
 
     public CopyOnWriteArrayList<Long> provisionTimes = new CopyOnWriteArrayList<>();
 
-    public EC2FleetCloudWithHistory(
+    public FleetCloudWithHistory(
             String name, String awsCredentialsId, String credentialsId, String region,
             String endpoint, String fleet, String labelString, String fsRoot, ComputerConnector computerConnector,
             boolean privateIpUsed, boolean alwaysReconnect, Integer idleMinutes, Integer minSize, Integer maxSize, Integer minSpareSize,

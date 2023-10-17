@@ -1,6 +1,6 @@
 package com.amazon.jenkins.ec2fleet.aws;
 
-import com.amazon.jenkins.ec2fleet.EC2FleetLabelParameters;
+import com.amazon.jenkins.ec2fleet.FleetLabelParameters;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.RegionUtils;
@@ -64,7 +64,7 @@ public class CloudFormationApi {
 
     public void create(
             final AmazonCloudFormation client, final String fleetName, final String keyName, final String parametersString) {
-        final EC2FleetLabelParameters parameters = new EC2FleetLabelParameters(parametersString);
+        final FleetLabelParameters parameters = new FleetLabelParameters(parametersString);
 
         try {
             final String type = parameters.getOrDefault("type", "ec2-spot-fleet");

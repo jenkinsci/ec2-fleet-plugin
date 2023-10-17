@@ -5,11 +5,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 @ThreadSafe
-public class EC2FleetLabelParameters {
+public class FleetLabelParameters {
 
     private final Map<String, String> parameters;
 
-    public EC2FleetLabelParameters(final String label) {
+    public FleetLabelParameters(final String label) {
         parameters = parse(label);
     }
 
