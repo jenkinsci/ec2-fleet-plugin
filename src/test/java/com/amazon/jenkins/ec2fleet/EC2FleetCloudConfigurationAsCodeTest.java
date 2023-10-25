@@ -65,13 +65,16 @@ public class EC2FleetCloudConfigurationAsCodeTest {
         assertEquals(cloud.getNumExecutors(), 1);
         assertEquals(cloud.isAddNodeOnlyIfRunning(), false);
         assertEquals(cloud.isRestrictUsage(), false);
-        assertEquals(cloud.isScaleExecutorsByWeight(), false);
+        assertEquals(cloud.getExecutorScaler().getClass(), EC2FleetCloud.NoScaler.class);
         assertEquals(cloud.getInitOnlineTimeoutSec(), 180);
         assertEquals(cloud.getInitOnlineCheckIntervalSec(), 15);
         assertEquals(cloud.getCloudStatusIntervalSec(), 10);
         assertEquals(cloud.isDisableTaskResubmit(), false);
         assertEquals(cloud.isNoDelayProvision(), false);
     }
+
+//    java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,      hudson.slaves.ComputerConnector,           boolean,           boolean, java.lang.Integer,               int,               int,               int,               int,           boolean,           boolean,  java.lang.String,           boolean, java.lang.Integer, java.lang.Integer, java.lang.Integer,           boolean, com.amazon.jenkins.ec2fleet.EC2FleetCloud$ExecutorScaler
+//    java.lang.String,java.lang.String,            null,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,hudson.plugins.sshslaves.SSHConnector, java.lang.Boolean, java.lang.Boolean, java.lang.Integer, java.lang.Integer, java.lang.Integer, java.lang.Integer, java.lang.Integer, java.lang.Boolean, java.lang.Boolean,              null, java.lang.Boolean, java.lang.Integer, java.lang.Integer, java.lang.Integer, java.lang.Boolean, com.amazon.jenkins.ec2fleet.EC2FleetCloud$NodeHardwareScaler
 
     @Test
     @ConfiguredWithCode("EC2FleetCloud/max-configuration-as-code.yml")
@@ -93,7 +96,7 @@ public class EC2FleetCloudConfigurationAsCodeTest {
         assertEquals(cloud.getNumExecutors(), 12);
         assertEquals(cloud.isAddNodeOnlyIfRunning(), true);
         assertEquals(cloud.isRestrictUsage(), true);
-        assertEquals(cloud.isScaleExecutorsByWeight(), true);
+        assertEquals(cloud.getExecutorScaler().getClass(), EC2FleetCloud.WeightedScaler.class);
         assertEquals(cloud.getInitOnlineTimeoutSec(), 181);
         assertEquals(cloud.getInitOnlineCheckIntervalSec(), 13);
         assertEquals(cloud.getCloudStatusIntervalSec(), 11);

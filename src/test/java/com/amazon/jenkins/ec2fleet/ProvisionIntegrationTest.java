@@ -49,6 +49,8 @@ import static org.mockito.Mockito.when;
 
 public class ProvisionIntegrationTest extends IntegrationTest {
 
+    private final EC2FleetCloud.ExecutorScaler noScaling = new EC2FleetCloud.NoScaler();
+
     @BeforeClass
     public static void beforeClass() {
         System.setProperty("jenkins.test.timeout", "720");
@@ -68,8 +70,8 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 0, 0, 1, true, false,
-                "-1", false, 0, 0, false,
-                2, false);
+                "-1", false, 0, 0,
+                2, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
         final EC2Api ec2Api = spy(EC2Api.class);
@@ -102,8 +104,8 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 0, 1, true, false,
-                "-1", false, 0, 0, false,
-                2, false);
+                "-1", false, 0, 0,
+                2, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
         List<QueueTaskFuture> rs = enqueTask(1);
@@ -137,8 +139,8 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         EC2FleetCloud cloud = spy(new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 0, 1, true, false,
-                "-1", false, 300, 15, false,
-                2, false));
+                "-1", false, 300, 15,
+                2, false, noScaling));
 
         j.jenkins.clouds.add(cloud);
 
@@ -171,8 +173,8 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         final EC2FleetCloud cloud = spy(new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 0, 1, true, false,
-                "-1", false, 0, 0, false,
-                10, false));
+                "-1", false, 0, 0,
+                10, false, noScaling));
         j.jenkins.clouds.add(cloud);
 
         mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Running);
@@ -199,8 +201,8 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         EC2FleetCloud cloud = spy(new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 0, 1, true, false,
-                "-1", false, 0, 0, false,
-                10, false));
+                "-1", false, 0, 0,
+                10, false, noScaling));
 
         cloud.setStats(new FleetStateStats("", 0, FleetStateStats.State.active(),
                 Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
@@ -260,8 +262,8 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 0, 1, true, false,
-                "-1", false, 0, 0, false,
-                2, false);
+                "-1", false, 0, 0,
+                2, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
         mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Pending);
@@ -297,8 +299,8 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 2, 0, 1, true, false,
-                "-1", false, 0, 0, false,
-                2, false);
+                "-1", false, 0, 0,
+                2, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
         mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Running);
@@ -328,8 +330,8 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         final EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 1, 0, 5, 0, 1, true, false,
-                "-1", false, 0, 0, false,
-                10, false);
+                "-1", false, 0, 0,
+                10, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
         waitFirstStats(cloud);

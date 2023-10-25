@@ -18,12 +18,12 @@ public class EC2FleetCloudWithMeter extends EC2FleetCloud {
             String endpoint, String fleet, String labelString, String fsRoot, ComputerConnector computerConnector,
             boolean privateIpUsed, boolean alwaysReconnect, Integer idleMinutes, Integer minSize, Integer maxSize,
             Integer minSpareSize, Integer numExecutors, boolean addNodeOnlyIfRunning, boolean restrictUsage, boolean disableTaskResubmit,
-            Integer initOnlineTimeoutSec, Integer initOnlineCheckIntervalSec, boolean scaleExecutorsByWeight,
-            Integer cloudStatusIntervalSec, boolean immediatelyProvision) {
+            Integer initOnlineTimeoutSec, Integer initOnlineCheckIntervalSec, Integer cloudStatusIntervalSec,
+            boolean immediatelyProvision, ExecutorScaler executorScaler) {
         super(name, awsCredentialsId, credentialsId, region, endpoint, fleet, labelString, fsRoot,
                 computerConnector, privateIpUsed, alwaysReconnect, idleMinutes, minSize, maxSize, minSpareSize, numExecutors,
                 addNodeOnlyIfRunning, restrictUsage, "-1", disableTaskResubmit, initOnlineTimeoutSec, initOnlineCheckIntervalSec,
-                scaleExecutorsByWeight, cloudStatusIntervalSec, immediatelyProvision);
+                cloudStatusIntervalSec, immediatelyProvision, executorScaler);
     }
 
     @Override

@@ -5,6 +5,7 @@ import com.amazon.jenkins.ec2fleet.aws.RegionHelper;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 import com.amazonaws.services.ec2.AmazonEC2;
+import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.*;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
 import com.google.common.collect.Sets;
@@ -209,13 +210,12 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         this.initOnlineCheckIntervalSec = initOnlineCheckIntervalSec;
         this.cloudStatusIntervalSec = cloudStatusIntervalSec;
         this.noDelayProvision = noDelayProvision;
-        this.executorScaler = executorScaler;
-
+        this.executorScaler = executorScaler == null ? new NoScaler().withNumExecutors(this.numExecutors) :
+                                                       executorScaler.withNumExecutors(this.numExecutors);
         if (fleet != null) {
             this.stats = EC2Fleets.get(fleet).getState(
                     getAwsCredentialsId(), region, endpoint, getFleet());
         }
-        System.out.println("Executor Scaler Class: " + this.executorScaler.getClass());
     }
 
     public boolean isNoDelayProvision() {
@@ -315,9 +315,9 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         return numExecutors;
     }
 
-//    public boolean isScaleExecutorsByWeight() {
-//        return scaleExecutorsByWeight;
-//    }
+    public ExecutorScaler getExecutorScaler() {
+        return this.executorScaler;
+    }
 
     public String getJvmSettings() {
         return "";
@@ -826,8 +826,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             effectiveFsRoot = fsRoot;
         }
 
-        InstanceTypeInfo instanceTypeInfo = getInstanceTypeInfo(ec2, instance.getInstanceType());
-        int effectiveNumExecutors = this.executorScaler.scale(numExecutors, instanceTypeInfo, stats);
+        int effectiveNumExecutors = this.executorScaler.scale(instance.getInstanceType(), stats, ec2);
 
         final EC2FleetAutoResubmitComputerLauncher computerLauncher = new EC2FleetAutoResubmitComputerLauncher(
                 computerConnector.launch(address, TaskListener.NULL));
@@ -860,12 +859,6 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         EC2FleetOnlineChecker.start(node, future,
                 TimeUnit.SECONDS.toMillis(getInitOnlineTimeoutSec()),
                 TimeUnit.SECONDS.toMillis(getInitOnlineCheckIntervalSec()));
-    }
-
-    private InstanceTypeInfo getInstanceTypeInfo(AmazonEC2 ec2, String instanceType) {
-        DescribeInstanceTypesRequest request = new DescribeInstanceTypesRequest().withInstanceTypes(instanceType);
-        DescribeInstanceTypesResult result = ec2.describeInstanceTypes(request);
-        return result.getInstanceTypes().get(0);
     }
 
     private int getCurrentSpareInstanceCount(final FleetStateStats currentState, final int countOfInstances) {
@@ -1045,22 +1038,33 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
     public static abstract class ExecutorScaler extends AbstractDescribableImpl<ExecutorScaler> implements ExtensionPoint {
 
+        protected int numExecutors = 1;
+
         protected ExecutorScaler(){}
 
-        public abstract int scale(int numExecutors, InstanceTypeInfo instanceTypeInfo, FleetStateStats stats);
+        public abstract int scale(String instanceType, FleetStateStats stats, AmazonEC2 ec2);
+
+        public ExecutorScaler withNumExecutors(int numExecutors) {
+            setNumExecutors(numExecutors);
+            return this;
+        }
+
+        private void setNumExecutors(int numExecutors) {
+            this.numExecutors = numExecutors;
+        }
 
         public ExecutorScaleDescriptor getDescriptor() { return (ExecutorScaleDescriptor) super.getDescriptor();}
     }
 
     public static class ExecutorScaleDescriptor extends Descriptor<ExecutorScaler> {}
 
-    public static class NoScale extends ExecutorScaler {
+    public static class NoScaler extends ExecutorScaler {
 
         @DataBoundConstructor
-        public NoScale() {}
+        public NoScaler() {}
 
         @Override
-        public int scale(int numExecutors, InstanceTypeInfo instanceTypeInfo, FleetStateStats stats) { return numExecutors; }
+        public int scale(String instanceType, FleetStateStats stats, AmazonEC2 ec2) { return numExecutors; }
 
         @Extension
         public static class DescriptorImpl extends ExecutorScaleDescriptor {
@@ -1069,17 +1073,17 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         }
     }
 
-    public static class WeightedScale extends ExecutorScaler {
+    public static class WeightedScaler extends ExecutorScaler {
 
         @DataBoundConstructor
-        public WeightedScale() {}
+        public WeightedScaler() {}
         @Override
-        public int scale(int numExecutors, InstanceTypeInfo instanceTypeInfo, FleetStateStats stats) {
-            if(stats == null || instanceTypeInfo == null) {
+        public int scale(String instanceType, FleetStateStats stats, AmazonEC2 ec2) {
+            if(stats == null) {
                 return numExecutors;
             }
 
-            final Double instanceTypeWeight = stats.getInstanceTypeWeights().get(instanceTypeInfo.getInstanceType());
+            final Double instanceTypeWeight = stats.getInstanceTypeWeights().get(instanceType);
             if (instanceTypeWeight == null) {
                 return numExecutors;
             }
@@ -1093,12 +1097,12 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         }
     }
 
-    public static class NodeHardwareScale extends ExecutorScaler {
+    public static class NodeHardwareScaler extends ExecutorScaler {
         private int vCpuPerExecutor;
         private int memoryGiBPerExecutor;
 
         @DataBoundConstructor
-        public NodeHardwareScale(int vCpuPerExecutor, int memoryGiBPerExecutor) {
+        public NodeHardwareScaler(int vCpuPerExecutor, int memoryGiBPerExecutor) {
             this.vCpuPerExecutor = vCpuPerExecutor;
             this.memoryGiBPerExecutor = memoryGiBPerExecutor;
         }
@@ -1110,13 +1114,14 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         public void setMemoryGiBPerExecutor(int value) { this.memoryGiBPerExecutor = value; }
 
         @Override
-        public int scale(int numExecutors, InstanceTypeInfo instanceTypeInfo, FleetStateStats stats) {
+        public int scale(String instanceType, FleetStateStats stats, AmazonEC2 ec2) {
             if(this.vCpuPerExecutor == 0 && this.memoryGiBPerExecutor == 0) {
                 return numExecutors;
             }
 
             int vCPUNumExecutors = Integer.MAX_VALUE;
             int memoryNumExecutors = Integer.MAX_VALUE;
+            InstanceTypeInfo instanceTypeInfo = getInstanceTypeInfo(ec2, instanceType);
             if(this.vCpuPerExecutor != 0) {
                 int instanceVCPUs = instanceTypeInfo.getVCpuInfo().getDefaultVCpus();
                 vCPUNumExecutors = Math.max(instanceVCPUs/this.vCpuPerExecutor, 1);
@@ -1133,6 +1138,12 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         public static class DescriptorImpl extends ExecutorScaleDescriptor {
             @Override
             public String getDisplayName() { return "Scale by node hardware";}
+        }
+
+        private InstanceTypeInfo getInstanceTypeInfo(AmazonEC2 ec2, String instanceType) {
+            DescribeInstanceTypesRequest request = new DescribeInstanceTypesRequest().withInstanceTypes(instanceType);
+            DescribeInstanceTypesResult result = ec2.describeInstanceTypes(request);
+            return result.getInstanceTypes().get(0);
         }
     }
 }

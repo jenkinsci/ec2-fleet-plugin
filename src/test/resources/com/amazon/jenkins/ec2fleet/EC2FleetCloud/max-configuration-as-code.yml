@@ -21,9 +21,9 @@ jenkins:
         numExecutors: 12
         addNodeOnlyIfRunning: true
         restrictUsage: true
-        scaleExecutorsByWeight: true
         initOnlineTimeoutSec: 181
         initOnlineCheckIntervalSec: 13
         cloudStatusIntervalSec: 11
         disableTaskResubmit: true
         noDelayProvision: true
+        executorScaler: weightedScaler

@@ -20,6 +20,8 @@ import java.util.concurrent.TimeUnit;
 @Ignore
 public class ProvisionPerformanceTest extends IntegrationTest {
 
+    private final EC2FleetCloud.ExecutorScaler noScaling = new EC2FleetCloud.NoScaler();
+
     @BeforeClass
     public static void beforeClass() {
         System.setProperty("jenkins.test.timeout", "720");
@@ -42,8 +44,7 @@ public class ProvisionPerformanceTest extends IntegrationTest {
         final EC2FleetCloudWithMeter cloud = new EC2FleetCloudWithMeter(null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 1, 0, workers, 0, 1, true, false,
-                false, 0, 0, false,
-                2, false);
+                false, 0, 0, 2, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
         // updated plugin requires some init time to get first update

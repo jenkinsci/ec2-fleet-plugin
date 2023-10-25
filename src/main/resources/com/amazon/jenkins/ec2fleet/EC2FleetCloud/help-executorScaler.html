@@ -1,0 +1,71 @@
+<p>Plugin always set number of executors to <b>at least one</b>.<p></p>
+<h5>No Scaling</h5>
+<p>Doesn't scale. Uses set number of executors</p>
+
+<h5>Scale by node hardware</h5>
+<p>Determine number of executors by node hardware: Memory and vCPU count. Specify the quantity of each resource to be
+    allocated per executor. The plugin sources the resources of the node and calculates the desired number of executors.
+    The lower number of executors calculated will be chosen to prevent over provisioning.
+</p>
+
+<h5>Scale by weight</h5>
+
+<p>
+    The plugin consumes <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-fleet.html#spot-instance-weighting">instance
+    weight</a> information provided by a Launch Specification
+    and uses it to scale the node's number of executors from configuration field <code>Number of Executors</code>.
+    <b>Note:</b> current implementation doesn't support Launch Template, only Launch Specification.
+</p>
+
+<p>
+    Example (here instance type from launch specification matches with
+    launched instance type):
+
+<table>
+    <thead>
+    <tr>
+        <th>Number of Executors</th>
+        <th>Instance Weight</th>
+        <th>Effective<br>Number of Executors</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>1</td>
+        <td>1</td>
+        <td>1</td>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>0.5</td>
+        <td>1</td>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>0.1</td>
+        <td>1</td>
+    </tr>
+    <tr>
+        <td>10</td>
+        <td>0.1</td>
+        <td>1</td>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>1.5</td>
+        <td>2</td>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>1.44</td>
+        <td>1</td>
+    </tr>
+    </tbody>
+</table>
+</p>
+
+<p>
+    If the launched instance type doesn't match any weight in launch specification,
+    regular number of executors will be used without any scaling.
+</p>
+

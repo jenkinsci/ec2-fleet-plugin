@@ -1,0 +1,17 @@
+<p>Used to set the number of executors based on the Node's memory(GiB)</p>
+
+<div>
+  <p>Number of Executors =
+    <math xmlns="http://www.w3.org/1998/Math/MathML" mathsize="1em">
+      <mfrac>
+          <ms>GiB of memory</ms>
+          <ms>Memory(GiB) Per Executor</ms>
+      </mfrac>
+    </math>
+  </p>
+</div>
+
+<p>For example, if an EC2 Instance with 8GiB of memory is used as a Node, and the Memory(GiB) Per Executor is set to 2, then
+the number of executors will be set to 4.</p>
+
+
