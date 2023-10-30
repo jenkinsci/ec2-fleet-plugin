@@ -57,6 +57,11 @@
       <name>Steve Nay</name>
       <email>stevnay@amazon.com</email>
     </developer>
+    <developer>
+      <id>GavinBurris42</id>
+      <name>Gavin Burris</name>
+      <email>ggburris@amazon.com</email>
+    </developer>
   </developers>
 
   <scm>

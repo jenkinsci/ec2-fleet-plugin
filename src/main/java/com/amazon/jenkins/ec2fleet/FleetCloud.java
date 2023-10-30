@@ -27,6 +27,7 @@ import hudson.util.ListBoxModel.Option;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -223,6 +224,10 @@ public class FleetCloud extends AbstractFleetCloud {
                     getAwsCredentialsId(), region, endpoint, getFleet());
         }
     }
+
+//    public EC2FleetCloud() {
+//        super("FleetCloudTest");
+//    }
 
     public boolean isNoDelayProvision() {
         return noDelayProvision;
@@ -927,7 +932,7 @@ public class FleetCloud extends AbstractFleetCloud {
     }
 
     @Extension
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") @Symbol("ec2Fleet")
     public static class DescriptorImpl extends Descriptor<Cloud> {
 
         public DescriptorImpl() {
