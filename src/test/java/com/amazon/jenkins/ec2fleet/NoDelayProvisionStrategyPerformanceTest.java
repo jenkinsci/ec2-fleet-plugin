@@ -48,7 +48,7 @@ public class NoDelayProvisionStrategyPerformanceTest extends IntegrationTest {
         final int scheduleInterval = 15;
         final int batchSize = 9;
 
-        mockEc2FleetApiToEc2SpotFleetWithDelay(InstanceStateName.Running, 500);
+        mockFleetApiToSpotFleetWithDelay(InstanceStateName.Running, 500);
 
         final ComputerConnector computerConnector = new LocalComputerConnector(j);
         final String label = "momo";

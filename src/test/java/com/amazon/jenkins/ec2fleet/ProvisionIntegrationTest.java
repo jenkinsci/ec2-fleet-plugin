@@ -97,7 +97,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
 
-        mockEc2FleetApi();
+        mockFleetApi();
 
         FleetCloud cloud = new FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
@@ -142,7 +142,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
         j.jenkins.clouds.add(cloud);
 
-        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Running);
+        mockFleetApiToSpotFleet(InstanceStateName.Running);
 
         List<QueueTaskFuture> rs = enqueTask(1);
 
@@ -175,7 +175,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                 10, false));
         j.jenkins.clouds.add(cloud);
 
-        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Running);
+        mockFleetApiToSpotFleet(InstanceStateName.Running);
 
         enqueTask(1);
 
@@ -190,7 +190,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
     @Test
     public void should_not_allow_jenkins_to_provision_if_address_not_available() throws Exception {
-        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Running);
+        mockFleetApiToSpotFleet(InstanceStateName.Running);
 
         ComputerLauncher computerLauncher = mock(ComputerLauncher.class);
         ComputerConnector computerConnector = mock(ComputerConnector.class);
@@ -264,7 +264,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                 2, false);
         j.jenkins.clouds.add(cloud);
 
-        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Pending);
+        mockFleetApiToSpotFleet(InstanceStateName.Pending);
 
         final List<QueueTaskFuture> rs = enqueTask(1);
 
@@ -301,7 +301,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                 2, false);
         j.jenkins.clouds.add(cloud);
 
-        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Running);
+        mockFleetApiToSpotFleet(InstanceStateName.Running);
 
         final List<QueueTaskFuture> rs = enqueTask(2);
 
@@ -322,7 +322,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
     @Test
     public void should_continue_update_after_termination() throws IOException {
-        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Running, 5);
+        mockFleetApiToSpotFleet(InstanceStateName.Running, 5);
 
         final ComputerConnector computerConnector = new LocalComputerConnector(j);
         final FleetCloud cloud = new FleetCloud("TestCloud", "credId", null, "region",

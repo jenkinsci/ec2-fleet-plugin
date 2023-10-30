@@ -48,7 +48,7 @@ More about this type [here](LABEL-BASED-CONFIGURATION.md)
 ```yaml
 jenkins:
   clouds:
-    - fleet:
+    - ec2fleet:
         name: ec2-fleet
         computerConnector:
             sshConnector:
@@ -66,7 +66,7 @@ jenkins:
 ```yaml
 jenkins:
   clouds:
-    - fleet:
+    - ec2fleet:
         name: ec2-fleet
         awsCredentialsId: xx
         computerConnector:
