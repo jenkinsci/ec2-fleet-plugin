@@ -6,13 +6,7 @@ import com.amazon.jenkins.ec2fleet.fleet.Fleets;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.model.AmazonAutoScalingException;
 import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.model.CreateTagsRequest;
-import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
-import com.amazonaws.services.ec2.model.DescribeSpotFleetInstancesRequest;
-import com.amazonaws.services.ec2.model.DescribeSpotFleetRequestsRequest;
-import com.amazonaws.services.ec2.model.DryRunResult;
-import com.amazonaws.services.ec2.model.ModifySpotFleetRequestRequest;
-import com.amazonaws.services.ec2.model.Tag;
+import com.amazonaws.services.ec2.model.*;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
@@ -38,6 +32,9 @@ public class AwsPermissionChecker {
         ModifySpotFleetRequest,
         DescribeSpotFleetRequests,
         DescribeAutoScalingGroups,
+        DescribeEC2FleetRequests,
+        DescribeEC2FleetInstances,
+        ModifyEC2FleetRequest,
         TerminateInstances, // TODO: Dry-run throws invalid instanceID first then AuthZ error. We need to find a better way to test
         UpdateAutoScalingGroup; // TODO: There is no dry-run for AutoScalingClient
     };
@@ -45,18 +42,21 @@ public class AwsPermissionChecker {
     public List<String> getMissingPermissions(final String fleet) {
         final AmazonEC2 ec2Client = Registry.getEc2Api().connect(awsCrendentialsId, regionName, endpoint);
         final List<String> missingPermissions = new ArrayList<>(getMissingCommonPermissions(ec2Client));
-        if(StringUtils.isBlank(fleet)) { // Since we don't know the fleet type, show permissions for both
-            missingPermissions.addAll(getMissingPermissionsForFleet(ec2Client, fleet));
+        if(StringUtils.isBlank(fleet)) { // Since we don't know the fleet type, show all permissions
+            missingPermissions.addAll(getMissingPermissionsForSpotFleet(ec2Client, fleet));
+            missingPermissions.addAll(getMissingPermissionsForEC2Fleet(ec2Client, fleet));
             missingPermissions.addAll(getMissingPermissionsForASG());
         } else if(Fleets.isSpotFleet(fleet)) {
-            missingPermissions.addAll(getMissingPermissionsForFleet(ec2Client, fleet));
+            missingPermissions.addAll(getMissingPermissionsForSpotFleet(ec2Client, fleet));
+        } else if(Fleets.isEC2Fleet(fleet)) {
+            missingPermissions.addAll(getMissingPermissionsForEC2Fleet(ec2Client, fleet));
         } else {
             missingPermissions.addAll(getMissingPermissionsForASG());
         }
         return missingPermissions;
     }
 
-    private List<String> getMissingPermissionsForFleet(final AmazonEC2 ec2Client, final String fleet) {
+    private List<String> getMissingPermissionsForSpotFleet(final AmazonEC2 ec2Client, final String fleet) {
         final List<String> missingFleetPermissions = new ArrayList<>();
         if(!hasDescribeSpotFleetRequestsPermission(ec2Client, fleet)) {
             missingFleetPermissions.add(FleetAPI.DescribeSpotFleetRequests.name());
@@ -88,6 +88,35 @@ public class AwsPermissionChecker {
             missingAsgPermissions.add(FleetAPI.DescribeAutoScalingGroups.name());
         }
         return missingAsgPermissions;
+    }
+
+    private List<String> getMissingPermissionsForEC2Fleet(final AmazonEC2 ec2Client, final String fleet) {
+        final List<String> missingFleetPermissions = new ArrayList<>();
+        if(!hasDescribeEC2FleetRequestsPermission(ec2Client, fleet)) {
+            missingFleetPermissions.add(FleetAPI.DescribeEC2FleetRequests.name());
+        }
+        if(!hasDescribeEC2FleetInstancesPermission(ec2Client, fleet)) {
+            missingFleetPermissions.add(FleetAPI.DescribeEC2FleetInstances.name());
+        }
+        if(!hasModifyEC2FleetRequestPermission(ec2Client, fleet)) {
+            missingFleetPermissions.add(FleetAPI.ModifyEC2FleetRequest.name());
+        }
+        return missingFleetPermissions;
+    }
+
+    private boolean hasModifyEC2FleetRequestPermission(final AmazonEC2 ec2Client, final String fleet) {
+        final DryRunResult<ModifyFleetRequest> dryRunResult = ec2Client.dryRun(new ModifyFleetRequest().withFleetId(fleet));
+        return dryRunResult.getDryRunResponse().getStatusCode() != UNAUTHORIZED_STATUS_CODE;
+    }
+
+    private boolean hasDescribeEC2FleetInstancesPermission(final AmazonEC2 ec2Client, final String fleet) {
+        final DryRunResult<DescribeFleetInstancesRequest> dryRunResult = ec2Client.dryRun(new DescribeFleetInstancesRequest().withFleetId(fleet));
+        return dryRunResult.getDryRunResponse().getStatusCode() != UNAUTHORIZED_STATUS_CODE;
+    }
+
+    private boolean hasDescribeEC2FleetRequestsPermission(final AmazonEC2 ec2Client, final String fleet) {
+        final DryRunResult<DescribeFleetsRequest> dryRunResult = ec2Client.dryRun(new DescribeFleetsRequest().withFleetIds(fleet));
+        return dryRunResult.getDryRunResponse().getStatusCode() != UNAUTHORIZED_STATUS_CODE;
     }
 
     private boolean hasModifySpotFleetRequestPermission(final AmazonEC2 ec2Client, final String fleet) {
