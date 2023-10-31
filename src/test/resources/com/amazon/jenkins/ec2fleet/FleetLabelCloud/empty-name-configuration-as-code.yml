@@ -1,0 +1,8 @@
+jenkins:
+  clouds:
+    - ec2FleetLabel:
+        name: ""
+    - ec2FleetLabel:
+        name: ""
+    - ec2FleetLabel:
+        name: ""

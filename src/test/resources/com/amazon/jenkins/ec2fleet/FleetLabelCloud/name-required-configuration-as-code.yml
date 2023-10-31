@@ -1,0 +1,9 @@
+jenkins:
+  clouds:
+    - ec2FleetLabel:
+        awsCredentialsId: xx
+        region: us-east-2
+        idleMinutes: 33
+        minSize: 15
+        maxSize: 90
+        numExecutors: 12

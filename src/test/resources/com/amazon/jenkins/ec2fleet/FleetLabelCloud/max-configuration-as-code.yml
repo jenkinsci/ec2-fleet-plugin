@@ -1,0 +1,26 @@
+jenkins:
+  clouds:
+    - ec2FleetLabel:
+        name: ec2-fleet-label
+        awsCredentialsId: xx
+        computerConnector:
+          sshConnector:
+            credentialsId: cred
+            sshHostKeyVerificationStrategy:
+              NonVerifyingKeyVerificationStrategy
+        region: us-east-2
+        endpoint: http://a.com
+        fsRoot: my-root
+        privateIpUsed: true
+        alwaysReconnect: true
+        idleMinutes: 22
+        minSize: 11
+        maxSize: 75
+        numExecutors: 24
+        restrictUsage: false
+        initOnlineTimeoutSec: 267
+        initOnlineCheckIntervalSec: 13
+        cloudStatusIntervalSec: 11
+        disableTaskResubmit: true
+        noDelayProvision: false
+        ec2KeyPairName: "keyPairName"

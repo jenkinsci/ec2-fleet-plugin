@@ -1,0 +1,4 @@
+jenkins:
+  clouds:
+    - ec2FleetLabel:
+        name: ec2-fleet-label

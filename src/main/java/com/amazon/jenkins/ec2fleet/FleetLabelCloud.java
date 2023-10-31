@@ -116,9 +116,9 @@ public class FleetLabelCloud extends AbstractFleetCloud {
                            final boolean privateIpUsed,
                            final boolean alwaysReconnect,
                            final Integer idleMinutes,
-                           final Integer minSize,
-                           final Integer maxSize,
-                           final Integer numExecutors,
+                           final int minSize,
+                           final int maxSize,
+                           final int numExecutors,
                            final boolean restrictUsage,
                            final boolean disableTaskResubmit,
                            final Integer initOnlineTimeoutSec,
@@ -136,9 +136,12 @@ public class FleetLabelCloud extends AbstractFleetCloud {
         this.idleMinutes = idleMinutes;
         this.privateIpUsed = privateIpUsed;
         this.alwaysReconnect = alwaysReconnect;
-        this.minSize = minSize;
+        if (minSize < 0) {
+            warning("Cloud parameter 'minSize' can't be less than 0, setting to 0");
+        }
+        this.minSize = Math.max(0, minSize);
         this.maxSize = maxSize;
-        this.numExecutors = numExecutors;
+        this.numExecutors = Math.max(numExecutors, 1);
         this.restrictUsage = restrictUsage;
         this.disableTaskResubmit = disableTaskResubmit;
         this.initOnlineTimeoutSec = initOnlineTimeoutSec;
@@ -204,15 +207,15 @@ public class FleetLabelCloud extends AbstractFleetCloud {
         return (idleMinutes != null) ? idleMinutes : 0;
     }
 
-    public Integer getMaxSize() {
+    public int getMaxSize() {
         return maxSize;
     }
 
-    public Integer getMinSize() {
+    public int getMinSize() {
         return minSize;
     }
 
-    public Integer getNumExecutors() {
+    public int getNumExecutors() {
         return numExecutors;
     }
 
