@@ -34,7 +34,7 @@ etc.
 **Linux or Windows?**
 <Linux/Windows>
 
-**Fleet Configuration as Code**
+**EC2Fleet Configuration as Code**
 ``
 Paste only eC2Fleet part from plugin configuration. Mask all security concerning details. You can download it from Manage Jenkins > Configuration as Code > Download Configuration
 ``
