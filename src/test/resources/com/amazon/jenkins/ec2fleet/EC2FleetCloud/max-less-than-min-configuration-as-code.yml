@@ -1,6 +1,0 @@
-jenkins:
-  clouds:
-    - ec2Fleet:
-        name: ec2-fleet
-        minSize: 10
-        maxSize: 0

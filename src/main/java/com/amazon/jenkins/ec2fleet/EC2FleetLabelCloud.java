@@ -32,7 +32,6 @@ import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -55,64 +54,58 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.util.stream.Collectors;
 
-import static com.amazon.jenkins.ec2fleet.CloudConstants.*;
-
 /**
  * @see CloudNanny
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
 
+    public static final String EC2_INSTANCE_TAG_NAMESPACE = "ec2-fleet-plugin";
+    public static final String EC2_INSTANCE_CLOUD_NAME_TAG = EC2_INSTANCE_TAG_NAMESPACE + ":cloud-name";
+
     public static final String BASE_DEFAULT_FLEET_CLOUD_ID = "FleetCloudLabel";
+
+    public static final int DEFAULT_CLOUD_STATUS_INTERVAL_SEC = 10;
+
+    private static final int DEFAULT_INIT_ONLINE_TIMEOUT_SEC = 3 * 60;
+    private static final int DEFAULT_INIT_ONLINE_CHECK_INTERVAL_SEC = 15;
 
 //    private static final String NEW_EC2_KEY_PAIR_VALUE = "- New Key Pair -";
 
     private static final SimpleFormatter sf = new SimpleFormatter();
     private static final Logger LOGGER = Logger.getLogger(EC2FleetLabelCloud.class.getName());
 
-    private String awsCredentialsId;
+    private final String awsCredentialsId;
     private final String region;
-    private String endpoint;
+    private final String endpoint;
 
-    private String fsRoot;
+    private final String fsRoot;
     private final ComputerConnector computerConnector;
-    private boolean privateIpUsed = DEFAULT_PRIVATE_IP_USED;
-    private boolean alwaysReconnect = DEFAULT_ALWAYS_RECONNECT;
-    private int idleMinutes = DEFAULT_IDLE_MINUTES;
-    private int minSize = DEFAULT_MIN_SIZE;
-    private int maxSize = DEFAULT_MAX_SIZE;
-    private int numExecutors = DEFAULT_NUM_EXECUTORS;
-    private boolean restrictUsage = DEFAULT_RESTRICT_USAGE;
-    private Integer initOnlineTimeoutSec = DEFAULT_INIT_ONLINE_TIMEOUT_SEC;
-    private Integer initOnlineCheckIntervalSec = DEFAULT_INIT_ONLINE_CHECK_INTERVAL_SEC;
-    private Integer cloudStatusIntervalSec = DEFAULT_CLOUD_STATUS_INTERVAL_SEC;
+    private final boolean privateIpUsed;
+    private final boolean alwaysReconnect;
+    private final Integer idleMinutes;
+    private final Integer minSize;
+    private final Integer maxSize;
+    private final Integer numExecutors;
+    private final boolean restrictUsage;
+    private final Integer initOnlineTimeoutSec;
+    private final Integer initOnlineCheckIntervalSec;
+    private final Integer cloudStatusIntervalSec;
     private final String ec2KeyPairName;
 
     /**
      * @see EC2FleetAutoResubmitComputerLauncher
      */
-    private boolean disableTaskResubmit;
+    private final boolean disableTaskResubmit;
 
     /**
      * @see NoDelayProvisionStrategy
      */
-    private boolean noDelayProvision;
+    private final boolean noDelayProvision;
 
     private transient Map<String, State> states;
 
     @DataBoundConstructor
-    public EC2FleetLabelCloud(@Nonnull final String name,
-                              final String region,
-                              final ComputerConnector computerConnector,
-                              final String ec2KeyPairName) {
-        super(StringUtils.isNotBlank(name) ? name : CloudNames.generateUnique(BASE_DEFAULT_FLEET_CLOUD_ID));
-        init();
-        this.region = region;
-        this.computerConnector = computerConnector;
-        this.ec2KeyPairName = ec2KeyPairName;
-    }
-
-    @Deprecated
     public EC2FleetLabelCloud(final String name,
                               final String awsCredentialsId,
                               final String region,
@@ -121,7 +114,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
                               final ComputerConnector computerConnector,
                               final boolean privateIpUsed,
                               final boolean alwaysReconnect,
-                              final int idleMinutes,
+                              final Integer idleMinutes,
                               final Integer minSize,
                               final Integer maxSize,
                               final Integer numExecutors,
@@ -132,22 +125,26 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
                               final Integer cloudStatusIntervalSec,
                               final boolean noDelayProvision,
                               final String ec2KeyPairName) {
-        this(name, region, computerConnector, ec2KeyPairName);
-        setAwsCredentialsId(awsCredentialsId);
-        setEndpoint(endpoint);
-        setFsRoot(fsRoot);
-        setPrivateIpUsed(privateIpUsed);
-        setAlwaysReconnect(alwaysReconnect);
-        setIdleMinutes(idleMinutes);
-        setMinSize(minSize);
-        setMaxSize(maxSize);
-        setNumExecutors(numExecutors);
-        setRestrictUsage(restrictUsage);
-        setDisableTaskResubmit(disableTaskResubmit);
-        setInitOnlineTimeoutSec(initOnlineTimeoutSec);
-        setInitOnlineCheckIntervalSec(initOnlineCheckIntervalSec);
-        setCloudStatusIntervalSec(cloudStatusIntervalSec);
-        setNoDelayProvision(noDelayProvision);
+        super(StringUtils.isNotBlank(name) ? name : CloudNames.generateUnique(BASE_DEFAULT_FLEET_CLOUD_ID));
+        init();
+        this.awsCredentialsId = awsCredentialsId;
+        this.region = region;
+        this.endpoint = endpoint;
+        this.fsRoot = fsRoot;
+        this.computerConnector = computerConnector;
+        this.idleMinutes = idleMinutes;
+        this.privateIpUsed = privateIpUsed;
+        this.alwaysReconnect = alwaysReconnect;
+        this.minSize = minSize;
+        this.maxSize = maxSize;
+        this.numExecutors = numExecutors;
+        this.restrictUsage = restrictUsage;
+        this.disableTaskResubmit = disableTaskResubmit;
+        this.initOnlineTimeoutSec = initOnlineTimeoutSec;
+        this.initOnlineCheckIntervalSec = initOnlineCheckIntervalSec;
+        this.cloudStatusIntervalSec = cloudStatusIntervalSec;
+        this.noDelayProvision = noDelayProvision;
+        this.ec2KeyPairName = ec2KeyPairName;
     }
 
     public String getEc2KeyPairName() {
@@ -158,54 +155,24 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
         return noDelayProvision;
     }
 
-    @DataBoundSetter
-    public void setNoDelayProvision(boolean noDelayProvision) {
-        this.noDelayProvision = noDelayProvision;
-    }
-
     public String getAwsCredentialsId() {
         return awsCredentialsId;
-    }
-
-    @DataBoundSetter
-    public void setAwsCredentialsId(String awsCredentialsId) {
-        this.awsCredentialsId = awsCredentialsId;
     }
 
     public boolean isDisableTaskResubmit() {
         return disableTaskResubmit;
     }
 
-    @DataBoundSetter
-    public void setDisableTaskResubmit(boolean disableTaskResubmit) {
-        this.disableTaskResubmit = disableTaskResubmit;
-    }
-
     public int getInitOnlineTimeoutSec() {
-        return initOnlineTimeoutSec;
-    }
-
-    @DataBoundSetter
-    public void setInitOnlineTimeoutSec(Integer initOnlineTimeoutSec) {
-        this.initOnlineTimeoutSec = initOnlineTimeoutSec;
+        return initOnlineTimeoutSec == null ? DEFAULT_INIT_ONLINE_TIMEOUT_SEC : initOnlineTimeoutSec;
     }
 
     public int getCloudStatusIntervalSec() {
-        return cloudStatusIntervalSec;
-    }
-
-    @DataBoundSetter
-    public void setCloudStatusIntervalSec(Integer cloudStatusIntervalSec) {
-        this.cloudStatusIntervalSec = cloudStatusIntervalSec;
+        return cloudStatusIntervalSec == null ? DEFAULT_CLOUD_STATUS_INTERVAL_SEC : cloudStatusIntervalSec;
     }
 
     public int getInitOnlineCheckIntervalSec() {
-        return initOnlineCheckIntervalSec;
-    }
-
-    @DataBoundSetter
-    public void setInitOnlineCheckIntervalSec(Integer initOnlineCheckIntervalSec) {
-        this.initOnlineCheckIntervalSec = initOnlineCheckIntervalSec;
+        return initOnlineCheckIntervalSec == null ? DEFAULT_INIT_ONLINE_CHECK_INTERVAL_SEC : initOnlineCheckIntervalSec;
     }
 
     public String getRegion() {
@@ -216,18 +183,8 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
         return endpoint;
     }
 
-    @DataBoundSetter
-    public void setEndpoint(String endpoint) {
-        this.endpoint = endpoint;
-    }
-
     public String getFsRoot() {
         return fsRoot;
-    }
-
-    @DataBoundSetter
-    public void setFsRoot(String fsRoot) {
-        this.fsRoot = fsRoot;
     }
 
     public ComputerConnector getComputerConnector() {
@@ -238,70 +195,24 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
         return privateIpUsed;
     }
 
-    @DataBoundSetter
-    public void setPrivateIpUsed(boolean privateIpUsed) {
-        this.privateIpUsed = privateIpUsed;
-    }
-
     public boolean isAlwaysReconnect() {
         return alwaysReconnect;
     }
 
-    @DataBoundSetter
-    public void setAlwaysReconnect(boolean alwaysReconnect) {
-        this.alwaysReconnect = alwaysReconnect;
-    }
-
     public int getIdleMinutes() {
-        return idleMinutes;
+        return (idleMinutes != null) ? idleMinutes : 0;
     }
 
-    @DataBoundSetter
-    public void setIdleMinutes(int idleMinutes) {
-        this.idleMinutes = Math.max(0, idleMinutes);
-    }
-
-    public int getMaxSize() {
+    public Integer getMaxSize() {
         return maxSize;
     }
 
-    @DataBoundSetter
-    public void setMaxSize(int maxSize) {
-        if (maxSize < minSize) {
-            int newMaxSize = Math.max(1, minSize);
-            warning("Cloud parameter 'maxSize' can't be less than 'minSize' or 1, setting to %d", newMaxSize);
-            maxSize = newMaxSize;
-        }
-        this.maxSize = Math.max(1, maxSize);
-    }
-
-    public int getMinSize() {
+    public Integer getMinSize() {
         return minSize;
     }
 
-    @DataBoundSetter
-    public void setMinSize(int minSize) {
-        if (minSize < 0) {
-            warning("Cloud parameter 'minSize' can't be less than 0, setting to 0");
-        }
-        minSize = Math.max(0, minSize);
-        //TODO: This validation is only in place for unit tests since constructor is run twice on CasC load but not
-        // for unit tests
-        if (minSize > maxSize) {
-            warning("Cloud parameter 'minSize' cannot be greater than 'maxSize', setting 'maxSize' to %d. " +
-                    "Ignore this if caused after a CasC load.", minSize);
-            this.maxSize = minSize;
-        }
-        this.minSize = minSize;
-    }
-
-    public int getNumExecutors() {
+    public Integer getNumExecutors() {
         return numExecutors;
-    }
-
-    @DataBoundSetter
-    public void setNumExecutors(int numExecutors) {
-        this.numExecutors = Math.max(numExecutors, 1);
     }
 
     public String getJvmSettings() {
@@ -310,11 +221,6 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
 
     public boolean isRestrictUsage() {
         return restrictUsage;
-    }
-
-    @DataBoundSetter
-    public void setRestrictUsage(boolean restrictUsage) {
-        this.restrictUsage = restrictUsage;
     }
 
     @Override
