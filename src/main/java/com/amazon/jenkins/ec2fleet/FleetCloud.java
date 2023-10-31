@@ -225,10 +225,6 @@ public class FleetCloud extends AbstractFleetCloud {
         }
     }
 
-//    public EC2FleetCloud() {
-//        super("FleetCloudTest");
-//    }
-
     public boolean isNoDelayProvision() {
         return noDelayProvision;
     }
