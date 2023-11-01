@@ -1,6 +1,6 @@
 jenkins:
   clouds:
-    - ec2FleetLabel:
+    - eC2FleetLabel:
         awsCredentialsId: xx
         region: us-east-2
         idleMinutes: 33

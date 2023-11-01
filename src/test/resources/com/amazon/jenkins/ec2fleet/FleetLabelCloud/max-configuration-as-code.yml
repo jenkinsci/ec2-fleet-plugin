@@ -1,6 +1,6 @@
 jenkins:
   clouds:
-    - ec2FleetLabel:
+    - eC2FleetLabel:
         name: ec2-fleet-label
         awsCredentialsId: xx
         computerConnector:
