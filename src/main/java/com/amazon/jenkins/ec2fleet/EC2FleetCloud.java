@@ -5,14 +5,12 @@ import com.amazon.jenkins.ec2fleet.aws.RegionHelper;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.*;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
 import com.google.common.collect.Sets;
 import hudson.Extension;
 import hudson.ExtensionPoint;
 import hudson.model.*;
-import hudson.plugins.sshslaves.Messages;
 import hudson.slaves.*;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
@@ -181,7 +179,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                          final Integer initOnlineCheckIntervalSec,
                          final Integer cloudStatusIntervalSec,
                          final boolean noDelayProvision,
-                         ExecutorScaler executorScaler) {
+                         final ExecutorScaler executorScaler) {
         super(StringUtils.isNotBlank(name) ? name : CloudNames.generateUnique(BASE_DEFAULT_FLEET_CLOUD_ID));
         init();
         this.credentialsId = credentialsId;
@@ -1113,8 +1111,16 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         @DataBoundSetter
         public void setMemoryGiBPerExecutor(int value) { this.memoryGiBPerExecutor = value; }
 
+        public int getvCpuPerExecutor() {
+            return vCpuPerExecutor;
+        }
+
+        public int getMemoryGiBPerExecutor() {
+            return memoryGiBPerExecutor;
+        }
+
         @Override
-        public int scale(String instanceType, FleetStateStats stats, AmazonEC2 ec2) {
+        public int scale(final String instanceType, final FleetStateStats stats, final AmazonEC2 ec2) {
             if(this.vCpuPerExecutor == 0 && this.memoryGiBPerExecutor == 0) {
                 return numExecutors;
             }
@@ -1140,7 +1146,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             public String getDisplayName() { return "Scale by node hardware";}
         }
 
-        private InstanceTypeInfo getInstanceTypeInfo(AmazonEC2 ec2, String instanceType) {
+        private InstanceTypeInfo getInstanceTypeInfo(final AmazonEC2 ec2, final String instanceType) {
             DescribeInstanceTypesRequest request = new DescribeInstanceTypesRequest().withInstanceTypes(instanceType);
             DescribeInstanceTypesResult result = ec2.describeInstanceTypes(request);
             return result.getInstanceTypes().get(0);
