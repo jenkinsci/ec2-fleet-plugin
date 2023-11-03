@@ -791,7 +791,7 @@ public class FleetLabelCloud extends AbstractFleetCloud {
     }
 
     @Extension
-    @SuppressWarnings("unused") @Symbol("ec2FleetLabel")
+    @SuppressWarnings("unused") @Symbol("eC2FleetLabel")
     public static class DescriptorImpl extends Descriptor<Cloud> {
 
         public DescriptorImpl() {
