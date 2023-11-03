@@ -1,0 +1,15 @@
+<div>
+    Provide a name for this Fleet Cloud/Fleet Label Cloud. If no name is provided, then a default of 'FleetCloud' for a FleetCloud or 'FleetCloudLabel' for a FleetLabelCloud will be used for the name.
+
+    <p>
+        Could be used in Groovy as cloud identifier.
+    </p>
+
+    <p>
+        <b>Note:</b> Due to Jenkins organization,
+        Build Executor Status section in Jenkins UI could show old cloud name
+        for agents. To fix that, just wait until agents are recreated (could be long)
+        or delete the agent (will not delete underlying EC2 instances).
+        Deleting an agent will cause the plugin to recreate it with correct cloud name.
+    </p>
+</div>

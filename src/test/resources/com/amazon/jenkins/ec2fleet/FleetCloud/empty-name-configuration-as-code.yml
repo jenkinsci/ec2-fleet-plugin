@@ -1,0 +1,8 @@
+jenkins:
+  clouds:
+    - eC2Fleet:
+        name: ""
+    - eC2Fleet:
+        name: ""
+    - eC2Fleet:
+        name: ""

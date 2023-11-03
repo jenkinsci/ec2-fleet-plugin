@@ -1,8 +1,0 @@
-jenkins:
-  clouds:
-    - ec2Fleet:
-        name: ""
-    - ec2Fleet:
-        name: ""
-    - ec2Fleet:
-        name: ""

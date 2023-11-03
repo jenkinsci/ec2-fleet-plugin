@@ -1,0 +1,4 @@
+jenkins:
+  clouds:
+    - eC2Fleet:
+        name: ec2-fleet

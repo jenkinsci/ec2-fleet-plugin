@@ -38,10 +38,10 @@ public class ProvisionPerformanceTest extends IntegrationTest {
     }
 
     private void test(int workers, int maxTasks) throws IOException, InterruptedException {
-        mockEc2FleetApiToEc2SpotFleetWithDelay(InstanceStateName.Running, 500);
+        mockFleetApiToSpotFleetWithDelay(InstanceStateName.Running, 500);
 
         final ComputerConnector computerConnector = new LocalComputerConnector(j);
-        final EC2FleetCloudWithMeter cloud = new EC2FleetCloudWithMeter(null, "credId", null, "region",
+        final FleetCloudWithMeter cloud = new FleetCloudWithMeter(null, "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 1, 0, workers, 0, 1, true, false,
                 false, 0, 0, 2, false, noScaling);

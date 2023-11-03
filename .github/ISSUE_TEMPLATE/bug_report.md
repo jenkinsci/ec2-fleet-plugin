@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Create a bug report to help us improve
 title: ''
 labels: bug
 assignees: ''
@@ -16,6 +16,10 @@ A clear and concise description of what the bug is.
 1. 
 2. 
 etc.
+
+** Logs **
+Tip: See [this guide](https://www.jenkins.io/doc/book/system-administration/viewing-logs/#logs-in-jenkins) to configure a logger in Jenkins UI. Please attach `fine` logs if you think they are relevant.
+
 
 ## Environment Details
 

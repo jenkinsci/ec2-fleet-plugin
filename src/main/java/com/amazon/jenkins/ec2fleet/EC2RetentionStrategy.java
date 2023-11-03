@@ -13,24 +13,24 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * The {@link EC2RetentionStrategy} controls when to take {@link EC2FleetNodeComputer} offline, bring it back online, or even to destroy it.
+ * The {@link EC2RetentionStrategy} controls when to take {@link FleetNodeComputer} offline, bring it back online, or even to destroy it.
  */
-public class EC2RetentionStrategy extends RetentionStrategy<EC2FleetNodeComputer> implements ExecutorListener {
+public class EC2RetentionStrategy extends RetentionStrategy<FleetNodeComputer> implements ExecutorListener {
     private static final Logger LOGGER = Logger.getLogger(EC2RetentionStrategy.class.getName());
     private static final int RE_CHECK_IN_A_MINUTE = 1;
 
     /**
      * Will be called under {@link hudson.model.Queue#withLock(Runnable)}
      *
-     * @param fc EC2FleetNodeComputer
+     * @param fc FleetNodeComputer
      * @return delay in min before next run
      */
     @SuppressFBWarnings(
             value = "BC_UNCONFIRMED_CAST",
-            justification = "to ignore EC2FleetNodeComputer cast")
+            justification = "to ignore FleetNodeComputer cast")
     @Override
-    public long check(final EC2FleetNodeComputer fc) {
-        final AbstractEC2FleetCloud cloud = fc.getCloud();
+    public long check(final FleetNodeComputer fc) {
+        final AbstractFleetCloud cloud = fc.getCloud();
 
         LOGGER.fine(String.format("Checking if node '%s' is idle ", fc.getName()));
 
@@ -41,7 +41,7 @@ public class EC2RetentionStrategy extends RetentionStrategy<EC2FleetNodeComputer
             return RE_CHECK_IN_A_MINUTE;
         }
 
-        // Ensure that the EC2FleetCloud cannot be mutated from under us while
+        // Ensure that the FleetCloud cannot be mutated from under us while
         // we're doing this check
         // Ensure nobody provisions onto this node until we've done
         // checking
@@ -58,14 +58,14 @@ public class EC2RetentionStrategy extends RetentionStrategy<EC2FleetNodeComputer
                 EC2AgentTerminationReason reason;
                 // Determine the reason for termination from specific to generic use cases.
                 // Reasoning for checking all cases of termination initiated by the plugin:
-                //  A user-initiated change to cloud configuration creates a new EC2FleetCloud object, erasing class fields containing data like instance IDs to terminate.
+                //  A user-initiated change to cloud configuration creates a new FleetCloud object, erasing class fields containing data like instance IDs to terminate.
                 //  Hence, determine the reasons for termination here using persisted fields for accurate handling of termination.
                 if (fc.isMarkedForDeletion()) {
                     reason = EC2AgentTerminationReason.AGENT_DELETED;
                 } else if (cloud.hasExcessCapacity()) {
                     reason = EC2AgentTerminationReason.EXCESS_CAPACITY;
-                } else if (cloud instanceof EC2FleetCloud && !((EC2FleetCloud) cloud).hasUnlimitedUsesForNodes()
-                        && ((EC2FleetNode)node).getUsesRemaining() <= 0) {
+                } else if (cloud instanceof FleetCloud && !((FleetCloud) cloud).hasUnlimitedUsesForNodes()
+                        && ((FleetNode)node).getUsesRemaining() <= 0) {
                     reason = EC2AgentTerminationReason.MAX_TOTAL_USES_EXHAUSTED;
                 } else if (isIdleForTooLong(cloud, fc)) {
                     reason = EC2AgentTerminationReason.IDLE_FOR_TOO_LONG;
@@ -97,12 +97,12 @@ public class EC2RetentionStrategy extends RetentionStrategy<EC2FleetNodeComputer
     }
 
     @Override
-    public void start(EC2FleetNodeComputer c) {
+    public void start(FleetNodeComputer c) {
         LOGGER.log(Level.INFO, "Connecting to instance: " + c.getDisplayName());
         c.connect(false);
     }
 
-    private boolean isIdleForTooLong(final AbstractEC2FleetCloud cloud, final Computer computer) {
+    private boolean isIdleForTooLong(final AbstractFleetCloud cloud, final Computer computer) {
         final int idleMinutes = cloud.getIdleMinutes();
         if (idleMinutes <= 0) return false;
 
@@ -122,25 +122,25 @@ public class EC2RetentionStrategy extends RetentionStrategy<EC2FleetNodeComputer
 
     @Override
     public void taskAccepted(Executor executor, Queue.Task task) {
-        final EC2FleetNodeComputer computer = (EC2FleetNodeComputer) executor.getOwner();
+        final FleetNodeComputer computer = (FleetNodeComputer) executor.getOwner();
         if (computer != null) {
-            final EC2FleetNode ec2FleetNode = computer.getNode();
-            if (ec2FleetNode != null) {
-                final int maxTotalUses = ec2FleetNode.getMaxTotalUses();
+            final FleetNode fleetNode = computer.getNode();
+            if (fleetNode != null) {
+                final int maxTotalUses = fleetNode.getMaxTotalUses();
                 if (maxTotalUses <= -1) { // unlimited uses
                     LOGGER.fine("maxTotalUses set to unlimited (" + maxTotalUses + ") for agent " + computer.getName());
                 } else { // limited uses
-                    if (ec2FleetNode.getUsesRemaining() > 1) {
-                        ec2FleetNode.decrementUsesRemaining();
-                        LOGGER.info("Agent " + computer.getName() + " has " + ec2FleetNode.getUsesRemaining() + " builds left");
-                    } else if (ec2FleetNode.getUsesRemaining() == 1) { // current task should be the last task for this agent
+                    if (fleetNode.getUsesRemaining() > 1) {
+                        fleetNode.decrementUsesRemaining();
+                        LOGGER.info("Agent " + computer.getName() + " has " + fleetNode.getUsesRemaining() + " builds left");
+                    } else if (fleetNode.getUsesRemaining() == 1) { // current task should be the last task for this agent
                         LOGGER.info(String.format("maxTotalUses drained - suspending agent %s after current build", computer.getName()));
                         computer.setAcceptingTasks(false);
-                        ec2FleetNode.decrementUsesRemaining();
+                        fleetNode.decrementUsesRemaining();
                     } else {
                         // don't decrement when usesRemaining=0, as -1 has a special meaning.
                         LOGGER.warning(String.format("Agent %s accepted a task after being suspended!!! MaxTotalUses: %d, uses remaining: %d",
-                                computer.getName(), ec2FleetNode.getMaxTotalUses(), ec2FleetNode.getUsesRemaining()));
+                                computer.getName(), fleetNode.getMaxTotalUses(), fleetNode.getUsesRemaining()));
                     }
                 }
             }
@@ -170,15 +170,15 @@ public class EC2RetentionStrategy extends RetentionStrategy<EC2FleetNodeComputer
                     TimeUnit.MILLISECONDS.toSeconds(executor.getElapsedTime())));
         }
 
-        final EC2FleetNodeComputer computer = (EC2FleetNodeComputer) executor.getOwner();
+        final FleetNodeComputer computer = (FleetNodeComputer) executor.getOwner();
         if (computer != null) {
-            final EC2FleetNode ec2FleetNode = computer.getNode();
-            if (ec2FleetNode != null) {
-                final AbstractEC2FleetCloud cloud = ec2FleetNode.getCloud();
+            final FleetNode fleetNode = computer.getNode();
+            if (fleetNode != null) {
+                final AbstractFleetCloud cloud = fleetNode.getCloud();
                 if (computer.countBusy() <= 1 && !computer.isAcceptingTasks()) {
-                    LOGGER.info("Calling scheduleToTerminate for node " + ec2FleetNode.getNodeName() + " due to exhausted maxTotalUses.");
+                    LOGGER.info("Calling scheduleToTerminate for node " + fleetNode.getNodeName() + " due to exhausted maxTotalUses.");
                     // Schedule instance for termination even if it breaches minSize and minSpareSize constraints
-                    cloud.scheduleToTerminate(ec2FleetNode.getNodeName(), true, EC2AgentTerminationReason.MAX_TOTAL_USES_EXHAUSTED);
+                    cloud.scheduleToTerminate(fleetNode.getNodeName(), true, EC2AgentTerminationReason.MAX_TOTAL_USES_EXHAUSTED);
                 }
             }
         }

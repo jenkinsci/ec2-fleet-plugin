@@ -208,7 +208,7 @@ import hudson.plugins.sshslaves.verifiers.NonVerifyingKeyVerificationStrategy
 import com.cloudbees.plugins.credentials.*
 import com.cloudbees.plugins.credentials.domains.Domain
 import hudson.model.*
-import com.amazon.jenkins.ec2fleet.EC2FleetCloud
+import com.amazon.jenkins.ec2fleet.FleetCloud
 import jenkins.model.Jenkins
 
 // just modify this config other code just logic
@@ -247,7 +247,7 @@ BasicSSHUserPrivateKey instanceCredentials = new BasicSSHUserPrivateKey(
 )
 // find detailed information about parameters on plugin config page or
 // https://github.com/jenkinsci/ec2-fleet-plugin/blob/master/src/main/java/com/amazon/jenkins/ec2fleet/EC2FleetCloud.java
-EC2FleetCloud ec2FleetCloud = new EC2FleetCloud(
+FleetCloud fleetCloud = new FleetCloud(
   "", // fleetCloudName
   null,
   awsCredentials.id,

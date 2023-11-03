@@ -31,13 +31,13 @@ import static org.mockito.Mockito.when;
 public class EC2RetentionStrategyTest {
 
     @Mock
-    private EC2FleetCloud cloud;
+    private FleetCloud cloud;
 
     @Mock
-    private EC2FleetNodeComputer computer;
+    private FleetNodeComputer computer;
 
     @Mock
-    private EC2FleetNode node;
+    private FleetNode node;
 
     @Mock
     private Queue.Task task;

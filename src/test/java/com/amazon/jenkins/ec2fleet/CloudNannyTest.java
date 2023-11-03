@@ -30,10 +30,10 @@ import static org.mockito.Mockito.when;
 public class CloudNannyTest {
 
     @Mock
-    private EC2FleetCloud cloud1;
+    private FleetCloud cloud1;
 
     @Mock
-    private EC2FleetCloud cloud2;
+    private FleetCloud cloud2;
 
     private List<Cloud> clouds = new ArrayList<>();
 
@@ -48,7 +48,7 @@ public class CloudNannyTest {
     private AtomicInteger recurrenceCounter1 = new AtomicInteger();
     private AtomicInteger recurrenceCounter2 = new AtomicInteger();
 
-    private Map<EC2FleetCloud, AtomicInteger> recurrenceCounters = Collections.synchronizedMap(new WeakHashMap<>());
+    private Map<FleetCloud, AtomicInteger> recurrenceCounters = Collections.synchronizedMap(new WeakHashMap<>());
 
     @Before
     public void before() throws Exception {
@@ -96,7 +96,7 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void shouldIgnoreNonEC2FleetClouds() {
+    public void shouldIgnoreNonFleetClouds() {
         clouds.add(cloud1);
 
         Cloud nonEc2FleetCloud = mock(Cloud.class);

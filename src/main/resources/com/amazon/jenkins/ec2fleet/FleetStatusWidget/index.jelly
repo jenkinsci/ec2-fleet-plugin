@@ -1,0 +1,16 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+    <l:pane width="3" title="Fleet Status">
+        <tr>
+            <td colspan="3" align="center" style="padding: 3px 0px;">
+                <j:forEach var = "fleet" items = "${it.statusList}">
+                    <li style="font-weight: bold;">${fleet.id}</li>
+                    <div>State: ${fleet.state},
+                        label: "${fleet.label}", nodes: ${fleet.numActive}, target: ${fleet.numDesired}
+                    </div>
+                    <br/>
+                </j:forEach>
+            </td>
+        </tr>
+    </l:pane>
+</j:jelly>

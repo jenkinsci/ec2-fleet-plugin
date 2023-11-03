@@ -4,9 +4,9 @@
 
 ## Properties
 
-### EC2FleetCloud
+### FleetCloud
 
-[Definition](https://github.com/jenkinsci/ec2-fleet-plugin/blob/master/src/main/java/com/amazon/jenkins/ec2fleet/EC2FleetCloud.java#L156-L179)
+[Definition](https://github.com/jenkinsci/ec2-fleet-plugin/blob/master/src/main/java/com/amazon/jenkins/ec2fleet/FleetCloud.java#L156-L179)
 
 | Property                   | Type    | Required                                 | Description                                                                                                                       |
 |----------------------------|---------|------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
@@ -35,20 +35,20 @@
 | cloudStatusIntervalSec     | int     | no, default ```10```                     ||
 | noDelayProvision           | boolean | no, default ```false```                  ||
 
-## EC2FleetLabelCloud
+## FleetLabelCloud
 
 More about this type [here](LABEL-BASED-CONFIGURATION.md)
 
-[Definition](https://github.com/jenkinsci/ec2-fleet-plugin/blob/master/src/main/java/com/amazon/jenkins/ec2fleet/EC2FleetLabelCloud.java#L123-L145)
+[Definition](https://github.com/jenkinsci/ec2-fleet-plugin/blob/master/src/main/java/com/amazon/jenkins/ec2fleet/FleetLabelCloud.java#L123-L145)
 
 ## Examples
 
-### EC2FleetCloud (min set of properties)
+### FleetCloud (min set of properties)
 
 ```yaml
 jenkins:
   clouds:
-    - ec2Fleet:
+    - eC2Fleet:
         name: ec2-fleet
         computerConnector:
             sshConnector:
@@ -61,12 +61,12 @@ jenkins:
         maxSize: 10
 ```
 
-### EC2FleetCloud (All properties)
+### FleetCloud (All properties)
 
 ```yaml
 jenkins:
   clouds:
-    - ec2Fleet:
+    - eC2Fleet:
         name: ec2-fleet
         awsCredentialsId: xx
         computerConnector:
