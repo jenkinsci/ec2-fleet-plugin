@@ -1,6 +1,6 @@
 jenkins:
   clouds:
-    - ec2Fleet:
+    - eC2Fleet:
         awsCredentialsId: xx
         region: us-east-2
         fleet: my-fleet
