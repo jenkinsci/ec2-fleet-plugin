@@ -58,7 +58,7 @@ public class NoDelayProvisionStrategy extends NodeProvisioner.Strategy {
 
             Cloud.CloudState cloudState = new Cloud.CloudState(label, strategyState.getAdditionalPlannedCapacity());
             if (!c.canProvision(cloudState)) {
-                LOGGER.log(Level.INFO, "label [{0}]: cloud {1} can not provision for this label, continuing...",
+                LOGGER.log(Level.FINE, "label [{0}]: cloud {1} can not provision for this label, continuing...",
                         new Object[]{label, c.getDisplayName()});
                 continue;
             }
