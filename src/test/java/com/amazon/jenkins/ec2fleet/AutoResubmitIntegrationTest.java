@@ -43,7 +43,7 @@ import static org.mockito.Mockito.when;
 @SuppressWarnings({"deprecation"})
 public class AutoResubmitIntegrationTest extends IntegrationTest {
 
-    private EC2FleetCloud.ExecutorScaler noScaling;
+    private FleetCloud.ExecutorScaler noScaling;
 
     @Before
     public void before() {
@@ -72,7 +72,7 @@ public class AutoResubmitIntegrationTest extends IntegrationTest {
                                 instance
                         )));
 
-        noScaling = new EC2FleetCloud.NoScaler();
+        noScaling = new FleetCloud.NoScaler();
     }
 
     @Test

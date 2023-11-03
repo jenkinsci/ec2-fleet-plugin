@@ -37,7 +37,7 @@ import static org.mockito.Mockito.when;
 
 public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
 
-    private final EC2FleetCloud.ExecutorScaler noScaling = new EC2FleetCloud.NoScaler();
+    private final FleetCloud.ExecutorScaler noScaling = new FleetCloud.NoScaler();
 
     private AmazonEC2 amazonEC2;
 
