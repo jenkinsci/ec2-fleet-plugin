@@ -50,10 +50,6 @@ public class FleetLabelCloudConfigurationAsCodeTest {
     public void shouldCreateCloudFromMinConfiguration() {
         assertEquals(jenkinsRule.jenkins.clouds.size(), 1);
         FleetLabelCloud cloud = (FleetLabelCloud) jenkinsRule.jenkins.clouds.getByName("ec2-fleet-label");
-        System.out.println("Cloud: " + cloud);
-        System.out.println("MinSize: " + cloud.getMinSize());
-        System.out.println("MaxSize: " + cloud.getMaxSize());
-        System.out.println("StatusInterval: " + cloud.getCloudStatusIntervalSec());
 
         assertEquals("ec2-fleet-label", cloud.name);
         assertNull(cloud.getRegion());
