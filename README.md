@@ -1,6 +1,6 @@
 # EC2 Fleet Plugin for Jenkins
 
-The EC2 Fleet Plugin scales your [Auto Scaling Group](https://docs.aws.amazon.com/autoscaling/ec2/userguide/AutoScalingGroup.html) or [EC2 Spot Fleet](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-fleet.html) 
+The EC2 Fleet Plugin scales your [Auto Scaling Group](https://docs.aws.amazon.com/autoscaling/ec2/userguide/AutoScalingGroup.html), [EC2 Fleet](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-fleet.html), or [Spot Fleet](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-fleet.html) 
 automatically for your Jenkins workload.
 
 [![Build Status](https://ci.jenkins.io/buildStatus/icon?job=Plugins/ec2-fleet-plugin/master)](https://ci.jenkins.io/blue/organizations/jenkins/Plugins%2Fec2-fleet-plugin/activity) [![](https://img.shields.io/jenkins/plugin/v/ec2-fleet.svg)](https://github.com/jenkinsci/ec2-fleet-plugin/releases)
@@ -24,8 +24,8 @@ automatically for your Jenkins workload.
 
 # Overview
 
-The EC2 Fleet Plugin scales your [Auto Scaling Group](https://docs.aws.amazon.com/autoscaling/ec2/userguide/AutoScalingGroup.html) or [EC2 Spot Fleet](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-fleet.html)
-automatically for your Jenkins workload. It handles launching new instances that match the criteria set in your ASG or Spot Fleet e.g. [allocation strategy](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-mixed-instances-groups.html#allocation-strategies), 
+The EC2 Fleet Plugin scales your [Auto Scaling Group](https://docs.aws.amazon.com/autoscaling/ec2/userguide/AutoScalingGroup.html), [EC2 Fleet](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-fleet.html), or [Spot Fleet](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-fleet.html)
+automatically for your Jenkins workload. It handles launching new instances that match the criteria set in your ASG, EC2 Fleet, or Spot Fleet e.g. [allocation strategy](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-mixed-instances-groups.html#allocation-strategies), 
 and terminating idle instances that breach that criteria or those in your Jenkins Cloud configuration.
 
 > [!WARNING]  
@@ -39,8 +39,8 @@ Minimum Jenkins version: 2.277.2
 > [Jenkins version 2.403](https://github.com/jenkinsci/jenkins/releases/tag/jenkins-2.403) includes [significant changes to cloud management](https://issues.jenkins.io/browse/JENKINS-70729).
 > If you are using that version, and see unexpected behavior, create an issue and let us know. 
 
-- Supports EC2 Spot Fleet or Auto Scaling Group as Jenkins Workers
-- Supports all features provided by EC2 Spot Fleet or Auto Scaling Groups e.g. [multiple instance types across Spot and On-Demand](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-mixed-instances-groups.html#allocation-strategies)
+- Supports EC2 Fleet, Spot Fleet, or Auto Scaling Group as Jenkins Workers
+- Supports all features provided by EC2 Fleet, Spot Fleet, or Auto Scaling Groups e.g. [multiple instance types across Spot and On-Demand](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-mixed-instances-groups.html#allocation-strategies)
 - Auto resubmit failed jobs caused by Spot interruptions
 - No delay scale up strategy: enable ```No Delay Provision Strategy``` in configuration
 - Add tags to EC2 instances used by plugin, for easy search, tag format ```ec2-fleet-plugin:cloud-name=<MyCloud>```
@@ -53,8 +53,8 @@ Minimum Jenkins version: 2.277.2
 ## Comparison to EC2-Plugin
 
 [EC2-Plugin](https://plugins.jenkins.io/ec2/) is a similar Jenkins plugin that will request EC2 instances when excess workload is
-detected. The main difference between the two plugins is that EC2-Fleet-Plugin uses ASG and EC2 Spot Fleet to request and manage
-instances instead of doing it manually with EC2 RunInstances. This gives EC2-Fleet-Plugin all the benefits of ASG and EC2 Spot Fleet:
+detected. The main difference between the two plugins is that EC2-Fleet-Plugin uses ASG, EC2 Fleet, and Spot Fleet to request and manage
+instances instead of doing it manually with EC2 RunInstances. This gives EC2-Fleet-Plugin all the benefits of ASG, EC2 Fleet, and Spot Fleet:
 allocation strategies, automatic availability zone re-balancing (ASG only), access to launch templates and launch configurations
 , instance weighting, etc. 
 See [which-spot-request-method-to-use](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-best-practices.html#which-spot-request-method-to-use).
@@ -62,8 +62,8 @@ See [which-spot-request-method-to-use](https://docs.aws.amazon.com/AWSEC2/latest
 | EC2-Fleet-Plugin                                                   | EC2-Plugin                                    |
 |--------------------------------------------------------------------|-----------------------------------------------|
 | Supports On-Demand & Spot Instances                                | Supports On-Demand & Spot Instances           |
-| Scales with ASG or EC2 Spot Fleet                                  | Scales with RunInstances                      |
-| ASG and EC2 Spot Fleet Allocation Strategies                       | No Allocation Strategies                      |
+| Scales with ASG, EC2 Fleet, or Spot Fleet                          | Scales with RunInstances                      |
+| ASG, EC2 Fleet, and Spot Fleet Allocation Strategies               | No Allocation Strategies                      |
 | Use launch template/config to set instance settings                | Manually set instances settings within plugin |
 | Custom instance weighting                                          | No custom instance weighting                  |
 | Supports mixed configuration like instance types, purchase options | Supports single instance type only            |
@@ -94,13 +94,13 @@ Go to [AWS account](http://aws.amazon.com/ec2/) and follow instructions.
 #### 2. Create IAM User
 
 Specify ```programmatic access``` during creation and record the credentials. These will
-be used by Jenkins EC2 Fleet Plugin to connect to your Spot Fleet.
+be used by Jenkins EC2 Fleet Plugin to connect to your EC2 Fleet or Spot Fleet.
 
 *Alternatively, you may use [AWS EC2 instance roles](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html)*
 
 #### 3. Configure User permissions
 
-Add an inline policy to the IAM user or EC2 instance role to allow it to use EC2 Spot Fleet and Auto Scaling Group.
+Add an inline policy to the IAM user or EC2 instance role to allow it to use EC2 Fleet, Spot Fleet, and Auto Scaling Group.
 [AWS documentation about this](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-fleet-requests.html#spot-fleet-prerequisites)
 
 ```json
@@ -117,7 +117,11 @@ Add an inline policy to the IAM user or EC2 instance role to allow it to use EC2
         "ec2:DescribeInstances",
         "ec2:TerminateInstances",
         "ec2:DescribeInstanceStatus",
-        "ec2:DescribeSpotFleetRequests"
+        "ec2:DescribeSpotFleetRequests",
+        "ec2:DescribeFleets",
+        "ec2:DescribeFleetInstances",
+        "ec2:ModifyFleet",
+        "ec2:DescribeInstanceTypes"
       ],
       "Resource": "*"
     },
@@ -160,7 +164,7 @@ Add an inline policy to the IAM user or EC2 instance role to allow it to use EC2
 }
 ```
 
-#### 4. Create an Auto Scaling Group or Spot Fleet
+#### 4. Create an Auto Scaling Group, EC2 Fleet, or Spot Fleet
 
 https://docs.aws.amazon.com/cli/latest/reference/autoscaling/create-auto-scaling-group.html
 Here is a [getting started tutorial for ASG](https://docs.aws.amazon.com/autoscaling/ec2/userguide/GettingStartedTutorial.html).
@@ -176,14 +180,14 @@ Use Auto Scaling Groups instead.
 
 #### 5. Configure Jenkins
 
-Once your ASG or Spot Fleet is ready, you can use it by adding a new **EC2 Fleet** cloud in the Jenkins configuration.
+Once your ASG, EC2 Fleet, or Spot Fleet is ready, you can use it by adding a new **EC2 Fleet** cloud in the Jenkins configuration.
 
 1. Goto ```Manage Jenkins > Plugin Manager```
 1. Install ```EC2 Fleet Jenkins Plugin```
 1. Goto ```Manage Jenkins > Configure Clouds```
 1. Click ```Add a new cloud``` and select ```Amazon EC2 Fleet```
 1. Configure AWS credentials, or leave empty to use the EC2 instance role
-1. Specify Auto Scaling Group or EC2 Spot Fleet to use
+1. Specify Auto Scaling Group, EC2 Fleet, or Spot Fleet to use
 
 More information on the configuration options can be found [here](https://github.com/jenkinsci/ec2-fleet-plugin/blob/master/docs/CONFIGURATION-OPTIONS.md).
 
@@ -195,7 +199,7 @@ You can use the History tab in the AWS console to view the scaling history.
 
 ## Groovy
 
-Below is a Groovy script to setup EC2 Spot Fleet Plugin for Jenkins and configure it. You can
+Below is a Groovy script to setup Spot Fleet Plugin for Jenkins and configure it. You can
 run the script with [Jenkins Script Console](https://wiki.jenkins.io/display/JENKINS/Jenkins+Script+Console).
 
 ```groovy
@@ -214,8 +218,7 @@ import jenkins.model.Jenkins
 // just modify this config other code just logic
 config = [
     region: "us-east-1",
-    // EC2 Spot Fleet ID
-    // or Auto Scaling Group Name
+    // Spot Fleet ID, EC2 Fleet ID, or Auto Scaling Group Name
     fleetId: "...", 
     idleMinutes: 10,
     minSize: 0,
@@ -246,7 +249,7 @@ BasicSSHUserPrivateKey instanceCredentials = new BasicSSHUserPrivateKey(
   "my private key to ssh ec2 for jenkins"
 )
 // find detailed information about parameters on plugin config page or
-// https://github.com/jenkinsci/ec2-fleet-plugin/blob/master/src/main/java/com/amazon/jenkins/ec2fleet/EC2FleetCloud.java
+// https://github.com/jenkinsci/ec2-fleet-plugin/blob/master/src/main/java/com/amazon/jenkins/ec2fleet/FleetCloud.java
 FleetCloud fleetCloud = new FleetCloud(
   "", // fleetCloudName
   null,
@@ -309,7 +312,7 @@ Linux plus Java, Maven etc. Then, when EC2 Fleet launches new EC2 instances with
 this AMI they will automatically get all the required software. Nice =)
 
 1. Create a custom AMI as described [here](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html#creating-an-ami)
-1. Create EC2 Spot Fleet with this AMI
+2. Create EC2 Fleet or Spot Fleet with this AMI
 
 ### EC2 Instance User Data
 
@@ -329,11 +332,11 @@ not be able to connect to the instance until the User Data script is done. More 
 launcher can be found [here](https://github.com/jenkinsci/ssh-slaves-plugin/blob/master/doc/CONFIGURE.md).
 
 1. Open Jenkins
-1. Go to ```Manage Jenkins > Configure System```
-1. Find proper fleet configuration and click ```Advanced...``` for SSH Launcher
-1. Add checking command into field ```Prefix Start Agent Command```
+2. Go to ```Manage Jenkins > Configure System```
+3. Find proper fleet configuration and click ```Advanced...``` for SSH Launcher
+4. Add checking command into field ```Prefix Start Agent Command```
    - example ```java -version && ```
-1. To apply for existing instances, restart Jenkins or Delete Nodes from Jenkins so they will be reconnected
+5. To apply for existing instances, restart Jenkins or Delete Nodes from Jenkins so they will be reconnected
 
 # FAQ
 

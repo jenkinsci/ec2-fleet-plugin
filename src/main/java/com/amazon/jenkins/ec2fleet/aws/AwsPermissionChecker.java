@@ -32,9 +32,10 @@ public class AwsPermissionChecker {
         ModifySpotFleetRequest,
         DescribeSpotFleetRequests,
         DescribeAutoScalingGroups,
-        DescribeEC2FleetRequests,
-        DescribeEC2FleetInstances,
-        ModifyEC2FleetRequest,
+        DescribeFleets,
+        DescribeFleetInstances,
+        ModifyFleet,
+        DescribeInstanceTypes,
         TerminateInstances, // TODO: Dry-run throws invalid instanceID first then AuthZ error. We need to find a better way to test
         UpdateAutoScalingGroup; // TODO: There is no dry-run for AutoScalingClient
     };
@@ -78,6 +79,9 @@ public class AwsPermissionChecker {
         if(!hasCreateTagsPermissions(ec2Client)) {
             missingCommonPermissions.add(FleetAPI.CreateTags.name());
         }
+        if(!hasDescribeInstanceTypesPermission(ec2Client)) {
+            missingCommonPermissions.add(FleetAPI.DescribeInstanceTypes.name());
+        }
         return missingCommonPermissions;
     }
 
@@ -93,13 +97,13 @@ public class AwsPermissionChecker {
     private List<String> getMissingPermissionsForEC2Fleet(final AmazonEC2 ec2Client, final String fleet) {
         final List<String> missingFleetPermissions = new ArrayList<>();
         if(!hasDescribeEC2FleetRequestsPermission(ec2Client, fleet)) {
-            missingFleetPermissions.add(FleetAPI.DescribeEC2FleetRequests.name());
+            missingFleetPermissions.add(FleetAPI.DescribeFleets.name());
         }
         if(!hasDescribeEC2FleetInstancesPermission(ec2Client, fleet)) {
-            missingFleetPermissions.add(FleetAPI.DescribeEC2FleetInstances.name());
+            missingFleetPermissions.add(FleetAPI.DescribeFleetInstances.name());
         }
         if(!hasModifyEC2FleetRequestPermission(ec2Client, fleet)) {
-            missingFleetPermissions.add(FleetAPI.ModifyEC2FleetRequest.name());
+            missingFleetPermissions.add(FleetAPI.ModifyFleet.name());
         }
         return missingFleetPermissions;
     }
@@ -150,6 +154,11 @@ public class AwsPermissionChecker {
 
     private boolean hasDescribeInstancePermission(final AmazonEC2 ec2Client) {
         final DryRunResult<DescribeInstancesRequest> dryRunResult = ec2Client.dryRun(new DescribeInstancesRequest());
+        return dryRunResult.getDryRunResponse().getStatusCode() != UNAUTHORIZED_STATUS_CODE;
+    }
+
+    private boolean hasDescribeInstanceTypesPermission(final AmazonEC2 ec2Client) {
+        final DryRunResult<DescribeInstanceTypesRequest> dryRunResult = ec2Client.dryRun(new DescribeInstanceTypesRequest());
         return dryRunResult.getDryRunResponse().getStatusCode() != UNAUTHORIZED_STATUS_CODE;
     }
 }
