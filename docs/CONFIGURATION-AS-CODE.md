@@ -8,32 +8,32 @@
 
 [Definition](https://github.com/jenkinsci/ec2-fleet-plugin/blob/master/src/main/java/com/amazon/jenkins/ec2fleet/FleetCloud.java#L156-L179)
 
-| Property                   | Type    | Required                                 | Description                                                                                                                       |
-|----------------------------|---------|------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
-| name                       | string  | yes, default ```""```                    | A unique name for Jenkins cloud. "" signals the plugin to generate a unique default name for the Cloud. e.g. FleetCloud-jBGChqOP  |
-| awsCredentialsId           | string  | no, default ```null```                   | [Leave blank to use AWS EC2 instance role](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html)    |
-| computerConnector          | object  | yes                                      | for example ```sshConnector```                                                                                                    |
-| region                     | string  | yes                                      | ```us-east-2```, full [list](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html)    |
-| fleet                      | string  | yes                                      | my-fleet                                                                                                                          |
-| endpoint                   | string  | no                                       | Set only if you need to use custome endpoint ```http://a.com```                                                                   |
-| fsRoot                     | string  | no                                       | my-root                                                                                                                           |
-| privateIpUsed              | boolean | no, default ```false```                  | connect to EC2 instance by private id instead of public                                                                           |
-| alwaysReconnect            | boolean | no, default ```false```                  ||
-| labelString                | string  | yes                                      ||
-| idleMinutes                | int     | no, default ```0```                      ||
-| minSize                    | int     | no, default ```0```                      ||
-| maxSize                    | int     | no, default ```0```                      ||
-| minSpareSize               | int     | no, default ```0```                      || minimum number of instances allowed to be idle, ready to pickup work. maxSize overrides minSpareSize. Such instances are exempted from 'Max Idle Minutes Before Scaledown' config.
-| maxTotalUses               | int     | no, default ```-1``` i.e. unlimited uses || maximum number of times a node can be used. Overrides minSize and minSpareSize, if set.
-| numExecutors               | int     | no, default ```1```                      ||
-| addNodeOnlyIfRunning       | boolean | no, default ```false```                  ||
-| restrictUsage              | boolean | no, default ```false```                  | if ```true``` fleet nodes will executed only jobs with same label                                                                 |
-| scaleExecutorsByWeight     | boolean | no, default ```false```                  ||
-| disableTaskResubmit        | boolean | no, default ```false```                  ||
-| initOnlineTimeoutSec       | int     | no, default ```180```                    ||
-| initOnlineCheckIntervalSec | int     | no, default ```15```                     ||
-| cloudStatusIntervalSec     | int     | no, default ```10```                     ||
-| noDelayProvision           | boolean | no, default ```false```                  ||
+| Property                   | Type    | Required                                 | Description                                                                                                                                 |
+|----------------------------|---------|------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| name                       | string  | yes, default ```""```                    | A unique name for Jenkins cloud. "" signals the plugin to generate a unique default name for the Cloud. e.g. FleetCloud-jBGChqOP            |
+| awsCredentialsId           | string  | no, default ```null```                   | [Leave blank to use AWS EC2 instance role](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html)              |
+| computerConnector          | object  | yes                                      | for example ```sshConnector```                                                                                                              |
+| region                     | string  | yes                                      | ```us-east-2```, full [list](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html)              |
+| fleet                      | string  | yes                                      | my-fleet                                                                                                                                    |
+| endpoint                   | string  | no                                       | Set only if you need to use custome endpoint ```http://a.com```                                                                             |
+| fsRoot                     | string  | no                                       | my-root                                                                                                                                     |
+| privateIpUsed              | boolean | no, default ```false```                  | connect to EC2 instance by private id instead of public                                                                                     |
+| alwaysReconnect            | boolean | no, default ```false```                  |                                                                                                                                             |
+| labelString                | string  | yes                                      |                                                                                                                                             |
+| idleMinutes                | int     | no, default ```0```                      |                                                                                                                                             |
+| minSize                    | int     | no, default ```0```                      |                                                                                                                                             |
+| maxSize                    | int     | no, default ```0```                      |                                                                                                                                             |
+| minSpareSize               | int     | no, default ```0```                      |                                                                                                                                             | minimum number of instances allowed to be idle, ready to pickup work. maxSize overrides minSpareSize. Such instances are exempted from 'Max Idle Minutes Before Scaledown' config.
+| maxTotalUses               | int     | no, default ```-1``` i.e. unlimited uses |                                                                                                                                             | maximum number of times a node can be used. Overrides minSize and minSpareSize, if set.
+| numExecutors               | int     | no, default ```1```                      |                                                                                                                                             |
+| addNodeOnlyIfRunning       | boolean | no, default ```false```                  |                                                                                                                                             |
+| restrictUsage              | boolean | no, default ```false```                  | if ```true``` fleet nodes will executed only jobs with same label                                                                           |
+| executorScaler             | object  | no, default ```NoScaler```               | Can be set to noScaler, weightedScaler, or nodeHardwareScaler. nodeHardwareScaler has subfields of vCpuPerExecutor and memoryGiBPerExecutor |
+| disableTaskResubmit        | boolean | no, default ```false```                  |                                                                                                                                             |
+| initOnlineTimeoutSec       | int     | no, default ```180```                    |                                                                                                                                             |
+| initOnlineCheckIntervalSec | int     | no, default ```15```                     |                                                                                                                                             |
+| cloudStatusIntervalSec     | int     | no, default ```10```                     |                                                                                                                                             |
+| noDelayProvision           | boolean | no, default ```false```                  |                                                                                                                                             |
 
 ## FleetLabelCloud
 
@@ -85,7 +85,10 @@ jenkins:
         numExecutors: 12
         addNodeOnlyIfRunning: true
         restrictUsage: true
-        scaleExecutorsByWeight: true
+        executorScaler:
+            nodeHardwareScaler:
+              memoryGiBPerExecutor: 2
+              vCpuPerExecutor: 3
         initOnlineTimeoutSec: 181
         initOnlineCheckIntervalSec: 13
         cloudStatusIntervalSec: 11
