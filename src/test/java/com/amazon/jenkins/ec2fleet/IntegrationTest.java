@@ -16,7 +16,22 @@ import com.amazonaws.services.cloudformation.model.Output;
 import com.amazonaws.services.cloudformation.model.Stack;
 import com.amazonaws.services.cloudformation.model.StackStatus;
 import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.model.*;
+import com.amazonaws.services.ec2.model.ActiveInstance;
+import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
+import com.amazonaws.services.ec2.model.DescribeInstancesResult;
+import com.amazonaws.services.ec2.model.DescribeSpotFleetInstancesRequest;
+import com.amazonaws.services.ec2.model.DescribeSpotFleetInstancesResult;
+import com.amazonaws.services.ec2.model.DescribeSpotFleetRequestsRequest;
+import com.amazonaws.services.ec2.model.DescribeSpotFleetRequestsResult;
+import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ec2.model.InstanceState;
+import com.amazonaws.services.ec2.model.InstanceStateName;
+import com.amazonaws.services.ec2.model.ModifySpotFleetRequestRequest;
+import com.amazonaws.services.ec2.model.Reservation;
+import com.amazonaws.services.ec2.model.SpotFleetRequestConfig;
+import com.amazonaws.services.ec2.model.SpotFleetRequestConfigData;
+import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
+import com.amazonaws.services.ec2.model.TerminateInstancesResult;
 import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import hudson.Functions;
@@ -305,19 +320,19 @@ public abstract class IntegrationTest {
 
     }
 
-    protected void mockFleetApiToSpotFleet(final InstanceStateName instanceStateName) {
-        mockFleetApiToSpotFleetWithDelay(instanceStateName, 0, 0);
+    protected void mockEc2FleetApiToEc2SpotFleet(final InstanceStateName instanceStateName) {
+        mockEc2FleetApiToEc2SpotFleetWithDelay(instanceStateName, 0, 0);
     }
 
-    protected void mockFleetApiToSpotFleet(final InstanceStateName instanceStateName, final int initialTargetCapacity) {
-        mockFleetApiToSpotFleetWithDelay(instanceStateName, initialTargetCapacity, 0);
+    protected void mockEc2FleetApiToEc2SpotFleet(final InstanceStateName instanceStateName, final int initialTargetCapacity) {
+        mockEc2FleetApiToEc2SpotFleetWithDelay(instanceStateName, initialTargetCapacity, 0);
     }
 
-    protected void mockFleetApiToSpotFleetWithDelay(final InstanceStateName instanceStateName, final long delayMillis) {
-        mockFleetApiToSpotFleetWithDelay(instanceStateName, 0, delayMillis);
+    protected void mockEc2FleetApiToEc2SpotFleetWithDelay(final InstanceStateName instanceStateName, final long delayMillis) {
+        mockEc2FleetApiToEc2SpotFleetWithDelay(instanceStateName, 0, delayMillis);
     }
 
-    protected void mockFleetApiToSpotFleetWithDelay(final InstanceStateName instanceStateName, final int initialTargetCapacity, final long delayMillis) {
+    protected void mockEc2FleetApiToEc2SpotFleetWithDelay(final InstanceStateName instanceStateName, final int initialTargetCapacity, final long delayMillis) {
         EC2Api ec2Api = spy(EC2Api.class);
         Registry.setEc2Api(ec2Api);
 
@@ -471,7 +486,7 @@ public abstract class IntegrationTest {
         return amazonCloudFormation;
     }
 
-    protected void mockFleetApi() {
+    protected void mockEc2FleetApi() {
         EC2Api ec2Api = mock(EC2Api.class);
         Registry.setEc2Api(ec2Api);
 

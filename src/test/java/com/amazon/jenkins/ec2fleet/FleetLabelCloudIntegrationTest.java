@@ -26,7 +26,7 @@ public class FleetLabelCloudIntegrationTest extends IntegrationTest {
 
     @Test
     public void should_create_stack_and_provision_node_for_task_execution() throws Exception {
-        mockFleetApiToSpotFleet(InstanceStateName.Running);
+        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Running);
         mockCloudFormationApi();
 
         FleetLabelCloud cloud = new FleetLabelCloud("FleetLabel", "credId", "region",
@@ -55,7 +55,7 @@ public class FleetLabelCloudIntegrationTest extends IntegrationTest {
 
     @Test
     public void should_delete_resources_if_label_unused() throws Exception {
-        mockFleetApiToSpotFleet(InstanceStateName.Running);
+        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Running);
         final AmazonCloudFormation amazonCloudFormation = mockCloudFormationApi();
 
         FleetLabelCloud cloud = new FleetLabelCloud("FleetLabel", "credId", "region",
