@@ -7,10 +7,10 @@ import java.util.Collection;
 import java.util.Map;
 
 /**
- * Hide details of access to EC2 Fleet depending on implementation like EC2 Fleet or Spot Fleet
+ * Hide details of access to EC2 Fleet depending on implementation like EC2 Fleet, Spot Fleet,
  * or Auto Scaling Group.
  *
- * @see EC2Fleet
+ * @see EC2EC2Fleet
  * @see SpotFleet
  * @see AutoScalingGroupFleet
  */

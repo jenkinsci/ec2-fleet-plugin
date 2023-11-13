@@ -249,8 +249,8 @@ BasicSSHUserPrivateKey instanceCredentials = new BasicSSHUserPrivateKey(
   "my private key to ssh ec2 for jenkins"
 )
 // find detailed information about parameters on plugin config page or
-// https://github.com/jenkinsci/ec2-fleet-plugin/blob/master/src/main/java/com/amazon/jenkins/ec2fleet/FleetCloud.java
-FleetCloud fleetCloud = new FleetCloud(
+// https://github.com/jenkinsci/ec2-fleet-plugin/blob/master/src/main/java/com/amazon/jenkins/ec2fleet/EC2FleetCloud.java
+FleetCloud ec2FleetCloud = new FleetCloud(
   "", // fleetCloudName
   null,
   awsCredentials.id,
