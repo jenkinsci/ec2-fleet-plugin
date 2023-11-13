@@ -1,11 +1,12 @@
 package com.amazon.jenkins.ec2fleet;
 
 import com.amazon.jenkins.ec2fleet.aws.EC2Api;
-import com.amazon.jenkins.ec2fleet.fleet.*;
-import com.amazon.jenkins.ec2fleet.fleet.SpotFleet;
+import com.amazon.jenkins.ec2fleet.fleet.AutoScalingGroupFleet;
+import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
+import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
+import com.amazon.jenkins.ec2fleet.fleet.EC2SpotFleet;
 import com.amazon.jenkins.ec2fleet.aws.RegionInfo;
 import com.amazon.jenkins.ec2fleet.aws.AwsPermissionChecker;
-import com.amazon.jenkins.ec2fleet.fleet.Fleet;
 import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2Client;
@@ -72,9 +73,9 @@ import static org.mockito.Mockito.when;
 
 @SuppressWarnings("unchecked")
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Jenkins.class, FleetCloud.class, FleetCloud.DescriptorImpl.class,
-        LabelFinder.class, FleetStateStats.class, Fleets.class, FleetNodeComputer.class})
-public class FleetCloudTest {
+@PrepareForTest({Jenkins.class, EC2FleetCloud.class, EC2FleetCloud.DescriptorImpl.class,
+        LabelFinder.class, FleetStateStats.class, EC2Fleets.class, EC2FleetNodeComputer.class})
+public class EC2FleetCloudTest {
 
     private SpotFleetRequestConfig spotFleetRequestConfig1;
     private SpotFleetRequestConfig spotFleetRequestConfig2;
@@ -89,7 +90,7 @@ public class FleetCloudTest {
     private Jenkins jenkins;
 
     @Mock
-    private Fleet fleet;
+    private EC2Fleet ec2Fleet;
 
     @Mock
     private EC2Api ec2Api;
@@ -98,14 +99,14 @@ public class FleetCloudTest {
     private AmazonEC2 amazonEC2;
 
     @Mock
-    private FleetNodeComputer idleComputer;
+    private EC2FleetNodeComputer idleComputer;
 
     @Mock
-    private FleetNodeComputer busyComputer;
+    private EC2FleetNodeComputer busyComputer;
 
-    private FleetCloud.ExecutorScaler noScaling;
+    private EC2FleetCloud.ExecutorScaler noScaling;
 
-    private FleetCloud.ExecutorScaler weightedScaling;
+    private EC2FleetCloud.ExecutorScaler weightedScaling;
 
     private int MiB_TO_GiB_MULTIPLIER = 1024;
 
@@ -138,8 +139,8 @@ public class FleetCloudTest {
 
         Registry.setEc2Api(ec2Api);
 
-        PowerMockito.mockStatic(Fleets.class);
-        when(Fleets.get(anyString())).thenReturn(fleet);
+        PowerMockito.mockStatic(EC2Fleets.class);
+        when(EC2Fleets.get(anyString())).thenReturn(ec2Fleet);
 
         PowerMockito.mockStatic(FleetStateStats.class);
         PowerMockito.mockStatic(LabelFinder.class);
@@ -150,8 +151,8 @@ public class FleetCloudTest {
         PowerMockito.when(idleComputer.isIdle()).thenReturn(true);
         PowerMockito.when(busyComputer.isIdle()).thenReturn(false);
 
-        noScaling = new FleetCloud.NoScaler();
-        weightedScaling = new FleetCloud.WeightedScaler();
+        noScaling = new EC2FleetCloud.NoScaler();
+        weightedScaling = new EC2FleetCloud.WeightedScaler();
 
     }
 
@@ -162,7 +163,7 @@ public class FleetCloudTest {
 
     @Test
     public void canProvision_fleetIsNull(){
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", null, "", null, null, false,
                 false, 0, 0, 10, 0, 1, true,
                 false, "-1", false, 0, 0,
@@ -175,7 +176,7 @@ public class FleetCloudTest {
 
     @Test
     public void canProvision_restrictUsageLabelIsNull(){
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "", "", null, null, false,
                 false, 0, 0, 10, 0, 1, true,
                 true, "-1", false, 0, 0,
@@ -188,7 +189,7 @@ public class FleetCloudTest {
 
     @Test
     public void canProvision_LabelNotInLabelString(){
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "", "", null, null, false,
                 false, 0, 0, 10, 0, 1, true,
                 false, "-1", false, 0, 0,
@@ -201,7 +202,7 @@ public class FleetCloudTest {
 
     @Test
     public void canProvision_LabelInLabelString(){
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "", "label1 momo", null, null, false,
                 false, 0, 0, 10, 0, 1, true,
                 false, "-1", false, 0, 0,
@@ -221,11 +222,11 @@ public class FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "", "", null, null, false,
                 false, 0, 0, 10, 0, 1, true,
                 false, "-1", false, 0, 0,
@@ -247,11 +248,11 @@ public class FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "", "", null, null, false,
                 false, 0, 1, 8, 0, 3, true,
                 false, "-1", false, 0, 0,
@@ -273,11 +274,11 @@ public class FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "", "", null, null, false,
                 false, 0, 1, 8, 0, 3, true,
                 false, "-1", false, 0, 0,
@@ -299,11 +300,11 @@ public class FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "", "", null, null, false,
                 false, 0, 0, 9, 0, 1, true,
                 false, "-1", false, 0, 0,
@@ -325,11 +326,11 @@ public class FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "", "", null, null, false,
                 false, 0, 0, 10, 0, 1, true,
                 false, "-1", false, 0, 0,
@@ -351,11 +352,11 @@ public class FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "", "", null, null, false,
                 false, 0, 0, 10, 0, 1, true,
                 false, "-1", false, 0, 0,
@@ -377,11 +378,11 @@ public class FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "", "", null, null, false,
                 false, 0, 0, 10, 0, 1, true,
                 false, "-1", false, 0, 0,
@@ -408,10 +409,10 @@ public class FleetCloudTest {
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
         // Don't set the status
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(null);
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "", "", null, null, false,
                 false, 0, 0, 1, 0, 1, true,
                 false, "-1", false, 0, 0,
@@ -431,10 +432,10 @@ public class FleetCloudTest {
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
         // Don't set the status
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(null);
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "", "", null, null, false,
                 false, 0, 0, 1, 0, 1, true,
                 false, "-1", false, 0, 0,
@@ -452,11 +453,11 @@ public class FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "", "", null, null, false,
                 false, 0, 1, 1, 0, 1, true,
                 false, "-1", false, 0, 0,
@@ -477,11 +478,11 @@ public class FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "", "", null, null, false,
                 false, 0, 1, 1, 0, 1, true,
                 false, "-1", false, 0, 0,
@@ -502,12 +503,12 @@ public class FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
         when(jenkins.getComputers()).thenReturn(new Computer[0]);
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "", "", null, null, false,
                 false, 0, 0, 5, 1, 1, true,
                 false, "-1", false, 0, 0,
@@ -528,11 +529,11 @@ public class FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "", "", null, null, false,
                 false, 0, 1, 1, 0, 1, true,
                 false, "-1", false, 0, 0,
@@ -554,11 +555,11 @@ public class FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "", "", null, null, false,
                 false, 0, 0, 1, 0, 1, true,
                 false, "-1", false, 0, 0,
@@ -585,11 +586,11 @@ public class FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "", "", null, null, false,
                 false, 0, 1, 1, 0, 1, true,
                 false, "-1", false, 0, 0,
@@ -618,11 +619,11 @@ public class FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, null, false,
                 false, 0, 0, 1, 0, 1, true,
                 false, "-1", false, 0,
@@ -642,11 +643,11 @@ public class FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, null, false,
                 false, 0, 0, 10, 0, 1, true,
                 false, "-1", false, 0,
@@ -661,7 +662,7 @@ public class FleetCloudTest {
         fleetCloud.update();
 
         // then
-        verify(fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(2), eq(0), eq(10));
+        verify(ec2Fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(2), eq(0), eq(10));
     }
 
     @Test
@@ -671,10 +672,10 @@ public class FleetCloudTest {
 
         final FleetStateStats currentState = new FleetStateStats("fleetId", 5, FleetStateStats.State.active(),
                 Collections.<String>emptySet(), Collections.<String, Double>emptyMap());
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(currentState);
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, null, false,
                 false, 0, 0, 10, 0, 1, true,
                 false, "-1", false, 0,
@@ -689,7 +690,7 @@ public class FleetCloudTest {
         fleetCloud.update();
 
         // then
-        verify(fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(6), eq(0), eq(10));
+        verify(ec2Fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(6), eq(0), eq(10));
         assertEquals(0, fleetCloud.getInstanceIdsToTerminate().size());
         assertEquals(0, fleetCloud.getToAdd());
     }
@@ -699,11 +700,11 @@ public class FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, null, false,
                 false, 0, 0, 10, 0, 1, true,
                 false, "-1", false, 0,
@@ -720,7 +721,7 @@ public class FleetCloudTest {
         fleetCloud.update();
 
         // then
-        verify(fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(0), eq(0), eq(10));
+        verify(ec2Fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(0), eq(0), eq(10));
         assertEquals(0, fleetCloud.getInstanceIdsToTerminate().size());
         assertEquals(0, fleetCloud.getToAdd());
     }
@@ -730,11 +731,11 @@ public class FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 5, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, null, false,
                 false, 0, 0, 10, 0, 1, true,
                 false, "-1", false, 0,
@@ -750,7 +751,7 @@ public class FleetCloudTest {
         fleetCloud.update();
 
         // then
-        verify(fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(5), eq(0), eq(10));
+        verify(ec2Fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(5), eq(0), eq(10));
         assertEquals(0, fleetCloud.getInstanceIdsToTerminate().size());
         assertEquals(0, fleetCloud.getToAdd());
     }
@@ -760,11 +761,11 @@ public class FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 4, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, null, false,
                 false, 0, 0, 10, 0, 1, true,
                 false, "-1", false, 0,
@@ -780,7 +781,7 @@ public class FleetCloudTest {
         fleetCloud.update();
 
         // then
-        verify(fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(2), eq(0), eq(10));
+        verify(ec2Fleet).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(2), eq(0), eq(10));
         verify(ec2Api).terminateInstances(amazonEC2, new HashSet<>(Arrays.asList("i-1", "i-2")));
     }
 
@@ -799,13 +800,13 @@ public class FleetCloudTest {
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
                         Collections.singleton("i-0"), Collections.<String, Double>emptyMap()));
 
         mockNodeCreatingPart();
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 0, 1, false,
                 false, "-1", false,
@@ -841,13 +842,13 @@ public class FleetCloudTest {
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
                         new HashSet<>(Arrays.asList("i-0", "i-1")), Collections.<String, Double>emptyMap()));
 
         mockNodeCreatingPart();
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 2, 0, 1, false,
                 false, "-1", false,
@@ -877,13 +878,13 @@ public class FleetCloudTest {
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
                         Collections.singleton("i-0"), Collections.<String, Double>emptyMap()));
 
         mockNodeCreatingPart();
 
-        FleetCloud fleetCloud = new FleetCloud("my-fleet", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("my-fleet", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 0, 1, false,
                 false, "-1", false,
@@ -918,13 +919,13 @@ public class FleetCloudTest {
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
                         Collections.singleton("i-0"), Collections.<String, Double>emptyMap()));
 
         mockNodeCreatingPart();
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 0, 1, false,
                 false, "-1", false,
@@ -947,7 +948,7 @@ public class FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
                         Collections.singleton("i-0"), Collections.<String, Double>emptyMap()));
 
@@ -962,7 +963,7 @@ public class FleetCloudTest {
 
         mockNodeCreatingPart();
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 0, 1, false,
                 true, "-1", false,
@@ -1000,14 +1001,14 @@ public class FleetCloudTest {
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
                         Collections.singleton("i-0"),
                         Collections.singletonMap(instanceType, 1.1)));
 
         mockNodeCreatingPart();
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 0, 1, false,
                 true, "-1", false,
@@ -1035,12 +1036,12 @@ public class FleetCloudTest {
         final FleetStateStats initState = new FleetStateStats("fleetId", 0,
                 FleetStateStats.State.active(),
                 new HashSet<>(Arrays.asList("i-0", "i-1")), Collections.<String, Double>emptyMap());
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(initState);
 
         mockNodeCreatingPart();
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 10, 0, 1, false,
                 true, "-1", false,
@@ -1057,7 +1058,7 @@ public class FleetCloudTest {
 
         // then
         // should reset list to empty
-        verify(fleet).modify(anyString(), anyString(), anyString(), anyString(), anyInt(), anyInt(), anyInt());
+        verify(ec2Fleet).modify(anyString(), anyString(), anyString(), anyString(), anyInt(), anyInt(), anyInt());
         Assert.assertEquals(0, fleetCloud.getPlannedNodesCache().size());
     }
 
@@ -1072,12 +1073,12 @@ public class FleetCloudTest {
         final FleetStateStats initState = new FleetStateStats("fleetId", 0,
                 FleetStateStats.State.active(),
                 Collections.<String>emptySet(), Collections.<String, Double>emptyMap());
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(initState);
 
         mockNodeCreatingPart();
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 10, 0, 1, false,
                 true, "-1", false,
@@ -1120,12 +1121,12 @@ public class FleetCloudTest {
         final FleetStateStats initState = new FleetStateStats("fleetId", 0,
                 FleetStateStats.State.active(),
                 Collections.<String>emptySet(), Collections.<String, Double>emptyMap());
-        when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(initState);
 
         mockNodeCreatingPart();
 
-        final FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        final EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 10, 0, 1, false,
                 true, "-1", false,
@@ -1143,7 +1144,7 @@ public class FleetCloudTest {
                 fleetCloud.provision(new Cloud.CloudState(null, 0), 1);
                 return null;
             }
-        }).when(fleet).modify(anyString(), anyString(), anyString(), anyString(), anyInt(), anyInt(), anyInt());
+        }).when(ec2Fleet).modify(anyString(), anyString(), anyString(), anyString(), anyInt(), anyInt(), anyInt());
 
         // when
         fleetCloud.update();
@@ -1172,12 +1173,12 @@ public class FleetCloudTest {
         final FleetStateStats initState = new FleetStateStats("fleetId", 5,
                 FleetStateStats.State.active(),
                 Collections.<String>emptySet(), Collections.<String, Double>emptyMap());
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(initState);
 
         mockNodeCreatingPart();
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 10, 0,1, false,
                 true, "-1", false,
@@ -1196,7 +1197,7 @@ public class FleetCloudTest {
     }
 
     /**
-     * See {@link FleetCloudTest#update_shouldUpdateStateWithFleetTargetCapacityPlusToAdd()}
+     * See {@link EC2FleetCloudTest#update_shouldUpdateStateWithFleetTargetCapacityPlusToAdd()}
      */
     @Test
     public void update_shouldUpdateStateWithFleetTargetCapacityMinusToTerminate() throws IOException {
@@ -1218,12 +1219,12 @@ public class FleetCloudTest {
         final FleetStateStats initState = new FleetStateStats("fleetId", 5,
                 FleetStateStats.State.active(),
                 Collections.singleton("i-0"), Collections.<String, Double>emptyMap());
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(initState);
 
         mockNodeCreatingPart();
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 10,0, 1, false,
                 true, "-1", false,
@@ -1253,12 +1254,12 @@ public class FleetCloudTest {
                 put("i-2", new Instance().withPublicIpAddress("p-ip").withInstanceId("i-2"));
                 put("i-3", new Instance().withPublicIpAddress("p-ip").withInstanceId("i-3"));
             }});
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
                         new HashSet<>(Arrays.asList("i-1", "i-2", "i-3")), Collections.<String, Double>emptyMap()));
         mockNodeCreatingPart();
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 2, 0, 1, false,
                 false, "-1", false,
@@ -1299,10 +1300,10 @@ public class FleetCloudTest {
         final FleetStateStats initState = new FleetStateStats("fleetId", 0,
                 FleetStateStats.State.active(),
                 Collections.emptySet(), Collections.<String, Double>emptyMap());
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(initState);
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 10, minSpareSize, 1, false,
                 true, "-1", false,
@@ -1336,14 +1337,14 @@ public class FleetCloudTest {
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
                         Collections.singleton(instanceId),
                         Collections.singletonMap(instanceType, 2.0)));
 
         mockNodeCreatingPart();
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 0, 1, false,
                 true, "-1", false,
@@ -1378,14 +1379,14 @@ public class FleetCloudTest {
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
                         Collections.singleton(instanceId),
                         Collections.singletonMap("diff-t", 2.0)));
 
         mockNodeCreatingPart();
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 0, 1, false,
                 true, "-1", false,
@@ -1420,14 +1421,14 @@ public class FleetCloudTest {
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
                         Collections.singleton(instanceId),
                         Collections.singletonMap(instanceType, 1.44)));
 
         mockNodeCreatingPart();
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 0, 1, false,
                 true, "-1", false,
@@ -1462,20 +1463,20 @@ public class FleetCloudTest {
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
                         Collections.singleton(instanceId),
                         Collections.singletonMap(instanceType, 1.5)));
 
         mockNodeCreatingPart();
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 0, 1, false,
                 true, "-1", false,
                 0, 0, 10, false, weightedScaling);
 
-        ArgumentCaptor<FleetNode> nodeCaptor = ArgumentCaptor.forClass(FleetNode.class);
+        ArgumentCaptor<EC2FleetNode> nodeCaptor = ArgumentCaptor.forClass(EC2FleetNode.class);
         doNothing().when(jenkins).addNode(nodeCaptor.capture());
 
         // when
@@ -1504,15 +1505,15 @@ public class FleetCloudTest {
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
                         Collections.singleton(instanceId),
                         Collections.<String, Double>emptyMap()));
 
-        PowerMockito.doThrow(new UnsupportedOperationException("Test exception")).when(fleet)
+        PowerMockito.doThrow(new UnsupportedOperationException("Test exception")).when(ec2Fleet)
                 .modify(anyString(), anyString(), anyString(), anyString(), anyInt(), anyInt(), anyInt());
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 0, 1, false,
                 true, "-1", false,
@@ -1550,14 +1551,14 @@ public class FleetCloudTest {
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
                         Collections.singleton(instanceId),
                         Collections.singletonMap(instanceType, .1)));
 
         mockNodeCreatingPart();
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 0, 1, false,
                 true, "-1", false,
@@ -1596,7 +1597,7 @@ public class FleetCloudTest {
                 FleetStateStats.State.modifying(""),
                 Collections.singleton(instanceId),
                 Collections.singletonMap(instanceType, .1));
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(stats);
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(stats);
 
         final FleetStateStats initialState = new FleetStateStats("fleetId", 0,
                 FleetStateStats.State.active(),
@@ -1605,7 +1606,7 @@ public class FleetCloudTest {
 
         mockNodeCreatingPart();
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 0, 1, false,
                 true, "-1", false,
@@ -1620,7 +1621,7 @@ public class FleetCloudTest {
         // then
         Assert.assertSame(initialState, newStats);
         Assert.assertSame(initialState, fleetCloud.getStats());
-        verify(fleet, never()).modify(any(String.class), any(String.class), any(String.class), any(String.class), anyInt(), anyInt(), anyInt());
+        verify(ec2Fleet, never()).modify(any(String.class), any(String.class), any(String.class), any(String.class), anyInt(), anyInt(), anyInt());
         verify(jenkins, never()).addNode(any(Node.class));
     }
 
@@ -1629,13 +1630,13 @@ public class FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
         final int timeout = 1;
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "", "", null, null, false,
                 false, 0, 0, 10, 0,1, true,
                 false, "-1", false, timeout, 0,
@@ -1660,13 +1661,13 @@ public class FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
         final int timeout = 1;
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "", "", null, null, false,
                 false, 0, 0, 10, 0,1, true,
                 false, "-1", false, timeout, 0,
@@ -1689,11 +1690,11 @@ public class FleetCloudTest {
     @Test
     public void update_shouldScaleUpToMinSize() {
         // given
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 1, 1, 0,1, false,
                 true, "-1", false,
@@ -1733,15 +1734,15 @@ public class FleetCloudTest {
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
                         Collections.singleton("i-0"), Collections.<String, Double>emptyMap()));
 
         mockNodeCreatingPart();
 
-        FleetCloud.NodeHardwareScaler nodeHardwareScaler = new FleetCloud.NodeHardwareScaler(1, 1);
+        EC2FleetCloud.NodeHardwareScaler nodeHardwareScaler = new EC2FleetCloud.NodeHardwareScaler(1, 1);
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 10, 0, 1, true,
                 false, "-1", false, 0,
@@ -1785,15 +1786,15 @@ public class FleetCloudTest {
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
                         Collections.singleton("i-0"), Collections.<String, Double>emptyMap()));
 
         mockNodeCreatingPart();
 
-        FleetCloud.NodeHardwareScaler nodeHardwareScaler = new FleetCloud.NodeHardwareScaler(2, 2);
+        EC2FleetCloud.NodeHardwareScaler nodeHardwareScaler = new EC2FleetCloud.NodeHardwareScaler(2, 2);
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 10, 0, 1, true,
                 false, "-1", false, 0,
@@ -1837,15 +1838,15 @@ public class FleetCloudTest {
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
                         Collections.singleton("i-0"), Collections.<String, Double>emptyMap()));
 
         mockNodeCreatingPart();
 
-        FleetCloud.NodeHardwareScaler nodeHardwareScaler = new FleetCloud.NodeHardwareScaler(0, 1);
+        EC2FleetCloud.NodeHardwareScaler nodeHardwareScaler = new EC2FleetCloud.NodeHardwareScaler(0, 1);
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 10, 0, 1, true,
                 false, "-1", false, 0,
@@ -1889,15 +1890,15 @@ public class FleetCloudTest {
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
                         Collections.singleton("i-0"), Collections.<String, Double>emptyMap()));
 
         mockNodeCreatingPart();
 
-        FleetCloud.NodeHardwareScaler nodeHardwareScaler = new FleetCloud.NodeHardwareScaler(2, 0);
+        EC2FleetCloud.NodeHardwareScaler nodeHardwareScaler = new EC2FleetCloud.NodeHardwareScaler(2, 0);
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 10, 0, 1, true,
                 false, "-1", false, 0,
@@ -1941,15 +1942,15 @@ public class FleetCloudTest {
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
                         Collections.singleton("i-0"), Collections.<String, Double>emptyMap()));
 
         mockNodeCreatingPart();
 
-        FleetCloud.NodeHardwareScaler nodeHardwareScaler = new FleetCloud.NodeHardwareScaler(0, 4);
+        EC2FleetCloud.NodeHardwareScaler nodeHardwareScaler = new EC2FleetCloud.NodeHardwareScaler(0, 4);
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 10, 0, 1, true,
                 false, "-1", false, 0,
@@ -1993,15 +1994,15 @@ public class FleetCloudTest {
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
                         Collections.singleton("i-0"), Collections.<String, Double>emptyMap()));
 
         mockNodeCreatingPart();
 
-        FleetCloud.NodeHardwareScaler nodeHardwareScaler = new FleetCloud.NodeHardwareScaler(5, 0);
+        EC2FleetCloud.NodeHardwareScaler nodeHardwareScaler = new EC2FleetCloud.NodeHardwareScaler(5, 0);
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 10, 0, 1, true,
                 false, "-1", false, 0,
@@ -2045,15 +2046,15 @@ public class FleetCloudTest {
         when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
-        PowerMockito.when(fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        PowerMockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
                         Collections.singleton("i-0"), Collections.<String, Double>emptyMap()));
 
         mockNodeCreatingPart();
 
-        FleetCloud.NodeHardwareScaler nodeHardwareScaler = new FleetCloud.NodeHardwareScaler(0, 0);
+        EC2FleetCloud.NodeHardwareScaler nodeHardwareScaler = new EC2FleetCloud.NodeHardwareScaler(0, 0);
 
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 10, 0, 3, true,
                 false, "-1", false, 0,
@@ -2073,7 +2074,7 @@ public class FleetCloudTest {
     @Test
     public void removeScheduledFutures_success() {
         // given
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 0, 1, false,
                 true, "-1", false,
@@ -2094,7 +2095,7 @@ public class FleetCloudTest {
     @Test
     public void removeScheduledFutures_scheduledFutureIsEmpty() {
         // given
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 0, 1, false,
                 true, "-1", false,
@@ -2113,7 +2114,7 @@ public class FleetCloudTest {
     @Test
     public void removeScheduledFutures_numToRemoveIsZero() {
         // given
-        FleetCloud fleetCloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 "", "fleetId", "", null, PowerMockito.mock(ComputerConnector.class), false,
                 false, 0, 0, 1, 0, 1, false,
                 true, "-1", false,
@@ -2136,7 +2137,7 @@ public class FleetCloudTest {
         AmazonEC2Client amazonEC2Client = mock(AmazonEC2Client.class);
         when(ec2Api.connect(anyString(), anyString(), anyString())).thenReturn(amazonEC2Client);
 
-        ListBoxModel r = new FleetCloud.DescriptorImpl().doFillRegionItems("");
+        ListBoxModel r = new EC2FleetCloud.DescriptorImpl().doFillRegionItems("");
         HashSet<String> staticRegions = new HashSet<>(RegionInfo.getRegionNames());
         staticRegions.addAll(RegionUtils.getRegions().stream().map(com.amazonaws.regions.Region::getName).collect(Collectors.toSet()));
 
@@ -2150,7 +2151,7 @@ public class FleetCloudTest {
         when(awsPermissionChecker.getMissingPermissions(null)).thenReturn(new ArrayList<>());
         PowerMockito.whenNew(AwsPermissionChecker.class).withAnyArguments().thenReturn(awsPermissionChecker);
 
-        final FormValidation formValidation = new FleetCloud.DescriptorImpl().doTestConnection("credentials", null, null, null);
+        final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doTestConnection("credentials", null, null, null);
 
         Assert.assertTrue(formValidation.getMessage().contains("Success"));
     }
@@ -2161,7 +2162,7 @@ public class FleetCloudTest {
         when(awsPermissionChecker.getMissingPermissions(null)).thenReturn(Collections.singletonList(AwsPermissionChecker.FleetAPI.DescribeInstances.name()));
         PowerMockito.whenNew(AwsPermissionChecker.class).withAnyArguments().thenReturn(awsPermissionChecker);
 
-        final FormValidation formValidation = new FleetCloud.DescriptorImpl().doTestConnection("credentials", null, null, null);
+        final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doTestConnection("credentials", null, null, null);
 
         Assert.assertThat(formValidation.getMessage(), Matchers.containsString(AwsPermissionChecker.FleetAPI.DescribeInstances.name()));
     }
@@ -2176,7 +2177,7 @@ public class FleetCloudTest {
         when(awsPermissionChecker.getMissingPermissions(null)).thenReturn(missingPermissions);
         PowerMockito.whenNew(AwsPermissionChecker.class).withAnyArguments().thenReturn(awsPermissionChecker);
 
-        final FormValidation formValidation = new FleetCloud.DescriptorImpl().doTestConnection("credentials", null, null, null);
+        final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doTestConnection("credentials", null, null, null);
 
         Assert.assertThat(formValidation.getMessage(), Matchers.containsString(AwsPermissionChecker.FleetAPI.DescribeInstances.name()));
         Assert.assertThat(formValidation.getMessage(), Matchers.containsString(AwsPermissionChecker.FleetAPI.CreateTags.name()));
@@ -2188,7 +2189,7 @@ public class FleetCloudTest {
         when(ec2Api.connect(anyString(), nullable(String.class), nullable(String.class))).thenReturn(amazonEC2Client);
         when(amazonEC2Client.describeRegions()).thenReturn(new DescribeRegionsResult().withRegions(new Region().withRegionName("dynamic-region")));
 
-        ListBoxModel r = new FleetCloud.DescriptorImpl().doFillRegionItems("");
+        ListBoxModel r = new EC2FleetCloud.DescriptorImpl().doFillRegionItems("");
         HashSet<String> staticRegions = new HashSet<>(RegionInfo.getRegionNames());
         staticRegions.addAll(RegionUtils.getRegions().stream().map(com.amazonaws.regions.Region::getName).collect(Collectors.toSet()));
 
@@ -2204,7 +2205,7 @@ public class FleetCloudTest {
         when(ec2Api.connect(anyString(), nullable(String.class), nullable(String.class))).thenReturn(amazonEC2Client);
         when(amazonEC2Client.describeRegions()).thenReturn(new DescribeRegionsResult().withRegions(new Region().withRegionName(dynamicRegion)));
 
-        final ListBoxModel regionsListBoxModel = new FleetCloud.DescriptorImpl().doFillRegionItems("");
+        final ListBoxModel regionsListBoxModel = new EC2FleetCloud.DescriptorImpl().doFillRegionItems("");
         boolean isPresent = false;
 
         for (final ListBoxModel.Option item : regionsListBoxModel) {
@@ -2227,7 +2228,7 @@ public class FleetCloudTest {
         when(ec2Api.connect(anyString(), nullable(String.class), nullable(String.class))).thenReturn(amazonEC2Client);
         when(amazonEC2Client.describeRegions()).thenReturn(new DescribeRegionsResult().withRegions(new Region().withRegionName(regionName)));
 
-        final ListBoxModel regionsListBoxModel = new FleetCloud.DescriptorImpl().doFillRegionItems("");
+        final ListBoxModel regionsListBoxModel = new EC2FleetCloud.DescriptorImpl().doFillRegionItems("");
         boolean isPresent = false;
 
         for (final ListBoxModel.Option item : regionsListBoxModel) {
@@ -2247,9 +2248,9 @@ public class FleetCloudTest {
         when(ec2Api.connect(anyString(), nullable(String.class), nullable(String.class))).thenReturn(amazonEC2Client);
         when(amazonEC2Client.describeRegions()).thenReturn(new DescribeRegionsResult().withRegions(new Region().withRegionName("dynamic-region")));
 
-        ListBoxModel r1 = new FleetCloud.DescriptorImpl().doFillRegionItems("");
-        ListBoxModel r2 = new FleetCloud.DescriptorImpl().doFillRegionItems("");
-        ListBoxModel r3 = new FleetCloud.DescriptorImpl().doFillRegionItems("");
+        ListBoxModel r1 = new EC2FleetCloud.DescriptorImpl().doFillRegionItems("");
+        ListBoxModel r2 = new EC2FleetCloud.DescriptorImpl().doFillRegionItems("");
+        ListBoxModel r3 = new EC2FleetCloud.DescriptorImpl().doFillRegionItems("");
 
         assertEquals(r1.toString(), r2.toString());
         assertEquals(r2.toString(), r3.toString());
@@ -2257,19 +2258,19 @@ public class FleetCloudTest {
 
     @Test
     public void descriptorImpl_doCheckFleetName_validName() {
-        FormValidation formValidation = new FleetCloud.DescriptorImpl().doCheckFleet("FleetCloud");
+        FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doCheckFleet("FleetCloud");
         assertEquals(formValidation.kind, Kind.OK);
     }
 
     @Test
     public void descriptorImpl_doCheckFleetName_invalidName() {
-        FormValidation formValidation = new FleetCloud.DescriptorImpl().doCheckFleet(null);
+        FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doCheckFleet(null);
         assertEquals(formValidation.kind, Kind.ERROR);
     }
 
     @Test
-    public void descriptorImpl_doFillFleetItems_returnEmptyListIfNoEmptyFleet() {
-        ListBoxModel r = new FleetCloud.DescriptorImpl().doFillFleetItems(
+    public void descriptorImpl_doFillFleetItems_returnEmptyListIfNoEmptyEC2Fleet() {
+        ListBoxModel r = new EC2FleetCloud.DescriptorImpl().doFillFleetItems(
                 false, "", "", "", "");
 
         assertEquals(1, r.size());
@@ -2277,12 +2278,12 @@ public class FleetCloudTest {
     }
 
     @Test
-    public void descriptorImpl_doFillFleetItems_returnFleetsProvidedByAllFleets() {
-        final Fleet ec2SpotFleet = mock(SpotFleet.class);
-        final Fleet autoScalingGroupFleet = mock(AutoScalingGroupFleet.class);
-        when(Fleets.all()).thenReturn(Arrays.asList(ec2SpotFleet, autoScalingGroupFleet));
+    public void descriptorImpl_doFillFleetItems_returnFleetsProvidedByAllEC2Fleets() {
+        final EC2Fleet ec2SpotFleet = mock(EC2SpotFleet.class);
+        final EC2Fleet autoScalingGroupFleet = mock(AutoScalingGroupFleet.class);
+        when(EC2Fleets.all()).thenReturn(Arrays.asList(ec2SpotFleet, autoScalingGroupFleet));
 
-        ListBoxModel r = new FleetCloud.DescriptorImpl().doFillFleetItems(
+        ListBoxModel r = new EC2FleetCloud.DescriptorImpl().doFillFleetItems(
                 false, "", "", "", "");
 
         assertEquals(1, r.size());
@@ -2293,14 +2294,14 @@ public class FleetCloudTest {
 
     @Test
     public void descriptorImpl_doFillFleetItems_returnEmptyListIfAnyException() {
-        final Fleet ec2SpotFleet = mock(SpotFleet.class);
+        final EC2Fleet ec2SpotFleet = mock(EC2SpotFleet.class);
         doThrow(new RuntimeException("test")).when(ec2SpotFleet).describe(
                 anyString(), anyString(), anyString(), any(ListBoxModel.class), anyString(), anyBoolean());
 
-        final Fleet autoScalingGroupFleet = mock(AutoScalingGroupFleet.class);
-        when(Fleets.all()).thenReturn(Arrays.asList(ec2SpotFleet, autoScalingGroupFleet));
+        final EC2Fleet autoScalingGroupFleet = mock(AutoScalingGroupFleet.class);
+        when(EC2Fleets.all()).thenReturn(Arrays.asList(ec2SpotFleet, autoScalingGroupFleet));
 
-        ListBoxModel r = new FleetCloud.DescriptorImpl().doFillFleetItems(
+        ListBoxModel r = new EC2FleetCloud.DescriptorImpl().doFillFleetItems(
                 false, "", "", "", "");
 
         assertEquals(1, r.size());
@@ -2309,153 +2310,153 @@ public class FleetCloudTest {
 
     @Test
     public void descriptorImpl_doCheckFleet_default() {
-        FormValidation formValidation = new FleetCloud.DescriptorImpl().doCheckFleet("");
+        FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doCheckFleet("");
         assertEquals(formValidation.kind, Kind.ERROR);
     }
 
     @Test
     public void descriptorImpl_doCheckFleet_nonDefault() {
-        FormValidation formValidation = new FleetCloud.DescriptorImpl().doCheckFleet("ASG1");
+        FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doCheckFleet("ASG1");
         assertEquals(formValidation.kind, Kind.OK);
 
     }
 
     @Test
     public void getDisplayName_returnDisplayName() {
-        FleetCloud fleetCloud = new FleetCloud(
+        EC2FleetCloud ec2FleetCloud = new EC2FleetCloud(
                 "CloudName", null, null, null, null, null,
                 null, null, null, false,
                 false, null, 0, 1, 0,
                 1, true, false, "-1", false
                 , 0, 0,
                 10, false, noScaling);
-        assertEquals(fleetCloud.getDisplayName(), "CloudName");
+        assertEquals(ec2FleetCloud.getDisplayName(), "CloudName");
     }
 
     @Test
     public void getAwsCredentialsId_returnNull_whenNoCredentialsIdOrAwsCredentialsId() {
-        FleetCloud fleetCloud = new FleetCloud(
+        EC2FleetCloud ec2FleetCloud = new EC2FleetCloud(
                 "TestCloud",  null, null, null, null, null,
                 null, null, null, false,
                 false, null, 0, 1, 0,
                 1, true, false, "-1", false,
                 0, 0,
                 10, false, noScaling);
-        Assert.assertNull(fleetCloud.getAwsCredentialsId());
+        Assert.assertNull(ec2FleetCloud.getAwsCredentialsId());
     }
 
     @Test
     public void getAwsCredentialsId_returnValue_whenCredentialsIdPresent() {
-        FleetCloud fleetCloud = new FleetCloud(
+        EC2FleetCloud ec2FleetCloud = new EC2FleetCloud(
                 "TestCloud", null, "Opa", null, null, null,
                 null, null, null, false,
                 false, null, 0, 1, 0,
                 1, true, false, "-1", false
                 , 0, 0,
                 10, false, noScaling);
-        assertEquals("Opa", fleetCloud.getAwsCredentialsId());
+        assertEquals("Opa", ec2FleetCloud.getAwsCredentialsId());
     }
 
     @Test
     public void getAwsCredentialsId_returnValue_whenAwsCredentialsIdPresent() {
-        FleetCloud fleetCloud = new FleetCloud(
+        EC2FleetCloud ec2FleetCloud = new EC2FleetCloud(
                 "TestCloud", "Opa", null, null, null, null,
                 null, null, null, false,
                 false, null, 0, 1, 0,
                 1, true, false, "-1", false
                 , 0, 0,
                 10, false, noScaling);
-        assertEquals("Opa", fleetCloud.getAwsCredentialsId());
+        assertEquals("Opa", ec2FleetCloud.getAwsCredentialsId());
     }
 
     @Test
     public void getAwsCredentialsId_returnAwsCredentialsId_whenAwsCredentialsIdAndCredentialsIdPresent() {
-        FleetCloud fleetCloud = new FleetCloud(
+        EC2FleetCloud ec2FleetCloud = new EC2FleetCloud(
                 "TestCloud", "A", "B", null, null, null,
                 null, null, null, false,
                 false, null, 0, 1, 0,
                 1, true, false, "-1", false
                 , 0, 0,
                 10, false, noScaling);
-        assertEquals("A", fleetCloud.getAwsCredentialsId());
+        assertEquals("A", ec2FleetCloud.getAwsCredentialsId());
     }
 
     // todo create test cases update failed to modify fleet
 
     @Test
     public void getCloudStatusInterval_returnCloudStatusInterval() {
-        FleetCloud fleetCloud = new FleetCloud(
+        EC2FleetCloud ec2FleetCloud = new EC2FleetCloud(
                 "CloudName", null, null, null, null, null,
                 null, null, null, false,
                 false, null, 0, 1, 0,
                 1, true, false, "-1", false
                 , 0, 0,
                 45, false, noScaling);
-        assertEquals(45, fleetCloud.getCloudStatusIntervalSec());
+        assertEquals(45, ec2FleetCloud.getCloudStatusIntervalSec());
     }
 
     @Test
     public void create_numExecutorsLessThenOneShouldUpgradedToOne() {
-        FleetCloud fleetCloud = new FleetCloud(
+        EC2FleetCloud ec2FleetCloud = new EC2FleetCloud(
                 "CloudName", null, null, null, null, null,
                 null, null, null, false,
                 false, null, 0, 1, 0,
                 0, true, false, "-1", false
                 , 0, 0,
                 45, false, noScaling);
-        assertEquals(1, fleetCloud.getNumExecutors());
+        assertEquals(1, ec2FleetCloud.getNumExecutors());
     }
 
     @Test
     public void hasUnlimitedUsesForNodes_shouldReturnTrueWhenUnlimited() {
         final int maxTotalUses = -1;
-        FleetCloud fleetCloud = new FleetCloud(
+        EC2FleetCloud ec2FleetCloud = new EC2FleetCloud(
                 "CloudName", null, null, null, null, null,
                 null, null, null, false,
                 false, null, 0, 1, 0,
                 0, true, false, String.valueOf(maxTotalUses), false
                 , 0, 0,
                 45, false, noScaling);
-        assertTrue(fleetCloud.hasUnlimitedUsesForNodes());
+        assertTrue(ec2FleetCloud.hasUnlimitedUsesForNodes());
     }
 
     @Test
     public void hasUnlimitedUsesForNodes_shouldReturnDefaultTrueForNull() {
         final String maxTotalUses = null;
-        FleetCloud fleetCloud = new FleetCloud(
+        EC2FleetCloud ec2FleetCloud = new EC2FleetCloud(
                 "CloudName", null, null, null, null, null,
                 null, null, null, false,
                 false, null, 0, 1, 0,
                 0, true, false, maxTotalUses, false
                 , 0, 0,
                 45, false, noScaling);
-        assertTrue(fleetCloud.hasUnlimitedUsesForNodes());
+        assertTrue(ec2FleetCloud.hasUnlimitedUsesForNodes());
     }
 
     @Test
     public void hasUnlimitedUsesForNodes_shouldReturnDefaultTrueForEmptyString() {
         final String maxTotalUses = "";
-        FleetCloud fleetCloud = new FleetCloud(
+        EC2FleetCloud ec2FleetCloud = new EC2FleetCloud(
                 "CloudName", null, null, null, null, null,
                 null, null, null, false,
                 false, null, 0, 1, 0,
                 0, true, false, maxTotalUses, false
                 , 0, 0,
                 45, false, noScaling);
-        assertTrue(fleetCloud.hasUnlimitedUsesForNodes());
+        assertTrue(ec2FleetCloud.hasUnlimitedUsesForNodes());
     }
 
     @Test
     public void hasUnlimitedUsesForNodes_shouldReturnFalseWhenLimited() {
         final int maxTotalUses = 5;
-        FleetCloud fleetCloud = new FleetCloud(
+        EC2FleetCloud ec2FleetCloud = new EC2FleetCloud(
                 "CloudName", null, null, null, null, null,
                 null, null, null, false,
                 false, null, 0, 1, 0,
                 0, true, false, String.valueOf(maxTotalUses), false
                 , 0, 0,
                 45, false, noScaling);
-        assertFalse(fleetCloud.hasUnlimitedUsesForNodes());
+        assertFalse(ec2FleetCloud.hasUnlimitedUsesForNodes());
     }
 
     private void mockNodeCreatingPart() {

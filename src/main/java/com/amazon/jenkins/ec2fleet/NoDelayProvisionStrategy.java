@@ -50,8 +50,8 @@ public class NoDelayProvisionStrategy extends NodeProvisioner.Strategy {
                 break;
             }
 
-            if (!(c instanceof FleetCloud)) {
-                LOGGER.log(Level.FINE, "label [{0}]: cloud {1} is not an FleetCloud, continuing...",
+            if (!(c instanceof EC2FleetCloud)) {
+                LOGGER.log(Level.FINE, "label [{0}]: cloud {1} is not an EC2FleetCloud, continuing...",
                         new Object[]{label, c.getDisplayName()});
                 continue;
             }
@@ -63,7 +63,7 @@ public class NoDelayProvisionStrategy extends NodeProvisioner.Strategy {
                 continue;
             }
 
-            if (!((FleetCloud) c).isNoDelayProvision()) {
+            if (!((EC2FleetCloud) c).isNoDelayProvision()) {
                 LOGGER.log(Level.FINE, "label [{0}]: cloud {1} does not use No Delay Provision Strategy, continuing...",
                         new Object[]{label, c.getDisplayName()});
                 continue;

@@ -17,18 +17,18 @@ import java.util.List;
 import java.util.logging.Logger;
 
 /**
- * The {@link FleetNode} represents an agent running on an EC2 instance, responsible for creating {@link FleetNodeComputer}.
+ * The {@link EC2FleetNode} represents an agent running on an EC2 instance, responsible for creating {@link EC2FleetNodeComputer}.
  */
-public class FleetNode extends Slave implements EphemeralNode {
-    private static final Logger LOGGER = Logger.getLogger(FleetNode.class.getName());
+public class EC2FleetNode extends Slave implements EphemeralNode {
+    private static final Logger LOGGER = Logger.getLogger(EC2FleetNode.class.getName());
 
     private String cloudName;
     private String instanceId;
     private final int maxTotalUses;
     private int usesRemaining;
 
-    public FleetNode(final String instanceId, final String nodeDescription, final String remoteFS, final int numExecutors, final Mode mode, final String label,
-                     final List<? extends NodeProperty<?>> nodeProperties, final String cloudName, ComputerLauncher launcher, final int maxTotalUses) throws IOException, Descriptor.FormException {
+    public EC2FleetNode(final String instanceId, final String nodeDescription, final String remoteFS, final int numExecutors, final Mode mode, final String label,
+                        final List<? extends NodeProperty<?>> nodeProperties, final String cloudName, ComputerLauncher launcher, final int maxTotalUses) throws IOException, Descriptor.FormException {
         //noinspection deprecation
         super(instanceId, nodeDescription, remoteFS, numExecutors, mode, label,
                 launcher, RetentionStrategy.NOOP, nodeProperties);
@@ -81,11 +81,11 @@ public class FleetNode extends Slave implements EphemeralNode {
 
     @Override
     public Computer createComputer() {
-        return new FleetNodeComputer(this);
+        return new EC2FleetNodeComputer(this);
     }
 
-    public AbstractFleetCloud getCloud() {
-        return (AbstractFleetCloud) Jenkins.get().getCloud(cloudName);
+    public AbstractEC2FleetCloud getCloud() {
+        return (AbstractEC2FleetCloud) Jenkins.get().getCloud(cloudName);
     }
 
     public DescriptorImpl getDescriptor() {

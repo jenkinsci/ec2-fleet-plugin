@@ -25,7 +25,7 @@ public class CloudNames {
             ? Jenkins.get().clouds.stream().map(c -> c.name).collect(Collectors.toSet())
             : Collections.emptySet();
 
-    if (proposedName.equals(FleetCloud.BASE_DEFAULT_FLEET_CLOUD_ID) || proposedName.equals(FleetLabelCloud.BASE_DEFAULT_FLEET_CLOUD_ID) || usedNames.contains(proposedName)) {
+    if (proposedName.equals(EC2FleetCloud.BASE_DEFAULT_FLEET_CLOUD_ID) || proposedName.equals(EC2FleetLabelCloud.BASE_DEFAULT_FLEET_CLOUD_ID) || usedNames.contains(proposedName)) {
       return proposedName + "-" + generateSuffix();
     }
 

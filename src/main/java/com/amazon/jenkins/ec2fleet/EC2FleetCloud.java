@@ -2,8 +2,8 @@ package com.amazon.jenkins.ec2fleet;
 
 import com.amazon.jenkins.ec2fleet.aws.AwsPermissionChecker;
 import com.amazon.jenkins.ec2fleet.aws.RegionHelper;
-import com.amazon.jenkins.ec2fleet.fleet.Fleet;
-import com.amazon.jenkins.ec2fleet.fleet.Fleets;
+import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
+import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.*;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
@@ -11,7 +11,10 @@ import com.google.common.collect.Sets;
 import hudson.Extension;
 import hudson.ExtensionPoint;
 import hudson.model.*;
-import hudson.slaves.*;
+import hudson.slaves.Cloud;
+import hudson.slaves.ComputerConnector;
+import hudson.slaves.NodeProperty;
+import hudson.slaves.NodeProvisioner;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.ListBoxModel.Option;
@@ -49,19 +52,19 @@ import java.util.logging.SimpleFormatter;
 import java.util.stream.Collectors;
 
 /**
- * The {@link FleetCloud} contains the main configuration values used while creating Jenkins nodes.
- * FleetCloud can represent either an AWS EC2 Spot Fleet or an AWS AutoScalingGroup.
+ * The {@link EC2FleetCloud} contains the main configuration values used while creating Jenkins nodes.
+ * EC2FleetCloud can represent either an AWS EC2 Spot Fleet or an AWS AutoScalingGroup.
  *
  * Responsibilities include:
  *  * maintain the configuration values set by user for the Cloud.
- *      User-initiated changes to such configuration will result in a new FleetCloud object. See {@link Cloud}.
- *  * provision new EC2 capacity along with supporting provisioning checks for FleetCloud
- *  * keep {@link FleetStateStats} in sync with state on the AWS side via {@link FleetCloud#update()}
+ *      User-initiated changes to such configuration will result in a new EC2FleetCloud object. See {@link Cloud}.
+ *  * provision new EC2 capacity along with supporting provisioning checks for EC2FleetCloud
+ *  * keep {@link FleetStateStats} in sync with state on the AWS side via {@link EC2FleetCloud#update()}
  *  * provide helper methods to extract certain state values
  *  * provide helper methods to schedule termination of compute / nodes
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
-public class FleetCloud extends AbstractFleetCloud {
+public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
     public static final String EC2_INSTANCE_TAG_NAMESPACE = "ec2-fleet-plugin";
     public static final String EC2_INSTANCE_CLOUD_NAME_TAG = EC2_INSTANCE_TAG_NAMESPACE + ":cloud-name";
@@ -76,13 +79,13 @@ public class FleetCloud extends AbstractFleetCloud {
     private static final int DEFAULT_MAX_TOTAL_USES = -1;
 
     private static final SimpleFormatter sf = new SimpleFormatter();
-    private static final Logger LOGGER = Logger.getLogger(FleetCloud.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(EC2FleetCloud.class.getName());
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
 
     /**
-     * Replaced with {@link FleetCloud#awsCredentialsId}
+     * Replaced with {@link EC2FleetCloud#awsCredentialsId}
      * <p>
-     * Plugin is using {@link FleetCloud#computerConnector} for node connection credentials
+     * Plugin is using {@link EC2FleetCloud#computerConnector} for node connection credentials
      * on UI it's introduced same field <code>credentialsId</code> as we, so it's undefined
      * which field will be use for operations from UI.
      * <p>
@@ -123,7 +126,7 @@ public class FleetCloud extends AbstractFleetCloud {
     private final Integer maxTotalUses;
 
     /**
-     * @see FleetAutoResubmitComputerLauncher
+     * @see EC2FleetAutoResubmitComputerLauncher
      */
     private final boolean disableTaskResubmit;
 
@@ -133,9 +136,9 @@ public class FleetCloud extends AbstractFleetCloud {
     private final boolean noDelayProvision;
 
     /**
-     * {@link FleetCloud#update()} updating this field, this is one thread
+     * {@link EC2FleetCloud#update()} updating this field, this is one thread
      * related to {@link CloudNanny}. At the same time {@link EC2RetentionStrategy}
-     * call {@link FleetCloud#scheduleToTerminate(String, boolean, EC2AgentTerminationReason)} to terminate instance when it is free
+     * call {@link EC2FleetCloud#scheduleToTerminate(String, boolean, EC2AgentTerminationReason)} to terminate instance when it is free
      * and uses this field to know the current capacity.
      * <p>
      * It could be situation that <code>stats</code> is outdated and plugin will make wrong decision,
@@ -152,35 +155,35 @@ public class FleetCloud extends AbstractFleetCloud {
 
     private transient ArrayList<ScheduledFuture<?>> plannedNodeScheduledFutures;
 
-    // Counter to keep track of planned nodes per FleetCloud, used in node's display name
+    // Counter to keep track of planned nodes per EC2FleetCloud, used in node's display name
     private transient AtomicInteger plannedNodeCounter = new AtomicInteger(1);
 
     @DataBoundConstructor
-    public FleetCloud(@Nonnull final String name,
-                      final String awsCredentialsId,
-                      final @Deprecated String credentialsId,
-                      final String region,
-                      final String endpoint,
-                      final String fleet,
-                      final String labelString,
-                      final String fsRoot,
-                      final ComputerConnector computerConnector,
-                      final boolean privateIpUsed,
-                      final boolean alwaysReconnect,
-                      final Integer idleMinutes,
-                      final int minSize,
-                      final int maxSize,
-                      final int minSpareSize,
-                      final int numExecutors,
-                      final boolean addNodeOnlyIfRunning,
-                      final boolean restrictUsage,
-                      final String maxTotalUses,
-                      final boolean disableTaskResubmit,
-                      final Integer initOnlineTimeoutSec,
-                      final Integer initOnlineCheckIntervalSec,
-                      final Integer cloudStatusIntervalSec,
-                      final boolean noDelayProvision,
-                      final ExecutorScaler executorScaler) {
+    public EC2FleetCloud(@Nonnull final String name,
+                         final String awsCredentialsId,
+                         final @Deprecated String credentialsId,
+                         final String region,
+                         final String endpoint,
+                         final String fleet,
+                         final String labelString,
+                         final String fsRoot,
+                         final ComputerConnector computerConnector,
+                         final boolean privateIpUsed,
+                         final boolean alwaysReconnect,
+                         final Integer idleMinutes,
+                         final int minSize,
+                         final int maxSize,
+                         final int minSpareSize,
+                         final int numExecutors,
+                         final boolean addNodeOnlyIfRunning,
+                         final boolean restrictUsage,
+                         final String maxTotalUses,
+                         final boolean disableTaskResubmit,
+                         final Integer initOnlineTimeoutSec,
+                         final Integer initOnlineCheckIntervalSec,
+                         final Integer cloudStatusIntervalSec,
+                         final boolean noDelayProvision,
+                         final ExecutorScaler executorScaler) {
         super(StringUtils.isNotBlank(name) ? name : CloudNames.generateUnique(BASE_DEFAULT_FLEET_CLOUD_ID));
         init();
         this.credentialsId = credentialsId;
@@ -212,7 +215,7 @@ public class FleetCloud extends AbstractFleetCloud {
         this.executorScaler = executorScaler == null ? new NoScaler().withNumExecutors(this.numExecutors) :
                                                        executorScaler.withNumExecutors(this.numExecutors);
         if (fleet != null) {
-            this.stats = Fleets.get(fleet).getState(
+            this.stats = EC2Fleets.get(fleet).getState(
                     getAwsCredentialsId(), region, endpoint, getFleet());
         }
     }
@@ -222,9 +225,9 @@ public class FleetCloud extends AbstractFleetCloud {
     }
 
     /**
-     * Deprecated.Use {@link FleetCloud#awsCredentialsId}
+     * Deprecated.Use {@link EC2FleetCloud#awsCredentialsId}
      *
-     * See {@link FleetCloud#awsCredentialsId} documentation. Don't use fields directly to be able
+     * See {@link EC2FleetCloud#awsCredentialsId} documentation. Don't use fields directly to be able
      * get old version of plugin and for new.
      *
      * @return credentials ID
@@ -443,9 +446,9 @@ public class FleetCloud extends AbstractFleetCloud {
 
             // create a ScheduledFuture that will cancel the planned node future after a timeout.
             // This protects us from leaving planned nodes stranded within Jenkins NodeProvisioner when the Fleet
-            // is updated or removed before it can scale. After scaling, FleetOnlineChecker will cancel the future
+            // is updated or removed before it can scale. After scaling, EC2FleetOnlineChecker will cancel the future
             // if something happens to the Fleet.
-            // TODO: refactor to consolidate logic with FleetOnlineChecker
+            // TODO: refactor to consolidate logic with EC2FleetOnlineChecker
             final ScheduledFuture<?> scheduledFuture = EXECUTOR.schedule(() -> {
                 if (completableFuture.isDone()) {
                     return;
@@ -471,10 +474,10 @@ public class FleetCloud extends AbstractFleetCloud {
 
         // Make a snapshot of current cloud state to work with.
         // We should always work with the snapshot since data could be modified in another thread
-        FleetStateStats currentState = Fleets.get(fleet).getState(
+        FleetStateStats currentState = EC2Fleets.get(fleet).getState(
                 getAwsCredentialsId(), region, endpoint, getFleet());
 
-        // Some Fleet implementations (e.g. SpotFleet) reflect their state only at the end of modification
+        // Some Fleet implementations (e.g. EC2SpotFleet) reflect their state only at the end of modification
         if (currentState.getState().isModifying()) {
             info("Fleet '%s' is currently under modification. Skipping update", currentState.getFleetId());
             synchronized (this) {
@@ -575,7 +578,7 @@ public class FleetCloud extends AbstractFleetCloud {
         // For example, if we remove an instance and add an instance the net change is 0, but we still make the API call.
         // This lets us update the fleet settings with NoTermination policy, which lets us terminate instances on our own
         if (currentToAdd > 0 || currentInstanceIdsToTerminate.size() > 0 || targetCapacity != currentState.getNumDesired()) {
-            Fleets.get(fleet).modify(
+            EC2Fleets.get(fleet).modify(
                     getAwsCredentialsId(), region, endpoint, fleet, targetCapacity, minSize, maxSize);
             info("Set target capacity to '%s'", targetCapacity);
         }
@@ -621,7 +624,7 @@ public class FleetCloud extends AbstractFleetCloud {
 
         final Set<String> jenkinsInstances = new HashSet<>();
         for (final Node node : jenkins.getNodes()) {
-            if (node instanceof FleetNode && ((FleetCloud)((FleetNode) node).getCloud()).getFleet().equals(fleet)) {
+            if (node instanceof EC2FleetNode && ((EC2FleetCloud)((EC2FleetNode) node).getCloud()).getFleet().equals(fleet)) {
                 jenkinsInstances.add(node.getNodeName());
             }
         }
@@ -709,7 +712,7 @@ public class FleetCloud extends AbstractFleetCloud {
      * If <code>ignoreMinConstraints</code> is false and target capacity falls below <code>minSize</code> OR <code>minSpareSize</code> thresholds, then reject termination.
      * Else if <code>ignoreMinConstraints</code> is true, schedule instance for termination even if it breaches <code>minSize</code> OR <code>minSpareSize</code>
      * <p>
-     * Real termination will happens in {@link FleetCloud#update()} which is periodically called by
+     * Real termination will happens in {@link EC2FleetCloud#update()} which is periodically called by
      * {@link CloudNanny}. So there could be some lag between the decision to terminate the node
      * and actual termination, you can find max lag size in {@link CloudNanny#getRecurrencePeriod()}
      * <p>
@@ -827,10 +830,10 @@ public class FleetCloud extends AbstractFleetCloud {
 
         int effectiveNumExecutors = this.executorScaler.scale(instance.getInstanceType(), stats, ec2);
 
-        final FleetAutoResubmitComputerLauncher computerLauncher = new FleetAutoResubmitComputerLauncher(
+        final EC2FleetAutoResubmitComputerLauncher computerLauncher = new EC2FleetAutoResubmitComputerLauncher(
                 computerConnector.launch(address, TaskListener.NULL));
         final Node.Mode nodeMode = restrictUsage ? Node.Mode.EXCLUSIVE : Node.Mode.NORMAL;
-        final FleetNode node = new FleetNode(instanceId, "Fleet agent for " + instanceId,
+        final EC2FleetNode node = new EC2FleetNode(instanceId, "Fleet agent for " + instanceId,
                 effectiveFsRoot, effectiveNumExecutors, nodeMode, labelString, new ArrayList<NodeProperty<?>>(),
                 this.name, computerLauncher, maxTotalUses);
 
@@ -855,7 +858,7 @@ public class FleetCloud extends AbstractFleetCloud {
 
         // Use getters for timeout and interval as they provide a default value
         // when a user installs a new plugin version and doesn't recreate the cloud
-        FleetOnlineChecker.start(node, future,
+        EC2FleetOnlineChecker.start(node, future,
                 TimeUnit.SECONDS.toMillis(getInitOnlineTimeoutSec()),
                 TimeUnit.SECONDS.toMillis(getInitOnlineCheckIntervalSec()));
     }
@@ -866,14 +869,14 @@ public class FleetCloud extends AbstractFleetCloud {
             final Jenkins jenkins = Jenkins.get();
             int currentBusyInstances = 0;
             for (final Computer computer : jenkins.getComputers()) {
-                if (computer instanceof FleetNodeComputer && !computer.isIdle()) {
+                if (computer instanceof EC2FleetNodeComputer && !computer.isIdle()) {
                     final Node compNode = computer.getNode();
                     if (compNode == null) {
                         continue;
                     }
 
                     // Do not count computer if it is not a part of the given fleet
-                    if (!Objects.equals(((FleetCloud)((FleetNodeComputer) computer).getCloud()).getFleet(), currentState.getFleetId())) {
+                    if (!Objects.equals(((EC2FleetCloud)((EC2FleetNodeComputer) computer).getCloud()).getFleet(), currentState.getFleetId())) {
                         continue;
                     }
                     currentBusyInstances++;
@@ -981,8 +984,8 @@ public class FleetCloud extends AbstractFleetCloud {
             final ListBoxModel model = new ListBoxModel();
             model.add(0, new Option("- please select -", "", true));
             try {
-                for (final Fleet Fleet : Fleets.all()) {
-                    Fleet.describe(
+                for (final EC2Fleet EC2Fleet : EC2Fleets.all()) {
+                    EC2Fleet.describe(
                             awsCredentialsId, region, endpoint, model, fleet, showAllFleets);
                 }
             } catch (final Exception ex) {

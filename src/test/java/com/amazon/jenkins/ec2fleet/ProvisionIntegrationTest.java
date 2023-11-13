@@ -1,8 +1,8 @@
 package com.amazon.jenkins.ec2fleet;
 
 import com.amazon.jenkins.ec2fleet.aws.EC2Api;
-import com.amazon.jenkins.ec2fleet.fleet.Fleet;
-import com.amazon.jenkins.ec2fleet.fleet.Fleets;
+import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
+import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.ActiveInstance;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
@@ -61,13 +61,13 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         ComputerLauncher computerLauncher = mock(ComputerLauncher.class);
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
-        final Fleet fleet = mock(Fleet.class);
-        Fleets.setGet(fleet);
-        when(fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
+        final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
+        EC2Fleets.setGet(ec2Fleet);
+        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
                 new FleetStateStats("", 0, FleetStateStats.State.active(), Collections.emptySet(),
                         Collections.<String, Double>emptyMap()));
 
-        FleetCloud cloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 0, 0, 1, true, false,
                 "-1", false, 0, 0,
@@ -101,7 +101,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
         mockEc2FleetApi();
 
-        FleetCloud cloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 0, 1, true, false,
                 "-1", false, 0, 0,
@@ -131,12 +131,12 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         ComputerLauncher computerLauncher = mock(ComputerLauncher.class);
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
-        final Fleet fleet = mock(Fleet.class);
-        Fleets.setGet(fleet);
-        when(fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
+        final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
+        EC2Fleets.setGet(ec2Fleet);
+        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
                 new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
-        FleetCloud cloud = spy(new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud cloud = spy(new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 0, 1, true, false,
                 "-1", false, 300, 15,
@@ -165,12 +165,12 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         ComputerLauncher computerLauncher = mock(ComputerLauncher.class);
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
-        final Fleet fleet = mock(Fleet.class);
-        Fleets.setGet(fleet);
-        when(fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
+        final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
+        EC2Fleets.setGet(ec2Fleet);
+        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
                 new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
-        final FleetCloud cloud = spy(new FleetCloud("TestCloud", "credId", null, "region",
+        final EC2FleetCloud cloud = spy(new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 0, 1, true, false,
                 "-1", false, 0, 0,
@@ -198,7 +198,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
 
-        FleetCloud cloud = spy(new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud cloud = spy(new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 0, 1, true, false,
                 "-1", false, 0, 0,
@@ -254,12 +254,12 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         ComputerLauncher computerLauncher = mock(ComputerLauncher.class);
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
-        final Fleet fleet = mock(Fleet.class);
-        Fleets.setGet(fleet);
-        when(fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
+        final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
+        EC2Fleets.setGet(ec2Fleet);
+        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
                 new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
-        FleetCloud cloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 0, 1, true, false,
                 "-1", false, 0, 0,
@@ -291,12 +291,12 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         ComputerLauncher computerLauncher = mock(ComputerLauncher.class);
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
-        final Fleet fleet = mock(Fleet.class);
-        Fleets.setGet(fleet);
-        when(fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
+        final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
+        EC2Fleets.setGet(ec2Fleet);
+        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
                 new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
-        FleetCloud cloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 2, 0, 1, true, false,
                 "-1", false, 0, 0,
@@ -327,7 +327,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Running, 5);
 
         final ComputerConnector computerConnector = new LocalComputerConnector(j);
-        final FleetCloud cloud = new FleetCloud("TestCloud", "credId", null, "region",
+        final EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 1, 0, 5, 0, 1, true, false,
                 "-1", false, 0, 0,

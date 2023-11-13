@@ -6,16 +6,16 @@ import javax.annotation.concurrent.ThreadSafe;
 import java.util.Objects;
 
 /**
- * This consumed by jelly file <code>FleetStatusWidget/index.jelly</code>
+ * This consumed by jelly file <code>EC2FleetStatusWidget/index.jelly</code>
  * to render fleet information about all fleets, don't forget to update it
  * if you change fields name
  *
- * @see FleetStatusWidget
+ * @see EC2FleetStatusWidget
  * @see CloudNanny
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
 @ThreadSafe
-public class FleetStatusInfo extends Widget {
+public class EC2FleetStatusInfo extends Widget {
 
     private final String id;
     private final String state;
@@ -23,7 +23,7 @@ public class FleetStatusInfo extends Widget {
     private final int numActive;
     private final int numDesired;
 
-    public FleetStatusInfo(String id, String state, String label, int numActive, int numDesired) {
+    public EC2FleetStatusInfo(String id, String state, String label, int numActive, int numDesired) {
         this.id = id;
         this.state = state;
         this.label = label;
@@ -39,7 +39,7 @@ public class FleetStatusInfo extends Widget {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        FleetStatusInfo that = (FleetStatusInfo) o;
+        EC2FleetStatusInfo that = (EC2FleetStatusInfo) o;
         return numActive == that.numActive &&
                 numDesired == that.numDesired &&
                 Objects.equals(id, that.id) &&

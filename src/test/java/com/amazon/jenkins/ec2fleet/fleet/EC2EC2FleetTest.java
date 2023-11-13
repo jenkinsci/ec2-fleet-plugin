@@ -22,7 +22,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
-public class EC2FleetTest {
+public class EC2EC2FleetTest {
 
     @Mock
     private AmazonEC2 ec2;
@@ -58,7 +58,7 @@ public class EC2FleetTest {
         when(ec2.describeFleets(any(DescribeFleetsRequest.class)))
                 .thenReturn(new DescribeFleetsResult());
 
-        new EC2Fleet().getState("cred", "region", "", "f");
+        new EC2EC2Fleet().getState("cred", "region", "", "f");
     }
 
     @Test
@@ -72,7 +72,7 @@ public class EC2FleetTest {
                                                 new TargetCapacitySpecification()
                                                         .withTotalTargetCapacity(12))));
 
-        FleetStateStats stats = new EC2Fleet().getState("cred", "region", "", "f-id");
+        FleetStateStats stats = new EC2EC2Fleet().getState("cred", "region", "", "f-id");
 
         Assert.assertEquals("f-id", stats.getFleetId());
         Assert.assertEquals(FleetStateStats.State.active(), stats.getState());
@@ -81,7 +81,7 @@ public class EC2FleetTest {
 
     @Test
     public void getState_returnEmptyIfNoInstancesForFleet() {
-        FleetStateStats stats = new EC2Fleet().getState("cred", "region", "", "f");
+        FleetStateStats stats = new EC2EC2Fleet().getState("cred", "region", "", "f");
 
         Assert.assertEquals(Collections.emptySet(), stats.getInstances());
         Assert.assertEquals(0, stats.getNumActive());
@@ -95,7 +95,7 @@ public class EC2FleetTest {
                                 new ActiveInstance().withInstanceId("i-1"),
                                 new ActiveInstance().withInstanceId("i-2")));
 
-        FleetStateStats stats = new EC2Fleet().getState("cred", "region", "", "f");
+        FleetStateStats stats = new EC2EC2Fleet().getState("cred", "region", "", "f");
 
         Assert.assertEquals(new HashSet<>(Arrays.asList("i-1", "i-2")), stats.getInstances());
         Assert.assertEquals(2, stats.getNumActive());
@@ -114,7 +114,7 @@ public class EC2FleetTest {
                 .thenReturn(new DescribeFleetInstancesResult()
                         .withActiveInstances(new ActiveInstance().withInstanceId("i-2")));
 
-        FleetStateStats stats = new EC2Fleet().getState("cred", "region", "", "f");
+        FleetStateStats stats = new EC2EC2Fleet().getState("cred", "region", "", "f");
 
         Assert.assertEquals(new HashSet<>(Arrays.asList("i-1", "i-2")), stats.getInstances());
         Assert.assertEquals(2, stats.getNumActive());
@@ -126,7 +126,7 @@ public class EC2FleetTest {
 
     @Test
     public void getState_returnEmptyInstanceTypeWeightsIfNoInformation() {
-        FleetStateStats stats = new EC2Fleet().getState("cred", "region", "", "f");
+        FleetStateStats stats = new EC2EC2Fleet().getState("cred", "region", "", "f");
 
         Assert.assertEquals(Collections.emptyMap(), stats.getInstanceTypeWeights());
     }
@@ -144,7 +144,7 @@ public class EC2FleetTest {
                                                 new FleetLaunchTemplateOverrides().withInstanceType("t1").withWeightedCapacity(0.1),
                                                 new FleetLaunchTemplateOverrides().withInstanceType("t2").withWeightedCapacity(12.0)))));
 
-        FleetStateStats stats = new EC2Fleet().getState("cred", "region", "", "f");
+        FleetStateStats stats = new EC2EC2Fleet().getState("cred", "region", "", "f");
 
         Map<String, Double> expected = new HashMap<>();
         expected.put("t1", 0.1);
@@ -165,7 +165,7 @@ public class EC2FleetTest {
                                                 new FleetLaunchTemplateOverrides().withInstanceType("t1"),
                                                 new FleetLaunchTemplateOverrides().withWeightedCapacity(12.0)))));
 
-        FleetStateStats stats = new EC2Fleet().getState("cred", "region", "", "f");
+        FleetStateStats stats = new EC2EC2Fleet().getState("cred", "region", "", "f");
 
         Assert.assertEquals(Collections.emptyMap(), stats.getInstanceTypeWeights());
     }
@@ -177,7 +177,7 @@ public class EC2FleetTest {
 
         Collection<String> fleetIds = new ArrayList<>();
 
-        Map<String, FleetStateStats> fleetStateStatsMap = new EC2Fleet().getStateBatch("cred", "region", "", fleetIds);
+        Map<String, FleetStateStats> fleetStateStatsMap = new EC2EC2Fleet().getStateBatch("cred", "region", "", fleetIds);
 
         Assert.assertTrue("FleetStateStats Map is expected to be empty when no Fleet Ids are given", fleetStateStatsMap.isEmpty());
     }
@@ -191,7 +191,7 @@ public class EC2FleetTest {
         fleetIds.add("f1");
         fleetIds.add("f2");
 
-        Map<String, FleetStateStats> fleetStateStatsMap = new EC2Fleet().getStateBatch("cred", "region", "", fleetIds);
+        Map<String, FleetStateStats> fleetStateStatsMap = new EC2EC2Fleet().getStateBatch("cred", "region", "", fleetIds);
 
         Assert.assertTrue(fleetStateStatsMap.isEmpty());
     }
@@ -230,7 +230,7 @@ public class EC2FleetTest {
         fleetIds.add("f1");
         fleetIds.add("f2");
 
-        Map<String, FleetStateStats> statsMap = new EC2Fleet().getStateBatch("cred", "region", "", fleetIds);
+        Map<String, FleetStateStats> statsMap = new EC2EC2Fleet().getStateBatch("cred", "region", "", fleetIds);
 
         Assert.assertEquals(new HashSet<>(Arrays.asList("i-1", "i-2")), statsMap.get("f1").getInstances());
         Assert.assertEquals(new HashSet<>(Collections.singletonList("i-3")), statsMap.get("f2").getInstances());
@@ -264,7 +264,7 @@ public class EC2FleetTest {
         fleetIds.add("f1");
         fleetIds.add("f2");
 
-        Map<String, FleetStateStats> statsMap = new EC2Fleet().getStateBatch("cred", "region", "", fleetIds);
+        Map<String, FleetStateStats> statsMap = new EC2EC2Fleet().getStateBatch("cred", "region", "", fleetIds);
 
         Assert.assertTrue(statsMap.get("f1").getState().isActive());
         Assert.assertTrue(statsMap.get("f2").getState().isModifying());
@@ -288,7 +288,7 @@ public class EC2FleetTest {
                                 .withType(FleetType.Request)));
         // when
         ListBoxModel model = new ListBoxModel();
-        new EC2Fleet().describe("cred", "region", "", model, "selected", true);
+        new EC2EC2Fleet().describe("cred", "region", "", model, "selected", true);
         // then
         Assert.assertEquals(
                 "[EC2 Fleet - f1 (active) (maintain)=f1, EC2 Fleet - f2 (modifying) (request)=f2]",
@@ -310,7 +310,7 @@ public class EC2FleetTest {
                                 .withType(FleetType.Request)));
         // when
         ListBoxModel model = new ListBoxModel();
-        new EC2Fleet().describe("cred", "region", "", model, "selected", false);
+        new EC2EC2Fleet().describe("cred", "region", "", model, "selected", false);
         // then
         Assert.assertEquals(
                 "[EC2 Fleet - f1 (active) (maintain)=f1]",
@@ -340,7 +340,7 @@ public class EC2FleetTest {
                                 .withType(FleetType.Maintain)));
         // when
         ListBoxModel model = new ListBoxModel();
-        new EC2Fleet().describe("cred", "region", "", model, "selected", false);
+        new EC2EC2Fleet().describe("cred", "region", "", model, "selected", false);
         // then
         Assert.assertEquals(
                 "[EC2 Fleet - f1 (active) (maintain)=f1]",
@@ -366,7 +366,7 @@ public class EC2FleetTest {
                                 .withType(FleetType.Maintain)));
         // when
         ListBoxModel model = new ListBoxModel();
-        new EC2Fleet().describe("cred", "region", "", model, "selected", false);
+        new EC2EC2Fleet().describe("cred", "region", "", model, "selected", false);
         // then
         Assert.assertEquals(
                 "[EC2 Fleet - f1 (active) (maintain)=f1, EC2 Fleet - f2 (submitted) (maintain)=f2, EC2 Fleet - f3 (modifying) (maintain)=f3]",
@@ -374,17 +374,17 @@ public class EC2FleetTest {
     }
 
     @Test
-    public void isECFleet_withFleetId_returnsTrue() {
+    public void isEC2EC2Fleet_withFleetId_returnsTrue() {
         String fleetId = "fleet-123456";
-        boolean isECFleet = Fleets.isEC2Fleet(fleetId);
+        boolean isEC2EC2Fleet = EC2Fleets.isEC2EC2Fleet(fleetId);
 
-        Assert.assertTrue(isECFleet);
+        Assert.assertTrue(isEC2EC2Fleet);
     }
     @Test
-    public void isECFleet_withNonFleetId_returnsFalse() {
+    public void isEC2EC2Fleet_withNonFleetId_returnsFalse() {
         String fleetId = "sfr-123456";
-        boolean isECFleet = Fleets.isEC2Fleet(fleetId);
+        boolean isEC2EC2Fleet = EC2Fleets.isEC2EC2Fleet(fleetId);
 
-        Assert.assertFalse(isECFleet);
+        Assert.assertFalse(isEC2EC2Fleet);
     }
 }

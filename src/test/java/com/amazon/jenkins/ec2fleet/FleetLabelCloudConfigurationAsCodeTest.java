@@ -1,7 +1,7 @@
 package com.amazon.jenkins.ec2fleet;
 
-import com.amazon.jenkins.ec2fleet.fleet.Fleet;
-import com.amazon.jenkins.ec2fleet.fleet.Fleets;
+import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
+import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 import hudson.plugins.sshslaves.SSHConnector;
 import hudson.plugins.sshslaves.verifiers.NonVerifyingKeyVerificationStrategy;
 import io.jenkins.plugins.casc.ConfiguratorException;
@@ -31,8 +31,8 @@ public class FleetLabelCloudConfigurationAsCodeTest {
 
     @Before
     public void before() {
-        final Fleet fleet = mock(Fleet.class);
-        Fleets.setGet(fleet);
+        final EC2Fleet fleet = mock(EC2Fleet.class);
+        EC2Fleets.setGet(fleet);
         when(fleet.getState(anyString(), anyString(), nullable(String.class), anyString()))
                 .thenReturn(new FleetStateStats("", 2, FleetStateStats.State.active(), new HashSet<>(Arrays.asList("i-1", "i-2")), Collections.emptyMap()));
     }
@@ -49,7 +49,7 @@ public class FleetLabelCloudConfigurationAsCodeTest {
     @ConfiguredWithCode("FleetLabelCloud/min-configuration-as-code.yml")
     public void shouldCreateCloudFromMinConfiguration() {
         assertEquals(jenkinsRule.jenkins.clouds.size(), 1);
-        FleetLabelCloud cloud = (FleetLabelCloud) jenkinsRule.jenkins.clouds.getByName("ec2-fleet-label");
+        EC2FleetLabelCloud cloud = (EC2FleetLabelCloud) jenkinsRule.jenkins.clouds.getByName("ec2-fleet-label");
 
         assertEquals("ec2-fleet-label", cloud.name);
         assertNull(cloud.getRegion());
@@ -74,7 +74,7 @@ public class FleetLabelCloudConfigurationAsCodeTest {
     @ConfiguredWithCode("FleetLabelCloud/max-configuration-as-code.yml")
     public void shouldCreateCloudFromMaxConfiguration() {
         assertEquals(jenkinsRule.jenkins.clouds.size(), 1);
-        FleetLabelCloud cloud = (FleetLabelCloud) jenkinsRule.jenkins.clouds.getByName("ec2-fleet-label");
+        EC2FleetLabelCloud cloud = (EC2FleetLabelCloud) jenkinsRule.jenkins.clouds.getByName("ec2-fleet-label");
 
         assertEquals("ec2-fleet-label", cloud.name);
         assertEquals(cloud.getRegion(), "us-east-2");
@@ -104,9 +104,9 @@ public class FleetLabelCloudConfigurationAsCodeTest {
     public void configurationWithEmptyName_shouldUseDefault() {
         assertEquals(jenkinsRule.jenkins.clouds.size(), 3);
 
-        for (FleetLabelCloud cloud : jenkinsRule.jenkins.clouds.getAll(FleetLabelCloud.class)){
+        for (EC2FleetLabelCloud cloud : jenkinsRule.jenkins.clouds.getAll(EC2FleetLabelCloud.class)){
 
-            assertTrue(cloud.name.startsWith(FleetLabelCloud.BASE_DEFAULT_FLEET_CLOUD_ID));
+            assertTrue(cloud.name.startsWith(EC2FleetLabelCloud.BASE_DEFAULT_FLEET_CLOUD_ID));
             assertEquals(("FleetLabelCloud".length() + CloudNames.SUFFIX_LENGTH + 1), cloud.name.length());
         }
     }

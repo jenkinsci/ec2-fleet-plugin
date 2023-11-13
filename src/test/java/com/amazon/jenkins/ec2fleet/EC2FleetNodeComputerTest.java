@@ -17,10 +17,10 @@ import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Jenkins.class, Queue.class})
-public class FleetNodeComputerTest {
+public class EC2FleetNodeComputerTest {
 
     @Mock
-    private FleetNode agent;
+    private EC2FleetNode agent;
 
     @Mock
     private Jenkins jenkins;
@@ -43,7 +43,7 @@ public class FleetNodeComputerTest {
         when(agent.getDisplayName()).thenReturn("a n");
         when(agent.getMaxTotalUses()).thenReturn(-1);
 
-        FleetNodeComputer computer = spy(new FleetNodeComputer(agent));
+        EC2FleetNodeComputer computer = spy(new EC2FleetNodeComputer(agent));
         doReturn(agent).when(computer).getNode();
 
         Assert.assertEquals("a n", computer.getDisplayName());
@@ -54,7 +54,7 @@ public class FleetNodeComputerTest {
         when(agent.getDisplayName()).thenReturn("a n");
         when(agent.getMaxTotalUses()).thenReturn(1);
 
-        FleetNodeComputer computer = spy(new FleetNodeComputer(agent));
+        EC2FleetNodeComputer computer = spy(new EC2FleetNodeComputer(agent));
         doReturn(agent).when(computer).getNode();
 
         Assert.assertEquals("a n Builds left: 1 ", computer.getDisplayName());

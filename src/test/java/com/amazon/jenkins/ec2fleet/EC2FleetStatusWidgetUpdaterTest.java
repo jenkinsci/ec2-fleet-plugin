@@ -23,20 +23,20 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(FleetStatusWidgetUpdater.class)
-public class FleetStatusWidgetUpdaterTest {
+@PrepareForTest(EC2FleetStatusWidgetUpdater.class)
+public class EC2FleetStatusWidgetUpdaterTest {
 
     @Mock
-    private FleetCloud cloud1;
+    private EC2FleetCloud cloud1;
 
     @Mock
-    private FleetCloud cloud2;
+    private EC2FleetCloud cloud2;
 
     @Mock
-    private FleetStatusWidget widget1;
+    private EC2FleetStatusWidget widget1;
 
     @Mock
-    private FleetStatusWidget widget2;
+    private EC2FleetStatusWidget widget2;
 
     private List<Widget> widgets = new ArrayList<>();
 
@@ -50,9 +50,9 @@ public class FleetStatusWidgetUpdaterTest {
 
     @Before
     public void before() throws Exception {
-        PowerMockito.mockStatic(FleetStatusWidgetUpdater.class);
-        PowerMockito.when(FleetStatusWidgetUpdater.class, "getClouds").thenReturn(clouds);
-        PowerMockito.when(FleetStatusWidgetUpdater.class, "getWidgets").thenReturn(widgets);
+        PowerMockito.mockStatic(EC2FleetStatusWidgetUpdater.class);
+        PowerMockito.when(EC2FleetStatusWidgetUpdater.class, "getClouds").thenReturn(clouds);
+        PowerMockito.when(EC2FleetStatusWidgetUpdater.class, "getWidgets").thenReturn(widgets);
 
         when(cloud1.getLabelString()).thenReturn("a");
         when(cloud2.getLabelString()).thenReturn("");
@@ -63,13 +63,13 @@ public class FleetStatusWidgetUpdaterTest {
         when(cloud2.getStats()).thenReturn(stats2);
     }
 
-    private FleetStatusWidgetUpdater getMockFleetStatusWidgetUpdater() {
-        return Whitebox.newInstance(FleetStatusWidgetUpdater.class);
+    private EC2FleetStatusWidgetUpdater getMockEC2FleetStatusWidgetUpdater() {
+        return Whitebox.newInstance(EC2FleetStatusWidgetUpdater.class);
     }
 
     @Test
     public void shouldDoNothingIfNoCloudsAndWidgets() {
-        getMockFleetStatusWidgetUpdater().doRun();
+        getMockEC2FleetStatusWidgetUpdater().doRun();
     }
 
     @Test
@@ -77,13 +77,13 @@ public class FleetStatusWidgetUpdaterTest {
         clouds.add(cloud1);
         clouds.add(cloud2);
 
-        getMockFleetStatusWidgetUpdater().doRun();
+        getMockEC2FleetStatusWidgetUpdater().doRun();
 
         verifyZeroInteractions(widget1, widget2);
     }
 
     @Test
-    public void shouldIgnoreNonFleetClouds() {
+    public void shouldIgnoreNonEC2FleetClouds() {
         clouds.add(cloud1);
 
         Cloud nonEc2FleetCloud = mock(Cloud.class);
@@ -91,7 +91,7 @@ public class FleetStatusWidgetUpdaterTest {
 
         widgets.add(widget2);
 
-        getMockFleetStatusWidgetUpdater().doRun();
+        getMockEC2FleetStatusWidgetUpdater().doRun();
 
         verify(cloud1).getStats();
         verifyZeroInteractions(nonEc2FleetCloud);
@@ -104,11 +104,11 @@ public class FleetStatusWidgetUpdaterTest {
 
         widgets.add(widget1);
 
-        getMockFleetStatusWidgetUpdater().doRun();
+        getMockEC2FleetStatusWidgetUpdater().doRun();
 
         verify(widget1).setStatusList(Arrays.asList(
-                new FleetStatusInfo(cloud1.getFleet(), stats1.getState().getDetailed(), cloud1.getLabelString(), stats1.getNumActive(), stats1.getNumDesired()),
-                new FleetStatusInfo(cloud2.getFleet(), stats2.getState().getDetailed(), cloud2.getLabelString(), stats2.getNumActive(), stats2.getNumDesired())
+                new EC2FleetStatusInfo(cloud1.getFleet(), stats1.getState().getDetailed(), cloud1.getLabelString(), stats1.getNumActive(), stats1.getNumDesired()),
+                new EC2FleetStatusInfo(cloud2.getFleet(), stats2.getState().getDetailed(), cloud2.getLabelString(), stats2.getNumActive(), stats2.getNumDesired())
         ));
     }
 
@@ -122,7 +122,7 @@ public class FleetStatusWidgetUpdaterTest {
 
         widgets.add(widget1);
 
-        getMockFleetStatusWidgetUpdater().doRun();
+        getMockEC2FleetStatusWidgetUpdater().doRun();
 
         verify(widget1).setStatusList(any(List.class));
         verifyZeroInteractions(nonEc2FleetWidget);

@@ -131,7 +131,7 @@ public class RealTest extends IntegrationTest {
         final SSHConnector computerConnector = new SSHConnector(
                 22, sshCredentialId, null, null, null,
                 null, null, null, null, new NonVerifyingKeyVerificationStrategy());
-        final FleetCloud cloud = new FleetCloud(
+        final EC2FleetCloud cloud = new EC2FleetCloud(
                 "TestCloud", credentialId, null, null, null,
                 autoScalingGroupName,
                 "momo", null, computerConnector, false, false,
@@ -183,7 +183,7 @@ public class RealTest extends IntegrationTest {
         final SSHConnector computerConnector = new SSHConnector(
                 22, sshCredentialId, null, null, null,
                 null, null, null, null, new NonVerifyingKeyVerificationStrategy());
-        final FleetCloud cloud = new FleetCloud(
+        final EC2FleetCloud cloud = new EC2FleetCloud(
                 "TestCloud", credentialId, null, null, null,
                 requestSpotFleetResult.getSpotFleetRequestId(),
                 "momo", null, computerConnector, false, false,

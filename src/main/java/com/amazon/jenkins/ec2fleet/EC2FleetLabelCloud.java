@@ -4,8 +4,8 @@ import com.amazon.jenkins.ec2fleet.aws.AwsPermissionChecker;
 import com.amazon.jenkins.ec2fleet.aws.CloudFormationApi;
 import com.amazon.jenkins.ec2fleet.aws.EC2Api;
 import com.amazon.jenkins.ec2fleet.aws.RegionHelper;
-import com.amazon.jenkins.ec2fleet.fleet.Fleets;
-import com.amazon.jenkins.ec2fleet.fleet.SpotFleet;
+import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
+import com.amazon.jenkins.ec2fleet.fleet.EC2SpotFleet;
 import com.amazonaws.services.cloudformation.AmazonCloudFormation;
 import com.amazonaws.services.cloudformation.model.StackStatus;
 import com.amazonaws.services.ec2.AmazonEC2;
@@ -59,7 +59,7 @@ import java.util.stream.Collectors;
  * @see CloudNanny
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
-public class FleetLabelCloud extends AbstractFleetCloud {
+public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
 
     public static final String EC2_INSTANCE_TAG_NAMESPACE = "ec2-fleet-plugin";
     public static final String EC2_INSTANCE_CLOUD_NAME_TAG = EC2_INSTANCE_TAG_NAMESPACE + ":cloud-name";
@@ -74,7 +74,7 @@ public class FleetLabelCloud extends AbstractFleetCloud {
 //    private static final String NEW_EC2_KEY_PAIR_VALUE = "- New Key Pair -";
 
     private static final SimpleFormatter sf = new SimpleFormatter();
-    private static final Logger LOGGER = Logger.getLogger(FleetLabelCloud.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(EC2FleetLabelCloud.class.getName());
 
     private final String awsCredentialsId;
     private final String region;
@@ -95,7 +95,7 @@ public class FleetLabelCloud extends AbstractFleetCloud {
     private final String ec2KeyPairName;
 
     /**
-     * @see FleetAutoResubmitComputerLauncher
+     * @see EC2FleetAutoResubmitComputerLauncher
      */
     private final boolean disableTaskResubmit;
 
@@ -107,25 +107,25 @@ public class FleetLabelCloud extends AbstractFleetCloud {
     private transient Map<String, State> states;
 
     @DataBoundConstructor
-    public FleetLabelCloud(final String name,
-                           final String awsCredentialsId,
-                           final String region,
-                           final String endpoint,
-                           final String fsRoot,
-                           final ComputerConnector computerConnector,
-                           final boolean privateIpUsed,
-                           final boolean alwaysReconnect,
-                           final Integer idleMinutes,
-                           final int minSize,
-                           final int maxSize,
-                           final int numExecutors,
-                           final boolean restrictUsage,
-                           final boolean disableTaskResubmit,
-                           final Integer initOnlineTimeoutSec,
-                           final Integer initOnlineCheckIntervalSec,
-                           final Integer cloudStatusIntervalSec,
-                           final boolean noDelayProvision,
-                           final String ec2KeyPairName) {
+    public EC2FleetLabelCloud(final String name,
+                              final String awsCredentialsId,
+                              final String region,
+                              final String endpoint,
+                              final String fsRoot,
+                              final ComputerConnector computerConnector,
+                              final boolean privateIpUsed,
+                              final boolean alwaysReconnect,
+                              final Integer idleMinutes,
+                              final int minSize,
+                              final int maxSize,
+                              final int numExecutors,
+                              final boolean restrictUsage,
+                              final boolean disableTaskResubmit,
+                              final Integer initOnlineTimeoutSec,
+                              final Integer initOnlineCheckIntervalSec,
+                              final Integer cloudStatusIntervalSec,
+                              final boolean noDelayProvision,
+                              final String ec2KeyPairName) {
         super(StringUtils.isNotBlank(name) ? name : CloudNames.generateUnique(BASE_DEFAULT_FLEET_CLOUD_ID));
         init();
         this.awsCredentialsId = awsCredentialsId;
@@ -286,7 +286,7 @@ public class FleetLabelCloud extends AbstractFleetCloud {
                     continue;
                 }
 
-                final FleetLabelParameters parameters = new FleetLabelParameters(state.getKey());
+                final EC2FleetLabelParameters parameters = new EC2FleetLabelParameters(state.getKey());
 
                 final int maxSize = parameters.getIntOrDefault("maxSize", this.maxSize);
                 if (cap >= maxSize) {
@@ -362,7 +362,7 @@ public class FleetLabelCloud extends AbstractFleetCloud {
 
         final Set<String> fleetIds = new HashSet<>();
         for (State state : states.values()) fleetIds.add(state.fleetId);
-        final Map<String, FleetStateStats> currentStats = new SpotFleet().getStateBatch(
+        final Map<String, FleetStateStats> currentStats = new EC2SpotFleet().getStateBatch(
                 getAwsCredentialsId(), region, endpoint, fleetIds);
         for (State state : currentStates.values()) {
             // todo what if we don't find this fleet in map
@@ -407,7 +407,7 @@ public class FleetLabelCloud extends AbstractFleetCloud {
                 // todo fix negative value
                 // we do update any time even real capacity was not update like remove one add one to
                 // update fleet settings with NoTermination so we can terminate instances on our own
-                Fleets.get(state.fleetId).modify(
+                EC2Fleets.get(state.fleetId).modify(
                         getAwsCredentialsId(), region, endpoint, state.fleetId, state.targetCapacity, minSize, maxSize);
                 info("Update fleet target capacity to %s", state.targetCapacity);
             }
@@ -458,8 +458,8 @@ public class FleetLabelCloud extends AbstractFleetCloud {
             // currentJenkinsNodes contains all registered Jenkins nodes related to this cloud
             final Set<String> jenkinsInstances = new HashSet<>();
             for (final Node node : jenkins.getNodes()) {
-                if (node instanceof FleetNode) {
-                    final FleetNode node1 = (FleetNode) node;
+                if (node instanceof EC2FleetNode) {
+                    final EC2FleetNode node1 = (EC2FleetNode) node;
                     // cloud and label are same
                     if (node1.getCloud() == this && node1.getLabelString().equals(entry.getKey())) {
                         jenkinsInstances.add(node.getNodeName());
@@ -553,7 +553,7 @@ public class FleetLabelCloud extends AbstractFleetCloud {
         }
 
         // We can't remove instances beyond minSize unless ignoreMinConstraints is true
-        final FleetLabelParameters parameters = new FleetLabelParameters(node.getLabelString());
+        final EC2FleetLabelParameters parameters = new EC2FleetLabelParameters(node.getLabelString());
         final int minSize = parameters.getIntOrDefault("minSize", this.minSize);
         if (!ignoreMinConstraints && (minSize > 0 && state.stats.getNumDesired() - state.instanceIdsToTerminate.size() <= minSize)) {
             info("Not terminating %s because we need a minimum of %s instances running.", instanceId, minSize);
@@ -620,11 +620,11 @@ public class FleetLabelCloud extends AbstractFleetCloud {
             effectiveNumExecutors = numExecutors;
         }
 
-        final FleetAutoResubmitComputerLauncher computerLauncher = new FleetAutoResubmitComputerLauncher(
+        final EC2FleetAutoResubmitComputerLauncher computerLauncher = new EC2FleetAutoResubmitComputerLauncher(
                 computerConnector.launch(address, TaskListener.NULL));
         final Node.Mode nodeMode = restrictUsage ? Node.Mode.EXCLUSIVE : Node.Mode.NORMAL;
-        //TODO: Add maxTotalUses to FleetLabelCloud similar to FleetCloud
-        final FleetNode node = new FleetNode(instanceId, "Fleet agent for " + instanceId,
+        //TODO: Add maxTotalUses to EC2FleetLabelCloud similar to EC2FleetCloud
+        final EC2FleetNode node = new EC2FleetNode(instanceId, "Fleet agent for " + instanceId,
                 effectiveFsRoot, effectiveNumExecutors, nodeMode, labelString, new ArrayList<NodeProperty<?>>(),
                 this.name, computerLauncher, -1);
 
@@ -648,8 +648,8 @@ public class FleetLabelCloud extends AbstractFleetCloud {
         }
 
         // use getters for timeout and interval as they provide default value
-        // when user just install new version and did't recreate fleet
-        FleetOnlineChecker.start(node, future,
+        // when user just install new version and didn't recreate fleet
+        EC2FleetOnlineChecker.start(node, future,
                 TimeUnit.SECONDS.toMillis(getInitOnlineTimeoutSec()),
                 TimeUnit.SECONDS.toMillis(getInitOnlineCheckIntervalSec()));
     }
@@ -703,7 +703,7 @@ public class FleetLabelCloud extends AbstractFleetCloud {
         for (final Item item : Jenkins.get().getAllItems()) {
             if (!(item instanceof AbstractProject)) continue;
             final AbstractProject abstractProject = (AbstractProject) item;
-            // assinged label could be null
+            // assigned label could be null
             final String labelString = StringUtils.defaultString(abstractProject.getAssignedLabelString());
 
             if (labelString.startsWith(name)) {
@@ -786,8 +786,8 @@ public class FleetLabelCloud extends AbstractFleetCloud {
     }
 
     @Override
-    public FleetLabelCloud.DescriptorImpl getDescriptor() {
-        return (FleetLabelCloud.DescriptorImpl) super.getDescriptor();
+    public EC2FleetLabelCloud.DescriptorImpl getDescriptor() {
+        return (EC2FleetLabelCloud.DescriptorImpl) super.getDescriptor();
     }
 
     @Extension

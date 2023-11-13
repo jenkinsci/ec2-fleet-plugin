@@ -1,7 +1,5 @@
 package com.amazon.jenkins.ec2fleet;
 
-import com.amazon.jenkins.ec2fleet.fleet.Fleet;
-import com.amazon.jenkins.ec2fleet.fleet.SpotFleet;
 import com.amazonaws.services.ec2.model.BatchState;
 
 import javax.annotation.Nonnegative;
@@ -12,7 +10,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * @see FleetCloud
+ * @see EC2FleetCloud
  */
 @SuppressWarnings({"unused"})
 @ThreadSafe
@@ -20,7 +18,7 @@ public final class FleetStateStats {
 
     /**
      * Abstract state of different implementation of
-     * {@link Fleet}
+     * {@link com.amazon.jenkins.ec2fleet.fleet.EC2Fleet}
      */
     public static class State {
 
@@ -54,12 +52,12 @@ public final class FleetStateStats {
          * Is underline fleet is updating so we need to suppress update
          * until modification will be completed and fleet state will be stabilized.
          *
-         * This is important only for {@link SpotFleet}
+         * This is important only for {@link com.amazon.jenkins.ec2fleet.fleet.EC2SpotFleet}
          * as it has delay between update request and actual update of target capacity, while
          * {@link com.amazon.jenkins.ec2fleet.fleet.AutoScalingGroupFleet} does it in sync with
          * update call.
          *
-         * Consumed by {@link FleetCloud#update()}
+         * Consumed by {@link EC2FleetCloud#update()}
          *
          * @return true or false
          */
@@ -69,7 +67,7 @@ public final class FleetStateStats {
 
         /**
          * Fleet is good to be used for plugin, it will be shown on UI as option to use
-         * and plugin will use it for provision {@link FleetCloud#provision(hudson.slaves.Cloud.CloudState, int)} ()} and de-provision
+         * and plugin will use it for provision {@link EC2FleetCloud#provision(hudson.slaves.Cloud.CloudState, int)} ()} and de-provision
          * otherwise activity will be ignored until state will not be updated.
          *
          * @return true or false

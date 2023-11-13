@@ -1,6 +1,7 @@
 package com.amazon.jenkins.ec2fleet;
 
 import com.amazonaws.services.ec2.model.InstanceStateName;
+import hudson.model.FreeStyleBuild;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.slaves.ComputerConnector;
 import hudson.slaves.NodeProvisioner;
@@ -53,7 +54,7 @@ public class NoDelayProvisionStrategyPerformanceTest extends IntegrationTest {
 
         final ComputerConnector computerConnector = new LocalComputerConnector(j);
         final String label = "momo";
-        final FleetCloudWithHistory cloud = new FleetCloudWithHistory(null, "credId", null, "region",
+        final EC2FleetCloudWithHistory cloud = new EC2FleetCloudWithHistory(null, "credId", null, "region",
                 null, "fId", label, null, computerConnector, false, false,
                 1, 0, maxWorkers, 0, 1, true, false,
                 false, 0, 0,

@@ -32,7 +32,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @ThreadSafe
-public class AutoScalingGroupFleet implements Fleet {
+public class AutoScalingGroupFleet implements EC2Fleet {
 
     @Override
     public void describe(

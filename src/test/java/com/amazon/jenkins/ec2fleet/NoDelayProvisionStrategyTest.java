@@ -55,7 +55,7 @@ public class NoDelayProvisionStrategyTest {
 
     @Test
     public void givenNoRequiredCapacity_shouldDoNotScale() {
-        final FleetCloud ec2FleetCloud = mock(FleetCloud.class);
+        final EC2FleetCloud ec2FleetCloud = mock(EC2FleetCloud.class);
         clouds.add(ec2FleetCloud);
 
         strategy.apply(state);
@@ -65,7 +65,7 @@ public class NoDelayProvisionStrategyTest {
 
     @Test
     public void givenAvailableSameAsRequiredCapacity_shouldDoNotScale() {
-        final FleetCloud ec2FleetCloud = mock(FleetCloud.class);
+        final EC2FleetCloud ec2FleetCloud = mock(EC2FleetCloud.class);
         clouds.add(ec2FleetCloud);
         when(snapshot.getQueueLength()).thenReturn(10);
         when(snapshot.getAvailableExecutors()).thenReturn(10);
@@ -101,7 +101,7 @@ public class NoDelayProvisionStrategyTest {
         when(snapshot.getQueueLength()).thenReturn(10);
         when(state.getLabel()).thenReturn(label);
 
-        final FleetCloud ec2FleetCloud = mock(FleetCloud.class);
+        final EC2FleetCloud ec2FleetCloud = mock(EC2FleetCloud.class);
         clouds.add(ec2FleetCloud);
         when(ec2FleetCloud.canProvision(any(Cloud.CloudState.class))).thenReturn(true);
         when(ec2FleetCloud.isNoDelayProvision()).thenReturn(false);
@@ -117,7 +117,7 @@ public class NoDelayProvisionStrategyTest {
         when(snapshot.getQueueLength()).thenReturn(10);
         when(state.getLabel()).thenReturn(label);
 
-        final FleetCloud ec2FleetCloud = mock(FleetCloud.class);
+        final EC2FleetCloud ec2FleetCloud = mock(EC2FleetCloud.class);
         clouds.add(ec2FleetCloud);
         when(ec2FleetCloud.canProvision(any(Cloud.CloudState.class))).thenReturn(false);
 
@@ -133,9 +133,9 @@ public class NoDelayProvisionStrategyTest {
         when(state.getLabel()).thenReturn(label);
         when(state.getAdditionalPlannedCapacity()).thenReturn(0);
 
-        final FleetCloud ec2FleetCloud1 = mock(FleetCloud.class);
+        final EC2FleetCloud ec2FleetCloud1 = mock(EC2FleetCloud.class);
         clouds.add(ec2FleetCloud1);
-        final FleetCloud ec2FleetCloud2 = mock(FleetCloud.class);
+        final EC2FleetCloud ec2FleetCloud2 = mock(EC2FleetCloud.class);
         clouds.add(ec2FleetCloud2);
         when(ec2FleetCloud1.canProvision(any(Cloud.CloudState.class))).thenReturn(true);
         when(ec2FleetCloud2.canProvision(any(Cloud.CloudState.class))).thenReturn(true);
@@ -158,9 +158,9 @@ public class NoDelayProvisionStrategyTest {
         when(snapshot.getQueueLength()).thenReturn(2);
         when(state.getLabel()).thenReturn(label);
 
-        final FleetCloud ec2FleetCloud1 = mock(FleetCloud.class);
+        final EC2FleetCloud ec2FleetCloud1 = mock(EC2FleetCloud.class);
         clouds.add(ec2FleetCloud1);
-        final FleetCloud ec2FleetCloud2 = mock(FleetCloud.class);
+        final EC2FleetCloud ec2FleetCloud2 = mock(EC2FleetCloud.class);
         clouds.add(ec2FleetCloud2);
         when(ec2FleetCloud1.canProvision(any(Cloud.CloudState.class))).thenReturn(true);
         when(ec2FleetCloud2.canProvision(any(Cloud.CloudState.class))).thenReturn(true);
@@ -183,9 +183,9 @@ public class NoDelayProvisionStrategyTest {
         when(snapshot.getQueueLength()).thenReturn(5);
         when(state.getLabel()).thenReturn(label);
 
-        final FleetCloud ec2FleetCloud1 = mock(FleetCloud.class);
+        final EC2FleetCloud ec2FleetCloud1 = mock(EC2FleetCloud.class);
         clouds.add(ec2FleetCloud1);
-        final FleetCloud ec2FleetCloud2 = mock(FleetCloud.class);
+        final EC2FleetCloud ec2FleetCloud2 = mock(EC2FleetCloud.class);
         clouds.add(ec2FleetCloud2);
         when(ec2FleetCloud1.canProvision(any(Cloud.CloudState.class))).thenReturn(true);
         when(ec2FleetCloud2.canProvision(any(Cloud.CloudState.class))).thenReturn(true);
@@ -208,7 +208,7 @@ public class NoDelayProvisionStrategyTest {
         when(snapshot.getQueueLength()).thenReturn(2);
         when(state.getLabel()).thenReturn(label);
 
-        final FleetCloud ec2FleetCloud1 = mock(FleetCloud.class);
+        final EC2FleetCloud ec2FleetCloud1 = mock(EC2FleetCloud.class);
         clouds.add(ec2FleetCloud1);
         when(ec2FleetCloud1.canProvision(any(Cloud.CloudState.class))).thenReturn(true);
         when(ec2FleetCloud1.isNoDelayProvision()).thenReturn(true);
@@ -228,14 +228,14 @@ public class NoDelayProvisionStrategyTest {
         when(state.getPlannedCapacitySnapshot()).thenReturn(3);
         when(state.getLabel()).thenReturn(label);
 
-        final FleetCloud ec2FleetCloud1 = mock(FleetCloud.class);
+        final EC2FleetCloud ec2FleetCloud1 = mock(EC2FleetCloud.class);
         clouds.add(ec2FleetCloud1);
         when(ec2FleetCloud1.canProvision(any(Cloud.CloudState.class))).thenReturn(true);
         when(ec2FleetCloud1.isNoDelayProvision()).thenReturn(true);
         final NodeProvisioner.PlannedNode plannedNode1 = new NodeProvisioner.PlannedNode("fc1-0", new CompletableFuture<>(), 2);
         when(ec2FleetCloud1.provision(any(Cloud.CloudState.class), anyInt())).thenReturn(Arrays.asList(plannedNode1));
 
-        final FleetCloud ec2FleetCloud2 = mock(FleetCloud.class);
+        final EC2FleetCloud ec2FleetCloud2 = mock(EC2FleetCloud.class);
         clouds.add(ec2FleetCloud2);
         when(ec2FleetCloud2.canProvision(any(Cloud.CloudState.class))).thenReturn(true);
         when(ec2FleetCloud2.isNoDelayProvision()).thenReturn(true);

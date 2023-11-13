@@ -4,9 +4,9 @@
 
 ## Properties
 
-### FleetCloud
+### EC2FleetCloud
 
-[Definition](https://github.com/jenkinsci/ec2-fleet-plugin/blob/master/src/main/java/com/amazon/jenkins/ec2fleet/FleetCloud.java#L156-L179)
+[Definition](https://github.com/jenkinsci/ec2-fleet-plugin/blob/master/src/main/java/com/amazon/jenkins/ec2fleet/EC2FleetCloud.java#L156-L179)
 
 | Property                   | Type    | Required                                 | Description                                                                                                                                 |
 |----------------------------|---------|------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
@@ -35,15 +35,15 @@
 | cloudStatusIntervalSec     | int     | no, default ```10```                     |                                                                                                                                             |
 | noDelayProvision           | boolean | no, default ```false```                  |                                                                                                                                             |
 
-## FleetLabelCloud
+## EC2FleetLabelCloud
 
 More about this type [here](LABEL-BASED-CONFIGURATION.md)
 
-[Definition](https://github.com/jenkinsci/ec2-fleet-plugin/blob/master/src/main/java/com/amazon/jenkins/ec2fleet/FleetLabelCloud.java#L123-L145)
+[Definition](https://github.com/jenkinsci/ec2-fleet-plugin/blob/master/src/main/java/com/amazon/jenkins/ec2fleet/EC2FleetLabelCloud.java#L123-L145)
 
 ## Examples
 
-### FleetCloud (min set of properties)
+### EC2FleetCloud (min set of properties)
 
 ```yaml
 jenkins:
@@ -61,7 +61,7 @@ jenkins:
         maxSize: 10
 ```
 
-### FleetCloud (All properties)
+### EC2FleetCloud (All properties)
 
 ```yaml
 jenkins:

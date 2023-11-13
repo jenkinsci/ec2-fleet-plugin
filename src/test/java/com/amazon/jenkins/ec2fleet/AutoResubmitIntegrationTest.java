@@ -1,8 +1,8 @@
 package com.amazon.jenkins.ec2fleet;
 
 import com.amazon.jenkins.ec2fleet.aws.EC2Api;
-import com.amazon.jenkins.ec2fleet.fleet.Fleet;
-import com.amazon.jenkins.ec2fleet.fleet.Fleets;
+import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
+import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
@@ -43,18 +43,18 @@ import static org.mockito.Mockito.when;
 @SuppressWarnings({"deprecation"})
 public class AutoResubmitIntegrationTest extends IntegrationTest {
 
-    private FleetCloud.ExecutorScaler noScaling;
+    private EC2FleetCloud.ExecutorScaler noScaling;
 
     @Before
     public void before() {
-        Fleet fleet = mock(Fleet.class);
+        EC2Fleet ec2Fleet = mock(EC2Fleet.class);
 
-        Fleets.setGet(fleet);
+        EC2Fleets.setGet(ec2Fleet);
 
         EC2Api ec2Api = spy(EC2Api.class);
         Registry.setEc2Api(ec2Api);
 
-        when(fleet.getState(anyString(), anyString(), nullable(String.class), anyString())).thenReturn(
+        when(ec2Fleet.getState(anyString(), anyString(), nullable(String.class), anyString())).thenReturn(
                 new FleetStateStats("", 1, FleetStateStats.State.active(), Collections.singleton("i-1"),
                         Collections.<String, Double>emptyMap()));
 
@@ -72,12 +72,12 @@ public class AutoResubmitIntegrationTest extends IntegrationTest {
                                 instance
                         )));
 
-        noScaling = new FleetCloud.NoScaler();
+        noScaling = new EC2FleetCloud.NoScaler();
     }
 
     @Test
     public void should_successfully_resubmit_freestyle_task() throws Exception {
-        FleetCloud cloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
                 0, 0, 10, 0, 1, false, true,
                 "-1", false, 0, 0,
@@ -113,7 +113,7 @@ public class AutoResubmitIntegrationTest extends IntegrationTest {
 
     @Test
     public void should_successfully_resubmit_parametrized_task() throws Exception {
-        FleetCloud cloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
                 0, 0, 10, 0, 1, false, true,
                 "-1", false, 0, 0,
@@ -169,7 +169,7 @@ public class AutoResubmitIntegrationTest extends IntegrationTest {
 
     @Test
     public void should_not_resubmit_if_disabled() throws Exception {
-        FleetCloud cloud = new FleetCloud("TestCloud", "credId", null, "region",
+        EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
                 0, 0, 10, 0, 1, false, true,
                 "-1", true, 0, 0, 10, false, noScaling);

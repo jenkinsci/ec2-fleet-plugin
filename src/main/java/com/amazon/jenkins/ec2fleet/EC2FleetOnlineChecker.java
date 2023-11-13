@@ -32,19 +32,19 @@ import java.util.logging.Logger;
  * <p>
  * Based on https://github.com/jenkinsci/ec2-plugin/blob/master/src/main/java/hudson/plugins/ec2/EC2Cloud.java#L640
  *
- * @see FleetCloud
- * @see FleetNode
+ * @see EC2FleetCloud
+ * @see EC2FleetNode
  */
 @SuppressWarnings("WeakerAccess")
 @ThreadSafe
-class FleetOnlineChecker implements Runnable {
+class EC2FleetOnlineChecker implements Runnable {
 
-    private static final Logger LOGGER = Logger.getLogger(FleetOnlineChecker.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(EC2FleetOnlineChecker.class.getName());
     // use daemon thread, so no problem when stop jenkins
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());
 
     public static void start(final Node node, final CompletableFuture<Node> future, final long timeout, final long interval) {
-        EXECUTOR.execute(new FleetOnlineChecker(node, future, timeout, interval));
+        EXECUTOR.execute(new EC2FleetOnlineChecker(node, future, timeout, interval));
     }
 
     private final long start;
@@ -53,7 +53,7 @@ class FleetOnlineChecker implements Runnable {
     private final long timeout;
     private final long interval;
 
-    private FleetOnlineChecker(
+    private EC2FleetOnlineChecker(
             final Node node, final CompletableFuture<Node> future, final long timeout, final long interval) {
         this.start = System.currentTimeMillis();
         this.node = node;
