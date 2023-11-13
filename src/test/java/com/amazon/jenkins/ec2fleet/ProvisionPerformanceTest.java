@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 @Ignore
 public class ProvisionPerformanceTest extends IntegrationTest {
 
-    private final FleetCloud.ExecutorScaler noScaling = new FleetCloud.NoScaler();
+    private final EC2FleetCloud.ExecutorScaler noScaling = new EC2FleetCloud.NoScaler();
 
     @BeforeClass
     public static void beforeClass() {

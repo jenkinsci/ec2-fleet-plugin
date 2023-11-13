@@ -22,7 +22,7 @@ public class EC2EC2Fleet implements EC2Fleet {
                 final String curFleetId = fleetData.getFleetId();
                 final boolean selected = ObjectUtils.nullSafeEquals(selectedId, curFleetId);
                 if (selected || showAll || isActiveAndMaintain(fleetData)) {
-                    final String displayStr = "EC2 Create Fleet - " + curFleetId +
+                    final String displayStr = "EC2 Fleet - " + curFleetId +
                             " (" + fleetData.getFleetState() + ")" +
                             " (" + fleetData.getType() + ")";
                     model.add(new ListBoxModel.Option(displayStr, curFleetId, selected));

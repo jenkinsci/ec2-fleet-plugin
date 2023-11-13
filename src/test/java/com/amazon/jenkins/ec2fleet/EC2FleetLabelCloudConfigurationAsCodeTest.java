@@ -25,7 +25,7 @@ import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class FleetLabelCloudConfigurationAsCodeTest {
+public class EC2FleetLabelCloudConfigurationAsCodeTest {
     @Rule
     public JenkinsRule jenkinsRule = new JenkinsConfiguredWithCodeRule();
 

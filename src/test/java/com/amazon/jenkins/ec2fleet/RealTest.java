@@ -71,14 +71,14 @@ public class RealTest extends IntegrationTest {
     private List<String> credentialLines;
     private String privateKeyName;
     private AWSCredentialsProvider awsCredentialsProvider;
-    private FleetCloud.ExecutorScaler noScaling;
+    private EC2FleetCloud.ExecutorScaler noScaling;
 
     @Before
     public void before() throws IOException {
         credentialLines = FileUtils.readLines(new File("credentials.txt"));
         privateKeyName = getPrivateKeyName(credentialLines);
         awsCredentialsProvider = getAwsCredentialsProvider(credentialLines);
-        noScaling = new FleetCloud.NoScaler();
+        noScaling = new EC2FleetCloud.NoScaler();
     }
 
     @Ignore("for manual run as you need to provide real AWS credentials")
