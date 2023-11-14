@@ -39,14 +39,14 @@ public class EC2FleetLabelCloudConfigurationAsCodeTest {
 
     @Test
     @ConfiguredWithCode(
-            value = "FleetLabelCloud/name-required-configuration-as-code.yml",
+            value = "EC2FleetLabelCloud/name-required-configuration-as-code.yml",
             expected = ConfiguratorException.class,
             message = "error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator")
     public void configurationWithNullName_shouldFail() {
     }
 
     @Test
-    @ConfiguredWithCode("FleetLabelCloud/min-configuration-as-code.yml")
+    @ConfiguredWithCode("EC2FleetLabelCloud/min-configuration-as-code.yml")
     public void shouldCreateCloudFromMinConfiguration() {
         assertEquals(jenkinsRule.jenkins.clouds.size(), 1);
         EC2FleetLabelCloud cloud = (EC2FleetLabelCloud) jenkinsRule.jenkins.clouds.getByName("ec2-fleet-label");
@@ -71,7 +71,7 @@ public class EC2FleetLabelCloudConfigurationAsCodeTest {
     }
 
     @Test
-    @ConfiguredWithCode("FleetLabelCloud/max-configuration-as-code.yml")
+    @ConfiguredWithCode("EC2FleetLabelCloud/max-configuration-as-code.yml")
     public void shouldCreateCloudFromMaxConfiguration() {
         assertEquals(jenkinsRule.jenkins.clouds.size(), 1);
         EC2FleetLabelCloud cloud = (EC2FleetLabelCloud) jenkinsRule.jenkins.clouds.getByName("ec2-fleet-label");
@@ -100,7 +100,7 @@ public class EC2FleetLabelCloudConfigurationAsCodeTest {
     }
 
     @Test
-    @ConfiguredWithCode("FleetLabelCloud/empty-name-configuration-as-code.yml")
+    @ConfiguredWithCode("EC2FleetLabelCloud/empty-name-configuration-as-code.yml")
     public void configurationWithEmptyName_shouldUseDefault() {
         assertEquals(jenkinsRule.jenkins.clouds.size(), 3);
 
