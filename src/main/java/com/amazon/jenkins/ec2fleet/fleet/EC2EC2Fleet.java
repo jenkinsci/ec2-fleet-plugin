@@ -52,7 +52,7 @@ public class EC2EC2Fleet implements EC2Fleet {
         final ModifyFleetRequest request = new ModifyFleetRequest();
         request.setFleetId(id);
         request.setTargetCapacitySpecification(new TargetCapacitySpecificationRequest().withTotalTargetCapacity(targetCapacity));
-        request.setExcessCapacityTerminationPolicy("NoTermination");
+        request.setExcessCapacityTerminationPolicy("no-termination");
 
         final AmazonEC2 ec2 = Registry.getEc2Api().connect(awsCredentialsId, regionName, endpoint);
         ec2.modifyFleet(request);
