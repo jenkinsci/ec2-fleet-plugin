@@ -5,6 +5,7 @@ import hudson.model.PeriodicWork;
 import hudson.slaves.Cloud;
 import jenkins.model.Jenkins;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -37,10 +38,14 @@ public class CloudNanny extends PeriodicWork {
      * by catch any exception and just log it, so we safe to throw exception here.
      */
     @Override
-    protected void doRun() {
+    protected void doRun() throws IOException {
         for (final Cloud cloud : getClouds()) {
             if (!(cloud instanceof EC2FleetCloud)) continue;
             final EC2FleetCloud fleetCloud = (EC2FleetCloud) cloud;
+
+            if (fleetCloud.getExecutorScaler() == null) {
+                updateCloudWithScaler(fleetCloud);
+            }
 
             final AtomicInteger recurrenceCounter = getRecurrenceCounter(fleetCloud);
 
@@ -68,6 +73,24 @@ public class CloudNanny extends PeriodicWork {
      */
     private static List<Cloud> getClouds() {
         return Jenkins.get().clouds;
+    }
+
+    private void updateCloudWithScaler(EC2FleetCloud oldCloud) throws IOException {
+        EC2FleetCloud.ExecutorScaler scaler = oldCloud.isScaleExecutorsByWeight() ? new EC2FleetCloud.WeightedScaler() :
+                                                                                    new EC2FleetCloud.NoScaler();
+        scaler.withNumExecutors(oldCloud.getNumExecutors());
+        EC2FleetCloud fleetCloudWithScaler = new EC2FleetCloud(oldCloud.getDisplayName(), oldCloud.getAwsCredentialsId(),
+                oldCloud.getAwsCredentialsId(), oldCloud.getRegion(), oldCloud.getEndpoint(), oldCloud.getFleet(),
+                oldCloud.getLabelString(), oldCloud.getFsRoot(), oldCloud.getComputerConnector(),
+                oldCloud.isPrivateIpUsed(), oldCloud.isAlwaysReconnect(), oldCloud.getIdleMinutes(),
+                oldCloud.getMinSize(), oldCloud.getMaxSize(), oldCloud.getMinSpareSize(), oldCloud.getNumExecutors(),
+                oldCloud.isAddNodeOnlyIfRunning(), oldCloud.isRestrictUsage(),
+                String.valueOf(oldCloud.getMaxTotalUses()), oldCloud.isDisableTaskResubmit(),
+                oldCloud.getInitOnlineTimeoutSec(), oldCloud.getInitOnlineCheckIntervalSec(),
+                oldCloud.getCloudStatusIntervalSec(), oldCloud.isNoDelayProvision(),
+                oldCloud.isScaleExecutorsByWeight(), scaler);
+        Jenkins.get().clouds.replace(oldCloud, fleetCloudWithScaler);
+        Jenkins.get().save();
     }
 
     private AtomicInteger getRecurrenceCounter(EC2FleetCloud fleetCloud) {

@@ -119,6 +119,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     private final int numExecutors;
     private final boolean addNodeOnlyIfRunning;
     private final boolean restrictUsage;
+    private final boolean scaleExecutorsByWeight;
     private final ExecutorScaler executorScaler;
     private final Integer initOnlineTimeoutSec;
     private final Integer initOnlineCheckIntervalSec;
@@ -183,6 +184,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                          final Integer initOnlineCheckIntervalSec,
                          final Integer cloudStatusIntervalSec,
                          final boolean noDelayProvision,
+                         final boolean scaleExecutorsByWeight,
                          final ExecutorScaler executorScaler) {
         super(StringUtils.isNotBlank(name) ? name : CloudNames.generateUnique(BASE_DEFAULT_FLEET_CLOUD_ID));
         init();
@@ -212,6 +214,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         this.initOnlineCheckIntervalSec = initOnlineCheckIntervalSec;
         this.cloudStatusIntervalSec = cloudStatusIntervalSec;
         this.noDelayProvision = noDelayProvision;
+        this.scaleExecutorsByWeight = scaleExecutorsByWeight;
         this.executorScaler = executorScaler == null ? new NoScaler().withNumExecutors(this.numExecutors) :
                                                        executorScaler.withNumExecutors(this.numExecutors);
         if (fleet != null) {
@@ -315,6 +318,10 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
     public int getNumExecutors() {
         return numExecutors;
+    }
+
+    public boolean isScaleExecutorsByWeight() {
+        return scaleExecutorsByWeight;
     }
 
     public ExecutorScaler getExecutorScaler() {
