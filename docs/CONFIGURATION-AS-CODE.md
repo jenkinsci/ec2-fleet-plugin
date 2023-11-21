@@ -85,13 +85,32 @@ jenkins:
         numExecutors: 12
         addNodeOnlyIfRunning: true
         restrictUsage: true
-        executorScaler:
-            nodeHardwareScaler:
-              memoryGiBPerExecutor: 2
-              vCpuPerExecutor: 3
+        executorScaler: "noScaler"
         initOnlineTimeoutSec: 181
         initOnlineCheckIntervalSec: 13
         cloudStatusIntervalSec: 11
         disableTaskResubmit: true
         noDelayProvision: true
+```
+
+### EC2FleetCloud (Node Hardware Scaling)
+
+```yaml
+jenkins:
+  clouds:
+    - eC2Fleet:
+        name: ec2-fleet
+        computerConnector:
+            sshConnector:
+                credentialsId: cred
+                sshHostKeyVerificationStrategy:
+                  NonVerifyingKeyVerificationStrategy
+        region: us-east-2
+        fleet: my-fleet
+        minSize: 1
+        maxSize: 10
+        executorScaler:
+            nodeHardwareScaler:
+              memoryGiBPerExecutor: 2
+              vCpuPerExecutor: 3
 ```
