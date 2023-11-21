@@ -81,7 +81,7 @@ public class AutoResubmitIntegrationTest extends IntegrationTest {
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
                 0, 0, 10, 0, 1, false, true,
                 "-1", false, 0, 0,
-                10, false, noScaling);
+                10, false, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
         List<QueueTaskFuture> rs = enqueTask(1);
@@ -117,7 +117,7 @@ public class AutoResubmitIntegrationTest extends IntegrationTest {
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
                 0, 0, 10, 0, 1, false, true,
                 "-1", false, 0, 0,
-                10, false, noScaling);
+                10, false, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
         List<QueueTaskFuture> rs = new ArrayList<>();
@@ -172,7 +172,7 @@ public class AutoResubmitIntegrationTest extends IntegrationTest {
         EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
                 0, 0, 10, 0, 1, false, true,
-                "-1", true, 0, 0, 10, false, noScaling);
+                "-1", true, 0, 0, 10, false, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
         List<QueueTaskFuture> rs = enqueTask(1);

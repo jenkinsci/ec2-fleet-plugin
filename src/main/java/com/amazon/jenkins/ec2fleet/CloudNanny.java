@@ -38,14 +38,10 @@ public class CloudNanny extends PeriodicWork {
      * by catch any exception and just log it, so we safe to throw exception here.
      */
     @Override
-    protected void doRun() throws IOException {
+    protected void doRun() {
         for (final Cloud cloud : getClouds()) {
             if (!(cloud instanceof EC2FleetCloud)) continue;
             final EC2FleetCloud fleetCloud = (EC2FleetCloud) cloud;
-
-            if (fleetCloud.getExecutorScaler() == null) {
-                updateCloudWithScaler(fleetCloud);
-            }
 
             final AtomicInteger recurrenceCounter = getRecurrenceCounter(fleetCloud);
 
@@ -56,6 +52,7 @@ public class CloudNanny extends PeriodicWork {
             recurrenceCounter.set(fleetCloud.getCloudStatusIntervalSec());
 
             try {
+                updateCloudWithScaler(fleetCloud);
                 // Update the cluster states
                 fleetCloud.update();
             } catch (Exception e) {
@@ -76,10 +73,22 @@ public class CloudNanny extends PeriodicWork {
     }
 
     private void updateCloudWithScaler(EC2FleetCloud oldCloud) throws IOException {
+        if(oldCloud.getExecutorScaler() != null) return;
+
         EC2FleetCloud.ExecutorScaler scaler = oldCloud.isScaleExecutorsByWeight() ? new EC2FleetCloud.WeightedScaler() :
                                                                                     new EC2FleetCloud.NoScaler();
         scaler.withNumExecutors(oldCloud.getNumExecutors());
-        EC2FleetCloud fleetCloudWithScaler = new EC2FleetCloud(oldCloud.getDisplayName(), oldCloud.getAwsCredentialsId(),
+        EC2FleetCloud fleetCloudWithScaler = createCloudWithScaler(oldCloud, scaler);
+        replaceJenkinsCloud(oldCloud, fleetCloudWithScaler);
+    }
+
+    private void replaceJenkinsCloud(EC2FleetCloud oldCloud, EC2FleetCloud newCloud) throws IOException {
+        Jenkins.get().clouds.replace(oldCloud, newCloud);
+        Jenkins.get().save();
+    }
+
+    private EC2FleetCloud createCloudWithScaler(EC2FleetCloud oldCloud, EC2FleetCloud.ExecutorScaler scaler) {
+        return  new EC2FleetCloud(oldCloud.getDisplayName(), oldCloud.getAwsCredentialsId(),
                 oldCloud.getAwsCredentialsId(), oldCloud.getRegion(), oldCloud.getEndpoint(), oldCloud.getFleet(),
                 oldCloud.getLabelString(), oldCloud.getFsRoot(), oldCloud.getComputerConnector(),
                 oldCloud.isPrivateIpUsed(), oldCloud.isAlwaysReconnect(), oldCloud.getIdleMinutes(),
@@ -89,8 +98,6 @@ public class CloudNanny extends PeriodicWork {
                 oldCloud.getInitOnlineTimeoutSec(), oldCloud.getInitOnlineCheckIntervalSec(),
                 oldCloud.getCloudStatusIntervalSec(), oldCloud.isNoDelayProvision(),
                 oldCloud.isScaleExecutorsByWeight(), scaler);
-        Jenkins.get().clouds.replace(oldCloud, fleetCloudWithScaler);
-        Jenkins.get().save();
     }
 
     private AtomicInteger getRecurrenceCounter(EC2FleetCloud fleetCloud) {

@@ -82,7 +82,7 @@ public class UiIntegrationTest {
                 "test-label", null, null, false, false,
                 0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0,
-                10, false, noScaling);
+                10, false, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
         j.jenkins.addNode(new EC2FleetNode(nodeName, "", "", 1,
@@ -100,7 +100,7 @@ public class UiIntegrationTest {
                 "label", null, null, false, false,
                 0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0,
-                10, false, noScaling);
+                10, false, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
         j.jenkins.addNode(new EC2FleetNode("mock", "", "", 1,
@@ -126,7 +126,7 @@ public class UiIntegrationTest {
                 null, null, null, false, false,
                 0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0,
-                10, false, noScaling);
+                10, false, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
         HtmlPage page = j.createWebClient().goTo("configureClouds");
@@ -140,14 +140,14 @@ public class UiIntegrationTest {
                 null, "label", null, null, false, false,
                 0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0,
-                10, false, noScaling);
+                10, false, false, noScaling);
         j.jenkins.clouds.add(cloud1);
 
         Cloud cloud2 = new EC2FleetCloud("b", null, null, null, null,
                 null, "label", null, null, false, false,
                 0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0,
-                10, false, noScaling);
+                10, false, false, noScaling);
         j.jenkins.clouds.add(cloud2);
 
         HtmlPage page = j.createWebClient().goTo("configureClouds");
@@ -164,14 +164,14 @@ public class UiIntegrationTest {
                 null, "label", null, null, false, false,
                 0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0,
-                10, false, noScaling);
+                10, false, false, noScaling);
         j.jenkins.clouds.add(cloud1);
 
         Cloud cloud2 = new EC2FleetCloud("TestCloud2", null, null, null, null,
                 null, "label", null, null, false, false,
                 0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0,
-                10, false, noScaling);
+                10, false, false, noScaling);
         j.jenkins.clouds.add(cloud2);
 
         HtmlPage page = j.createWebClient().goTo("configureClouds");
@@ -188,14 +188,14 @@ public class UiIntegrationTest {
                 null, "label", null, null, false, false,
                 0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0,
-                10, false, noScaling);
+                10, false, false, noScaling);
         j.jenkins.clouds.add(cloud1);
 
         EC2FleetCloud cloud2 = new EC2FleetCloud("TestCloud2", null, null, null, null,
                 null, "label", null, null, false, false,
                 0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0,
-                10, false, noScaling);
+                10, false, false, noScaling);
         j.jenkins.clouds.add(cloud2);
 
         HtmlPage page = j.createWebClient().goTo("configureClouds");
@@ -214,7 +214,7 @@ public class UiIntegrationTest {
                 null, "label", null, null, false, false,
                 0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0,
-                10, false, noScaling);
+                10, false, false, noScaling);
         j.jenkins.clouds.add(cloud1);
 
         HtmlPage page = j.createWebClient().goTo("configureClouds");
@@ -236,7 +236,7 @@ public class UiIntegrationTest {
                 null, "label", null, null, false, false,
                 0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0,
-                10, false, noScaling);
+                10, false, false, noScaling);
         j.jenkins.clouds.add(cloud1);
 
         HtmlPage page = j.createWebClient().goTo("configureClouds");
@@ -264,14 +264,14 @@ public class UiIntegrationTest {
                 null, "label", null, null, false, false,
                 0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0,
-                10, false, noScaling);
+                10, false, false, noScaling);
         j.jenkins.clouds.add(cloud1);
 
         EC2FleetCloud cloud2 = new EC2FleetCloud("TestCloud", null, null, null, null,
                 null, "label", null, null, false, false,
                 0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0,
-                10, false, noScaling);
+                10, false, false, noScaling);
         j.jenkins.clouds.add(cloud2);
 
         assertSame(cloud1, j.jenkins.getCloud("TestCloud"));
@@ -283,14 +283,14 @@ public class UiIntegrationTest {
                 null, null, null, null, false, false,
                 0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0,
-                10, false, noScaling);
+                10, false, false, noScaling);
         j.jenkins.clouds.add(cloud1);
 
         EC2FleetCloud cloud2 = new EC2FleetCloud("b", null, null, null, null,
                 null, null, null, null, false, false,
                 0, 0, 0, 0, 0, true, false,
                 "-1", false, 0, 0,
-                10, false, noScaling);
+                10, false, false, noScaling);
         j.jenkins.clouds.add(cloud2);
 
         assertSame(cloud1, j.jenkins.getCloud("a"));
@@ -303,7 +303,7 @@ public class UiIntegrationTest {
             "label", null, null, false, false,
             0, 0, 0, 0, 0, true, false,
             "-1", false, 0, 0,
-            10, false, noScaling);
+            10, false, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
         HtmlPage page = j.createWebClient().goTo("configureClouds");
@@ -318,13 +318,13 @@ public class UiIntegrationTest {
             "label", null, null, false, false,
             0, 0, 0, 0, 0, true, false,
             "-1", false, 0, 0,
-            10, false, noScaling));
+            10, false, false, noScaling));
 
         j.jenkins.clouds.add(new EC2FleetCloud("test-cloud", null, null, null, null, "",
             "label", null, null, false, false,
             0, 0, 0, 0, 0, true, false,
             "-1", false, 0, 0,
-            10, false, noScaling));
+            10, false, false, noScaling));
 
         HtmlPage page = j.createWebClient().goTo("configureClouds");
 

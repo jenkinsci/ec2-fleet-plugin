@@ -1,6 +1,8 @@
 package com.amazon.jenkins.ec2fleet;
 
+import hudson.model.Hudson;
 import hudson.slaves.Cloud;
+import jenkins.model.Jenkins;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -10,6 +12,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -18,22 +21,26 @@ import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(CloudNanny.class)
+@PrepareForTest({CloudNanny.class, Jenkins.class})
 public class CloudNannyTest {
+
+    @Mock
+    private Jenkins jenkins;
 
     @Mock
     private EC2FleetCloud cloud1;
 
     @Mock
     private EC2FleetCloud cloud2;
+
+    @Mock
+    private EC2FleetCloud cloud3;
+
+    @Mock
+    private EC2FleetCloud cloud4;
 
     private List<Cloud> clouds = new ArrayList<>();
 
@@ -59,6 +66,10 @@ public class CloudNannyTest {
         when(cloud2.getLabelString()).thenReturn("");
         when(cloud1.getFleet()).thenReturn("f1");
         when(cloud2.getFleet()).thenReturn("f2");
+        when(cloud1.isScaleExecutorsByWeight()).thenReturn(true);
+        when(cloud2.isScaleExecutorsByWeight()).thenReturn(false);
+        when(cloud1.getExecutorScaler()).thenReturn(new EC2FleetCloud.NoScaler());
+        when(cloud2.getExecutorScaler()).thenReturn(new EC2FleetCloud.WeightedScaler());
 
         when(cloud1.update()).thenReturn(stats1);
         when(cloud2.update()).thenReturn(stats2);
@@ -83,12 +94,12 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void shouldDoNothingIfNoCloudsAndWidgets() {
+    public void shouldDoNothingIfNoCloudsAndWidgets() throws IOException {
         getMockCloudNannyInstance().doRun();
     }
 
     @Test
-    public void shouldUpdateCloudAndDoNothingIfNoWidgets() {
+    public void shouldUpdateCloudAndDoNothingIfNoWidgets() throws Exception {
         clouds.add(cloud1);
         clouds.add(cloud2);
 
@@ -96,7 +107,7 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void shouldIgnoreNonEC2FleetClouds() {
+    public void shouldIgnoreNonEC2FleetClouds() throws IOException {
         clouds.add(cloud1);
 
         Cloud nonEc2FleetCloud = mock(Cloud.class);
@@ -109,7 +120,7 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void shouldUpdateCloudCollectAll() {
+    public void shouldUpdateCloudCollectAll() throws IOException {
         clouds.add(cloud1);
         clouds.add(cloud2);
 
@@ -120,7 +131,7 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void shouldIgnoreExceptionsFromUpdateForOneofCloudAndUpdateOther() {
+    public void shouldIgnoreExceptionsFromUpdateForOneofCloudAndUpdateOther() throws IOException {
         clouds.add(cloud1);
         clouds.add(cloud2);
 
@@ -133,7 +144,7 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void resetCloudInterval() {
+    public void resetCloudInterval() throws IOException {
         clouds.add(cloud1);
         clouds.add(cloud2);
         CloudNanny cloudNanny = getMockCloudNannyInstance();
@@ -151,7 +162,7 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void skipCloudIntervalExecution() {
+    public void skipCloudIntervalExecution() throws IOException {
         clouds.add(cloud1);
         clouds.add(cloud2);
         CloudNanny cloudNanny = getMockCloudNannyInstance();
@@ -169,7 +180,7 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void updateOnlyOneCloud() {
+    public void updateOnlyOneCloud() throws IOException {
         clouds.add(cloud1);
         clouds.add(cloud2);
         CloudNanny cloudNanny = getMockCloudNannyInstance();

@@ -71,7 +71,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 0, 0, 1, true, false,
                 "-1", false, 0, 0,
-                2, false, noScaling);
+                2, false, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
         final EC2Api ec2Api = spy(EC2Api.class);
@@ -105,7 +105,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 0, 1, true, false,
                 "-1", false, 0, 0,
-                2, false, noScaling);
+                2, false, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
         List<QueueTaskFuture> rs = enqueTask(1);
@@ -140,7 +140,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 0, 1, true, false,
                 "-1", false, 300, 15,
-                2, false, noScaling));
+                2, false, false, noScaling));
 
         j.jenkins.clouds.add(cloud);
 
@@ -174,7 +174,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 0, 1, true, false,
                 "-1", false, 0, 0,
-                10, false, noScaling));
+                10, false, false, noScaling));
         j.jenkins.clouds.add(cloud);
 
         mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Running);
@@ -202,7 +202,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 0, 1, true, false,
                 "-1", false, 0, 0,
-                10, false, noScaling));
+                10, false, false, noScaling));
 
         cloud.setStats(new FleetStateStats("", 0, FleetStateStats.State.active(),
                 Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
@@ -263,7 +263,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 0, 1, true, false,
                 "-1", false, 0, 0,
-                2, false, noScaling);
+                2, false, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
         mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Pending);
@@ -300,7 +300,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 2, 0, 1, true, false,
                 "-1", false, 0, 0,
-                2, false, noScaling);
+                2, false, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
         mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Running);
@@ -331,7 +331,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                 null, "fId", "momo", null, computerConnector, false, false,
                 1, 0, 5, 0, 1, true, false,
                 "-1", false, 0, 0,
-                10, false, noScaling);
+                10, false, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
         waitFirstStats(cloud);

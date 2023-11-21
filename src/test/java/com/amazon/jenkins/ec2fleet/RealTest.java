@@ -137,7 +137,7 @@ public class RealTest extends IntegrationTest {
                 "momo", null, computerConnector, false, false,
                 1, 0, 5, 0, 1, true, false,
                 "-1", false, 180, 15,
-                10, true, noScaling);
+                10, true, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
         final List<QueueTaskFuture> tasks = enqueTask(2);
@@ -189,7 +189,7 @@ public class RealTest extends IntegrationTest {
                 "momo", null, computerConnector, false, false,
                 1, 0, 5, 0, 1, true, false,
                 "-1", false, 180, 15,
-                10, true, noScaling);
+                10, true, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
         final List<QueueTaskFuture> tasks = enqueTask(2);
