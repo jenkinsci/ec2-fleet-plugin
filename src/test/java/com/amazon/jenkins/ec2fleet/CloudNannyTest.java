@@ -26,21 +26,11 @@ import static org.mockito.Mockito.*;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({CloudNanny.class, Jenkins.class})
 public class CloudNannyTest {
-
-    @Mock
-    private Jenkins jenkins;
-
     @Mock
     private EC2FleetCloud cloud1;
 
     @Mock
     private EC2FleetCloud cloud2;
-
-    @Mock
-    private EC2FleetCloud cloud3;
-
-    @Mock
-    private EC2FleetCloud cloud4;
 
     private List<Cloud> clouds = new ArrayList<>();
 
@@ -94,12 +84,12 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void shouldDoNothingIfNoCloudsAndWidgets() throws IOException {
+    public void shouldDoNothingIfNoCloudsAndWidgets() {
         getMockCloudNannyInstance().doRun();
     }
 
     @Test
-    public void shouldUpdateCloudAndDoNothingIfNoWidgets() throws Exception {
+    public void shouldUpdateCloudAndDoNothingIfNoWidgets() {
         clouds.add(cloud1);
         clouds.add(cloud2);
 
@@ -107,7 +97,7 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void shouldIgnoreNonEC2FleetClouds() throws IOException {
+    public void shouldIgnoreNonEC2FleetClouds() {
         clouds.add(cloud1);
 
         Cloud nonEc2FleetCloud = mock(Cloud.class);
@@ -120,7 +110,7 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void shouldUpdateCloudCollectAll() throws IOException {
+    public void shouldUpdateCloudCollectAll() {
         clouds.add(cloud1);
         clouds.add(cloud2);
 
@@ -131,7 +121,7 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void shouldIgnoreExceptionsFromUpdateForOneofCloudAndUpdateOther() throws IOException {
+    public void shouldIgnoreExceptionsFromUpdateForOneofCloudAndUpdateOther() {
         clouds.add(cloud1);
         clouds.add(cloud2);
 
@@ -144,7 +134,7 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void resetCloudInterval() throws IOException {
+    public void resetCloudInterval() {
         clouds.add(cloud1);
         clouds.add(cloud2);
         CloudNanny cloudNanny = getMockCloudNannyInstance();
@@ -162,7 +152,7 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void skipCloudIntervalExecution() throws IOException {
+    public void skipCloudIntervalExecution() {
         clouds.add(cloud1);
         clouds.add(cloud2);
         CloudNanny cloudNanny = getMockCloudNannyInstance();
@@ -180,7 +170,7 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void updateOnlyOneCloud() throws IOException {
+    public void updateOnlyOneCloud() {
         clouds.add(cloud1);
         clouds.add(cloud2);
         CloudNanny cloudNanny = getMockCloudNannyInstance();
