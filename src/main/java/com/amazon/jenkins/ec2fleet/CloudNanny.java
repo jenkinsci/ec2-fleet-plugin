@@ -52,7 +52,7 @@ public class CloudNanny extends PeriodicWork {
             recurrenceCounter.set(fleetCloud.getCloudStatusIntervalSec());
 
             try {
-                updateCloudWithScaler(fleetCloud);
+                updateCloudWithScaler(getClouds(), fleetCloud);
                 // Update the cluster states
                 fleetCloud.update();
             } catch (Exception e) {
@@ -68,22 +68,18 @@ public class CloudNanny extends PeriodicWork {
      *
      * @return basic java list
      */
-    private static List<Cloud> getClouds() {
+    private static Jenkins.CloudList getClouds() {
         return Jenkins.get().clouds;
     }
 
-    private void updateCloudWithScaler(EC2FleetCloud oldCloud) throws IOException {
+    private void updateCloudWithScaler(Jenkins.CloudList clouds, EC2FleetCloud oldCloud) throws IOException {
         if(oldCloud.getExecutorScaler() != null) return;
 
         EC2FleetCloud.ExecutorScaler scaler = oldCloud.isScaleExecutorsByWeight() ? new EC2FleetCloud.WeightedScaler() :
                                                                                     new EC2FleetCloud.NoScaler();
         scaler.withNumExecutors(oldCloud.getNumExecutors());
         EC2FleetCloud fleetCloudWithScaler = createCloudWithScaler(oldCloud, scaler);
-        replaceJenkinsCloud(oldCloud, fleetCloudWithScaler);
-    }
-
-    private void replaceJenkinsCloud(EC2FleetCloud oldCloud, EC2FleetCloud newCloud) throws IOException {
-        Jenkins.get().clouds.replace(oldCloud, newCloud);
+        clouds.replace(oldCloud, fleetCloudWithScaler);
         Jenkins.get().save();
     }
 
