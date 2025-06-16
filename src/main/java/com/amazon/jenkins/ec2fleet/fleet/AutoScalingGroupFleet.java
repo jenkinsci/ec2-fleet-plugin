@@ -14,6 +14,7 @@ import com.amazonaws.services.autoscaling.model.LaunchTemplate;
 import com.amazonaws.services.autoscaling.model.LaunchTemplateOverrides;
 import com.amazonaws.services.autoscaling.model.MixedInstancesPolicy;
 import com.amazonaws.services.autoscaling.model.UpdateAutoScalingGroupRequest;
+import com.amazonaws.services.autoscaling.model.TerminateInstanceInAutoScalingGroupRequest;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
 import com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentials;
 import hudson.util.ListBoxModel;
@@ -23,16 +24,14 @@ import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @ThreadSafe
 public class AutoScalingGroupFleet implements EC2Fleet {
+
+    private static final Logger LOGGER = Logger.getLogger(AutoScalingGroupFleet.class.getName());
 
     @Override
     public void describe(
@@ -112,6 +111,11 @@ public class AutoScalingGroupFleet implements EC2Fleet {
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public Boolean isAutoScalingGroup() {
+        return true;
+    }
+
     // TODO: move to Registry
     public AmazonAutoScalingClient createClient(
             final String awsCredentialsId, final String regionName, final String endpoint) {
@@ -124,6 +128,24 @@ public class AutoScalingGroupFleet implements EC2Fleet {
         final String effectiveEndpoint = getEndpoint(regionName, endpoint);
         if (effectiveEndpoint != null) client.setEndpoint(effectiveEndpoint);
         return client;
+    }
+
+    public void terminateInstances(final String awsCredentialsId, final String regionName, final String endpoint, final Collection<String> instanceIds) {
+        final AmazonAutoScalingClient client = createClient(awsCredentialsId, regionName, endpoint);
+
+        for(String instanceId : instanceIds) {
+            if (StringUtils.isBlank(instanceId)) {
+                throw new IllegalArgumentException("Instance ID cannot be null or empty");
+            }
+            try{
+                // Attempt to terminate the instance in the Auto Scaling group first
+                client.terminateInstanceInAutoScalingGroup(new TerminateInstanceInAutoScalingGroupRequest()
+                        .withInstanceId(instanceId)
+                        .withShouldDecrementDesiredCapacity(false));
+            } catch (Exception e) {
+                LOGGER.warning(String.format("Failed to terminate instance %s in Auto Scaling group: %s", instanceId, e.getMessage()));
+            }
+        }
     }
 
     // TODO: merge with EC2Api#getEndpoint

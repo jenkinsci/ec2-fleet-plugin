@@ -41,6 +41,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -2069,6 +2070,69 @@ public class EC2FleetCloudTest {
         // then
         Node actualFleetNode = nodeCaptor.getValue();
         assertEquals(fleetCloud.getNumExecutors(), actualFleetNode.getNumExecutors());
+    }
+
+    @Test
+    public void update_shouldTerminateInstancesInAutoScalingGroup() throws IOException, IllegalAccessException, NoSuchFieldException {
+        // Arrange
+        final AutoScalingGroupFleet autoScalingGroupFleet = mock(AutoScalingGroupFleet.class);
+        when(EC2Fleets.get(anyString())).thenReturn(autoScalingGroupFleet);
+        when(autoScalingGroupFleet.isAutoScalingGroup()).thenReturn(true);
+
+        final FleetStateStats stats = new FleetStateStats("fleetId", 1, FleetStateStats.State.active(),
+                Collections.singleton("i-0"), Collections.<String, Double>emptyMap());
+        when(autoScalingGroupFleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(stats);
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
+                null, "fleetId", null, null, mock(ComputerConnector.class), false, false,
+                0, 0, 10, 0, 1, false, false, null, false, null, null, null, false, false, null);
+
+        // Set up instanceIdsToTerminate
+        HashMap<String, EC2AgentTerminationReason> toTerminate = new HashMap<>();
+        toTerminate.put("i-0", EC2AgentTerminationReason.MAX_TOTAL_USES_EXHAUSTED);
+        fleetCloud.setStats(stats);
+        Field field = EC2FleetCloud.class.getDeclaredField("instanceIdsToTerminate");
+        field.setAccessible(true);
+        field.set(fleetCloud, toTerminate);
+
+        // Act
+        fleetCloud.update();
+
+        // Assert
+        verify(autoScalingGroupFleet).terminateInstances(anyString(), anyString(), anyString(), eq(Collections.singleton("i-0")));
+    }
+
+    @Test
+    public void update_shouldTerminateInstancesInEC2Api() throws IOException, NoSuchFieldException, IllegalAccessException {
+        // Arrange
+        final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
+        when(EC2Fleets.get(anyString())).thenReturn(ec2Fleet);
+        when(ec2Fleet.isAutoScalingGroup()).thenReturn(false);
+
+        final AmazonEC2 amazonEC2 = mock(AmazonEC2.class);
+        when(Registry.getEc2Api().connect(anyString(), anyString(), anyString())).thenReturn(amazonEC2);
+
+        final FleetStateStats stats = new FleetStateStats("fleetId", 1, FleetStateStats.State.active(),
+                Collections.singleton("i-0"), Collections.<String, Double>emptyMap());
+        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(stats);
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
+                null, "fleetId", null, null, mock(ComputerConnector.class), false, false,
+                0, 0, 10, 0, 1, false, false, null, false, null, null, null, false, false, null);
+
+        // Set up instanceIdsToTerminate
+        HashMap<String, EC2AgentTerminationReason> toTerminate = new HashMap<>();
+        toTerminate.put("i-0", EC2AgentTerminationReason.MAX_TOTAL_USES_EXHAUSTED);
+        fleetCloud.setStats(stats);
+        Field field = EC2FleetCloud.class.getDeclaredField("instanceIdsToTerminate");
+        field.setAccessible(true);
+        field.set(fleetCloud, toTerminate);
+
+        // Act
+        fleetCloud.update();
+
+        // Assert
+        verify(Registry.getEc2Api()).terminateInstances(eq(amazonEC2), eq(Collections.singleton("i-0")));
     }
 
     @Test
