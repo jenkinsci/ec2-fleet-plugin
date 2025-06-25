@@ -2081,7 +2081,7 @@ public class EC2FleetCloudTest {
 
         final FleetStateStats stats = new FleetStateStats("fleetId", 1, FleetStateStats.State.active(),
                 Collections.singleton("i-0"), Collections.<String, Double>emptyMap());
-        when(autoScalingGroupFleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(stats);
+        when(autoScalingGroupFleet.getState(anyString(), any(), any(), anyString())).thenReturn(stats);
 
         EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fleetId", null, null, mock(ComputerConnector.class), false, false,
@@ -2099,7 +2099,7 @@ public class EC2FleetCloudTest {
         fleetCloud.update();
 
         // Assert
-        verify(autoScalingGroupFleet).terminateInstances(anyString(), anyString(), anyString(), eq(Collections.singleton("i-0")));
+        verify(autoScalingGroupFleet).terminateInstances(anyString(), any(), any(), eq(Collections.singleton("i-0")));
     }
 
     @Test
@@ -2110,11 +2110,11 @@ public class EC2FleetCloudTest {
         when(ec2Fleet.isAutoScalingGroup()).thenReturn(false);
 
         final AmazonEC2 amazonEC2 = mock(AmazonEC2.class);
-        when(Registry.getEc2Api().connect(anyString(), anyString(), anyString())).thenReturn(amazonEC2);
+        when(Registry.getEc2Api().connect(anyString(), any(), any())).thenReturn(amazonEC2);
 
         final FleetStateStats stats = new FleetStateStats("fleetId", 1, FleetStateStats.State.active(),
                 Collections.singleton("i-0"), Collections.<String, Double>emptyMap());
-        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(stats);
+        when(ec2Fleet.getState(anyString(), any(), any(), anyString())).thenReturn(stats);
 
         EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fleetId", null, null, mock(ComputerConnector.class), false, false,
