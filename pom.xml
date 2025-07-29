@@ -20,7 +20,7 @@
     <jenkins.version>2.277.2</jenkins.version>
     <java.level>8</java.level>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-    <aws-sdk.version>1.12.101-300.vc09c7be9cb57</aws-sdk.version>
+    <aws-sdk.version>1.12.780-480.v4a_0819121a_9e</aws-sdk.version>
     <aws-credentials.version>1.32</aws-credentials.version>
     <mockito.version>3.12.4</mockito.version>
     <powermock.version>2.0.5</powermock.version>
