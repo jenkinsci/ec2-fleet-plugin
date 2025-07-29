@@ -2,6 +2,7 @@ package com.amazon.jenkins.ec2fleet;
 
 import com.amazon.jenkins.ec2fleet.aws.AwsPermissionChecker;
 import com.amazon.jenkins.ec2fleet.aws.RegionHelper;
+import com.amazon.jenkins.ec2fleet.fleet.AutoScalingGroupFleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 import com.amazonaws.services.ec2.AmazonEC2;
@@ -29,6 +30,7 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -612,7 +614,14 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                     }
                 }
             });
-            Registry.getEc2Api().terminateInstances(ec2, currentInstanceIdsToTerminate.keySet());
+            if(EC2Fleets.get(fleet).isAutoScalingGroup()){
+                fine("Terminating instances in AutoScalingGroup: %s", currentInstanceIdsToTerminate.keySet());
+                ((AutoScalingGroupFleet) EC2Fleets.get(fleet)).terminateInstances(awsCredentialsId, region, endpoint, currentInstanceIdsToTerminate.keySet());
+            }
+            else {
+                fine("Terminating instances: %s", currentInstanceIdsToTerminate.keySet());
+                Registry.getEc2Api().terminateInstances(ec2, currentInstanceIdsToTerminate.keySet());
+            }
             info("Terminated instances: %s", currentInstanceIdsToTerminate);
         }
 

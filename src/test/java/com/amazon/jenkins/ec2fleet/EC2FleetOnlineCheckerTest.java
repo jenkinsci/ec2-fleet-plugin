@@ -3,14 +3,15 @@ package com.amazon.jenkins.ec2fleet;
 import hudson.model.Computer;
 import hudson.model.Node;
 import jenkins.model.Jenkins;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -24,16 +25,17 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({EC2FleetOnlineChecker.class, EC2FleetNode.class, Jenkins.class, Computer.class})
+@RunWith(MockitoJUnitRunner.class)
 public class EC2FleetOnlineCheckerTest {
+
+    private MockedStatic<Jenkins> mockedJenkins;
 
     private CompletableFuture<Node> future = new CompletableFuture<>();
 
     @Mock
     private EC2FleetNode node;
 
-    @Mock
+    @Mock(strictness = Mock.Strictness.LENIENT)
     private Computer computer;
 
     @Mock
@@ -43,14 +45,16 @@ public class EC2FleetOnlineCheckerTest {
     public void before() throws Exception {
         when(node.getDisplayName()).thenReturn("MockEC2FleetCloud i-1");
 
-        PowerMockito.mockStatic(Jenkins.class);
-
-        when(Jenkins.get()).thenReturn(jenkins);
+        mockedJenkins = Mockito.mockStatic(Jenkins.class);
+        mockedJenkins.when(Jenkins::get).thenReturn(jenkins);
 
         // final method
-        PowerMockito.when(node.toComputer()).thenReturn(computer);
+        Mockito.when(node.toComputer()).thenReturn(computer);
+    }
 
-        PowerMockito.whenNew(EC2FleetNode.class).withAnyArguments().thenReturn(node);
+    @After
+    public void after() {
+        mockedJenkins.close();
     }
 
     @Test
@@ -81,7 +85,7 @@ public class EC2FleetOnlineCheckerTest {
 
     @Test
     public void shouldFinishWithNodeWhenSuccessfulConnect() throws InterruptedException, ExecutionException {
-        PowerMockito.when(computer.isOnline()).thenReturn(true);
+        Mockito.when(computer.isOnline()).thenReturn(true);
 
         EC2FleetOnlineChecker.start(node, future, TimeUnit.MINUTES.toMillis(1), 0);
 
@@ -106,7 +110,7 @@ public class EC2FleetOnlineCheckerTest {
 
     @Test
     public void shouldWaitIfOffline() throws InterruptedException, ExecutionException {
-        PowerMockito.when(computer.isOnline())
+        Mockito.when(computer.isOnline())
                 .thenReturn(false)
                 .thenReturn(false)
                 .thenReturn(false)
@@ -120,9 +124,9 @@ public class EC2FleetOnlineCheckerTest {
 
     @Test
     public void shouldWaitIfComputerIsNull() throws InterruptedException, ExecutionException {
-        PowerMockito.when(computer.isOnline()).thenReturn(true);
+        Mockito.when(computer.isOnline()).thenReturn(true);
 
-        PowerMockito.when(node.toComputer())
+        Mockito.when(node.toComputer())
                 .thenReturn(null)
                 .thenReturn(null)
                 .thenReturn(computer);

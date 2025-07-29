@@ -41,7 +41,7 @@ public class EC2FleetCloudConfigurationAsCodeTest {
     @ConfiguredWithCode(
             value = "EC2FleetCloud/name-required-configuration-as-code.yml",
             expected = ConfiguratorException.class,
-            message = "error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator")
+            message = "name is required to configure class com.amazon.jenkins.ec2fleet.EC2FleetCloud")
     public void configurationWithNullName_shouldFail() {
     }
 

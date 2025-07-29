@@ -10,8 +10,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.quality.Strictness;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,9 +28,9 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({NodeProvisioner.StrategyState.class})
+@RunWith(MockitoJUnitRunner.class)
 public class NoDelayProvisionStrategyTest {
 
     @Mock
@@ -160,7 +160,7 @@ public class NoDelayProvisionStrategyTest {
 
         final EC2FleetCloud ec2FleetCloud1 = mock(EC2FleetCloud.class);
         clouds.add(ec2FleetCloud1);
-        final EC2FleetCloud ec2FleetCloud2 = mock(EC2FleetCloud.class);
+        final EC2FleetCloud ec2FleetCloud2 = mock(EC2FleetCloud.class, withSettings().strictness(Strictness.LENIENT));
         clouds.add(ec2FleetCloud2);
         when(ec2FleetCloud1.canProvision(any(Cloud.CloudState.class))).thenReturn(true);
         when(ec2FleetCloud2.canProvision(any(Cloud.CloudState.class))).thenReturn(true);
