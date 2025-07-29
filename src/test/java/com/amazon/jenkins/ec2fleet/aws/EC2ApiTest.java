@@ -29,8 +29,8 @@ import java.util.Set;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
@@ -45,7 +45,7 @@ public class EC2ApiTest {
         Map<String, Instance> described = new EC2Api().describeInstances(amazonEC2, Collections.<String>emptySet());
 
         Assert.assertEquals(Collections.<String, Instance>emptyMap(), described);
-        verifyZeroInteractions(amazonEC2);
+        verifyNoInteractions(amazonEC2);
     }
 
     @Test
@@ -321,7 +321,7 @@ public class EC2ApiTest {
         new EC2Api().tagInstances(amazonEC2, Collections.<String>emptySet(), "opa", "v");
 
         // then
-        verifyZeroInteractions(amazonEC2);
+        verifyNoInteractions(amazonEC2);
     }
 
     @Test
