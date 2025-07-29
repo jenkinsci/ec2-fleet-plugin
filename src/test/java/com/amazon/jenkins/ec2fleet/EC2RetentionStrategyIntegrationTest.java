@@ -31,11 +31,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.nullable;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
 
@@ -269,7 +265,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
         cloud.update();
 
         final ArgumentCaptor<TerminateInstancesRequest> argument = ArgumentCaptor.forClass(TerminateInstancesRequest.class);
-        verify((amazonEC2)).terminateInstances(argument.capture());
+        verify((amazonEC2), atLeastOnce()).terminateInstances(argument.capture());
         assertTrue(argument.getAllValues().get(0).getInstanceIds().containsAll(Arrays.asList("i-1", "i-2")));
     }
 }

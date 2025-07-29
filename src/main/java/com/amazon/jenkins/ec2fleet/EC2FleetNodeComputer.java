@@ -55,9 +55,9 @@ public class EC2FleetNodeComputer extends SlaveComputer {
     public String getDisplayName() {
         final EC2FleetNode node = getNode();
         if(node != null) {
-            final int totalUses = node.getMaxTotalUses();
-            if(totalUses != -1) {
-                return String.format("%s Builds left: %d ", node.getDisplayName(), totalUses);
+            final int usesRemaining = node.getUsesRemaining();
+            if(usesRemaining >= 0) {
+                return String.format("%s Builds left: %d ", node.getDisplayName(), usesRemaining);
             }
             return node.getDisplayName();
         }
