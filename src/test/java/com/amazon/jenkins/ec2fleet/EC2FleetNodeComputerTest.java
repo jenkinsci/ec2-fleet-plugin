@@ -52,7 +52,7 @@ public class EC2FleetNodeComputerTest {
     @Test
     public void getDisplayName_returns_node_display_name_for_default_maxTotalUses() {
         when(agent.getDisplayName()).thenReturn("a n");
-        when(agent.getMaxTotalUses()).thenReturn(-1);
+        when(agent.getUsesRemaining()).thenReturn(-1);
 
         EC2FleetNodeComputer computer = spy(new EC2FleetNodeComputer(agent));
         doReturn(agent).when(computer).getNode();
@@ -63,7 +63,7 @@ public class EC2FleetNodeComputerTest {
     @Test
     public void getDisplayName_returns_builds_left_for_non_default_maxTotalUses() {
         when(agent.getDisplayName()).thenReturn("a n");
-        when(agent.getMaxTotalUses()).thenReturn(1);
+        when(agent.getUsesRemaining()).thenReturn(1);
 
         EC2FleetNodeComputer computer = spy(new EC2FleetNodeComputer(agent));
         doReturn(agent).when(computer).getNode();
