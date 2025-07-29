@@ -152,7 +152,7 @@ public class RealTest extends IntegrationTest {
                 final DescribeAutoScalingGroupsResult r = autoScalingClient.describeAutoScalingGroups(
                         new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName));
                 Assert.assertEquals(1, r.getAutoScalingGroups().size());
-                Assert.assertEquals(new Integer(0), r.getAutoScalingGroups().get(0).getDesiredCapacity());
+                Assert.assertEquals(Integer.valueOf(0), r.getAutoScalingGroups().get(0).getDesiredCapacity());
             }
         }, TimeUnit.MINUTES.toMillis(3));
     }
@@ -205,7 +205,7 @@ public class RealTest extends IntegrationTest {
                         .withSpotFleetRequestIds(requestSpotFleetResult.getSpotFleetRequestId()))
                         .getSpotFleetRequestConfigs();
                 Assert.assertEquals(1, r.size());
-                Assert.assertEquals(new Integer(0), r.get(0).getSpotFleetRequestConfig().getTargetCapacity());
+                Assert.assertEquals(Integer.valueOf(0), r.get(0).getSpotFleetRequestConfig().getTargetCapacity());
             }
         }, TimeUnit.MINUTES.toMillis(3));
     }
