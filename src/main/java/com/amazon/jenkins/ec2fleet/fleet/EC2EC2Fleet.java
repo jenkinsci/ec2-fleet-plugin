@@ -160,4 +160,9 @@ public class EC2EC2Fleet implements EC2Fleet {
         }
         return r;
     }
+
+    @Override
+    public Boolean isAutoScalingGroup() {
+        return false;
+    }
 }

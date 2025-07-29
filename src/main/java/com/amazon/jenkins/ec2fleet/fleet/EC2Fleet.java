@@ -32,4 +32,6 @@ public interface EC2Fleet {
             final String awsCredentialsId, final String regionName, final String endpoint,
             final Collection<String> ids);
 
+    Boolean isAutoScalingGroup();
+
 }

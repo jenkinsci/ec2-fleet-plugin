@@ -204,4 +204,9 @@ public class EC2SpotFleet implements EC2Fleet {
         return r;
     }
 
+    @Override
+    public Boolean isAutoScalingGroup() {
+        return false;
+    }
+
 }
