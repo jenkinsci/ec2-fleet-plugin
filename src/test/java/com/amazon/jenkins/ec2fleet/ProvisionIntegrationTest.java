@@ -277,7 +277,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         tryUntil(new Runnable() {
             @Override
             public void run() {
-                Assert.assertEquals(new HashSet<>(Arrays.asList("master", "momo")), labelsToNames(j.jenkins.getLabels()));
+                Assert.assertEquals(new HashSet<>(Arrays.asList("built-in", "momo")), labelsToNames(j.jenkins.getLabels()));
                 Assert.assertEquals(1, j.jenkins.getLabelAtom("momo").nodeProvisioner.getPendingLaunches().size());
                 Assert.assertEquals(0, j.jenkins.getNodes().size());
             }
@@ -312,7 +312,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         tryUntil(new Runnable() {
             @Override
             public void run() {
-                Assert.assertEquals(new HashSet<>(Arrays.asList("master", "momo", "i-0", "i-1")), labelsToNames(j.jenkins.getLabels()));
+                Assert.assertEquals(new HashSet<>(Arrays.asList("built-in", "momo", "i-0", "i-1")), labelsToNames(j.jenkins.getLabels()));
                 Assert.assertEquals(2, j.jenkins.getLabelAtom("momo").getNodes().size());
                 // node name should be instance name
                 Assert.assertEquals(new HashSet<>(Arrays.asList("i-0", "i-1")), nodeToNames(j.jenkins.getLabelAtom("momo").getNodes()));
