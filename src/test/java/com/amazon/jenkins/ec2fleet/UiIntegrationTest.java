@@ -5,11 +5,14 @@ import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 import com.amazonaws.services.ec2.AmazonEC2;
 
-import com.gargoylesoftware.htmlunit.html.DomElement;
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
-import com.gargoylesoftware.htmlunit.html.HtmlFormUtil;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.html.HtmlTextInput;
+import org.htmlunit.html.DomElement;
+import org.htmlunit.html.HtmlAnchor;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlFormUtil;
+import org.htmlunit.html.HtmlInput;
+import org.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlTableRow;
+import org.htmlunit.html.HtmlTextInput;
 import hudson.PluginWrapper;
 import hudson.model.Node;
 import hudson.slaves.Cloud;
@@ -107,7 +110,7 @@ public class UiIntegrationTest {
                 Node.Mode.EXCLUSIVE, "", new ArrayList<NodeProperty<?>>(), cloud.name,
                 j.createComputerLauncher(null), -1));
 
-        HtmlPage page = j.createWebClient().goTo("configureClouds");
+        HtmlPage page = j.createWebClient().goTo("cloud/test-cloud/configure");
         HtmlForm form = page.getFormByName("config");
 
         ((HtmlTextInput) IntegrationTest.getElementsByNameWithoutJdk(page, "_.labelString").get(0)).setText("new-label");
@@ -129,7 +132,7 @@ public class UiIntegrationTest {
                 10, false, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
-        HtmlPage page = j.createWebClient().goTo("configureClouds");
+        HtmlPage page = j.createWebClient().goTo("cloud/TestCloud/configure");
 
         assertEquals("ec2-fleet", ((HtmlTextInput) IntegrationTest.getElementsByNameWithoutJdk(page, "_.labelString").get(0)).getText());
     }
@@ -152,10 +155,10 @@ public class UiIntegrationTest {
 
         HtmlPage page = j.createWebClient().goTo("configureClouds");
 
-        List<DomElement> elementsByName = IntegrationTest.getElementsByNameWithoutJdk(page, "_.name");
+        List<DomElement> elementsByName = IntegrationTest.getElementsByNameWithoutJdk(page, "name");
         assertEquals(2, elementsByName.size());
-        assertEquals("a", ((HtmlTextInput) elementsByName.get(0)).getText());
-        assertEquals("b", ((HtmlTextInput) elementsByName.get(1)).getText());
+        assertEquals("a", ((HtmlInput) elementsByName.get(0)).getValueAttribute());
+        assertEquals("b", ((HtmlInput) elementsByName.get(1)).getValueAttribute());
     }
 
     @Test
@@ -176,10 +179,10 @@ public class UiIntegrationTest {
 
         HtmlPage page = j.createWebClient().goTo("configureClouds");
 
-        List<DomElement> elementsByName = IntegrationTest.getElementsByNameWithoutJdk(page, "_.name");
+        List<DomElement> elementsByName = IntegrationTest.getElementsByNameWithoutJdk(page, "name");
         assertEquals(2, elementsByName.size());
-        assertEquals("TestCloud1", ((HtmlTextInput) elementsByName.get(0)).getText());
-        assertEquals("TestCloud2", ((HtmlTextInput) elementsByName.get(1)).getText());
+        assertEquals("TestCloud1", ((HtmlInput) elementsByName.get(0)).getValueAttribute());
+        assertEquals("TestCloud2", ((HtmlInput) elementsByName.get(1)).getValueAttribute());
     }
 
     @Test
@@ -198,7 +201,7 @@ public class UiIntegrationTest {
                 10, false, false, noScaling);
         j.jenkins.clouds.add(cloud2);
 
-        HtmlPage page = j.createWebClient().goTo("configureClouds");
+        HtmlPage page = j.createWebClient().goTo("cloud/TestCloud1/configure");
         HtmlForm form = page.getFormByName("config");
 
         ((HtmlTextInput) IntegrationTest.getElementsByNameWithoutJdk(page, "_.labelString").get(0)).setText("new-label");
@@ -217,7 +220,7 @@ public class UiIntegrationTest {
                 10, false, false, noScaling);
         j.jenkins.clouds.add(cloud1);
 
-        HtmlPage page = j.createWebClient().goTo("configureClouds");
+        HtmlPage page = j.createWebClient().goTo("cloud/TestCloud/configure");
 
         final List<DomElement> regionDropDown = IntegrationTest.getElementsByNameWithoutJdk(page, "_.region");
 
@@ -239,7 +242,7 @@ public class UiIntegrationTest {
                 10, false, false, noScaling);
         j.jenkins.clouds.add(cloud1);
 
-        HtmlPage page = j.createWebClient().goTo("configureClouds");
+        HtmlPage page = j.createWebClient().goTo("cloud/TestCloud/configure");
         boolean isPresent = false;
 
         final List<DomElement> regionDropDown = IntegrationTest.getElementsByNameWithoutJdk(page, "_.region");
@@ -306,7 +309,7 @@ public class UiIntegrationTest {
             10, false, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
-        HtmlPage page = j.createWebClient().goTo("configureClouds");
+        HtmlPage page = j.createWebClient().goTo("cloud/test-cloud/configure");
 
         List<DomElement> elementsByName = IntegrationTest.getElementsByNameWithoutJdk(page, "_.name");
         assertTrue(((HtmlTextInput) elementsByName.get(0)).isReadOnly());
@@ -328,8 +331,16 @@ public class UiIntegrationTest {
 
         HtmlPage page = j.createWebClient().goTo("configureClouds");
 
-        List<DomElement> elementsByName = IntegrationTest.getElementsByNameWithoutJdk(page, "_.name");
-        assertFalse(((HtmlTextInput) elementsByName.get(0)).isReadOnly());
-        assertFalse(((HtmlTextInput) elementsByName.get(1)).isReadOnly());
+        List<DomElement> elementsByName = IntegrationTest.getElementsByNameWithoutJdk(page, "name");
+        assertEquals(2, elementsByName.size());
+        assertEquals("test-cloud", ((HtmlInput) elementsByName.get(0)).getValueAttribute());
+        assertEquals("test-cloud", ((HtmlInput) elementsByName.get(1)).getValueAttribute());
+
+        List<HtmlTableRow> rows = page.getByXPath("//table[@id='clouds']/tbody/tr[@class='repeated-chunk']");
+        assertEquals(2, rows.size());
+        for (HtmlTableRow row : rows) {
+            List<HtmlAnchor> configureLinks = row.getByXPath(".//a[contains(@href, '/configure')]");
+            assertEquals(1, configureLinks.size());
+        }
     }
 }

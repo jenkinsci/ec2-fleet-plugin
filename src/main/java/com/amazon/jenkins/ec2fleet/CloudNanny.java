@@ -1,5 +1,6 @@
 package com.amazon.jenkins.ec2fleet;
 
+import com.google.common.annotations.VisibleForTesting;
 import hudson.Extension;
 import hudson.model.PeriodicWork;
 import hudson.slaves.Cloud;
@@ -32,7 +33,7 @@ public class CloudNanny extends PeriodicWork {
     }
 
     /**
-     * <h2>Exceptions</h2>
+     * <p><strong>Exceptions</strong>
      * This method will be executed by {@link PeriodicWork} inside {@link java.util.concurrent.ScheduledExecutorService}
      * by default it stops execution if task throws exception, however {@link PeriodicWork} fix that
      * by catch any exception and just log it, so we safe to throw exception here.
@@ -68,7 +69,8 @@ public class CloudNanny extends PeriodicWork {
      *
      * @return basic java list
      */
-    private static Jenkins.CloudList getClouds() {
+    @VisibleForTesting
+    static Jenkins.CloudList getClouds() {
         return Jenkins.get().clouds;
     }
 
