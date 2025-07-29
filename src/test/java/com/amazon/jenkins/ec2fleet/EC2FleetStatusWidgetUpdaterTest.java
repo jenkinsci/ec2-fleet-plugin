@@ -2,14 +2,14 @@ package com.amazon.jenkins.ec2fleet;
 
 import hudson.slaves.Cloud;
 import hudson.widgets.Widget;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-import org.powermock.reflect.Whitebox;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,12 +19,13 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(EC2FleetStatusWidgetUpdater.class)
+@RunWith(MockitoJUnitRunner.class)
 public class EC2FleetStatusWidgetUpdaterTest {
+
+    private MockedStatic<EC2FleetStatusWidgetUpdater> mockedEc2FleetStatusWidgetUpdater;
 
     @Mock
     private EC2FleetCloud cloud1;
@@ -50,9 +51,9 @@ public class EC2FleetStatusWidgetUpdaterTest {
 
     @Before
     public void before() throws Exception {
-        PowerMockito.mockStatic(EC2FleetStatusWidgetUpdater.class);
-        PowerMockito.when(EC2FleetStatusWidgetUpdater.class, "getClouds").thenReturn(clouds);
-        PowerMockito.when(EC2FleetStatusWidgetUpdater.class, "getWidgets").thenReturn(widgets);
+        mockedEc2FleetStatusWidgetUpdater = Mockito.mockStatic(EC2FleetStatusWidgetUpdater.class);
+        mockedEc2FleetStatusWidgetUpdater.when(EC2FleetStatusWidgetUpdater::getClouds).thenReturn(clouds);
+        mockedEc2FleetStatusWidgetUpdater.when(EC2FleetStatusWidgetUpdater::getWidgets).thenReturn(widgets);
 
         when(cloud1.getLabelString()).thenReturn("a");
         when(cloud2.getLabelString()).thenReturn("");
@@ -64,7 +65,12 @@ public class EC2FleetStatusWidgetUpdaterTest {
     }
 
     private EC2FleetStatusWidgetUpdater getMockEC2FleetStatusWidgetUpdater() {
-        return Whitebox.newInstance(EC2FleetStatusWidgetUpdater.class);
+        return new EC2FleetStatusWidgetUpdater();
+    }
+
+    @After
+    public void after() {
+        mockedEc2FleetStatusWidgetUpdater.close();
     }
 
     @Test
@@ -79,7 +85,7 @@ public class EC2FleetStatusWidgetUpdaterTest {
 
         getMockEC2FleetStatusWidgetUpdater().doRun();
 
-        verifyZeroInteractions(widget1, widget2);
+        verifyNoInteractions(widget1, widget2);
     }
 
     @Test
@@ -94,7 +100,7 @@ public class EC2FleetStatusWidgetUpdaterTest {
         getMockEC2FleetStatusWidgetUpdater().doRun();
 
         verify(cloud1).getStats();
-        verifyZeroInteractions(nonEc2FleetCloud);
+        verifyNoInteractions(nonEc2FleetCloud);
     }
 
     @Test
@@ -125,7 +131,7 @@ public class EC2FleetStatusWidgetUpdaterTest {
         getMockEC2FleetStatusWidgetUpdater().doRun();
 
         verify(widget1).setStatusList(any(List.class));
-        verifyZeroInteractions(nonEc2FleetWidget);
+        verifyNoInteractions(nonEc2FleetWidget);
     }
 
 }

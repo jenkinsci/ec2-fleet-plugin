@@ -1,5 +1,6 @@
 package com.amazon.jenkins.ec2fleet;
 
+import com.google.common.annotations.VisibleForTesting;
 import hudson.Extension;
 import hudson.model.PeriodicWork;
 import hudson.slaves.Cloud;
@@ -23,7 +24,7 @@ public class EC2FleetStatusWidgetUpdater extends PeriodicWork {
     }
 
     /**
-     * <h2>Exceptions</h2>
+     * <p><strong>Exceptions</strong>
      * This method will be executed by {@link PeriodicWork} inside {@link java.util.concurrent.ScheduledExecutorService}
      * by default it stops execution if task throws exception, however {@link PeriodicWork} fix that
      * by catch any exception and just log it, so we safe to throw exception here.
@@ -53,7 +54,8 @@ public class EC2FleetStatusWidgetUpdater extends PeriodicWork {
      *
      * @return widgets
      */
-    private static List<Widget> getWidgets() {
+    @VisibleForTesting
+    static List<Widget> getWidgets() {
         return Jenkins.get().getWidgets();
     }
 
@@ -63,7 +65,8 @@ public class EC2FleetStatusWidgetUpdater extends PeriodicWork {
      *
      * @return basic java list
      */
-    private static List<Cloud> getClouds() {
+    @VisibleForTesting
+    static List<Cloud> getClouds() {
         return Jenkins.get().clouds;
     }
 

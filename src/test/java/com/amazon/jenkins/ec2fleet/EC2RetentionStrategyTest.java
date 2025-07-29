@@ -8,9 +8,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InOrder;
 import org.mockito.Mock;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.concurrent.TimeUnit;
 
@@ -26,14 +25,13 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(SlaveComputer.class)
+@RunWith(MockitoJUnitRunner.class)
 public class EC2RetentionStrategyTest {
 
-    @Mock
+    @Mock(strictness = Mock.Strictness.LENIENT)
     private EC2FleetCloud cloud;
 
-    @Mock
+    @Mock(strictness = Mock.Strictness.LENIENT)
     private EC2FleetNodeComputer computer;
 
     @Mock
@@ -51,9 +49,9 @@ public class EC2RetentionStrategyTest {
         when(cloud.hasUnlimitedUsesForNodes()).thenReturn(true);
         when(cloud.isAlwaysReconnect()).thenReturn(false);
 
-        PowerMockito.when(computer.getIdleStartMilliseconds()).thenReturn(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(11));
+        Mockito.when(computer.getIdleStartMilliseconds()).thenReturn(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(11));
         when(computer.getNode()).thenReturn(node);
-        PowerMockito.when(computer.isIdle()).thenReturn(true);
+        Mockito.when(computer.isIdle()).thenReturn(true);
         when(computer.isAcceptingTasks()).thenReturn(true);
         when(computer.getCloud()).thenReturn(cloud);
         when(computer.isMarkedForDeletion()).thenReturn(false);

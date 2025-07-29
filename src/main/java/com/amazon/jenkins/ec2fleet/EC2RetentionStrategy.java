@@ -1,6 +1,5 @@
 package com.amazon.jenkins.ec2fleet;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.Computer;
 import hudson.model.Executor;
 import hudson.model.ExecutorListener;
@@ -25,9 +24,6 @@ public class EC2RetentionStrategy extends RetentionStrategy<EC2FleetNodeComputer
      * @param fc EC2FleetNodeComputer
      * @return delay in min before next run
      */
-    @SuppressFBWarnings(
-            value = "BC_UNCONFIRMED_CAST",
-            justification = "to ignore EC2FleetNodeComputer cast")
     @Override
     public long check(final EC2FleetNodeComputer fc) {
         final AbstractEC2FleetCloud cloud = fc.getCloud();
