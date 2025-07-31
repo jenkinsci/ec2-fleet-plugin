@@ -18,7 +18,7 @@
     <revision>4.0.0</revision>
     <changelist>999999-SNAPSHOT</changelist>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
-    <jenkins.baseline>2.479</jenkins.baseline>
+    <jenkins.baseline>2.492</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <aws-sdk.version>1.12.780-480.v4a_0819121a_9e</aws-sdk.version>
@@ -33,34 +33,6 @@
       <url>http://opensource.org/licenses/MIT</url>
     </license>
   </licenses>
-
-  <developers>
-    <developer>
-      <id>brycahta</id>
-      <name>Bryan Carter</name>
-      <email>crtbry@amazon.com</email>
-    </developer>
-    <developer>
-      <id>pdk27</id>
-      <name>Prathibha Datta-Kumar</name>
-      <email>kprathib@amazon.com</email>
-    </developer>
-    <developer>
-      <id>cjerad</id>
-      <name>Jerad C</name>
-      <email>jeradc@amazon.com</email>
-    </developer>
-    <developer>
-      <id>snay2</id>
-      <name>Steve Nay</name>
-      <email>stevnay@amazon.com</email>
-    </developer>
-    <developer>
-      <id>GavinBurris42</id>
-      <name>Gavin Burris</name>
-      <email>ggburris@amazon.com</email>
-    </developer>
-  </developers>
 
   <scm>
     <connection>scm:git:https://github.com/${gitHubRepo}.git</connection>
@@ -88,7 +60,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>5054.v620b_5d2b_d5e6</version>
+        <version>5085.v05cc65a_936d3</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
