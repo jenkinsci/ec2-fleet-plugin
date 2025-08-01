@@ -1,15 +1,15 @@
 package com.amazon.jenkins.ec2fleet;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.ResponseMetadata;
 import com.amazonaws.regions.Region;
-import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.model.*;
-import com.amazonaws.services.ec2.waiters.AmazonEC2Waiters;
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
+import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.*;
+import software.amazon.awssdk.services.ec2.waiters.Ec2WaitersClient;
 
-public class EmptyAmazonEC2 implements AmazonEC2 {
+public class EmptyAmazonEC2 implements Ec2Client {
     @Override
     public void setEndpoint(String endpoint) {
 
@@ -21,3412 +21,3412 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
     }
 
     @Override
-    public AcceptAddressTransferResult acceptAddressTransfer(AcceptAddressTransferRequest acceptAddressTransferRequest) {
+    public AcceptAddressTransferResponse acceptAddressTransfer(AcceptAddressTransferRequest acceptAddressTransferRequest) {
         return null;
     }
 
     @Override
-    public AcceptReservedInstancesExchangeQuoteResult acceptReservedInstancesExchangeQuote(AcceptReservedInstancesExchangeQuoteRequest acceptReservedInstancesExchangeQuoteRequest) {
+    public AcceptReservedInstancesExchangeQuoteResponse acceptReservedInstancesExchangeQuote(AcceptReservedInstancesExchangeQuoteRequest acceptReservedInstancesExchangeQuoteRequest) {
         return null;
     }
 
     @Override
-    public AcceptTransitGatewayMulticastDomainAssociationsResult acceptTransitGatewayMulticastDomainAssociations(AcceptTransitGatewayMulticastDomainAssociationsRequest acceptTransitGatewayMulticastDomainAssociationsRequest) {
+    public AcceptTransitGatewayMulticastDomainAssociationsResponse acceptTransitGatewayMulticastDomainAssociations(AcceptTransitGatewayMulticastDomainAssociationsRequest acceptTransitGatewayMulticastDomainAssociationsRequest) {
         return null;
     }
 
     @Override
-    public AcceptTransitGatewayPeeringAttachmentResult acceptTransitGatewayPeeringAttachment(AcceptTransitGatewayPeeringAttachmentRequest acceptTransitGatewayPeeringAttachmentRequest) {
+    public AcceptTransitGatewayPeeringAttachmentResponse acceptTransitGatewayPeeringAttachment(AcceptTransitGatewayPeeringAttachmentRequest acceptTransitGatewayPeeringAttachmentRequest) {
         return null;
     }
 
     @Override
-    public AcceptTransitGatewayVpcAttachmentResult acceptTransitGatewayVpcAttachment(AcceptTransitGatewayVpcAttachmentRequest acceptTransitGatewayVpcAttachmentRequest) {
+    public AcceptTransitGatewayVpcAttachmentResponse acceptTransitGatewayVpcAttachment(AcceptTransitGatewayVpcAttachmentRequest acceptTransitGatewayVpcAttachmentRequest) {
         return null;
     }
 
     @Override
-    public AcceptVpcEndpointConnectionsResult acceptVpcEndpointConnections(AcceptVpcEndpointConnectionsRequest acceptVpcEndpointConnectionsRequest) {
+    public AcceptVpcEndpointConnectionsResponse acceptVpcEndpointConnections(AcceptVpcEndpointConnectionsRequest acceptVpcEndpointConnectionsRequest) {
         return null;
     }
 
     @Override
-    public AcceptVpcPeeringConnectionResult acceptVpcPeeringConnection(AcceptVpcPeeringConnectionRequest acceptVpcPeeringConnectionRequest) {
+    public AcceptVpcPeeringConnectionResponse acceptVpcPeeringConnection(AcceptVpcPeeringConnectionRequest acceptVpcPeeringConnectionRequest) {
         return null;
     }
 
     @Override
-    public AcceptVpcPeeringConnectionResult acceptVpcPeeringConnection() {
+    public AcceptVpcPeeringConnectionResponse acceptVpcPeeringConnection() {
         return null;
     }
 
     @Override
-    public AdvertiseByoipCidrResult advertiseByoipCidr(AdvertiseByoipCidrRequest advertiseByoipCidrRequest) {
+    public AdvertiseByoipCidrResponse advertiseByoipCidr(AdvertiseByoipCidrRequest advertiseByoipCidrRequest) {
         return null;
     }
 
     @Override
-    public AllocateAddressResult allocateAddress(AllocateAddressRequest allocateAddressRequest) {
+    public AllocateAddressResponse allocateAddress(AllocateAddressRequest allocateAddressRequest) {
         return null;
     }
 
     @Override
-    public AllocateAddressResult allocateAddress() {
+    public AllocateAddressResponse allocateAddress() {
         return null;
     }
 
     @Override
-    public AllocateHostsResult allocateHosts(AllocateHostsRequest allocateHostsRequest) {
+    public AllocateHostsResponse allocateHosts(AllocateHostsRequest allocateHostsRequest) {
         return null;
     }
 
     @Override
-    public AllocateIpamPoolCidrResult allocateIpamPoolCidr(AllocateIpamPoolCidrRequest allocateIpamPoolCidrRequest) {
+    public AllocateIpamPoolCidrResponse allocateIpamPoolCidr(AllocateIpamPoolCidrRequest allocateIpamPoolCidrRequest) {
         return null;
     }
 
     @Override
-    public ApplySecurityGroupsToClientVpnTargetNetworkResult applySecurityGroupsToClientVpnTargetNetwork(ApplySecurityGroupsToClientVpnTargetNetworkRequest applySecurityGroupsToClientVpnTargetNetworkRequest) {
+    public ApplySecurityGroupsToClientVpnTargetNetworkResponse applySecurityGroupsToClientVpnTargetNetwork(ApplySecurityGroupsToClientVpnTargetNetworkRequest applySecurityGroupsToClientVpnTargetNetworkRequest) {
         return null;
     }
 
     @Override
-    public AssignIpv6AddressesResult assignIpv6Addresses(AssignIpv6AddressesRequest assignIpv6AddressesRequest) {
+    public AssignIpv6AddressesResponse assignIpv6Addresses(AssignIpv6AddressesRequest assignIpv6AddressesRequest) {
         return null;
     }
 
     @Override
-    public AssignPrivateIpAddressesResult assignPrivateIpAddresses(AssignPrivateIpAddressesRequest assignPrivateIpAddressesRequest) {
+    public AssignPrivateIpAddressesResponse assignPrivateIpAddresses(AssignPrivateIpAddressesRequest assignPrivateIpAddressesRequest) {
         return null;
     }
 
     @Override
-    public AssignPrivateNatGatewayAddressResult assignPrivateNatGatewayAddress(AssignPrivateNatGatewayAddressRequest assignPrivateNatGatewayAddressRequest) {
+    public AssignPrivateNatGatewayAddressResponse assignPrivateNatGatewayAddress(AssignPrivateNatGatewayAddressRequest assignPrivateNatGatewayAddressRequest) {
         return null;
     }
 
     @Override
-    public AssociateAddressResult associateAddress(AssociateAddressRequest associateAddressRequest) {
+    public AssociateAddressResponse associateAddress(AssociateAddressRequest associateAddressRequest) {
         return null;
     }
 
     @Override
-    public AssociateClientVpnTargetNetworkResult associateClientVpnTargetNetwork(AssociateClientVpnTargetNetworkRequest associateClientVpnTargetNetworkRequest) {
+    public AssociateClientVpnTargetNetworkResponse associateClientVpnTargetNetwork(AssociateClientVpnTargetNetworkRequest associateClientVpnTargetNetworkRequest) {
         return null;
     }
 
     @Override
-    public AssociateDhcpOptionsResult associateDhcpOptions(AssociateDhcpOptionsRequest associateDhcpOptionsRequest) {
+    public AssociateDhcpOptionsResponse associateDhcpOptions(AssociateDhcpOptionsRequest associateDhcpOptionsRequest) {
         return null;
     }
 
     @Override
-    public AssociateEnclaveCertificateIamRoleResult associateEnclaveCertificateIamRole(AssociateEnclaveCertificateIamRoleRequest associateEnclaveCertificateIamRoleRequest) {
+    public AssociateEnclaveCertificateIamRoleResponse associateEnclaveCertificateIamRole(AssociateEnclaveCertificateIamRoleRequest associateEnclaveCertificateIamRoleRequest) {
         return null;
     }
 
     @Override
-    public AssociateIamInstanceProfileResult associateIamInstanceProfile(AssociateIamInstanceProfileRequest associateIamInstanceProfileRequest) {
+    public AssociateIamInstanceProfileResponse associateIamInstanceProfile(AssociateIamInstanceProfileRequest associateIamInstanceProfileRequest) {
         return null;
     }
 
     @Override
-    public AssociateInstanceEventWindowResult associateInstanceEventWindow(AssociateInstanceEventWindowRequest associateInstanceEventWindowRequest) {
+    public AssociateInstanceEventWindowResponse associateInstanceEventWindow(AssociateInstanceEventWindowRequest associateInstanceEventWindowRequest) {
         return null;
     }
 
     @Override
-    public AssociateIpamByoasnResult associateIpamByoasn(AssociateIpamByoasnRequest associateIpamByoasnRequest) {
+    public AssociateIpamByoasnResponse associateIpamByoasn(AssociateIpamByoasnRequest associateIpamByoasnRequest) {
         return null;
     }
 
     @Override
-    public AssociateIpamResourceDiscoveryResult associateIpamResourceDiscovery(AssociateIpamResourceDiscoveryRequest associateIpamResourceDiscoveryRequest) {
+    public AssociateIpamResourceDiscoveryResponse associateIpamResourceDiscovery(AssociateIpamResourceDiscoveryRequest associateIpamResourceDiscoveryRequest) {
         return null;
     }
 
     @Override
-    public AssociateNatGatewayAddressResult associateNatGatewayAddress(AssociateNatGatewayAddressRequest associateNatGatewayAddressRequest) {
+    public AssociateNatGatewayAddressResponse associateNatGatewayAddress(AssociateNatGatewayAddressRequest associateNatGatewayAddressRequest) {
         return null;
     }
 
     @Override
-    public AssociateRouteTableResult associateRouteTable(AssociateRouteTableRequest associateRouteTableRequest) {
+    public AssociateRouteTableResponse associateRouteTable(AssociateRouteTableRequest associateRouteTableRequest) {
         return null;
     }
 
     @Override
-    public AssociateSubnetCidrBlockResult associateSubnetCidrBlock(AssociateSubnetCidrBlockRequest associateSubnetCidrBlockRequest) {
+    public AssociateSubnetCidrBlockResponse associateSubnetCidrBlock(AssociateSubnetCidrBlockRequest associateSubnetCidrBlockRequest) {
         return null;
     }
 
     @Override
-    public AssociateTransitGatewayMulticastDomainResult associateTransitGatewayMulticastDomain(AssociateTransitGatewayMulticastDomainRequest associateTransitGatewayMulticastDomainRequest) {
+    public AssociateTransitGatewayMulticastDomainResponse associateTransitGatewayMulticastDomain(AssociateTransitGatewayMulticastDomainRequest associateTransitGatewayMulticastDomainRequest) {
         return null;
     }
 
     @Override
-    public AssociateTransitGatewayPolicyTableResult associateTransitGatewayPolicyTable(AssociateTransitGatewayPolicyTableRequest associateTransitGatewayPolicyTableRequest) {
+    public AssociateTransitGatewayPolicyTableResponse associateTransitGatewayPolicyTable(AssociateTransitGatewayPolicyTableRequest associateTransitGatewayPolicyTableRequest) {
         return null;
     }
 
     @Override
-    public AssociateTransitGatewayRouteTableResult associateTransitGatewayRouteTable(AssociateTransitGatewayRouteTableRequest associateTransitGatewayRouteTableRequest) {
+    public AssociateTransitGatewayRouteTableResponse associateTransitGatewayRouteTable(AssociateTransitGatewayRouteTableRequest associateTransitGatewayRouteTableRequest) {
         return null;
     }
 
     @Override
-    public AssociateTrunkInterfaceResult associateTrunkInterface(AssociateTrunkInterfaceRequest associateTrunkInterfaceRequest) {
+    public AssociateTrunkInterfaceResponse associateTrunkInterface(AssociateTrunkInterfaceRequest associateTrunkInterfaceRequest) {
         return null;
     }
 
     @Override
-    public AssociateVpcCidrBlockResult associateVpcCidrBlock(AssociateVpcCidrBlockRequest associateVpcCidrBlockRequest) {
+    public AssociateVpcCidrBlockResponse associateVpcCidrBlock(AssociateVpcCidrBlockRequest associateVpcCidrBlockRequest) {
         return null;
     }
 
     @Override
-    public AttachClassicLinkVpcResult attachClassicLinkVpc(AttachClassicLinkVpcRequest attachClassicLinkVpcRequest) {
+    public AttachClassicLinkVpcResponse attachClassicLinkVpc(AttachClassicLinkVpcRequest attachClassicLinkVpcRequest) {
         return null;
     }
 
     @Override
-    public AttachInternetGatewayResult attachInternetGateway(AttachInternetGatewayRequest attachInternetGatewayRequest) {
+    public AttachInternetGatewayResponse attachInternetGateway(AttachInternetGatewayRequest attachInternetGatewayRequest) {
         return null;
     }
 
     @Override
-    public AttachNetworkInterfaceResult attachNetworkInterface(AttachNetworkInterfaceRequest attachNetworkInterfaceRequest) {
+    public AttachNetworkInterfaceResponse attachNetworkInterface(AttachNetworkInterfaceRequest attachNetworkInterfaceRequest) {
         return null;
     }
 
     @Override
-    public AttachVerifiedAccessTrustProviderResult attachVerifiedAccessTrustProvider(AttachVerifiedAccessTrustProviderRequest attachVerifiedAccessTrustProviderRequest) {
+    public AttachVerifiedAccessTrustProviderResponse attachVerifiedAccessTrustProvider(AttachVerifiedAccessTrustProviderRequest attachVerifiedAccessTrustProviderRequest) {
         return null;
     }
 
     @Override
-    public AttachVolumeResult attachVolume(AttachVolumeRequest attachVolumeRequest) {
+    public AttachVolumeResponse attachVolume(AttachVolumeRequest attachVolumeRequest) {
         return null;
     }
 
     @Override
-    public AttachVpnGatewayResult attachVpnGateway(AttachVpnGatewayRequest attachVpnGatewayRequest) {
+    public AttachVpnGatewayResponse attachVpnGateway(AttachVpnGatewayRequest attachVpnGatewayRequest) {
         return null;
     }
 
     @Override
-    public AuthorizeClientVpnIngressResult authorizeClientVpnIngress(AuthorizeClientVpnIngressRequest authorizeClientVpnIngressRequest) {
+    public AuthorizeClientVpnIngressResponse authorizeClientVpnIngress(AuthorizeClientVpnIngressRequest authorizeClientVpnIngressRequest) {
         return null;
     }
 
     @Override
-    public AuthorizeSecurityGroupEgressResult authorizeSecurityGroupEgress(AuthorizeSecurityGroupEgressRequest authorizeSecurityGroupEgressRequest) {
+    public AuthorizeSecurityGroupEgressResponse authorizeSecurityGroupEgress(AuthorizeSecurityGroupEgressRequest authorizeSecurityGroupEgressRequest) {
         return null;
     }
 
     @Override
-    public AuthorizeSecurityGroupIngressResult authorizeSecurityGroupIngress(AuthorizeSecurityGroupIngressRequest authorizeSecurityGroupIngressRequest) {
+    public AuthorizeSecurityGroupIngressResponse authorizeSecurityGroupIngress(AuthorizeSecurityGroupIngressRequest authorizeSecurityGroupIngressRequest) {
         return null;
     }
 
     @Override
-    public BundleInstanceResult bundleInstance(BundleInstanceRequest bundleInstanceRequest) {
+    public BundleInstanceResponse bundleInstance(BundleInstanceRequest bundleInstanceRequest) {
         return null;
     }
 
     @Override
-    public CancelBundleTaskResult cancelBundleTask(CancelBundleTaskRequest cancelBundleTaskRequest) {
+    public CancelBundleTaskResponse cancelBundleTask(CancelBundleTaskRequest cancelBundleTaskRequest) {
         return null;
     }
 
     @Override
-    public CancelCapacityReservationResult cancelCapacityReservation(CancelCapacityReservationRequest cancelCapacityReservationRequest) {
+    public CancelCapacityReservationResponse cancelCapacityReservation(CancelCapacityReservationRequest cancelCapacityReservationRequest) {
         return null;
     }
 
     @Override
-    public CancelCapacityReservationFleetsResult cancelCapacityReservationFleets(CancelCapacityReservationFleetsRequest cancelCapacityReservationFleetsRequest) {
+    public CancelCapacityReservationFleetsResponse cancelCapacityReservationFleets(CancelCapacityReservationFleetsRequest cancelCapacityReservationFleetsRequest) {
         return null;
     }
 
     @Override
-    public CancelConversionTaskResult cancelConversionTask(CancelConversionTaskRequest cancelConversionTaskRequest) {
+    public CancelConversionTaskResponse cancelConversionTask(CancelConversionTaskRequest cancelConversionTaskRequest) {
         return null;
     }
 
     @Override
-    public CancelExportTaskResult cancelExportTask(CancelExportTaskRequest cancelExportTaskRequest) {
+    public CancelExportTaskResponse cancelExportTask(CancelExportTaskRequest cancelExportTaskRequest) {
         return null;
     }
 
     @Override
-    public CancelImageLaunchPermissionResult cancelImageLaunchPermission(CancelImageLaunchPermissionRequest cancelImageLaunchPermissionRequest) {
+    public CancelImageLaunchPermissionResponse cancelImageLaunchPermission(CancelImageLaunchPermissionRequest cancelImageLaunchPermissionRequest) {
         return null;
     }
 
     @Override
-    public CancelImportTaskResult cancelImportTask(CancelImportTaskRequest cancelImportTaskRequest) {
+    public CancelImportTaskResponse cancelImportTask(CancelImportTaskRequest cancelImportTaskRequest) {
         return null;
     }
 
     @Override
-    public CancelImportTaskResult cancelImportTask() {
+    public CancelImportTaskResponse cancelImportTask() {
         return null;
     }
 
     @Override
-    public CancelReservedInstancesListingResult cancelReservedInstancesListing(CancelReservedInstancesListingRequest cancelReservedInstancesListingRequest) {
+    public CancelReservedInstancesListingResponse cancelReservedInstancesListing(CancelReservedInstancesListingRequest cancelReservedInstancesListingRequest) {
         return null;
     }
 
     @Override
-    public CancelSpotFleetRequestsResult cancelSpotFleetRequests(CancelSpotFleetRequestsRequest cancelSpotFleetRequestsRequest) {
+    public CancelSpotFleetRequestsResponse cancelSpotFleetRequests(CancelSpotFleetRequestsRequest cancelSpotFleetRequestsRequest) {
         return null;
     }
 
     @Override
-    public CancelSpotInstanceRequestsResult cancelSpotInstanceRequests(CancelSpotInstanceRequestsRequest cancelSpotInstanceRequestsRequest) {
+    public CancelSpotInstanceRequestsResponse cancelSpotInstanceRequests(CancelSpotInstanceRequestsRequest cancelSpotInstanceRequestsRequest) {
         return null;
     }
 
     @Override
-    public ConfirmProductInstanceResult confirmProductInstance(ConfirmProductInstanceRequest confirmProductInstanceRequest) {
+    public ConfirmProductInstanceResponse confirmProductInstance(ConfirmProductInstanceRequest confirmProductInstanceRequest) {
         return null;
     }
 
     @Override
-    public CopyFpgaImageResult copyFpgaImage(CopyFpgaImageRequest copyFpgaImageRequest) {
+    public CopyFpgaImageResponse copyFpgaImage(CopyFpgaImageRequest copyFpgaImageRequest) {
         return null;
     }
 
     @Override
-    public CopyImageResult copyImage(CopyImageRequest copyImageRequest) {
+    public CopyImageResponse copyImage(CopyImageRequest copyImageRequest) {
         return null;
     }
 
     @Override
-    public CopySnapshotResult copySnapshot(CopySnapshotRequest copySnapshotRequest) {
+    public CopySnapshotResponse copySnapshot(CopySnapshotRequest copySnapshotRequest) {
         return null;
     }
 
     @Override
-    public CreateCapacityReservationResult createCapacityReservation(CreateCapacityReservationRequest createCapacityReservationRequest) {
+    public CreateCapacityReservationResponse createCapacityReservation(CreateCapacityReservationRequest createCapacityReservationRequest) {
         return null;
     }
 
     @Override
-    public CreateCapacityReservationFleetResult createCapacityReservationFleet(CreateCapacityReservationFleetRequest createCapacityReservationFleetRequest) {
+    public CreateCapacityReservationFleetResponse createCapacityReservationFleet(CreateCapacityReservationFleetRequest createCapacityReservationFleetRequest) {
         return null;
     }
 
     @Override
-    public CreateCarrierGatewayResult createCarrierGateway(CreateCarrierGatewayRequest createCarrierGatewayRequest) {
+    public CreateCarrierGatewayResponse createCarrierGateway(CreateCarrierGatewayRequest createCarrierGatewayRequest) {
         return null;
     }
 
     @Override
-    public CreateClientVpnEndpointResult createClientVpnEndpoint(CreateClientVpnEndpointRequest createClientVpnEndpointRequest) {
+    public CreateClientVpnEndpointResponse createClientVpnEndpoint(CreateClientVpnEndpointRequest createClientVpnEndpointRequest) {
         return null;
     }
 
     @Override
-    public CreateClientVpnRouteResult createClientVpnRoute(CreateClientVpnRouteRequest createClientVpnRouteRequest) {
+    public CreateClientVpnRouteResponse createClientVpnRoute(CreateClientVpnRouteRequest createClientVpnRouteRequest) {
         return null;
     }
 
     @Override
-    public CreateCoipCidrResult createCoipCidr(CreateCoipCidrRequest createCoipCidrRequest) {
+    public CreateCoipCidrResponse createCoipCidr(CreateCoipCidrRequest createCoipCidrRequest) {
         return null;
     }
 
     @Override
-    public CreateCoipPoolResult createCoipPool(CreateCoipPoolRequest createCoipPoolRequest) {
+    public CreateCoipPoolResponse createCoipPool(CreateCoipPoolRequest createCoipPoolRequest) {
         return null;
     }
 
     @Override
-    public CreateCustomerGatewayResult createCustomerGateway(CreateCustomerGatewayRequest createCustomerGatewayRequest) {
+    public CreateCustomerGatewayResponse createCustomerGateway(CreateCustomerGatewayRequest createCustomerGatewayRequest) {
         return null;
     }
 
     @Override
-    public CreateDefaultSubnetResult createDefaultSubnet(CreateDefaultSubnetRequest createDefaultSubnetRequest) {
+    public CreateDefaultSubnetResponse createDefaultSubnet(CreateDefaultSubnetRequest createDefaultSubnetRequest) {
         return null;
     }
 
     @Override
-    public CreateDefaultVpcResult createDefaultVpc(CreateDefaultVpcRequest createDefaultVpcRequest) {
+    public CreateDefaultVpcResponse createDefaultVpc(CreateDefaultVpcRequest createDefaultVpcRequest) {
         return null;
     }
 
     @Override
-    public CreateDhcpOptionsResult createDhcpOptions(CreateDhcpOptionsRequest createDhcpOptionsRequest) {
+    public CreateDhcpOptionsResponse createDhcpOptions(CreateDhcpOptionsRequest createDhcpOptionsRequest) {
         return null;
     }
 
     @Override
-    public CreateEgressOnlyInternetGatewayResult createEgressOnlyInternetGateway(CreateEgressOnlyInternetGatewayRequest createEgressOnlyInternetGatewayRequest) {
+    public CreateEgressOnlyInternetGatewayResponse createEgressOnlyInternetGateway(CreateEgressOnlyInternetGatewayRequest createEgressOnlyInternetGatewayRequest) {
         return null;
     }
 
     @Override
-    public CreateFleetResult createFleet(CreateFleetRequest createFleetRequest) {
+    public CreateFleetResponse createFleet(CreateFleetRequest createFleetRequest) {
         return null;
     }
 
     @Override
-    public CreateFlowLogsResult createFlowLogs(CreateFlowLogsRequest createFlowLogsRequest) {
+    public CreateFlowLogsResponse createFlowLogs(CreateFlowLogsRequest createFlowLogsRequest) {
         return null;
     }
 
     @Override
-    public CreateFpgaImageResult createFpgaImage(CreateFpgaImageRequest createFpgaImageRequest) {
+    public CreateFpgaImageResponse createFpgaImage(CreateFpgaImageRequest createFpgaImageRequest) {
         return null;
     }
 
     @Override
-    public CreateImageResult createImage(CreateImageRequest createImageRequest) {
+    public CreateImageResponse createImage(CreateImageRequest createImageRequest) {
         return null;
     }
 
     @Override
-    public CreateInstanceConnectEndpointResult createInstanceConnectEndpoint(CreateInstanceConnectEndpointRequest createInstanceConnectEndpointRequest) {
+    public CreateInstanceConnectEndpointResponse createInstanceConnectEndpoint(CreateInstanceConnectEndpointRequest createInstanceConnectEndpointRequest) {
         return null;
     }
 
     @Override
-    public CreateInstanceEventWindowResult createInstanceEventWindow(CreateInstanceEventWindowRequest createInstanceEventWindowRequest) {
+    public CreateInstanceEventWindowResponse createInstanceEventWindow(CreateInstanceEventWindowRequest createInstanceEventWindowRequest) {
         return null;
     }
 
     @Override
-    public CreateInstanceExportTaskResult createInstanceExportTask(CreateInstanceExportTaskRequest createInstanceExportTaskRequest) {
+    public CreateInstanceExportTaskResponse createInstanceExportTask(CreateInstanceExportTaskRequest createInstanceExportTaskRequest) {
         return null;
     }
 
     @Override
-    public CreateInternetGatewayResult createInternetGateway(CreateInternetGatewayRequest createInternetGatewayRequest) {
+    public CreateInternetGatewayResponse createInternetGateway(CreateInternetGatewayRequest createInternetGatewayRequest) {
         return null;
     }
 
     @Override
-    public CreateInternetGatewayResult createInternetGateway() {
+    public CreateInternetGatewayResponse createInternetGateway() {
         return null;
     }
 
     @Override
-    public CreateIpamResult createIpam(CreateIpamRequest createIpamRequest) {
+    public CreateIpamResponse createIpam(CreateIpamRequest createIpamRequest) {
         return null;
     }
 
     @Override
-    public CreateIpamExternalResourceVerificationTokenResult createIpamExternalResourceVerificationToken(CreateIpamExternalResourceVerificationTokenRequest createIpamExternalResourceVerificationTokenRequest) {
+    public CreateIpamExternalResourceVerificationTokenResponse createIpamExternalResourceVerificationToken(CreateIpamExternalResourceVerificationTokenRequest createIpamExternalResourceVerificationTokenRequest) {
         return null;
     }
 
     @Override
-    public CreateIpamPoolResult createIpamPool(CreateIpamPoolRequest createIpamPoolRequest) {
+    public CreateIpamPoolResponse createIpamPool(CreateIpamPoolRequest createIpamPoolRequest) {
         return null;
     }
 
     @Override
-    public CreateIpamResourceDiscoveryResult createIpamResourceDiscovery(CreateIpamResourceDiscoveryRequest createIpamResourceDiscoveryRequest) {
+    public CreateIpamResourceDiscoveryResponse createIpamResourceDiscovery(CreateIpamResourceDiscoveryRequest createIpamResourceDiscoveryRequest) {
         return null;
     }
 
     @Override
-    public CreateIpamScopeResult createIpamScope(CreateIpamScopeRequest createIpamScopeRequest) {
+    public CreateIpamScopeResponse createIpamScope(CreateIpamScopeRequest createIpamScopeRequest) {
         return null;
     }
 
     @Override
-    public CreateKeyPairResult createKeyPair(CreateKeyPairRequest createKeyPairRequest) {
+    public CreateKeyPairResponse createKeyPair(CreateKeyPairRequest createKeyPairRequest) {
         return null;
     }
 
     @Override
-    public CreateLaunchTemplateResult createLaunchTemplate(CreateLaunchTemplateRequest createLaunchTemplateRequest) {
+    public CreateLaunchTemplateResponse createLaunchTemplate(CreateLaunchTemplateRequest createLaunchTemplateRequest) {
         return null;
     }
 
     @Override
-    public CreateLaunchTemplateVersionResult createLaunchTemplateVersion(CreateLaunchTemplateVersionRequest createLaunchTemplateVersionRequest) {
+    public CreateLaunchTemplateVersionResponse createLaunchTemplateVersion(CreateLaunchTemplateVersionRequest createLaunchTemplateVersionRequest) {
         return null;
     }
 
     @Override
-    public CreateLocalGatewayRouteResult createLocalGatewayRoute(CreateLocalGatewayRouteRequest createLocalGatewayRouteRequest) {
+    public CreateLocalGatewayRouteResponse createLocalGatewayRoute(CreateLocalGatewayRouteRequest createLocalGatewayRouteRequest) {
         return null;
     }
 
     @Override
-    public CreateLocalGatewayRouteTableResult createLocalGatewayRouteTable(CreateLocalGatewayRouteTableRequest createLocalGatewayRouteTableRequest) {
+    public CreateLocalGatewayRouteTableResponse createLocalGatewayRouteTable(CreateLocalGatewayRouteTableRequest createLocalGatewayRouteTableRequest) {
         return null;
     }
 
     @Override
-    public CreateLocalGatewayRouteTableVirtualInterfaceGroupAssociationResult createLocalGatewayRouteTableVirtualInterfaceGroupAssociation(CreateLocalGatewayRouteTableVirtualInterfaceGroupAssociationRequest createLocalGatewayRouteTableVirtualInterfaceGroupAssociationRequest) {
+    public CreateLocalGatewayRouteTableVirtualInterfaceGroupAssociationResponse createLocalGatewayRouteTableVirtualInterfaceGroupAssociation(CreateLocalGatewayRouteTableVirtualInterfaceGroupAssociationRequest createLocalGatewayRouteTableVirtualInterfaceGroupAssociationRequest) {
         return null;
     }
 
     @Override
-    public CreateLocalGatewayRouteTableVpcAssociationResult createLocalGatewayRouteTableVpcAssociation(CreateLocalGatewayRouteTableVpcAssociationRequest createLocalGatewayRouteTableVpcAssociationRequest) {
+    public CreateLocalGatewayRouteTableVpcAssociationResponse createLocalGatewayRouteTableVpcAssociation(CreateLocalGatewayRouteTableVpcAssociationRequest createLocalGatewayRouteTableVpcAssociationRequest) {
         return null;
     }
 
     @Override
-    public CreateManagedPrefixListResult createManagedPrefixList(CreateManagedPrefixListRequest createManagedPrefixListRequest) {
+    public CreateManagedPrefixListResponse createManagedPrefixList(CreateManagedPrefixListRequest createManagedPrefixListRequest) {
         return null;
     }
 
     @Override
-    public CreateNatGatewayResult createNatGateway(CreateNatGatewayRequest createNatGatewayRequest) {
+    public CreateNatGatewayResponse createNatGateway(CreateNatGatewayRequest createNatGatewayRequest) {
         return null;
     }
 
     @Override
-    public CreateNetworkAclResult createNetworkAcl(CreateNetworkAclRequest createNetworkAclRequest) {
+    public CreateNetworkAclResponse createNetworkAcl(CreateNetworkAclRequest createNetworkAclRequest) {
         return null;
     }
 
     @Override
-    public CreateNetworkAclEntryResult createNetworkAclEntry(CreateNetworkAclEntryRequest createNetworkAclEntryRequest) {
+    public CreateNetworkAclEntryResponse createNetworkAclEntry(CreateNetworkAclEntryRequest createNetworkAclEntryRequest) {
         return null;
     }
 
     @Override
-    public CreateNetworkInsightsAccessScopeResult createNetworkInsightsAccessScope(CreateNetworkInsightsAccessScopeRequest createNetworkInsightsAccessScopeRequest) {
+    public CreateNetworkInsightsAccessScopeResponse createNetworkInsightsAccessScope(CreateNetworkInsightsAccessScopeRequest createNetworkInsightsAccessScopeRequest) {
         return null;
     }
 
     @Override
-    public CreateNetworkInsightsPathResult createNetworkInsightsPath(CreateNetworkInsightsPathRequest createNetworkInsightsPathRequest) {
+    public CreateNetworkInsightsPathResponse createNetworkInsightsPath(CreateNetworkInsightsPathRequest createNetworkInsightsPathRequest) {
         return null;
     }
 
     @Override
-    public CreateNetworkInterfaceResult createNetworkInterface(CreateNetworkInterfaceRequest createNetworkInterfaceRequest) {
+    public CreateNetworkInterfaceResponse createNetworkInterface(CreateNetworkInterfaceRequest createNetworkInterfaceRequest) {
         return null;
     }
 
     @Override
-    public CreateNetworkInterfacePermissionResult createNetworkInterfacePermission(CreateNetworkInterfacePermissionRequest createNetworkInterfacePermissionRequest) {
+    public CreateNetworkInterfacePermissionResponse createNetworkInterfacePermission(CreateNetworkInterfacePermissionRequest createNetworkInterfacePermissionRequest) {
         return null;
     }
 
     @Override
-    public CreatePlacementGroupResult createPlacementGroup(CreatePlacementGroupRequest createPlacementGroupRequest) {
+    public CreatePlacementGroupResponse createPlacementGroup(CreatePlacementGroupRequest createPlacementGroupRequest) {
         return null;
     }
 
     @Override
-    public CreatePublicIpv4PoolResult createPublicIpv4Pool(CreatePublicIpv4PoolRequest createPublicIpv4PoolRequest) {
+    public CreatePublicIpv4PoolResponse createPublicIpv4Pool(CreatePublicIpv4PoolRequest createPublicIpv4PoolRequest) {
         return null;
     }
 
     @Override
-    public CreateReplaceRootVolumeTaskResult createReplaceRootVolumeTask(CreateReplaceRootVolumeTaskRequest createReplaceRootVolumeTaskRequest) {
+    public CreateReplaceRootVolumeTaskResponse createReplaceRootVolumeTask(CreateReplaceRootVolumeTaskRequest createReplaceRootVolumeTaskRequest) {
         return null;
     }
 
     @Override
-    public CreateReservedInstancesListingResult createReservedInstancesListing(CreateReservedInstancesListingRequest createReservedInstancesListingRequest) {
+    public CreateReservedInstancesListingResponse createReservedInstancesListing(CreateReservedInstancesListingRequest createReservedInstancesListingRequest) {
         return null;
     }
 
     @Override
-    public CreateRestoreImageTaskResult createRestoreImageTask(CreateRestoreImageTaskRequest createRestoreImageTaskRequest) {
+    public CreateRestoreImageTaskResponse createRestoreImageTask(CreateRestoreImageTaskRequest createRestoreImageTaskRequest) {
         return null;
     }
 
     @Override
-    public CreateRouteResult createRoute(CreateRouteRequest createRouteRequest) {
+    public CreateRouteResponse createRoute(CreateRouteRequest createRouteRequest) {
         return null;
     }
 
     @Override
-    public CreateRouteTableResult createRouteTable(CreateRouteTableRequest createRouteTableRequest) {
+    public CreateRouteTableResponse createRouteTable(CreateRouteTableRequest createRouteTableRequest) {
         return null;
     }
 
     @Override
-    public CreateSecurityGroupResult createSecurityGroup(CreateSecurityGroupRequest createSecurityGroupRequest) {
+    public CreateSecurityGroupResponse createSecurityGroup(CreateSecurityGroupRequest createSecurityGroupRequest) {
         return null;
     }
 
     @Override
-    public CreateSnapshotResult createSnapshot(CreateSnapshotRequest createSnapshotRequest) {
+    public CreateSnapshotResponse createSnapshot(CreateSnapshotRequest createSnapshotRequest) {
         return null;
     }
 
     @Override
-    public CreateSnapshotsResult createSnapshots(CreateSnapshotsRequest createSnapshotsRequest) {
+    public CreateSnapshotsResponse createSnapshots(CreateSnapshotsRequest createSnapshotsRequest) {
         return null;
     }
 
     @Override
-    public CreateSpotDatafeedSubscriptionResult createSpotDatafeedSubscription(CreateSpotDatafeedSubscriptionRequest createSpotDatafeedSubscriptionRequest) {
+    public CreateSpotDatafeedSubscriptionResponse createSpotDatafeedSubscription(CreateSpotDatafeedSubscriptionRequest createSpotDatafeedSubscriptionRequest) {
         return null;
     }
 
     @Override
-    public CreateStoreImageTaskResult createStoreImageTask(CreateStoreImageTaskRequest createStoreImageTaskRequest) {
+    public CreateStoreImageTaskResponse createStoreImageTask(CreateStoreImageTaskRequest createStoreImageTaskRequest) {
         return null;
     }
 
     @Override
-    public CreateSubnetResult createSubnet(CreateSubnetRequest createSubnetRequest) {
+    public CreateSubnetResponse createSubnet(CreateSubnetRequest createSubnetRequest) {
         return null;
     }
 
     @Override
-    public CreateSubnetCidrReservationResult createSubnetCidrReservation(CreateSubnetCidrReservationRequest createSubnetCidrReservationRequest) {
+    public CreateSubnetCidrReservationResponse createSubnetCidrReservation(CreateSubnetCidrReservationRequest createSubnetCidrReservationRequest) {
         return null;
     }
 
     @Override
-    public CreateTagsResult createTags(CreateTagsRequest createTagsRequest) {
+    public CreateTagsResponse createTags(CreateTagsRequest createTagsRequest) {
         return null;
     }
 
     @Override
-    public CreateTrafficMirrorFilterResult createTrafficMirrorFilter(CreateTrafficMirrorFilterRequest createTrafficMirrorFilterRequest) {
+    public CreateTrafficMirrorFilterResponse createTrafficMirrorFilter(CreateTrafficMirrorFilterRequest createTrafficMirrorFilterRequest) {
         return null;
     }
 
     @Override
-    public CreateTrafficMirrorFilterRuleResult createTrafficMirrorFilterRule(CreateTrafficMirrorFilterRuleRequest createTrafficMirrorFilterRuleRequest) {
+    public CreateTrafficMirrorFilterRuleResponse createTrafficMirrorFilterRule(CreateTrafficMirrorFilterRuleRequest createTrafficMirrorFilterRuleRequest) {
         return null;
     }
 
     @Override
-    public CreateTrafficMirrorSessionResult createTrafficMirrorSession(CreateTrafficMirrorSessionRequest createTrafficMirrorSessionRequest) {
+    public CreateTrafficMirrorSessionResponse createTrafficMirrorSession(CreateTrafficMirrorSessionRequest createTrafficMirrorSessionRequest) {
         return null;
     }
 
     @Override
-    public CreateTrafficMirrorTargetResult createTrafficMirrorTarget(CreateTrafficMirrorTargetRequest createTrafficMirrorTargetRequest) {
+    public CreateTrafficMirrorTargetResponse createTrafficMirrorTarget(CreateTrafficMirrorTargetRequest createTrafficMirrorTargetRequest) {
         return null;
     }
 
     @Override
-    public CreateTransitGatewayResult createTransitGateway(CreateTransitGatewayRequest createTransitGatewayRequest) {
+    public CreateTransitGatewayResponse createTransitGateway(CreateTransitGatewayRequest createTransitGatewayRequest) {
         return null;
     }
 
     @Override
-    public CreateTransitGatewayConnectResult createTransitGatewayConnect(CreateTransitGatewayConnectRequest createTransitGatewayConnectRequest) {
+    public CreateTransitGatewayConnectResponse createTransitGatewayConnect(CreateTransitGatewayConnectRequest createTransitGatewayConnectRequest) {
         return null;
     }
 
     @Override
-    public CreateTransitGatewayConnectPeerResult createTransitGatewayConnectPeer(CreateTransitGatewayConnectPeerRequest createTransitGatewayConnectPeerRequest) {
+    public CreateTransitGatewayConnectPeerResponse createTransitGatewayConnectPeer(CreateTransitGatewayConnectPeerRequest createTransitGatewayConnectPeerRequest) {
         return null;
     }
 
     @Override
-    public CreateTransitGatewayMulticastDomainResult createTransitGatewayMulticastDomain(CreateTransitGatewayMulticastDomainRequest createTransitGatewayMulticastDomainRequest) {
+    public CreateTransitGatewayMulticastDomainResponse createTransitGatewayMulticastDomain(CreateTransitGatewayMulticastDomainRequest createTransitGatewayMulticastDomainRequest) {
         return null;
     }
 
     @Override
-    public CreateTransitGatewayPeeringAttachmentResult createTransitGatewayPeeringAttachment(CreateTransitGatewayPeeringAttachmentRequest createTransitGatewayPeeringAttachmentRequest) {
+    public CreateTransitGatewayPeeringAttachmentResponse createTransitGatewayPeeringAttachment(CreateTransitGatewayPeeringAttachmentRequest createTransitGatewayPeeringAttachmentRequest) {
         return null;
     }
 
     @Override
-    public CreateTransitGatewayPolicyTableResult createTransitGatewayPolicyTable(CreateTransitGatewayPolicyTableRequest createTransitGatewayPolicyTableRequest) {
+    public CreateTransitGatewayPolicyTableResponse createTransitGatewayPolicyTable(CreateTransitGatewayPolicyTableRequest createTransitGatewayPolicyTableRequest) {
         return null;
     }
 
     @Override
-    public CreateTransitGatewayPrefixListReferenceResult createTransitGatewayPrefixListReference(CreateTransitGatewayPrefixListReferenceRequest createTransitGatewayPrefixListReferenceRequest) {
+    public CreateTransitGatewayPrefixListReferenceResponse createTransitGatewayPrefixListReference(CreateTransitGatewayPrefixListReferenceRequest createTransitGatewayPrefixListReferenceRequest) {
         return null;
     }
 
     @Override
-    public CreateTransitGatewayRouteResult createTransitGatewayRoute(CreateTransitGatewayRouteRequest createTransitGatewayRouteRequest) {
+    public CreateTransitGatewayRouteResponse createTransitGatewayRoute(CreateTransitGatewayRouteRequest createTransitGatewayRouteRequest) {
         return null;
     }
 
     @Override
-    public CreateTransitGatewayRouteTableResult createTransitGatewayRouteTable(CreateTransitGatewayRouteTableRequest createTransitGatewayRouteTableRequest) {
+    public CreateTransitGatewayRouteTableResponse createTransitGatewayRouteTable(CreateTransitGatewayRouteTableRequest createTransitGatewayRouteTableRequest) {
         return null;
     }
 
     @Override
-    public CreateTransitGatewayRouteTableAnnouncementResult createTransitGatewayRouteTableAnnouncement(CreateTransitGatewayRouteTableAnnouncementRequest createTransitGatewayRouteTableAnnouncementRequest) {
+    public CreateTransitGatewayRouteTableAnnouncementResponse createTransitGatewayRouteTableAnnouncement(CreateTransitGatewayRouteTableAnnouncementRequest createTransitGatewayRouteTableAnnouncementRequest) {
         return null;
     }
 
     @Override
-    public CreateTransitGatewayVpcAttachmentResult createTransitGatewayVpcAttachment(CreateTransitGatewayVpcAttachmentRequest createTransitGatewayVpcAttachmentRequest) {
+    public CreateTransitGatewayVpcAttachmentResponse createTransitGatewayVpcAttachment(CreateTransitGatewayVpcAttachmentRequest createTransitGatewayVpcAttachmentRequest) {
         return null;
     }
 
     @Override
-    public CreateVerifiedAccessEndpointResult createVerifiedAccessEndpoint(CreateVerifiedAccessEndpointRequest createVerifiedAccessEndpointRequest) {
+    public CreateVerifiedAccessEndpointResponse createVerifiedAccessEndpoint(CreateVerifiedAccessEndpointRequest createVerifiedAccessEndpointRequest) {
         return null;
     }
 
     @Override
-    public CreateVerifiedAccessGroupResult createVerifiedAccessGroup(CreateVerifiedAccessGroupRequest createVerifiedAccessGroupRequest) {
+    public CreateVerifiedAccessGroupResponse createVerifiedAccessGroup(CreateVerifiedAccessGroupRequest createVerifiedAccessGroupRequest) {
         return null;
     }
 
     @Override
-    public CreateVerifiedAccessInstanceResult createVerifiedAccessInstance(CreateVerifiedAccessInstanceRequest createVerifiedAccessInstanceRequest) {
+    public CreateVerifiedAccessInstanceResponse createVerifiedAccessInstance(CreateVerifiedAccessInstanceRequest createVerifiedAccessInstanceRequest) {
         return null;
     }
 
     @Override
-    public CreateVerifiedAccessTrustProviderResult createVerifiedAccessTrustProvider(CreateVerifiedAccessTrustProviderRequest createVerifiedAccessTrustProviderRequest) {
+    public CreateVerifiedAccessTrustProviderResponse createVerifiedAccessTrustProvider(CreateVerifiedAccessTrustProviderRequest createVerifiedAccessTrustProviderRequest) {
         return null;
     }
 
     @Override
-    public CreateVolumeResult createVolume(CreateVolumeRequest createVolumeRequest) {
+    public CreateVolumeResponse createVolume(CreateVolumeRequest createVolumeRequest) {
         return null;
     }
 
     @Override
-    public CreateVpcResult createVpc(CreateVpcRequest createVpcRequest) {
+    public CreateVpcResponse createVpc(CreateVpcRequest createVpcRequest) {
         return null;
     }
 
     @Override
-    public CreateVpcEndpointResult createVpcEndpoint(CreateVpcEndpointRequest createVpcEndpointRequest) {
+    public CreateVpcEndpointResponse createVpcEndpoint(CreateVpcEndpointRequest createVpcEndpointRequest) {
         return null;
     }
 
     @Override
-    public CreateVpcEndpointConnectionNotificationResult createVpcEndpointConnectionNotification(CreateVpcEndpointConnectionNotificationRequest createVpcEndpointConnectionNotificationRequest) {
+    public CreateVpcEndpointConnectionNotificationResponse createVpcEndpointConnectionNotification(CreateVpcEndpointConnectionNotificationRequest createVpcEndpointConnectionNotificationRequest) {
         return null;
     }
 
     @Override
-    public CreateVpcEndpointServiceConfigurationResult createVpcEndpointServiceConfiguration(CreateVpcEndpointServiceConfigurationRequest createVpcEndpointServiceConfigurationRequest) {
+    public CreateVpcEndpointServiceConfigurationResponse createVpcEndpointServiceConfiguration(CreateVpcEndpointServiceConfigurationRequest createVpcEndpointServiceConfigurationRequest) {
         return null;
     }
 
     @Override
-    public CreateVpcPeeringConnectionResult createVpcPeeringConnection(CreateVpcPeeringConnectionRequest createVpcPeeringConnectionRequest) {
+    public CreateVpcPeeringConnectionResponse createVpcPeeringConnection(CreateVpcPeeringConnectionRequest createVpcPeeringConnectionRequest) {
         return null;
     }
 
     @Override
-    public CreateVpcPeeringConnectionResult createVpcPeeringConnection() {
+    public CreateVpcPeeringConnectionResponse createVpcPeeringConnection() {
         return null;
     }
 
     @Override
-    public CreateVpnConnectionResult createVpnConnection(CreateVpnConnectionRequest createVpnConnectionRequest) {
+    public CreateVpnConnectionResponse createVpnConnection(CreateVpnConnectionRequest createVpnConnectionRequest) {
         return null;
     }
 
     @Override
-    public CreateVpnConnectionRouteResult createVpnConnectionRoute(CreateVpnConnectionRouteRequest createVpnConnectionRouteRequest) {
+    public CreateVpnConnectionRouteResponse createVpnConnectionRoute(CreateVpnConnectionRouteRequest createVpnConnectionRouteRequest) {
         return null;
     }
 
     @Override
-    public CreateVpnGatewayResult createVpnGateway(CreateVpnGatewayRequest createVpnGatewayRequest) {
+    public CreateVpnGatewayResponse createVpnGateway(CreateVpnGatewayRequest createVpnGatewayRequest) {
         return null;
     }
 
     @Override
-    public DeleteCarrierGatewayResult deleteCarrierGateway(DeleteCarrierGatewayRequest deleteCarrierGatewayRequest) {
+    public DeleteCarrierGatewayResponse deleteCarrierGateway(DeleteCarrierGatewayRequest deleteCarrierGatewayRequest) {
         return null;
     }
 
     @Override
-    public DeleteClientVpnEndpointResult deleteClientVpnEndpoint(DeleteClientVpnEndpointRequest deleteClientVpnEndpointRequest) {
+    public DeleteClientVpnEndpointResponse deleteClientVpnEndpoint(DeleteClientVpnEndpointRequest deleteClientVpnEndpointRequest) {
         return null;
     }
 
     @Override
-    public DeleteClientVpnRouteResult deleteClientVpnRoute(DeleteClientVpnRouteRequest deleteClientVpnRouteRequest) {
+    public DeleteClientVpnRouteResponse deleteClientVpnRoute(DeleteClientVpnRouteRequest deleteClientVpnRouteRequest) {
         return null;
     }
 
     @Override
-    public DeleteCoipCidrResult deleteCoipCidr(DeleteCoipCidrRequest deleteCoipCidrRequest) {
+    public DeleteCoipCidrResponse deleteCoipCidr(DeleteCoipCidrRequest deleteCoipCidrRequest) {
         return null;
     }
 
     @Override
-    public DeleteCoipPoolResult deleteCoipPool(DeleteCoipPoolRequest deleteCoipPoolRequest) {
+    public DeleteCoipPoolResponse deleteCoipPool(DeleteCoipPoolRequest deleteCoipPoolRequest) {
         return null;
     }
 
     @Override
-    public DeleteCustomerGatewayResult deleteCustomerGateway(DeleteCustomerGatewayRequest deleteCustomerGatewayRequest) {
+    public DeleteCustomerGatewayResponse deleteCustomerGateway(DeleteCustomerGatewayRequest deleteCustomerGatewayRequest) {
         return null;
     }
 
     @Override
-    public DeleteDhcpOptionsResult deleteDhcpOptions(DeleteDhcpOptionsRequest deleteDhcpOptionsRequest) {
+    public DeleteDhcpOptionsResponse deleteDhcpOptions(DeleteDhcpOptionsRequest deleteDhcpOptionsRequest) {
         return null;
     }
 
     @Override
-    public DeleteEgressOnlyInternetGatewayResult deleteEgressOnlyInternetGateway(DeleteEgressOnlyInternetGatewayRequest deleteEgressOnlyInternetGatewayRequest) {
+    public DeleteEgressOnlyInternetGatewayResponse deleteEgressOnlyInternetGateway(DeleteEgressOnlyInternetGatewayRequest deleteEgressOnlyInternetGatewayRequest) {
         return null;
     }
 
     @Override
-    public DeleteFleetsResult deleteFleets(DeleteFleetsRequest deleteFleetsRequest) {
+    public DeleteFleetsResponse deleteFleets(DeleteFleetsRequest deleteFleetsRequest) {
         return null;
     }
 
     @Override
-    public DeleteFlowLogsResult deleteFlowLogs(DeleteFlowLogsRequest deleteFlowLogsRequest) {
+    public DeleteFlowLogsResponse deleteFlowLogs(DeleteFlowLogsRequest deleteFlowLogsRequest) {
         return null;
     }
 
     @Override
-    public DeleteFpgaImageResult deleteFpgaImage(DeleteFpgaImageRequest deleteFpgaImageRequest) {
+    public DeleteFpgaImageResponse deleteFpgaImage(DeleteFpgaImageRequest deleteFpgaImageRequest) {
         return null;
     }
 
     @Override
-    public DeleteInstanceConnectEndpointResult deleteInstanceConnectEndpoint(DeleteInstanceConnectEndpointRequest deleteInstanceConnectEndpointRequest) {
+    public DeleteInstanceConnectEndpointResponse deleteInstanceConnectEndpoint(DeleteInstanceConnectEndpointRequest deleteInstanceConnectEndpointRequest) {
         return null;
     }
 
     @Override
-    public DeleteInstanceEventWindowResult deleteInstanceEventWindow(DeleteInstanceEventWindowRequest deleteInstanceEventWindowRequest) {
+    public DeleteInstanceEventWindowResponse deleteInstanceEventWindow(DeleteInstanceEventWindowRequest deleteInstanceEventWindowRequest) {
         return null;
     }
 
     @Override
-    public DeleteInternetGatewayResult deleteInternetGateway(DeleteInternetGatewayRequest deleteInternetGatewayRequest) {
+    public DeleteInternetGatewayResponse deleteInternetGateway(DeleteInternetGatewayRequest deleteInternetGatewayRequest) {
         return null;
     }
 
     @Override
-    public DeleteIpamResult deleteIpam(DeleteIpamRequest deleteIpamRequest) {
+    public DeleteIpamResponse deleteIpam(DeleteIpamRequest deleteIpamRequest) {
         return null;
     }
 
     @Override
-    public DeleteIpamExternalResourceVerificationTokenResult deleteIpamExternalResourceVerificationToken(DeleteIpamExternalResourceVerificationTokenRequest deleteIpamExternalResourceVerificationTokenRequest) {
+    public DeleteIpamExternalResourceVerificationTokenResponse deleteIpamExternalResourceVerificationToken(DeleteIpamExternalResourceVerificationTokenRequest deleteIpamExternalResourceVerificationTokenRequest) {
         return null;
     }
 
     @Override
-    public DeleteIpamPoolResult deleteIpamPool(DeleteIpamPoolRequest deleteIpamPoolRequest) {
+    public DeleteIpamPoolResponse deleteIpamPool(DeleteIpamPoolRequest deleteIpamPoolRequest) {
         return null;
     }
 
     @Override
-    public DeleteIpamResourceDiscoveryResult deleteIpamResourceDiscovery(DeleteIpamResourceDiscoveryRequest deleteIpamResourceDiscoveryRequest) {
+    public DeleteIpamResourceDiscoveryResponse deleteIpamResourceDiscovery(DeleteIpamResourceDiscoveryRequest deleteIpamResourceDiscoveryRequest) {
         return null;
     }
 
     @Override
-    public DeleteIpamScopeResult deleteIpamScope(DeleteIpamScopeRequest deleteIpamScopeRequest) {
+    public DeleteIpamScopeResponse deleteIpamScope(DeleteIpamScopeRequest deleteIpamScopeRequest) {
         return null;
     }
 
     @Override
-    public DeleteKeyPairResult deleteKeyPair(DeleteKeyPairRequest deleteKeyPairRequest) {
+    public DeleteKeyPairResponse deleteKeyPair(DeleteKeyPairRequest deleteKeyPairRequest) {
         return null;
     }
 
     @Override
-    public DeleteLaunchTemplateResult deleteLaunchTemplate(DeleteLaunchTemplateRequest deleteLaunchTemplateRequest) {
+    public DeleteLaunchTemplateResponse deleteLaunchTemplate(DeleteLaunchTemplateRequest deleteLaunchTemplateRequest) {
         return null;
     }
 
     @Override
-    public DeleteLaunchTemplateVersionsResult deleteLaunchTemplateVersions(DeleteLaunchTemplateVersionsRequest deleteLaunchTemplateVersionsRequest) {
+    public DeleteLaunchTemplateVersionsResponse deleteLaunchTemplateVersions(DeleteLaunchTemplateVersionsRequest deleteLaunchTemplateVersionsRequest) {
         return null;
     }
 
     @Override
-    public DeleteLocalGatewayRouteResult deleteLocalGatewayRoute(DeleteLocalGatewayRouteRequest deleteLocalGatewayRouteRequest) {
+    public DeleteLocalGatewayRouteResponse deleteLocalGatewayRoute(DeleteLocalGatewayRouteRequest deleteLocalGatewayRouteRequest) {
         return null;
     }
 
     @Override
-    public DeleteLocalGatewayRouteTableResult deleteLocalGatewayRouteTable(DeleteLocalGatewayRouteTableRequest deleteLocalGatewayRouteTableRequest) {
+    public DeleteLocalGatewayRouteTableResponse deleteLocalGatewayRouteTable(DeleteLocalGatewayRouteTableRequest deleteLocalGatewayRouteTableRequest) {
         return null;
     }
 
     @Override
-    public DeleteLocalGatewayRouteTableVirtualInterfaceGroupAssociationResult deleteLocalGatewayRouteTableVirtualInterfaceGroupAssociation(DeleteLocalGatewayRouteTableVirtualInterfaceGroupAssociationRequest deleteLocalGatewayRouteTableVirtualInterfaceGroupAssociationRequest) {
+    public DeleteLocalGatewayRouteTableVirtualInterfaceGroupAssociationResponse deleteLocalGatewayRouteTableVirtualInterfaceGroupAssociation(DeleteLocalGatewayRouteTableVirtualInterfaceGroupAssociationRequest deleteLocalGatewayRouteTableVirtualInterfaceGroupAssociationRequest) {
         return null;
     }
 
     @Override
-    public DeleteLocalGatewayRouteTableVpcAssociationResult deleteLocalGatewayRouteTableVpcAssociation(DeleteLocalGatewayRouteTableVpcAssociationRequest deleteLocalGatewayRouteTableVpcAssociationRequest) {
+    public DeleteLocalGatewayRouteTableVpcAssociationResponse deleteLocalGatewayRouteTableVpcAssociation(DeleteLocalGatewayRouteTableVpcAssociationRequest deleteLocalGatewayRouteTableVpcAssociationRequest) {
         return null;
     }
 
     @Override
-    public DeleteManagedPrefixListResult deleteManagedPrefixList(DeleteManagedPrefixListRequest deleteManagedPrefixListRequest) {
+    public DeleteManagedPrefixListResponse deleteManagedPrefixList(DeleteManagedPrefixListRequest deleteManagedPrefixListRequest) {
         return null;
     }
 
     @Override
-    public DeleteNatGatewayResult deleteNatGateway(DeleteNatGatewayRequest deleteNatGatewayRequest) {
+    public DeleteNatGatewayResponse deleteNatGateway(DeleteNatGatewayRequest deleteNatGatewayRequest) {
         return null;
     }
 
     @Override
-    public DeleteNetworkAclResult deleteNetworkAcl(DeleteNetworkAclRequest deleteNetworkAclRequest) {
+    public DeleteNetworkAclResponse deleteNetworkAcl(DeleteNetworkAclRequest deleteNetworkAclRequest) {
         return null;
     }
 
     @Override
-    public DeleteNetworkAclEntryResult deleteNetworkAclEntry(DeleteNetworkAclEntryRequest deleteNetworkAclEntryRequest) {
+    public DeleteNetworkAclEntryResponse deleteNetworkAclEntry(DeleteNetworkAclEntryRequest deleteNetworkAclEntryRequest) {
         return null;
     }
 
     @Override
-    public DeleteNetworkInsightsAccessScopeResult deleteNetworkInsightsAccessScope(DeleteNetworkInsightsAccessScopeRequest deleteNetworkInsightsAccessScopeRequest) {
+    public DeleteNetworkInsightsAccessScopeResponse deleteNetworkInsightsAccessScope(DeleteNetworkInsightsAccessScopeRequest deleteNetworkInsightsAccessScopeRequest) {
         return null;
     }
 
     @Override
-    public DeleteNetworkInsightsAccessScopeAnalysisResult deleteNetworkInsightsAccessScopeAnalysis(DeleteNetworkInsightsAccessScopeAnalysisRequest deleteNetworkInsightsAccessScopeAnalysisRequest) {
+    public DeleteNetworkInsightsAccessScopeAnalysisResponse deleteNetworkInsightsAccessScopeAnalysis(DeleteNetworkInsightsAccessScopeAnalysisRequest deleteNetworkInsightsAccessScopeAnalysisRequest) {
         return null;
     }
 
     @Override
-    public DeleteNetworkInsightsAnalysisResult deleteNetworkInsightsAnalysis(DeleteNetworkInsightsAnalysisRequest deleteNetworkInsightsAnalysisRequest) {
+    public DeleteNetworkInsightsAnalysisResponse deleteNetworkInsightsAnalysis(DeleteNetworkInsightsAnalysisRequest deleteNetworkInsightsAnalysisRequest) {
         return null;
     }
 
     @Override
-    public DeleteNetworkInsightsPathResult deleteNetworkInsightsPath(DeleteNetworkInsightsPathRequest deleteNetworkInsightsPathRequest) {
+    public DeleteNetworkInsightsPathResponse deleteNetworkInsightsPath(DeleteNetworkInsightsPathRequest deleteNetworkInsightsPathRequest) {
         return null;
     }
 
     @Override
-    public DeleteNetworkInterfaceResult deleteNetworkInterface(DeleteNetworkInterfaceRequest deleteNetworkInterfaceRequest) {
+    public DeleteNetworkInterfaceResponse deleteNetworkInterface(DeleteNetworkInterfaceRequest deleteNetworkInterfaceRequest) {
         return null;
     }
 
     @Override
-    public DeleteNetworkInterfacePermissionResult deleteNetworkInterfacePermission(DeleteNetworkInterfacePermissionRequest deleteNetworkInterfacePermissionRequest) {
+    public DeleteNetworkInterfacePermissionResponse deleteNetworkInterfacePermission(DeleteNetworkInterfacePermissionRequest deleteNetworkInterfacePermissionRequest) {
         return null;
     }
 
     @Override
-    public DeletePlacementGroupResult deletePlacementGroup(DeletePlacementGroupRequest deletePlacementGroupRequest) {
+    public DeletePlacementGroupResponse deletePlacementGroup(DeletePlacementGroupRequest deletePlacementGroupRequest) {
         return null;
     }
 
     @Override
-    public DeletePublicIpv4PoolResult deletePublicIpv4Pool(DeletePublicIpv4PoolRequest deletePublicIpv4PoolRequest) {
+    public DeletePublicIpv4PoolResponse deletePublicIpv4Pool(DeletePublicIpv4PoolRequest deletePublicIpv4PoolRequest) {
         return null;
     }
 
     @Override
-    public DeleteQueuedReservedInstancesResult deleteQueuedReservedInstances(DeleteQueuedReservedInstancesRequest deleteQueuedReservedInstancesRequest) {
+    public DeleteQueuedReservedInstancesResponse deleteQueuedReservedInstances(DeleteQueuedReservedInstancesRequest deleteQueuedReservedInstancesRequest) {
         return null;
     }
 
     @Override
-    public DeleteRouteResult deleteRoute(DeleteRouteRequest deleteRouteRequest) {
+    public DeleteRouteResponse deleteRoute(DeleteRouteRequest deleteRouteRequest) {
         return null;
     }
 
     @Override
-    public DeleteRouteTableResult deleteRouteTable(DeleteRouteTableRequest deleteRouteTableRequest) {
+    public DeleteRouteTableResponse deleteRouteTable(DeleteRouteTableRequest deleteRouteTableRequest) {
         return null;
     }
 
     @Override
-    public DeleteSecurityGroupResult deleteSecurityGroup(DeleteSecurityGroupRequest deleteSecurityGroupRequest) {
+    public DeleteSecurityGroupResponse deleteSecurityGroup(DeleteSecurityGroupRequest deleteSecurityGroupRequest) {
         return null;
     }
 
     @Override
-    public DeleteSnapshotResult deleteSnapshot(DeleteSnapshotRequest deleteSnapshotRequest) {
+    public DeleteSnapshotResponse deleteSnapshot(DeleteSnapshotRequest deleteSnapshotRequest) {
         return null;
     }
 
     @Override
-    public DeleteSpotDatafeedSubscriptionResult deleteSpotDatafeedSubscription(DeleteSpotDatafeedSubscriptionRequest deleteSpotDatafeedSubscriptionRequest) {
+    public DeleteSpotDatafeedSubscriptionResponse deleteSpotDatafeedSubscription(DeleteSpotDatafeedSubscriptionRequest deleteSpotDatafeedSubscriptionRequest) {
         return null;
     }
 
     @Override
-    public DeleteSpotDatafeedSubscriptionResult deleteSpotDatafeedSubscription() {
+    public DeleteSpotDatafeedSubscriptionResponse deleteSpotDatafeedSubscription() {
         return null;
     }
 
     @Override
-    public DeleteSubnetResult deleteSubnet(DeleteSubnetRequest deleteSubnetRequest) {
+    public DeleteSubnetResponse deleteSubnet(DeleteSubnetRequest deleteSubnetRequest) {
         return null;
     }
 
     @Override
-    public DeleteSubnetCidrReservationResult deleteSubnetCidrReservation(DeleteSubnetCidrReservationRequest deleteSubnetCidrReservationRequest) {
+    public DeleteSubnetCidrReservationResponse deleteSubnetCidrReservation(DeleteSubnetCidrReservationRequest deleteSubnetCidrReservationRequest) {
         return null;
     }
 
     @Override
-    public DeleteTagsResult deleteTags(DeleteTagsRequest deleteTagsRequest) {
+    public DeleteTagsResponse deleteTags(DeleteTagsRequest deleteTagsRequest) {
         return null;
     }
 
     @Override
-    public DeleteTrafficMirrorFilterResult deleteTrafficMirrorFilter(DeleteTrafficMirrorFilterRequest deleteTrafficMirrorFilterRequest) {
+    public DeleteTrafficMirrorFilterResponse deleteTrafficMirrorFilter(DeleteTrafficMirrorFilterRequest deleteTrafficMirrorFilterRequest) {
         return null;
     }
 
     @Override
-    public DeleteTrafficMirrorFilterRuleResult deleteTrafficMirrorFilterRule(DeleteTrafficMirrorFilterRuleRequest deleteTrafficMirrorFilterRuleRequest) {
+    public DeleteTrafficMirrorFilterRuleResponse deleteTrafficMirrorFilterRule(DeleteTrafficMirrorFilterRuleRequest deleteTrafficMirrorFilterRuleRequest) {
         return null;
     }
 
     @Override
-    public DeleteTrafficMirrorSessionResult deleteTrafficMirrorSession(DeleteTrafficMirrorSessionRequest deleteTrafficMirrorSessionRequest) {
+    public DeleteTrafficMirrorSessionResponse deleteTrafficMirrorSession(DeleteTrafficMirrorSessionRequest deleteTrafficMirrorSessionRequest) {
         return null;
     }
 
     @Override
-    public DeleteTrafficMirrorTargetResult deleteTrafficMirrorTarget(DeleteTrafficMirrorTargetRequest deleteTrafficMirrorTargetRequest) {
+    public DeleteTrafficMirrorTargetResponse deleteTrafficMirrorTarget(DeleteTrafficMirrorTargetRequest deleteTrafficMirrorTargetRequest) {
         return null;
     }
 
     @Override
-    public DeleteTransitGatewayResult deleteTransitGateway(DeleteTransitGatewayRequest deleteTransitGatewayRequest) {
+    public DeleteTransitGatewayResponse deleteTransitGateway(DeleteTransitGatewayRequest deleteTransitGatewayRequest) {
         return null;
     }
 
     @Override
-    public DeleteTransitGatewayConnectResult deleteTransitGatewayConnect(DeleteTransitGatewayConnectRequest deleteTransitGatewayConnectRequest) {
+    public DeleteTransitGatewayConnectResponse deleteTransitGatewayConnect(DeleteTransitGatewayConnectRequest deleteTransitGatewayConnectRequest) {
         return null;
     }
 
     @Override
-    public DeleteTransitGatewayConnectPeerResult deleteTransitGatewayConnectPeer(DeleteTransitGatewayConnectPeerRequest deleteTransitGatewayConnectPeerRequest) {
+    public DeleteTransitGatewayConnectPeerResponse deleteTransitGatewayConnectPeer(DeleteTransitGatewayConnectPeerRequest deleteTransitGatewayConnectPeerRequest) {
         return null;
     }
 
     @Override
-    public DeleteTransitGatewayMulticastDomainResult deleteTransitGatewayMulticastDomain(DeleteTransitGatewayMulticastDomainRequest deleteTransitGatewayMulticastDomainRequest) {
+    public DeleteTransitGatewayMulticastDomainResponse deleteTransitGatewayMulticastDomain(DeleteTransitGatewayMulticastDomainRequest deleteTransitGatewayMulticastDomainRequest) {
         return null;
     }
 
     @Override
-    public DeleteTransitGatewayPeeringAttachmentResult deleteTransitGatewayPeeringAttachment(DeleteTransitGatewayPeeringAttachmentRequest deleteTransitGatewayPeeringAttachmentRequest) {
+    public DeleteTransitGatewayPeeringAttachmentResponse deleteTransitGatewayPeeringAttachment(DeleteTransitGatewayPeeringAttachmentRequest deleteTransitGatewayPeeringAttachmentRequest) {
         return null;
     }
 
     @Override
-    public DeleteTransitGatewayPolicyTableResult deleteTransitGatewayPolicyTable(DeleteTransitGatewayPolicyTableRequest deleteTransitGatewayPolicyTableRequest) {
+    public DeleteTransitGatewayPolicyTableResponse deleteTransitGatewayPolicyTable(DeleteTransitGatewayPolicyTableRequest deleteTransitGatewayPolicyTableRequest) {
         return null;
     }
 
     @Override
-    public DeleteTransitGatewayPrefixListReferenceResult deleteTransitGatewayPrefixListReference(DeleteTransitGatewayPrefixListReferenceRequest deleteTransitGatewayPrefixListReferenceRequest) {
+    public DeleteTransitGatewayPrefixListReferenceResponse deleteTransitGatewayPrefixListReference(DeleteTransitGatewayPrefixListReferenceRequest deleteTransitGatewayPrefixListReferenceRequest) {
         return null;
     }
 
     @Override
-    public DeleteTransitGatewayRouteResult deleteTransitGatewayRoute(DeleteTransitGatewayRouteRequest deleteTransitGatewayRouteRequest) {
+    public DeleteTransitGatewayRouteResponse deleteTransitGatewayRoute(DeleteTransitGatewayRouteRequest deleteTransitGatewayRouteRequest) {
         return null;
     }
 
     @Override
-    public DeleteTransitGatewayRouteTableResult deleteTransitGatewayRouteTable(DeleteTransitGatewayRouteTableRequest deleteTransitGatewayRouteTableRequest) {
+    public DeleteTransitGatewayRouteTableResponse deleteTransitGatewayRouteTable(DeleteTransitGatewayRouteTableRequest deleteTransitGatewayRouteTableRequest) {
         return null;
     }
 
     @Override
-    public DeleteTransitGatewayRouteTableAnnouncementResult deleteTransitGatewayRouteTableAnnouncement(DeleteTransitGatewayRouteTableAnnouncementRequest deleteTransitGatewayRouteTableAnnouncementRequest) {
+    public DeleteTransitGatewayRouteTableAnnouncementResponse deleteTransitGatewayRouteTableAnnouncement(DeleteTransitGatewayRouteTableAnnouncementRequest deleteTransitGatewayRouteTableAnnouncementRequest) {
         return null;
     }
 
     @Override
-    public DeleteTransitGatewayVpcAttachmentResult deleteTransitGatewayVpcAttachment(DeleteTransitGatewayVpcAttachmentRequest deleteTransitGatewayVpcAttachmentRequest) {
+    public DeleteTransitGatewayVpcAttachmentResponse deleteTransitGatewayVpcAttachment(DeleteTransitGatewayVpcAttachmentRequest deleteTransitGatewayVpcAttachmentRequest) {
         return null;
     }
 
     @Override
-    public DeleteVerifiedAccessEndpointResult deleteVerifiedAccessEndpoint(DeleteVerifiedAccessEndpointRequest deleteVerifiedAccessEndpointRequest) {
+    public DeleteVerifiedAccessEndpointResponse deleteVerifiedAccessEndpoint(DeleteVerifiedAccessEndpointRequest deleteVerifiedAccessEndpointRequest) {
         return null;
     }
 
     @Override
-    public DeleteVerifiedAccessGroupResult deleteVerifiedAccessGroup(DeleteVerifiedAccessGroupRequest deleteVerifiedAccessGroupRequest) {
+    public DeleteVerifiedAccessGroupResponse deleteVerifiedAccessGroup(DeleteVerifiedAccessGroupRequest deleteVerifiedAccessGroupRequest) {
         return null;
     }
 
     @Override
-    public DeleteVerifiedAccessInstanceResult deleteVerifiedAccessInstance(DeleteVerifiedAccessInstanceRequest deleteVerifiedAccessInstanceRequest) {
+    public DeleteVerifiedAccessInstanceResponse deleteVerifiedAccessInstance(DeleteVerifiedAccessInstanceRequest deleteVerifiedAccessInstanceRequest) {
         return null;
     }
 
     @Override
-    public DeleteVerifiedAccessTrustProviderResult deleteVerifiedAccessTrustProvider(DeleteVerifiedAccessTrustProviderRequest deleteVerifiedAccessTrustProviderRequest) {
+    public DeleteVerifiedAccessTrustProviderResponse deleteVerifiedAccessTrustProvider(DeleteVerifiedAccessTrustProviderRequest deleteVerifiedAccessTrustProviderRequest) {
         return null;
     }
 
     @Override
-    public DeleteVolumeResult deleteVolume(DeleteVolumeRequest deleteVolumeRequest) {
+    public DeleteVolumeResponse deleteVolume(DeleteVolumeRequest deleteVolumeRequest) {
         return null;
     }
 
     @Override
-    public DeleteVpcResult deleteVpc(DeleteVpcRequest deleteVpcRequest) {
+    public DeleteVpcResponse deleteVpc(DeleteVpcRequest deleteVpcRequest) {
         return null;
     }
 
     @Override
-    public DeleteVpcEndpointConnectionNotificationsResult deleteVpcEndpointConnectionNotifications(DeleteVpcEndpointConnectionNotificationsRequest deleteVpcEndpointConnectionNotificationsRequest) {
+    public DeleteVpcEndpointConnectionNotificationsResponse deleteVpcEndpointConnectionNotifications(DeleteVpcEndpointConnectionNotificationsRequest deleteVpcEndpointConnectionNotificationsRequest) {
         return null;
     }
 
     @Override
-    public DeleteVpcEndpointServiceConfigurationsResult deleteVpcEndpointServiceConfigurations(DeleteVpcEndpointServiceConfigurationsRequest deleteVpcEndpointServiceConfigurationsRequest) {
+    public DeleteVpcEndpointServiceConfigurationsResponse deleteVpcEndpointServiceConfigurations(DeleteVpcEndpointServiceConfigurationsRequest deleteVpcEndpointServiceConfigurationsRequest) {
         return null;
     }
 
     @Override
-    public DeleteVpcEndpointsResult deleteVpcEndpoints(DeleteVpcEndpointsRequest deleteVpcEndpointsRequest) {
+    public DeleteVpcEndpointsResponse deleteVpcEndpoints(DeleteVpcEndpointsRequest deleteVpcEndpointsRequest) {
         return null;
     }
 
     @Override
-    public DeleteVpcPeeringConnectionResult deleteVpcPeeringConnection(DeleteVpcPeeringConnectionRequest deleteVpcPeeringConnectionRequest) {
+    public DeleteVpcPeeringConnectionResponse deleteVpcPeeringConnection(DeleteVpcPeeringConnectionRequest deleteVpcPeeringConnectionRequest) {
         return null;
     }
 
     @Override
-    public DeleteVpnConnectionResult deleteVpnConnection(DeleteVpnConnectionRequest deleteVpnConnectionRequest) {
+    public DeleteVpnConnectionResponse deleteVpnConnection(DeleteVpnConnectionRequest deleteVpnConnectionRequest) {
         return null;
     }
 
     @Override
-    public DeleteVpnConnectionRouteResult deleteVpnConnectionRoute(DeleteVpnConnectionRouteRequest deleteVpnConnectionRouteRequest) {
+    public DeleteVpnConnectionRouteResponse deleteVpnConnectionRoute(DeleteVpnConnectionRouteRequest deleteVpnConnectionRouteRequest) {
         return null;
     }
 
     @Override
-    public DeleteVpnGatewayResult deleteVpnGateway(DeleteVpnGatewayRequest deleteVpnGatewayRequest) {
+    public DeleteVpnGatewayResponse deleteVpnGateway(DeleteVpnGatewayRequest deleteVpnGatewayRequest) {
         return null;
     }
 
     @Override
-    public DeprovisionByoipCidrResult deprovisionByoipCidr(DeprovisionByoipCidrRequest deprovisionByoipCidrRequest) {
+    public DeprovisionByoipCidrResponse deprovisionByoipCidr(DeprovisionByoipCidrRequest deprovisionByoipCidrRequest) {
         return null;
     }
 
     @Override
-    public DeprovisionIpamByoasnResult deprovisionIpamByoasn(DeprovisionIpamByoasnRequest deprovisionIpamByoasnRequest) {
+    public DeprovisionIpamByoasnResponse deprovisionIpamByoasn(DeprovisionIpamByoasnRequest deprovisionIpamByoasnRequest) {
         return null;
     }
 
     @Override
-    public DeprovisionIpamPoolCidrResult deprovisionIpamPoolCidr(DeprovisionIpamPoolCidrRequest deprovisionIpamPoolCidrRequest) {
+    public DeprovisionIpamPoolCidrResponse deprovisionIpamPoolCidr(DeprovisionIpamPoolCidrRequest deprovisionIpamPoolCidrRequest) {
         return null;
     }
 
     @Override
-    public DeprovisionPublicIpv4PoolCidrResult deprovisionPublicIpv4PoolCidr(DeprovisionPublicIpv4PoolCidrRequest deprovisionPublicIpv4PoolCidrRequest) {
+    public DeprovisionPublicIpv4PoolCidrResponse deprovisionPublicIpv4PoolCidr(DeprovisionPublicIpv4PoolCidrRequest deprovisionPublicIpv4PoolCidrRequest) {
         return null;
     }
 
     @Override
-    public DeregisterImageResult deregisterImage(DeregisterImageRequest deregisterImageRequest) {
+    public DeregisterImageResponse deregisterImage(DeregisterImageRequest deregisterImageRequest) {
         return null;
     }
 
     @Override
-    public DeregisterInstanceEventNotificationAttributesResult deregisterInstanceEventNotificationAttributes(DeregisterInstanceEventNotificationAttributesRequest deregisterInstanceEventNotificationAttributesRequest) {
+    public DeregisterInstanceEventNotificationAttributesResponse deregisterInstanceEventNotificationAttributes(DeregisterInstanceEventNotificationAttributesRequest deregisterInstanceEventNotificationAttributesRequest) {
         return null;
     }
 
     @Override
-    public DeregisterTransitGatewayMulticastGroupMembersResult deregisterTransitGatewayMulticastGroupMembers(DeregisterTransitGatewayMulticastGroupMembersRequest deregisterTransitGatewayMulticastGroupMembersRequest) {
+    public DeregisterTransitGatewayMulticastGroupMembersResponse deregisterTransitGatewayMulticastGroupMembers(DeregisterTransitGatewayMulticastGroupMembersRequest deregisterTransitGatewayMulticastGroupMembersRequest) {
         return null;
     }
 
     @Override
-    public DeregisterTransitGatewayMulticastGroupSourcesResult deregisterTransitGatewayMulticastGroupSources(DeregisterTransitGatewayMulticastGroupSourcesRequest deregisterTransitGatewayMulticastGroupSourcesRequest) {
+    public DeregisterTransitGatewayMulticastGroupSourcesResponse deregisterTransitGatewayMulticastGroupSources(DeregisterTransitGatewayMulticastGroupSourcesRequest deregisterTransitGatewayMulticastGroupSourcesRequest) {
         return null;
     }
 
     @Override
-    public DescribeAccountAttributesResult describeAccountAttributes(DescribeAccountAttributesRequest describeAccountAttributesRequest) {
+    public DescribeAccountAttributesResponse describeAccountAttributes(DescribeAccountAttributesRequest describeAccountAttributesRequest) {
         return null;
     }
 
     @Override
-    public DescribeAccountAttributesResult describeAccountAttributes() {
+    public DescribeAccountAttributesResponse describeAccountAttributes() {
         return null;
     }
 
     @Override
-    public DescribeAddressTransfersResult describeAddressTransfers(DescribeAddressTransfersRequest describeAddressTransfersRequest) {
+    public DescribeAddressTransfersResponse describeAddressTransfers(DescribeAddressTransfersRequest describeAddressTransfersRequest) {
         return null;
     }
 
     @Override
-    public DescribeAddressesResult describeAddresses(DescribeAddressesRequest describeAddressesRequest) {
+    public DescribeAddressesResponse describeAddresses(DescribeAddressesRequest describeAddressesRequest) {
         return null;
     }
 
     @Override
-    public DescribeAddressesResult describeAddresses() {
+    public DescribeAddressesResponse describeAddresses() {
         return null;
     }
 
     @Override
-    public DescribeAddressesAttributeResult describeAddressesAttribute(DescribeAddressesAttributeRequest describeAddressesAttributeRequest) {
+    public DescribeAddressesAttributeResponse describeAddressesAttribute(DescribeAddressesAttributeRequest describeAddressesAttributeRequest) {
         return null;
     }
 
     @Override
-    public DescribeAggregateIdFormatResult describeAggregateIdFormat(DescribeAggregateIdFormatRequest describeAggregateIdFormatRequest) {
+    public DescribeAggregateIdFormatResponse describeAggregateIdFormat(DescribeAggregateIdFormatRequest describeAggregateIdFormatRequest) {
         return null;
     }
 
     @Override
-    public DescribeAvailabilityZonesResult describeAvailabilityZones(DescribeAvailabilityZonesRequest describeAvailabilityZonesRequest) {
+    public DescribeAvailabilityZonesResponse describeAvailabilityZones(DescribeAvailabilityZonesRequest describeAvailabilityZonesRequest) {
         return null;
     }
 
     @Override
-    public DescribeAvailabilityZonesResult describeAvailabilityZones() {
+    public DescribeAvailabilityZonesResponse describeAvailabilityZones() {
         return null;
     }
 
     @Override
-    public DescribeAwsNetworkPerformanceMetricSubscriptionsResult describeAwsNetworkPerformanceMetricSubscriptions(DescribeAwsNetworkPerformanceMetricSubscriptionsRequest describeAwsNetworkPerformanceMetricSubscriptionsRequest) {
+    public DescribeAwsNetworkPerformanceMetricSubscriptionsResponse describeAwsNetworkPerformanceMetricSubscriptions(DescribeAwsNetworkPerformanceMetricSubscriptionsRequest describeAwsNetworkPerformanceMetricSubscriptionsRequest) {
         return null;
     }
 
     @Override
-    public DescribeBundleTasksResult describeBundleTasks(DescribeBundleTasksRequest describeBundleTasksRequest) {
+    public DescribeBundleTasksResponse describeBundleTasks(DescribeBundleTasksRequest describeBundleTasksRequest) {
         return null;
     }
 
     @Override
-    public DescribeBundleTasksResult describeBundleTasks() {
+    public DescribeBundleTasksResponse describeBundleTasks() {
         return null;
     }
 
     @Override
-    public DescribeByoipCidrsResult describeByoipCidrs(DescribeByoipCidrsRequest describeByoipCidrsRequest) {
+    public DescribeByoipCidrsResponse describeByoipCidrs(DescribeByoipCidrsRequest describeByoipCidrsRequest) {
         return null;
     }
 
     @Override
-    public DescribeCapacityBlockOfferingsResult describeCapacityBlockOfferings(DescribeCapacityBlockOfferingsRequest describeCapacityBlockOfferingsRequest) {
+    public DescribeCapacityBlockOfferingsResponse describeCapacityBlockOfferings(DescribeCapacityBlockOfferingsRequest describeCapacityBlockOfferingsRequest) {
         return null;
     }
 
     @Override
-    public DescribeCapacityReservationFleetsResult describeCapacityReservationFleets(DescribeCapacityReservationFleetsRequest describeCapacityReservationFleetsRequest) {
+    public DescribeCapacityReservationFleetsResponse describeCapacityReservationFleets(DescribeCapacityReservationFleetsRequest describeCapacityReservationFleetsRequest) {
         return null;
     }
 
     @Override
-    public DescribeCapacityReservationsResult describeCapacityReservations(DescribeCapacityReservationsRequest describeCapacityReservationsRequest) {
+    public DescribeCapacityReservationsResponse describeCapacityReservations(DescribeCapacityReservationsRequest describeCapacityReservationsRequest) {
         return null;
     }
 
     @Override
-    public DescribeCarrierGatewaysResult describeCarrierGateways(DescribeCarrierGatewaysRequest describeCarrierGatewaysRequest) {
+    public DescribeCarrierGatewaysResponse describeCarrierGateways(DescribeCarrierGatewaysRequest describeCarrierGatewaysRequest) {
         return null;
     }
 
     @Override
-    public DescribeClassicLinkInstancesResult describeClassicLinkInstances(DescribeClassicLinkInstancesRequest describeClassicLinkInstancesRequest) {
+    public DescribeClassicLinkInstancesResponse describeClassicLinkInstances(DescribeClassicLinkInstancesRequest describeClassicLinkInstancesRequest) {
         return null;
     }
 
     @Override
-    public DescribeClassicLinkInstancesResult describeClassicLinkInstances() {
+    public DescribeClassicLinkInstancesResponse describeClassicLinkInstances() {
         return null;
     }
 
     @Override
-    public DescribeClientVpnAuthorizationRulesResult describeClientVpnAuthorizationRules(DescribeClientVpnAuthorizationRulesRequest describeClientVpnAuthorizationRulesRequest) {
+    public DescribeClientVpnAuthorizationRulesResponse describeClientVpnAuthorizationRules(DescribeClientVpnAuthorizationRulesRequest describeClientVpnAuthorizationRulesRequest) {
         return null;
     }
 
     @Override
-    public DescribeClientVpnConnectionsResult describeClientVpnConnections(DescribeClientVpnConnectionsRequest describeClientVpnConnectionsRequest) {
+    public DescribeClientVpnConnectionsResponse describeClientVpnConnections(DescribeClientVpnConnectionsRequest describeClientVpnConnectionsRequest) {
         return null;
     }
 
     @Override
-    public DescribeClientVpnEndpointsResult describeClientVpnEndpoints(DescribeClientVpnEndpointsRequest describeClientVpnEndpointsRequest) {
+    public DescribeClientVpnEndpointsResponse describeClientVpnEndpoints(DescribeClientVpnEndpointsRequest describeClientVpnEndpointsRequest) {
         return null;
     }
 
     @Override
-    public DescribeClientVpnRoutesResult describeClientVpnRoutes(DescribeClientVpnRoutesRequest describeClientVpnRoutesRequest) {
+    public DescribeClientVpnRoutesResponse describeClientVpnRoutes(DescribeClientVpnRoutesRequest describeClientVpnRoutesRequest) {
         return null;
     }
 
     @Override
-    public DescribeClientVpnTargetNetworksResult describeClientVpnTargetNetworks(DescribeClientVpnTargetNetworksRequest describeClientVpnTargetNetworksRequest) {
+    public DescribeClientVpnTargetNetworksResponse describeClientVpnTargetNetworks(DescribeClientVpnTargetNetworksRequest describeClientVpnTargetNetworksRequest) {
         return null;
     }
 
     @Override
-    public DescribeCoipPoolsResult describeCoipPools(DescribeCoipPoolsRequest describeCoipPoolsRequest) {
+    public DescribeCoipPoolsResponse describeCoipPools(DescribeCoipPoolsRequest describeCoipPoolsRequest) {
         return null;
     }
 
     @Override
-    public DescribeConversionTasksResult describeConversionTasks(DescribeConversionTasksRequest describeConversionTasksRequest) {
+    public DescribeConversionTasksResponse describeConversionTasks(DescribeConversionTasksRequest describeConversionTasksRequest) {
         return null;
     }
 
     @Override
-    public DescribeConversionTasksResult describeConversionTasks() {
+    public DescribeConversionTasksResponse describeConversionTasks() {
         return null;
     }
 
     @Override
-    public DescribeCustomerGatewaysResult describeCustomerGateways(DescribeCustomerGatewaysRequest describeCustomerGatewaysRequest) {
+    public DescribeCustomerGatewaysResponse describeCustomerGateways(DescribeCustomerGatewaysRequest describeCustomerGatewaysRequest) {
         return null;
     }
 
     @Override
-    public DescribeCustomerGatewaysResult describeCustomerGateways() {
+    public DescribeCustomerGatewaysResponse describeCustomerGateways() {
         return null;
     }
 
     @Override
-    public DescribeDhcpOptionsResult describeDhcpOptions(DescribeDhcpOptionsRequest describeDhcpOptionsRequest) {
+    public DescribeDhcpOptionsResponse describeDhcpOptions(DescribeDhcpOptionsRequest describeDhcpOptionsRequest) {
         return null;
     }
 
     @Override
-    public DescribeDhcpOptionsResult describeDhcpOptions() {
+    public DescribeDhcpOptionsResponse describeDhcpOptions() {
         return null;
     }
 
     @Override
-    public DescribeEgressOnlyInternetGatewaysResult describeEgressOnlyInternetGateways(DescribeEgressOnlyInternetGatewaysRequest describeEgressOnlyInternetGatewaysRequest) {
+    public DescribeEgressOnlyInternetGatewaysResponse describeEgressOnlyInternetGateways(DescribeEgressOnlyInternetGatewaysRequest describeEgressOnlyInternetGatewaysRequest) {
         return null;
     }
 
     @Override
-    public DescribeElasticGpusResult describeElasticGpus(DescribeElasticGpusRequest describeElasticGpusRequest) {
+    public DescribeElasticGpusResponse describeElasticGpus(DescribeElasticGpusRequest describeElasticGpusRequest) {
         return null;
     }
 
     @Override
-    public DescribeExportImageTasksResult describeExportImageTasks(DescribeExportImageTasksRequest describeExportImageTasksRequest) {
+    public DescribeExportImageTasksResponse describeExportImageTasks(DescribeExportImageTasksRequest describeExportImageTasksRequest) {
         return null;
     }
 
     @Override
-    public DescribeExportTasksResult describeExportTasks(DescribeExportTasksRequest describeExportTasksRequest) {
+    public DescribeExportTasksResponse describeExportTasks(DescribeExportTasksRequest describeExportTasksRequest) {
         return null;
     }
 
     @Override
-    public DescribeExportTasksResult describeExportTasks() {
+    public DescribeExportTasksResponse describeExportTasks() {
         return null;
     }
 
     @Override
-    public DescribeFastLaunchImagesResult describeFastLaunchImages(DescribeFastLaunchImagesRequest describeFastLaunchImagesRequest) {
+    public DescribeFastLaunchImagesResponse describeFastLaunchImages(DescribeFastLaunchImagesRequest describeFastLaunchImagesRequest) {
         return null;
     }
 
     @Override
-    public DescribeFastSnapshotRestoresResult describeFastSnapshotRestores(DescribeFastSnapshotRestoresRequest describeFastSnapshotRestoresRequest) {
+    public DescribeFastSnapshotRestoresResponse describeFastSnapshotRestores(DescribeFastSnapshotRestoresRequest describeFastSnapshotRestoresRequest) {
         return null;
     }
 
     @Override
-    public DescribeFleetHistoryResult describeFleetHistory(DescribeFleetHistoryRequest describeFleetHistoryRequest) {
+    public DescribeFleetHistoryResponse describeFleetHistory(DescribeFleetHistoryRequest describeFleetHistoryRequest) {
         return null;
     }
 
     @Override
-    public DescribeFleetInstancesResult describeFleetInstances(DescribeFleetInstancesRequest describeFleetInstancesRequest) {
+    public DescribeFleetInstancesResponse describeFleetInstances(DescribeFleetInstancesRequest describeFleetInstancesRequest) {
         return null;
     }
 
     @Override
-    public DescribeFleetsResult describeFleets(DescribeFleetsRequest describeFleetsRequest) {
+    public DescribeFleetsResponse describeFleets(DescribeFleetsRequest describeFleetsRequest) {
         return null;
     }
 
     @Override
-    public DescribeFlowLogsResult describeFlowLogs(DescribeFlowLogsRequest describeFlowLogsRequest) {
+    public DescribeFlowLogsResponse describeFlowLogs(DescribeFlowLogsRequest describeFlowLogsRequest) {
         return null;
     }
 
     @Override
-    public DescribeFlowLogsResult describeFlowLogs() {
+    public DescribeFlowLogsResponse describeFlowLogs() {
         return null;
     }
 
     @Override
-    public DescribeFpgaImageAttributeResult describeFpgaImageAttribute(DescribeFpgaImageAttributeRequest describeFpgaImageAttributeRequest) {
+    public DescribeFpgaImageAttributeResponse describeFpgaImageAttribute(DescribeFpgaImageAttributeRequest describeFpgaImageAttributeRequest) {
         return null;
     }
 
     @Override
-    public DescribeFpgaImagesResult describeFpgaImages(DescribeFpgaImagesRequest describeFpgaImagesRequest) {
+    public DescribeFpgaImagesResponse describeFpgaImages(DescribeFpgaImagesRequest describeFpgaImagesRequest) {
         return null;
     }
 
     @Override
-    public DescribeHostReservationOfferingsResult describeHostReservationOfferings(DescribeHostReservationOfferingsRequest describeHostReservationOfferingsRequest) {
+    public DescribeHostReservationOfferingsResponse describeHostReservationOfferings(DescribeHostReservationOfferingsRequest describeHostReservationOfferingsRequest) {
         return null;
     }
 
     @Override
-    public DescribeHostReservationsResult describeHostReservations(DescribeHostReservationsRequest describeHostReservationsRequest) {
+    public DescribeHostReservationsResponse describeHostReservations(DescribeHostReservationsRequest describeHostReservationsRequest) {
         return null;
     }
 
     @Override
-    public DescribeHostsResult describeHosts(DescribeHostsRequest describeHostsRequest) {
+    public DescribeHostsResponse describeHosts(DescribeHostsRequest describeHostsRequest) {
         return null;
     }
 
     @Override
-    public DescribeHostsResult describeHosts() {
+    public DescribeHostsResponse describeHosts() {
         return null;
     }
 
     @Override
-    public DescribeIamInstanceProfileAssociationsResult describeIamInstanceProfileAssociations(DescribeIamInstanceProfileAssociationsRequest describeIamInstanceProfileAssociationsRequest) {
+    public DescribeIamInstanceProfileAssociationsResponse describeIamInstanceProfileAssociations(DescribeIamInstanceProfileAssociationsRequest describeIamInstanceProfileAssociationsRequest) {
         return null;
     }
 
     @Override
-    public DescribeIdFormatResult describeIdFormat(DescribeIdFormatRequest describeIdFormatRequest) {
+    public DescribeIdFormatResponse describeIdFormat(DescribeIdFormatRequest describeIdFormatRequest) {
         return null;
     }
 
     @Override
-    public DescribeIdFormatResult describeIdFormat() {
+    public DescribeIdFormatResponse describeIdFormat() {
         return null;
     }
 
     @Override
-    public DescribeIdentityIdFormatResult describeIdentityIdFormat(DescribeIdentityIdFormatRequest describeIdentityIdFormatRequest) {
+    public DescribeIdentityIdFormatResponse describeIdentityIdFormat(DescribeIdentityIdFormatRequest describeIdentityIdFormatRequest) {
         return null;
     }
 
     @Override
-    public DescribeImageAttributeResult describeImageAttribute(DescribeImageAttributeRequest describeImageAttributeRequest) {
+    public DescribeImageAttributeResponse describeImageAttribute(DescribeImageAttributeRequest describeImageAttributeRequest) {
         return null;
     }
 
     @Override
-    public DescribeImagesResult describeImages(DescribeImagesRequest describeImagesRequest) {
+    public DescribeImagesResponse describeImages(DescribeImagesRequest describeImagesRequest) {
         return null;
     }
 
     @Override
-    public DescribeImagesResult describeImages() {
+    public DescribeImagesResponse describeImages() {
         return null;
     }
 
     @Override
-    public DescribeImportImageTasksResult describeImportImageTasks(DescribeImportImageTasksRequest describeImportImageTasksRequest) {
+    public DescribeImportImageTasksResponse describeImportImageTasks(DescribeImportImageTasksRequest describeImportImageTasksRequest) {
         return null;
     }
 
     @Override
-    public DescribeImportImageTasksResult describeImportImageTasks() {
+    public DescribeImportImageTasksResponse describeImportImageTasks() {
         return null;
     }
 
     @Override
-    public DescribeImportSnapshotTasksResult describeImportSnapshotTasks(DescribeImportSnapshotTasksRequest describeImportSnapshotTasksRequest) {
+    public DescribeImportSnapshotTasksResponse describeImportSnapshotTasks(DescribeImportSnapshotTasksRequest describeImportSnapshotTasksRequest) {
         return null;
     }
 
     @Override
-    public DescribeImportSnapshotTasksResult describeImportSnapshotTasks() {
+    public DescribeImportSnapshotTasksResponse describeImportSnapshotTasks() {
         return null;
     }
 
     @Override
-    public DescribeInstanceAttributeResult describeInstanceAttribute(DescribeInstanceAttributeRequest describeInstanceAttributeRequest) {
+    public DescribeInstanceAttributeResponse describeInstanceAttribute(DescribeInstanceAttributeRequest describeInstanceAttributeRequest) {
         return null;
     }
 
     @Override
-    public DescribeInstanceConnectEndpointsResult describeInstanceConnectEndpoints(DescribeInstanceConnectEndpointsRequest describeInstanceConnectEndpointsRequest) {
+    public DescribeInstanceConnectEndpointsResponse describeInstanceConnectEndpoints(DescribeInstanceConnectEndpointsRequest describeInstanceConnectEndpointsRequest) {
         return null;
     }
 
     @Override
-    public DescribeInstanceCreditSpecificationsResult describeInstanceCreditSpecifications(DescribeInstanceCreditSpecificationsRequest describeInstanceCreditSpecificationsRequest) {
+    public DescribeInstanceCreditSpecificationsResponse describeInstanceCreditSpecifications(DescribeInstanceCreditSpecificationsRequest describeInstanceCreditSpecificationsRequest) {
         return null;
     }
 
     @Override
-    public DescribeInstanceEventNotificationAttributesResult describeInstanceEventNotificationAttributes(DescribeInstanceEventNotificationAttributesRequest describeInstanceEventNotificationAttributesRequest) {
+    public DescribeInstanceEventNotificationAttributesResponse describeInstanceEventNotificationAttributes(DescribeInstanceEventNotificationAttributesRequest describeInstanceEventNotificationAttributesRequest) {
         return null;
     }
 
     @Override
-    public DescribeInstanceEventWindowsResult describeInstanceEventWindows(DescribeInstanceEventWindowsRequest describeInstanceEventWindowsRequest) {
+    public DescribeInstanceEventWindowsResponse describeInstanceEventWindows(DescribeInstanceEventWindowsRequest describeInstanceEventWindowsRequest) {
         return null;
     }
 
     @Override
-    public DescribeInstanceStatusResult describeInstanceStatus(DescribeInstanceStatusRequest describeInstanceStatusRequest) {
+    public DescribeInstanceStatusResponse describeInstanceStatus(DescribeInstanceStatusRequest describeInstanceStatusRequest) {
         return null;
     }
 
     @Override
-    public DescribeInstanceStatusResult describeInstanceStatus() {
+    public DescribeInstanceStatusResponse describeInstanceStatus() {
         return null;
     }
 
     @Override
-    public DescribeInstanceTopologyResult describeInstanceTopology(DescribeInstanceTopologyRequest describeInstanceTopologyRequest) {
+    public DescribeInstanceTopologyResponse describeInstanceTopology(DescribeInstanceTopologyRequest describeInstanceTopologyRequest) {
         return null;
     }
 
     @Override
-    public DescribeInstanceTypeOfferingsResult describeInstanceTypeOfferings(DescribeInstanceTypeOfferingsRequest describeInstanceTypeOfferingsRequest) {
+    public DescribeInstanceTypeOfferingsResponse describeInstanceTypeOfferings(DescribeInstanceTypeOfferingsRequest describeInstanceTypeOfferingsRequest) {
         return null;
     }
 
     @Override
-    public DescribeInstanceTypesResult describeInstanceTypes(DescribeInstanceTypesRequest describeInstanceTypesRequest) {
+    public DescribeInstanceTypesResponse describeInstanceTypes(DescribeInstanceTypesRequest describeInstanceTypesRequest) {
         return null;
     }
 
     @Override
-    public DescribeInstancesResult describeInstances(DescribeInstancesRequest describeInstancesRequest) {
+    public DescribeInstancesResponse describeInstances(DescribeInstancesRequest describeInstancesRequest) {
         return null;
     }
 
     @Override
-    public DescribeInstancesResult describeInstances() {
+    public DescribeInstancesResponse describeInstances() {
         return null;
     }
 
     @Override
-    public DescribeInternetGatewaysResult describeInternetGateways(DescribeInternetGatewaysRequest describeInternetGatewaysRequest) {
+    public DescribeInternetGatewaysResponse describeInternetGateways(DescribeInternetGatewaysRequest describeInternetGatewaysRequest) {
         return null;
     }
 
     @Override
-    public DescribeInternetGatewaysResult describeInternetGateways() {
+    public DescribeInternetGatewaysResponse describeInternetGateways() {
         return null;
     }
 
     @Override
-    public DescribeIpamByoasnResult describeIpamByoasn(DescribeIpamByoasnRequest describeIpamByoasnRequest) {
+    public DescribeIpamByoasnResponse describeIpamByoasn(DescribeIpamByoasnRequest describeIpamByoasnRequest) {
         return null;
     }
 
     @Override
-    public DescribeIpamExternalResourceVerificationTokensResult describeIpamExternalResourceVerificationTokens(DescribeIpamExternalResourceVerificationTokensRequest describeIpamExternalResourceVerificationTokensRequest) {
+    public DescribeIpamExternalResourceVerificationTokensResponse describeIpamExternalResourceVerificationTokens(DescribeIpamExternalResourceVerificationTokensRequest describeIpamExternalResourceVerificationTokensRequest) {
         return null;
     }
 
     @Override
-    public DescribeIpamPoolsResult describeIpamPools(DescribeIpamPoolsRequest describeIpamPoolsRequest) {
+    public DescribeIpamPoolsResponse describeIpamPools(DescribeIpamPoolsRequest describeIpamPoolsRequest) {
         return null;
     }
 
     @Override
-    public DescribeIpamResourceDiscoveriesResult describeIpamResourceDiscoveries(DescribeIpamResourceDiscoveriesRequest describeIpamResourceDiscoveriesRequest) {
+    public DescribeIpamResourceDiscoveriesResponse describeIpamResourceDiscoveries(DescribeIpamResourceDiscoveriesRequest describeIpamResourceDiscoveriesRequest) {
         return null;
     }
 
     @Override
-    public DescribeIpamResourceDiscoveryAssociationsResult describeIpamResourceDiscoveryAssociations(DescribeIpamResourceDiscoveryAssociationsRequest describeIpamResourceDiscoveryAssociationsRequest) {
+    public DescribeIpamResourceDiscoveryAssociationsResponse describeIpamResourceDiscoveryAssociations(DescribeIpamResourceDiscoveryAssociationsRequest describeIpamResourceDiscoveryAssociationsRequest) {
         return null;
     }
 
     @Override
-    public DescribeIpamScopesResult describeIpamScopes(DescribeIpamScopesRequest describeIpamScopesRequest) {
+    public DescribeIpamScopesResponse describeIpamScopes(DescribeIpamScopesRequest describeIpamScopesRequest) {
         return null;
     }
 
     @Override
-    public DescribeIpamsResult describeIpams(DescribeIpamsRequest describeIpamsRequest) {
+    public DescribeIpamsResponse describeIpams(DescribeIpamsRequest describeIpamsRequest) {
         return null;
     }
 
     @Override
-    public DescribeIpv6PoolsResult describeIpv6Pools(DescribeIpv6PoolsRequest describeIpv6PoolsRequest) {
+    public DescribeIpv6PoolsResponse describeIpv6Pools(DescribeIpv6PoolsRequest describeIpv6PoolsRequest) {
         return null;
     }
 
     @Override
-    public DescribeKeyPairsResult describeKeyPairs(DescribeKeyPairsRequest describeKeyPairsRequest) {
+    public DescribeKeyPairsResponse describeKeyPairs(DescribeKeyPairsRequest describeKeyPairsRequest) {
         return null;
     }
 
     @Override
-    public DescribeKeyPairsResult describeKeyPairs() {
+    public DescribeKeyPairsResponse describeKeyPairs() {
         return null;
     }
 
     @Override
-    public DescribeLaunchTemplateVersionsResult describeLaunchTemplateVersions(DescribeLaunchTemplateVersionsRequest describeLaunchTemplateVersionsRequest) {
+    public DescribeLaunchTemplateVersionsResponse describeLaunchTemplateVersions(DescribeLaunchTemplateVersionsRequest describeLaunchTemplateVersionsRequest) {
         return null;
     }
 
     @Override
-    public DescribeLaunchTemplatesResult describeLaunchTemplates(DescribeLaunchTemplatesRequest describeLaunchTemplatesRequest) {
+    public DescribeLaunchTemplatesResponse describeLaunchTemplates(DescribeLaunchTemplatesRequest describeLaunchTemplatesRequest) {
         return null;
     }
 
     @Override
-    public DescribeLocalGatewayRouteTableVirtualInterfaceGroupAssociationsResult describeLocalGatewayRouteTableVirtualInterfaceGroupAssociations(DescribeLocalGatewayRouteTableVirtualInterfaceGroupAssociationsRequest describeLocalGatewayRouteTableVirtualInterfaceGroupAssociationsRequest) {
+    public DescribeLocalGatewayRouteTableVirtualInterfaceGroupAssociationsResponse describeLocalGatewayRouteTableVirtualInterfaceGroupAssociations(DescribeLocalGatewayRouteTableVirtualInterfaceGroupAssociationsRequest describeLocalGatewayRouteTableVirtualInterfaceGroupAssociationsRequest) {
         return null;
     }
 
     @Override
-    public DescribeLocalGatewayRouteTableVpcAssociationsResult describeLocalGatewayRouteTableVpcAssociations(DescribeLocalGatewayRouteTableVpcAssociationsRequest describeLocalGatewayRouteTableVpcAssociationsRequest) {
+    public DescribeLocalGatewayRouteTableVpcAssociationsResponse describeLocalGatewayRouteTableVpcAssociations(DescribeLocalGatewayRouteTableVpcAssociationsRequest describeLocalGatewayRouteTableVpcAssociationsRequest) {
         return null;
     }
 
     @Override
-    public DescribeLocalGatewayRouteTablesResult describeLocalGatewayRouteTables(DescribeLocalGatewayRouteTablesRequest describeLocalGatewayRouteTablesRequest) {
+    public DescribeLocalGatewayRouteTablesResponse describeLocalGatewayRouteTables(DescribeLocalGatewayRouteTablesRequest describeLocalGatewayRouteTablesRequest) {
         return null;
     }
 
     @Override
-    public DescribeLocalGatewayVirtualInterfaceGroupsResult describeLocalGatewayVirtualInterfaceGroups(DescribeLocalGatewayVirtualInterfaceGroupsRequest describeLocalGatewayVirtualInterfaceGroupsRequest) {
+    public DescribeLocalGatewayVirtualInterfaceGroupsResponse describeLocalGatewayVirtualInterfaceGroups(DescribeLocalGatewayVirtualInterfaceGroupsRequest describeLocalGatewayVirtualInterfaceGroupsRequest) {
         return null;
     }
 
     @Override
-    public DescribeLocalGatewayVirtualInterfacesResult describeLocalGatewayVirtualInterfaces(DescribeLocalGatewayVirtualInterfacesRequest describeLocalGatewayVirtualInterfacesRequest) {
+    public DescribeLocalGatewayVirtualInterfacesResponse describeLocalGatewayVirtualInterfaces(DescribeLocalGatewayVirtualInterfacesRequest describeLocalGatewayVirtualInterfacesRequest) {
         return null;
     }
 
     @Override
-    public DescribeLocalGatewaysResult describeLocalGateways(DescribeLocalGatewaysRequest describeLocalGatewaysRequest) {
+    public DescribeLocalGatewaysResponse describeLocalGateways(DescribeLocalGatewaysRequest describeLocalGatewaysRequest) {
         return null;
     }
 
     @Override
-    public DescribeLockedSnapshotsResult describeLockedSnapshots(DescribeLockedSnapshotsRequest describeLockedSnapshotsRequest) {
+    public DescribeLockedSnapshotsResponse describeLockedSnapshots(DescribeLockedSnapshotsRequest describeLockedSnapshotsRequest) {
         return null;
     }
 
     @Override
-    public DescribeMacHostsResult describeMacHosts(DescribeMacHostsRequest describeMacHostsRequest) {
+    public DescribeMacHostsResponse describeMacHosts(DescribeMacHostsRequest describeMacHostsRequest) {
         return null;
     }
 
     @Override
-    public DescribeManagedPrefixListsResult describeManagedPrefixLists(DescribeManagedPrefixListsRequest describeManagedPrefixListsRequest) {
+    public DescribeManagedPrefixListsResponse describeManagedPrefixLists(DescribeManagedPrefixListsRequest describeManagedPrefixListsRequest) {
         return null;
     }
 
     @Override
-    public DescribeMovingAddressesResult describeMovingAddresses(DescribeMovingAddressesRequest describeMovingAddressesRequest) {
+    public DescribeMovingAddressesResponse describeMovingAddresses(DescribeMovingAddressesRequest describeMovingAddressesRequest) {
         return null;
     }
 
     @Override
-    public DescribeMovingAddressesResult describeMovingAddresses() {
+    public DescribeMovingAddressesResponse describeMovingAddresses() {
         return null;
     }
 
     @Override
-    public DescribeNatGatewaysResult describeNatGateways(DescribeNatGatewaysRequest describeNatGatewaysRequest) {
+    public DescribeNatGatewaysResponse describeNatGateways(DescribeNatGatewaysRequest describeNatGatewaysRequest) {
         return null;
     }
 
     @Override
-    public DescribeNetworkAclsResult describeNetworkAcls(DescribeNetworkAclsRequest describeNetworkAclsRequest) {
+    public DescribeNetworkAclsResponse describeNetworkAcls(DescribeNetworkAclsRequest describeNetworkAclsRequest) {
         return null;
     }
 
     @Override
-    public DescribeNetworkAclsResult describeNetworkAcls() {
+    public DescribeNetworkAclsResponse describeNetworkAcls() {
         return null;
     }
 
     @Override
-    public DescribeNetworkInsightsAccessScopeAnalysesResult describeNetworkInsightsAccessScopeAnalyses(DescribeNetworkInsightsAccessScopeAnalysesRequest describeNetworkInsightsAccessScopeAnalysesRequest) {
+    public DescribeNetworkInsightsAccessScopeAnalysesResponse describeNetworkInsightsAccessScopeAnalyses(DescribeNetworkInsightsAccessScopeAnalysesRequest describeNetworkInsightsAccessScopeAnalysesRequest) {
         return null;
     }
 
     @Override
-    public DescribeNetworkInsightsAccessScopesResult describeNetworkInsightsAccessScopes(DescribeNetworkInsightsAccessScopesRequest describeNetworkInsightsAccessScopesRequest) {
+    public DescribeNetworkInsightsAccessScopesResponse describeNetworkInsightsAccessScopes(DescribeNetworkInsightsAccessScopesRequest describeNetworkInsightsAccessScopesRequest) {
         return null;
     }
 
     @Override
-    public DescribeNetworkInsightsAnalysesResult describeNetworkInsightsAnalyses(DescribeNetworkInsightsAnalysesRequest describeNetworkInsightsAnalysesRequest) {
+    public DescribeNetworkInsightsAnalysesResponse describeNetworkInsightsAnalyses(DescribeNetworkInsightsAnalysesRequest describeNetworkInsightsAnalysesRequest) {
         return null;
     }
 
     @Override
-    public DescribeNetworkInsightsPathsResult describeNetworkInsightsPaths(DescribeNetworkInsightsPathsRequest describeNetworkInsightsPathsRequest) {
+    public DescribeNetworkInsightsPathsResponse describeNetworkInsightsPaths(DescribeNetworkInsightsPathsRequest describeNetworkInsightsPathsRequest) {
         return null;
     }
 
     @Override
-    public DescribeNetworkInterfaceAttributeResult describeNetworkInterfaceAttribute(DescribeNetworkInterfaceAttributeRequest describeNetworkInterfaceAttributeRequest) {
+    public DescribeNetworkInterfaceAttributeResponse describeNetworkInterfaceAttribute(DescribeNetworkInterfaceAttributeRequest describeNetworkInterfaceAttributeRequest) {
         return null;
     }
 
     @Override
-    public DescribeNetworkInterfacePermissionsResult describeNetworkInterfacePermissions(DescribeNetworkInterfacePermissionsRequest describeNetworkInterfacePermissionsRequest) {
+    public DescribeNetworkInterfacePermissionsResponse describeNetworkInterfacePermissions(DescribeNetworkInterfacePermissionsRequest describeNetworkInterfacePermissionsRequest) {
         return null;
     }
 
     @Override
-    public DescribeNetworkInterfacesResult describeNetworkInterfaces(DescribeNetworkInterfacesRequest describeNetworkInterfacesRequest) {
+    public DescribeNetworkInterfacesResponse describeNetworkInterfaces(DescribeNetworkInterfacesRequest describeNetworkInterfacesRequest) {
         return null;
     }
 
     @Override
-    public DescribeNetworkInterfacesResult describeNetworkInterfaces() {
+    public DescribeNetworkInterfacesResponse describeNetworkInterfaces() {
         return null;
     }
 
     @Override
-    public DescribePlacementGroupsResult describePlacementGroups(DescribePlacementGroupsRequest describePlacementGroupsRequest) {
+    public DescribePlacementGroupsResponse describePlacementGroups(DescribePlacementGroupsRequest describePlacementGroupsRequest) {
         return null;
     }
 
     @Override
-    public DescribePlacementGroupsResult describePlacementGroups() {
+    public DescribePlacementGroupsResponse describePlacementGroups() {
         return null;
     }
 
     @Override
-    public DescribePrefixListsResult describePrefixLists(DescribePrefixListsRequest describePrefixListsRequest) {
+    public DescribePrefixListsResponse describePrefixLists(DescribePrefixListsRequest describePrefixListsRequest) {
         return null;
     }
 
     @Override
-    public DescribePrefixListsResult describePrefixLists() {
+    public DescribePrefixListsResponse describePrefixLists() {
         return null;
     }
 
     @Override
-    public DescribePrincipalIdFormatResult describePrincipalIdFormat(DescribePrincipalIdFormatRequest describePrincipalIdFormatRequest) {
+    public DescribePrincipalIdFormatResponse describePrincipalIdFormat(DescribePrincipalIdFormatRequest describePrincipalIdFormatRequest) {
         return null;
     }
 
     @Override
-    public DescribePublicIpv4PoolsResult describePublicIpv4Pools(DescribePublicIpv4PoolsRequest describePublicIpv4PoolsRequest) {
+    public DescribePublicIpv4PoolsResponse describePublicIpv4Pools(DescribePublicIpv4PoolsRequest describePublicIpv4PoolsRequest) {
         return null;
     }
 
     @Override
-    public DescribeRegionsResult describeRegions(DescribeRegionsRequest describeRegionsRequest) {
+    public DescribeRegionsResponse describeRegions(DescribeRegionsRequest describeRegionsRequest) {
         return null;
     }
 
     @Override
-    public DescribeRegionsResult describeRegions() {
+    public DescribeRegionsResponse describeRegions() {
         return null;
     }
 
     @Override
-    public DescribeReplaceRootVolumeTasksResult describeReplaceRootVolumeTasks(DescribeReplaceRootVolumeTasksRequest describeReplaceRootVolumeTasksRequest) {
+    public DescribeReplaceRootVolumeTasksResponse describeReplaceRootVolumeTasks(DescribeReplaceRootVolumeTasksRequest describeReplaceRootVolumeTasksRequest) {
         return null;
     }
 
     @Override
-    public DescribeReservedInstancesResult describeReservedInstances(DescribeReservedInstancesRequest describeReservedInstancesRequest) {
+    public DescribeReservedInstancesResponse describeReservedInstances(DescribeReservedInstancesRequest describeReservedInstancesRequest) {
         return null;
     }
 
     @Override
-    public DescribeReservedInstancesResult describeReservedInstances() {
+    public DescribeReservedInstancesResponse describeReservedInstances() {
         return null;
     }
 
     @Override
-    public DescribeReservedInstancesListingsResult describeReservedInstancesListings(DescribeReservedInstancesListingsRequest describeReservedInstancesListingsRequest) {
+    public DescribeReservedInstancesListingsResponse describeReservedInstancesListings(DescribeReservedInstancesListingsRequest describeReservedInstancesListingsRequest) {
         return null;
     }
 
     @Override
-    public DescribeReservedInstancesListingsResult describeReservedInstancesListings() {
+    public DescribeReservedInstancesListingsResponse describeReservedInstancesListings() {
         return null;
     }
 
     @Override
-    public DescribeReservedInstancesModificationsResult describeReservedInstancesModifications(DescribeReservedInstancesModificationsRequest describeReservedInstancesModificationsRequest) {
+    public DescribeReservedInstancesModificationsResponse describeReservedInstancesModifications(DescribeReservedInstancesModificationsRequest describeReservedInstancesModificationsRequest) {
         return null;
     }
 
     @Override
-    public DescribeReservedInstancesModificationsResult describeReservedInstancesModifications() {
+    public DescribeReservedInstancesModificationsResponse describeReservedInstancesModifications() {
         return null;
     }
 
     @Override
-    public DescribeReservedInstancesOfferingsResult describeReservedInstancesOfferings(DescribeReservedInstancesOfferingsRequest describeReservedInstancesOfferingsRequest) {
+    public DescribeReservedInstancesOfferingsResponse describeReservedInstancesOfferings(DescribeReservedInstancesOfferingsRequest describeReservedInstancesOfferingsRequest) {
         return null;
     }
 
     @Override
-    public DescribeReservedInstancesOfferingsResult describeReservedInstancesOfferings() {
+    public DescribeReservedInstancesOfferingsResponse describeReservedInstancesOfferings() {
         return null;
     }
 
     @Override
-    public DescribeRouteTablesResult describeRouteTables(DescribeRouteTablesRequest describeRouteTablesRequest) {
+    public DescribeRouteTablesResponse describeRouteTables(DescribeRouteTablesRequest describeRouteTablesRequest) {
         return null;
     }
 
     @Override
-    public DescribeRouteTablesResult describeRouteTables() {
+    public DescribeRouteTablesResponse describeRouteTables() {
         return null;
     }
 
     @Override
-    public DescribeScheduledInstanceAvailabilityResult describeScheduledInstanceAvailability(DescribeScheduledInstanceAvailabilityRequest describeScheduledInstanceAvailabilityRequest) {
+    public DescribeScheduledInstanceAvailabilityResponse describeScheduledInstanceAvailability(DescribeScheduledInstanceAvailabilityRequest describeScheduledInstanceAvailabilityRequest) {
         return null;
     }
 
     @Override
-    public DescribeScheduledInstancesResult describeScheduledInstances(DescribeScheduledInstancesRequest describeScheduledInstancesRequest) {
+    public DescribeScheduledInstancesResponse describeScheduledInstances(DescribeScheduledInstancesRequest describeScheduledInstancesRequest) {
         return null;
     }
 
     @Override
-    public DescribeSecurityGroupReferencesResult describeSecurityGroupReferences(DescribeSecurityGroupReferencesRequest describeSecurityGroupReferencesRequest) {
+    public DescribeSecurityGroupReferencesResponse describeSecurityGroupReferences(DescribeSecurityGroupReferencesRequest describeSecurityGroupReferencesRequest) {
         return null;
     }
 
     @Override
-    public DescribeSecurityGroupRulesResult describeSecurityGroupRules(DescribeSecurityGroupRulesRequest describeSecurityGroupRulesRequest) {
+    public DescribeSecurityGroupRulesResponse describeSecurityGroupRules(DescribeSecurityGroupRulesRequest describeSecurityGroupRulesRequest) {
         return null;
     }
 
     @Override
-    public DescribeSecurityGroupsResult describeSecurityGroups(DescribeSecurityGroupsRequest describeSecurityGroupsRequest) {
+    public DescribeSecurityGroupsResponse describeSecurityGroups(DescribeSecurityGroupsRequest describeSecurityGroupsRequest) {
         return null;
     }
 
     @Override
-    public DescribeSecurityGroupsResult describeSecurityGroups() {
+    public DescribeSecurityGroupsResponse describeSecurityGroups() {
         return null;
     }
 
     @Override
-    public DescribeSnapshotAttributeResult describeSnapshotAttribute(DescribeSnapshotAttributeRequest describeSnapshotAttributeRequest) {
+    public DescribeSnapshotAttributeResponse describeSnapshotAttribute(DescribeSnapshotAttributeRequest describeSnapshotAttributeRequest) {
         return null;
     }
 
     @Override
-    public DescribeSnapshotTierStatusResult describeSnapshotTierStatus(DescribeSnapshotTierStatusRequest describeSnapshotTierStatusRequest) {
+    public DescribeSnapshotTierStatusResponse describeSnapshotTierStatus(DescribeSnapshotTierStatusRequest describeSnapshotTierStatusRequest) {
         return null;
     }
 
     @Override
-    public DescribeSnapshotsResult describeSnapshots(DescribeSnapshotsRequest describeSnapshotsRequest) {
+    public DescribeSnapshotsResponse describeSnapshots(DescribeSnapshotsRequest describeSnapshotsRequest) {
         return null;
     }
 
     @Override
-    public DescribeSnapshotsResult describeSnapshots() {
+    public DescribeSnapshotsResponse describeSnapshots() {
         return null;
     }
 
     @Override
-    public DescribeSpotDatafeedSubscriptionResult describeSpotDatafeedSubscription(DescribeSpotDatafeedSubscriptionRequest describeSpotDatafeedSubscriptionRequest) {
+    public DescribeSpotDatafeedSubscriptionResponse describeSpotDatafeedSubscription(DescribeSpotDatafeedSubscriptionRequest describeSpotDatafeedSubscriptionRequest) {
         return null;
     }
 
     @Override
-    public DescribeSpotDatafeedSubscriptionResult describeSpotDatafeedSubscription() {
+    public DescribeSpotDatafeedSubscriptionResponse describeSpotDatafeedSubscription() {
         return null;
     }
 
     @Override
-    public DescribeSpotFleetInstancesResult describeSpotFleetInstances(DescribeSpotFleetInstancesRequest describeSpotFleetInstancesRequest) {
+    public DescribeSpotFleetInstancesResponse describeSpotFleetInstances(DescribeSpotFleetInstancesRequest describeSpotFleetInstancesRequest) {
         return null;
     }
 
     @Override
-    public DescribeSpotFleetRequestHistoryResult describeSpotFleetRequestHistory(DescribeSpotFleetRequestHistoryRequest describeSpotFleetRequestHistoryRequest) {
+    public DescribeSpotFleetRequestHistoryResponse describeSpotFleetRequestHistory(DescribeSpotFleetRequestHistoryRequest describeSpotFleetRequestHistoryRequest) {
         return null;
     }
 
     @Override
-    public DescribeSpotFleetRequestsResult describeSpotFleetRequests(DescribeSpotFleetRequestsRequest describeSpotFleetRequestsRequest) {
+    public DescribeSpotFleetRequestsResponse describeSpotFleetRequests(DescribeSpotFleetRequestsRequest describeSpotFleetRequestsRequest) {
         return null;
     }
 
     @Override
-    public DescribeSpotFleetRequestsResult describeSpotFleetRequests() {
+    public DescribeSpotFleetRequestsResponse describeSpotFleetRequests() {
         return null;
     }
 
     @Override
-    public DescribeSpotInstanceRequestsResult describeSpotInstanceRequests(DescribeSpotInstanceRequestsRequest describeSpotInstanceRequestsRequest) {
+    public DescribeSpotInstanceRequestsResponse describeSpotInstanceRequests(DescribeSpotInstanceRequestsRequest describeSpotInstanceRequestsRequest) {
         return null;
     }
 
     @Override
-    public DescribeSpotInstanceRequestsResult describeSpotInstanceRequests() {
+    public DescribeSpotInstanceRequestsResponse describeSpotInstanceRequests() {
         return null;
     }
 
     @Override
-    public DescribeSpotPriceHistoryResult describeSpotPriceHistory(DescribeSpotPriceHistoryRequest describeSpotPriceHistoryRequest) {
+    public DescribeSpotPriceHistoryResponse describeSpotPriceHistory(DescribeSpotPriceHistoryRequest describeSpotPriceHistoryRequest) {
         return null;
     }
 
     @Override
-    public DescribeSpotPriceHistoryResult describeSpotPriceHistory() {
+    public DescribeSpotPriceHistoryResponse describeSpotPriceHistory() {
         return null;
     }
 
     @Override
-    public DescribeStaleSecurityGroupsResult describeStaleSecurityGroups(DescribeStaleSecurityGroupsRequest describeStaleSecurityGroupsRequest) {
+    public DescribeStaleSecurityGroupsResponse describeStaleSecurityGroups(DescribeStaleSecurityGroupsRequest describeStaleSecurityGroupsRequest) {
         return null;
     }
 
     @Override
-    public DescribeStoreImageTasksResult describeStoreImageTasks(DescribeStoreImageTasksRequest describeStoreImageTasksRequest) {
+    public DescribeStoreImageTasksResponse describeStoreImageTasks(DescribeStoreImageTasksRequest describeStoreImageTasksRequest) {
         return null;
     }
 
     @Override
-    public DescribeSubnetsResult describeSubnets(DescribeSubnetsRequest describeSubnetsRequest) {
+    public DescribeSubnetsResponse describeSubnets(DescribeSubnetsRequest describeSubnetsRequest) {
         return null;
     }
 
     @Override
-    public DescribeSubnetsResult describeSubnets() {
+    public DescribeSubnetsResponse describeSubnets() {
         return null;
     }
 
     @Override
-    public DescribeTagsResult describeTags(DescribeTagsRequest describeTagsRequest) {
+    public DescribeTagsResponse describeTags(DescribeTagsRequest describeTagsRequest) {
         return null;
     }
 
     @Override
-    public DescribeTagsResult describeTags() {
+    public DescribeTagsResponse describeTags() {
         return null;
     }
 
     @Override
-    public DescribeTrafficMirrorFilterRulesResult describeTrafficMirrorFilterRules(DescribeTrafficMirrorFilterRulesRequest describeTrafficMirrorFilterRulesRequest) {
+    public DescribeTrafficMirrorFilterRulesResponse describeTrafficMirrorFilterRules(DescribeTrafficMirrorFilterRulesRequest describeTrafficMirrorFilterRulesRequest) {
         return null;
     }
 
     @Override
-    public DescribeTrafficMirrorFiltersResult describeTrafficMirrorFilters(DescribeTrafficMirrorFiltersRequest describeTrafficMirrorFiltersRequest) {
+    public DescribeTrafficMirrorFiltersResponse describeTrafficMirrorFilters(DescribeTrafficMirrorFiltersRequest describeTrafficMirrorFiltersRequest) {
         return null;
     }
 
     @Override
-    public DescribeTrafficMirrorSessionsResult describeTrafficMirrorSessions(DescribeTrafficMirrorSessionsRequest describeTrafficMirrorSessionsRequest) {
+    public DescribeTrafficMirrorSessionsResponse describeTrafficMirrorSessions(DescribeTrafficMirrorSessionsRequest describeTrafficMirrorSessionsRequest) {
         return null;
     }
 
     @Override
-    public DescribeTrafficMirrorTargetsResult describeTrafficMirrorTargets(DescribeTrafficMirrorTargetsRequest describeTrafficMirrorTargetsRequest) {
+    public DescribeTrafficMirrorTargetsResponse describeTrafficMirrorTargets(DescribeTrafficMirrorTargetsRequest describeTrafficMirrorTargetsRequest) {
         return null;
     }
 
     @Override
-    public DescribeTransitGatewayAttachmentsResult describeTransitGatewayAttachments(DescribeTransitGatewayAttachmentsRequest describeTransitGatewayAttachmentsRequest) {
+    public DescribeTransitGatewayAttachmentsResponse describeTransitGatewayAttachments(DescribeTransitGatewayAttachmentsRequest describeTransitGatewayAttachmentsRequest) {
         return null;
     }
 
     @Override
-    public DescribeTransitGatewayConnectPeersResult describeTransitGatewayConnectPeers(DescribeTransitGatewayConnectPeersRequest describeTransitGatewayConnectPeersRequest) {
+    public DescribeTransitGatewayConnectPeersResponse describeTransitGatewayConnectPeers(DescribeTransitGatewayConnectPeersRequest describeTransitGatewayConnectPeersRequest) {
         return null;
     }
 
     @Override
-    public DescribeTransitGatewayConnectsResult describeTransitGatewayConnects(DescribeTransitGatewayConnectsRequest describeTransitGatewayConnectsRequest) {
+    public DescribeTransitGatewayConnectsResponse describeTransitGatewayConnects(DescribeTransitGatewayConnectsRequest describeTransitGatewayConnectsRequest) {
         return null;
     }
 
     @Override
-    public DescribeTransitGatewayMulticastDomainsResult describeTransitGatewayMulticastDomains(DescribeTransitGatewayMulticastDomainsRequest describeTransitGatewayMulticastDomainsRequest) {
+    public DescribeTransitGatewayMulticastDomainsResponse describeTransitGatewayMulticastDomains(DescribeTransitGatewayMulticastDomainsRequest describeTransitGatewayMulticastDomainsRequest) {
         return null;
     }
 
     @Override
-    public DescribeTransitGatewayPeeringAttachmentsResult describeTransitGatewayPeeringAttachments(DescribeTransitGatewayPeeringAttachmentsRequest describeTransitGatewayPeeringAttachmentsRequest) {
+    public DescribeTransitGatewayPeeringAttachmentsResponse describeTransitGatewayPeeringAttachments(DescribeTransitGatewayPeeringAttachmentsRequest describeTransitGatewayPeeringAttachmentsRequest) {
         return null;
     }
 
     @Override
-    public DescribeTransitGatewayPolicyTablesResult describeTransitGatewayPolicyTables(DescribeTransitGatewayPolicyTablesRequest describeTransitGatewayPolicyTablesRequest) {
+    public DescribeTransitGatewayPolicyTablesResponse describeTransitGatewayPolicyTables(DescribeTransitGatewayPolicyTablesRequest describeTransitGatewayPolicyTablesRequest) {
         return null;
     }
 
     @Override
-    public DescribeTransitGatewayRouteTableAnnouncementsResult describeTransitGatewayRouteTableAnnouncements(DescribeTransitGatewayRouteTableAnnouncementsRequest describeTransitGatewayRouteTableAnnouncementsRequest) {
+    public DescribeTransitGatewayRouteTableAnnouncementsResponse describeTransitGatewayRouteTableAnnouncements(DescribeTransitGatewayRouteTableAnnouncementsRequest describeTransitGatewayRouteTableAnnouncementsRequest) {
         return null;
     }
 
     @Override
-    public DescribeTransitGatewayRouteTablesResult describeTransitGatewayRouteTables(DescribeTransitGatewayRouteTablesRequest describeTransitGatewayRouteTablesRequest) {
+    public DescribeTransitGatewayRouteTablesResponse describeTransitGatewayRouteTables(DescribeTransitGatewayRouteTablesRequest describeTransitGatewayRouteTablesRequest) {
         return null;
     }
 
     @Override
-    public DescribeTransitGatewayVpcAttachmentsResult describeTransitGatewayVpcAttachments(DescribeTransitGatewayVpcAttachmentsRequest describeTransitGatewayVpcAttachmentsRequest) {
+    public DescribeTransitGatewayVpcAttachmentsResponse describeTransitGatewayVpcAttachments(DescribeTransitGatewayVpcAttachmentsRequest describeTransitGatewayVpcAttachmentsRequest) {
         return null;
     }
 
     @Override
-    public DescribeTransitGatewaysResult describeTransitGateways(DescribeTransitGatewaysRequest describeTransitGatewaysRequest) {
+    public DescribeTransitGatewaysResponse describeTransitGateways(DescribeTransitGatewaysRequest describeTransitGatewaysRequest) {
         return null;
     }
 
     @Override
-    public DescribeTrunkInterfaceAssociationsResult describeTrunkInterfaceAssociations(DescribeTrunkInterfaceAssociationsRequest describeTrunkInterfaceAssociationsRequest) {
+    public DescribeTrunkInterfaceAssociationsResponse describeTrunkInterfaceAssociations(DescribeTrunkInterfaceAssociationsRequest describeTrunkInterfaceAssociationsRequest) {
         return null;
     }
 
     @Override
-    public DescribeVerifiedAccessEndpointsResult describeVerifiedAccessEndpoints(DescribeVerifiedAccessEndpointsRequest describeVerifiedAccessEndpointsRequest) {
+    public DescribeVerifiedAccessEndpointsResponse describeVerifiedAccessEndpoints(DescribeVerifiedAccessEndpointsRequest describeVerifiedAccessEndpointsRequest) {
         return null;
     }
 
     @Override
-    public DescribeVerifiedAccessGroupsResult describeVerifiedAccessGroups(DescribeVerifiedAccessGroupsRequest describeVerifiedAccessGroupsRequest) {
+    public DescribeVerifiedAccessGroupsResponse describeVerifiedAccessGroups(DescribeVerifiedAccessGroupsRequest describeVerifiedAccessGroupsRequest) {
         return null;
     }
 
     @Override
-    public DescribeVerifiedAccessInstanceLoggingConfigurationsResult describeVerifiedAccessInstanceLoggingConfigurations(DescribeVerifiedAccessInstanceLoggingConfigurationsRequest describeVerifiedAccessInstanceLoggingConfigurationsRequest) {
+    public DescribeVerifiedAccessInstanceLoggingConfigurationsResponse describeVerifiedAccessInstanceLoggingConfigurations(DescribeVerifiedAccessInstanceLoggingConfigurationsRequest describeVerifiedAccessInstanceLoggingConfigurationsRequest) {
         return null;
     }
 
     @Override
-    public DescribeVerifiedAccessInstancesResult describeVerifiedAccessInstances(DescribeVerifiedAccessInstancesRequest describeVerifiedAccessInstancesRequest) {
+    public DescribeVerifiedAccessInstancesResponse describeVerifiedAccessInstances(DescribeVerifiedAccessInstancesRequest describeVerifiedAccessInstancesRequest) {
         return null;
     }
 
     @Override
-    public DescribeVerifiedAccessTrustProvidersResult describeVerifiedAccessTrustProviders(DescribeVerifiedAccessTrustProvidersRequest describeVerifiedAccessTrustProvidersRequest) {
+    public DescribeVerifiedAccessTrustProvidersResponse describeVerifiedAccessTrustProviders(DescribeVerifiedAccessTrustProvidersRequest describeVerifiedAccessTrustProvidersRequest) {
         return null;
     }
 
     @Override
-    public DescribeVolumeAttributeResult describeVolumeAttribute(DescribeVolumeAttributeRequest describeVolumeAttributeRequest) {
+    public DescribeVolumeAttributeResponse describeVolumeAttribute(DescribeVolumeAttributeRequest describeVolumeAttributeRequest) {
         return null;
     }
 
     @Override
-    public DescribeVolumeStatusResult describeVolumeStatus(DescribeVolumeStatusRequest describeVolumeStatusRequest) {
+    public DescribeVolumeStatusResponse describeVolumeStatus(DescribeVolumeStatusRequest describeVolumeStatusRequest) {
         return null;
     }
 
     @Override
-    public DescribeVolumeStatusResult describeVolumeStatus() {
+    public DescribeVolumeStatusResponse describeVolumeStatus() {
         return null;
     }
 
     @Override
-    public DescribeVolumesResult describeVolumes(DescribeVolumesRequest describeVolumesRequest) {
+    public DescribeVolumesResponse describeVolumes(DescribeVolumesRequest describeVolumesRequest) {
         return null;
     }
 
     @Override
-    public DescribeVolumesResult describeVolumes() {
+    public DescribeVolumesResponse describeVolumes() {
         return null;
     }
 
     @Override
-    public DescribeVolumesModificationsResult describeVolumesModifications(DescribeVolumesModificationsRequest describeVolumesModificationsRequest) {
+    public DescribeVolumesModificationsResponse describeVolumesModifications(DescribeVolumesModificationsRequest describeVolumesModificationsRequest) {
         return null;
     }
 
     @Override
-    public DescribeVpcAttributeResult describeVpcAttribute(DescribeVpcAttributeRequest describeVpcAttributeRequest) {
+    public DescribeVpcAttributeResponse describeVpcAttribute(DescribeVpcAttributeRequest describeVpcAttributeRequest) {
         return null;
     }
 
     @Override
-    public DescribeVpcClassicLinkResult describeVpcClassicLink(DescribeVpcClassicLinkRequest describeVpcClassicLinkRequest) {
+    public DescribeVpcClassicLinkResponse describeVpcClassicLink(DescribeVpcClassicLinkRequest describeVpcClassicLinkRequest) {
         return null;
     }
 
     @Override
-    public DescribeVpcClassicLinkResult describeVpcClassicLink() {
+    public DescribeVpcClassicLinkResponse describeVpcClassicLink() {
         return null;
     }
 
     @Override
-    public DescribeVpcClassicLinkDnsSupportResult describeVpcClassicLinkDnsSupport(DescribeVpcClassicLinkDnsSupportRequest describeVpcClassicLinkDnsSupportRequest) {
+    public DescribeVpcClassicLinkDnsSupportResponse describeVpcClassicLinkDnsSupport(DescribeVpcClassicLinkDnsSupportRequest describeVpcClassicLinkDnsSupportRequest) {
         return null;
     }
 
     @Override
-    public DescribeVpcEndpointConnectionNotificationsResult describeVpcEndpointConnectionNotifications(DescribeVpcEndpointConnectionNotificationsRequest describeVpcEndpointConnectionNotificationsRequest) {
+    public DescribeVpcEndpointConnectionNotificationsResponse describeVpcEndpointConnectionNotifications(DescribeVpcEndpointConnectionNotificationsRequest describeVpcEndpointConnectionNotificationsRequest) {
         return null;
     }
 
     @Override
-    public DescribeVpcEndpointConnectionsResult describeVpcEndpointConnections(DescribeVpcEndpointConnectionsRequest describeVpcEndpointConnectionsRequest) {
+    public DescribeVpcEndpointConnectionsResponse describeVpcEndpointConnections(DescribeVpcEndpointConnectionsRequest describeVpcEndpointConnectionsRequest) {
         return null;
     }
 
     @Override
-    public DescribeVpcEndpointServiceConfigurationsResult describeVpcEndpointServiceConfigurations(DescribeVpcEndpointServiceConfigurationsRequest describeVpcEndpointServiceConfigurationsRequest) {
+    public DescribeVpcEndpointServiceConfigurationsResponse describeVpcEndpointServiceConfigurations(DescribeVpcEndpointServiceConfigurationsRequest describeVpcEndpointServiceConfigurationsRequest) {
         return null;
     }
 
     @Override
-    public DescribeVpcEndpointServicePermissionsResult describeVpcEndpointServicePermissions(DescribeVpcEndpointServicePermissionsRequest describeVpcEndpointServicePermissionsRequest) {
+    public DescribeVpcEndpointServicePermissionsResponse describeVpcEndpointServicePermissions(DescribeVpcEndpointServicePermissionsRequest describeVpcEndpointServicePermissionsRequest) {
         return null;
     }
 
     @Override
-    public DescribeVpcEndpointServicesResult describeVpcEndpointServices(DescribeVpcEndpointServicesRequest describeVpcEndpointServicesRequest) {
+    public DescribeVpcEndpointServicesResponse describeVpcEndpointServices(DescribeVpcEndpointServicesRequest describeVpcEndpointServicesRequest) {
         return null;
     }
 
     @Override
-    public DescribeVpcEndpointServicesResult describeVpcEndpointServices() {
+    public DescribeVpcEndpointServicesResponse describeVpcEndpointServices() {
         return null;
     }
 
     @Override
-    public DescribeVpcEndpointsResult describeVpcEndpoints(DescribeVpcEndpointsRequest describeVpcEndpointsRequest) {
+    public DescribeVpcEndpointsResponse describeVpcEndpoints(DescribeVpcEndpointsRequest describeVpcEndpointsRequest) {
         return null;
     }
 
     @Override
-    public DescribeVpcEndpointsResult describeVpcEndpoints() {
+    public DescribeVpcEndpointsResponse describeVpcEndpoints() {
         return null;
     }
 
     @Override
-    public DescribeVpcPeeringConnectionsResult describeVpcPeeringConnections(DescribeVpcPeeringConnectionsRequest describeVpcPeeringConnectionsRequest) {
+    public DescribeVpcPeeringConnectionsResponse describeVpcPeeringConnections(DescribeVpcPeeringConnectionsRequest describeVpcPeeringConnectionsRequest) {
         return null;
     }
 
     @Override
-    public DescribeVpcPeeringConnectionsResult describeVpcPeeringConnections() {
+    public DescribeVpcPeeringConnectionsResponse describeVpcPeeringConnections() {
         return null;
     }
 
     @Override
-    public DescribeVpcsResult describeVpcs(DescribeVpcsRequest describeVpcsRequest) {
+    public DescribeVpcsResponse describeVpcs(DescribeVpcsRequest describeVpcsRequest) {
         return null;
     }
 
     @Override
-    public DescribeVpcsResult describeVpcs() {
+    public DescribeVpcsResponse describeVpcs() {
         return null;
     }
 
     @Override
-    public DescribeVpnConnectionsResult describeVpnConnections(DescribeVpnConnectionsRequest describeVpnConnectionsRequest) {
+    public DescribeVpnConnectionsResponse describeVpnConnections(DescribeVpnConnectionsRequest describeVpnConnectionsRequest) {
         return null;
     }
 
     @Override
-    public DescribeVpnConnectionsResult describeVpnConnections() {
+    public DescribeVpnConnectionsResponse describeVpnConnections() {
         return null;
     }
 
     @Override
-    public DescribeVpnGatewaysResult describeVpnGateways(DescribeVpnGatewaysRequest describeVpnGatewaysRequest) {
+    public DescribeVpnGatewaysResponse describeVpnGateways(DescribeVpnGatewaysRequest describeVpnGatewaysRequest) {
         return null;
     }
 
     @Override
-    public DescribeVpnGatewaysResult describeVpnGateways() {
+    public DescribeVpnGatewaysResponse describeVpnGateways() {
         return null;
     }
 
     @Override
-    public DetachClassicLinkVpcResult detachClassicLinkVpc(DetachClassicLinkVpcRequest detachClassicLinkVpcRequest) {
+    public DetachClassicLinkVpcResponse detachClassicLinkVpc(DetachClassicLinkVpcRequest detachClassicLinkVpcRequest) {
         return null;
     }
 
     @Override
-    public DetachInternetGatewayResult detachInternetGateway(DetachInternetGatewayRequest detachInternetGatewayRequest) {
+    public DetachInternetGatewayResponse detachInternetGateway(DetachInternetGatewayRequest detachInternetGatewayRequest) {
         return null;
     }
 
     @Override
-    public DetachNetworkInterfaceResult detachNetworkInterface(DetachNetworkInterfaceRequest detachNetworkInterfaceRequest) {
+    public DetachNetworkInterfaceResponse detachNetworkInterface(DetachNetworkInterfaceRequest detachNetworkInterfaceRequest) {
         return null;
     }
 
     @Override
-    public DetachVerifiedAccessTrustProviderResult detachVerifiedAccessTrustProvider(DetachVerifiedAccessTrustProviderRequest detachVerifiedAccessTrustProviderRequest) {
+    public DetachVerifiedAccessTrustProviderResponse detachVerifiedAccessTrustProvider(DetachVerifiedAccessTrustProviderRequest detachVerifiedAccessTrustProviderRequest) {
         return null;
     }
 
     @Override
-    public DetachVolumeResult detachVolume(DetachVolumeRequest detachVolumeRequest) {
+    public DetachVolumeResponse detachVolume(DetachVolumeRequest detachVolumeRequest) {
         return null;
     }
 
     @Override
-    public DetachVpnGatewayResult detachVpnGateway(DetachVpnGatewayRequest detachVpnGatewayRequest) {
+    public DetachVpnGatewayResponse detachVpnGateway(DetachVpnGatewayRequest detachVpnGatewayRequest) {
         return null;
     }
 
     @Override
-    public DisableAddressTransferResult disableAddressTransfer(DisableAddressTransferRequest disableAddressTransferRequest) {
+    public DisableAddressTransferResponse disableAddressTransfer(DisableAddressTransferRequest disableAddressTransferRequest) {
         return null;
     }
 
     @Override
-    public DisableAwsNetworkPerformanceMetricSubscriptionResult disableAwsNetworkPerformanceMetricSubscription(DisableAwsNetworkPerformanceMetricSubscriptionRequest disableAwsNetworkPerformanceMetricSubscriptionRequest) {
+    public DisableAwsNetworkPerformanceMetricSubscriptionResponse disableAwsNetworkPerformanceMetricSubscription(DisableAwsNetworkPerformanceMetricSubscriptionRequest disableAwsNetworkPerformanceMetricSubscriptionRequest) {
         return null;
     }
 
     @Override
-    public DisableEbsEncryptionByDefaultResult disableEbsEncryptionByDefault(DisableEbsEncryptionByDefaultRequest disableEbsEncryptionByDefaultRequest) {
+    public DisableEbsEncryptionByDefaultResponse disableEbsEncryptionByDefault(DisableEbsEncryptionByDefaultRequest disableEbsEncryptionByDefaultRequest) {
         return null;
     }
 
     @Override
-    public DisableFastLaunchResult disableFastLaunch(DisableFastLaunchRequest disableFastLaunchRequest) {
+    public DisableFastLaunchResponse disableFastLaunch(DisableFastLaunchRequest disableFastLaunchRequest) {
         return null;
     }
 
     @Override
-    public DisableFastSnapshotRestoresResult disableFastSnapshotRestores(DisableFastSnapshotRestoresRequest disableFastSnapshotRestoresRequest) {
+    public DisableFastSnapshotRestoresResponse disableFastSnapshotRestores(DisableFastSnapshotRestoresRequest disableFastSnapshotRestoresRequest) {
         return null;
     }
 
     @Override
-    public DisableImageResult disableImage(DisableImageRequest disableImageRequest) {
+    public DisableImageResponse disableImage(DisableImageRequest disableImageRequest) {
         return null;
     }
 
     @Override
-    public DisableImageBlockPublicAccessResult disableImageBlockPublicAccess(DisableImageBlockPublicAccessRequest disableImageBlockPublicAccessRequest) {
+    public DisableImageBlockPublicAccessResponse disableImageBlockPublicAccess(DisableImageBlockPublicAccessRequest disableImageBlockPublicAccessRequest) {
         return null;
     }
 
     @Override
-    public DisableImageDeprecationResult disableImageDeprecation(DisableImageDeprecationRequest disableImageDeprecationRequest) {
+    public DisableImageDeprecationResponse disableImageDeprecation(DisableImageDeprecationRequest disableImageDeprecationRequest) {
         return null;
     }
 
     @Override
-    public DisableImageDeregistrationProtectionResult disableImageDeregistrationProtection(DisableImageDeregistrationProtectionRequest disableImageDeregistrationProtectionRequest) {
+    public DisableImageDeregistrationProtectionResponse disableImageDeregistrationProtection(DisableImageDeregistrationProtectionRequest disableImageDeregistrationProtectionRequest) {
         return null;
     }
 
     @Override
-    public DisableIpamOrganizationAdminAccountResult disableIpamOrganizationAdminAccount(DisableIpamOrganizationAdminAccountRequest disableIpamOrganizationAdminAccountRequest) {
+    public DisableIpamOrganizationAdminAccountResponse disableIpamOrganizationAdminAccount(DisableIpamOrganizationAdminAccountRequest disableIpamOrganizationAdminAccountRequest) {
         return null;
     }
 
     @Override
-    public DisableSerialConsoleAccessResult disableSerialConsoleAccess(DisableSerialConsoleAccessRequest disableSerialConsoleAccessRequest) {
+    public DisableSerialConsoleAccessResponse disableSerialConsoleAccess(DisableSerialConsoleAccessRequest disableSerialConsoleAccessRequest) {
         return null;
     }
 
     @Override
-    public DisableSnapshotBlockPublicAccessResult disableSnapshotBlockPublicAccess(DisableSnapshotBlockPublicAccessRequest disableSnapshotBlockPublicAccessRequest) {
+    public DisableSnapshotBlockPublicAccessResponse disableSnapshotBlockPublicAccess(DisableSnapshotBlockPublicAccessRequest disableSnapshotBlockPublicAccessRequest) {
         return null;
     }
 
     @Override
-    public DisableTransitGatewayRouteTablePropagationResult disableTransitGatewayRouteTablePropagation(DisableTransitGatewayRouteTablePropagationRequest disableTransitGatewayRouteTablePropagationRequest) {
+    public DisableTransitGatewayRouteTablePropagationResponse disableTransitGatewayRouteTablePropagation(DisableTransitGatewayRouteTablePropagationRequest disableTransitGatewayRouteTablePropagationRequest) {
         return null;
     }
 
     @Override
-    public DisableVgwRoutePropagationResult disableVgwRoutePropagation(DisableVgwRoutePropagationRequest disableVgwRoutePropagationRequest) {
+    public DisableVgwRoutePropagationResponse disableVgwRoutePropagation(DisableVgwRoutePropagationRequest disableVgwRoutePropagationRequest) {
         return null;
     }
 
     @Override
-    public DisableVpcClassicLinkResult disableVpcClassicLink(DisableVpcClassicLinkRequest disableVpcClassicLinkRequest) {
+    public DisableVpcClassicLinkResponse disableVpcClassicLink(DisableVpcClassicLinkRequest disableVpcClassicLinkRequest) {
         return null;
     }
 
     @Override
-    public DisableVpcClassicLinkDnsSupportResult disableVpcClassicLinkDnsSupport(DisableVpcClassicLinkDnsSupportRequest disableVpcClassicLinkDnsSupportRequest) {
+    public DisableVpcClassicLinkDnsSupportResponse disableVpcClassicLinkDnsSupport(DisableVpcClassicLinkDnsSupportRequest disableVpcClassicLinkDnsSupportRequest) {
         return null;
     }
 
     @Override
-    public DisassociateAddressResult disassociateAddress(DisassociateAddressRequest disassociateAddressRequest) {
+    public DisassociateAddressResponse disassociateAddress(DisassociateAddressRequest disassociateAddressRequest) {
         return null;
     }
 
     @Override
-    public DisassociateClientVpnTargetNetworkResult disassociateClientVpnTargetNetwork(DisassociateClientVpnTargetNetworkRequest disassociateClientVpnTargetNetworkRequest) {
+    public DisassociateClientVpnTargetNetworkResponse disassociateClientVpnTargetNetwork(DisassociateClientVpnTargetNetworkRequest disassociateClientVpnTargetNetworkRequest) {
         return null;
     }
 
     @Override
-    public DisassociateEnclaveCertificateIamRoleResult disassociateEnclaveCertificateIamRole(DisassociateEnclaveCertificateIamRoleRequest disassociateEnclaveCertificateIamRoleRequest) {
+    public DisassociateEnclaveCertificateIamRoleResponse disassociateEnclaveCertificateIamRole(DisassociateEnclaveCertificateIamRoleRequest disassociateEnclaveCertificateIamRoleRequest) {
         return null;
     }
 
     @Override
-    public DisassociateIamInstanceProfileResult disassociateIamInstanceProfile(DisassociateIamInstanceProfileRequest disassociateIamInstanceProfileRequest) {
+    public DisassociateIamInstanceProfileResponse disassociateIamInstanceProfile(DisassociateIamInstanceProfileRequest disassociateIamInstanceProfileRequest) {
         return null;
     }
 
     @Override
-    public DisassociateInstanceEventWindowResult disassociateInstanceEventWindow(DisassociateInstanceEventWindowRequest disassociateInstanceEventWindowRequest) {
+    public DisassociateInstanceEventWindowResponse disassociateInstanceEventWindow(DisassociateInstanceEventWindowRequest disassociateInstanceEventWindowRequest) {
         return null;
     }
 
     @Override
-    public DisassociateIpamByoasnResult disassociateIpamByoasn(DisassociateIpamByoasnRequest disassociateIpamByoasnRequest) {
+    public DisassociateIpamByoasnResponse disassociateIpamByoasn(DisassociateIpamByoasnRequest disassociateIpamByoasnRequest) {
         return null;
     }
 
     @Override
-    public DisassociateIpamResourceDiscoveryResult disassociateIpamResourceDiscovery(DisassociateIpamResourceDiscoveryRequest disassociateIpamResourceDiscoveryRequest) {
+    public DisassociateIpamResourceDiscoveryResponse disassociateIpamResourceDiscovery(DisassociateIpamResourceDiscoveryRequest disassociateIpamResourceDiscoveryRequest) {
         return null;
     }
 
     @Override
-    public DisassociateNatGatewayAddressResult disassociateNatGatewayAddress(DisassociateNatGatewayAddressRequest disassociateNatGatewayAddressRequest) {
+    public DisassociateNatGatewayAddressResponse disassociateNatGatewayAddress(DisassociateNatGatewayAddressRequest disassociateNatGatewayAddressRequest) {
         return null;
     }
 
     @Override
-    public DisassociateRouteTableResult disassociateRouteTable(DisassociateRouteTableRequest disassociateRouteTableRequest) {
+    public DisassociateRouteTableResponse disassociateRouteTable(DisassociateRouteTableRequest disassociateRouteTableRequest) {
         return null;
     }
 
     @Override
-    public DisassociateSubnetCidrBlockResult disassociateSubnetCidrBlock(DisassociateSubnetCidrBlockRequest disassociateSubnetCidrBlockRequest) {
+    public DisassociateSubnetCidrBlockResponse disassociateSubnetCidrBlock(DisassociateSubnetCidrBlockRequest disassociateSubnetCidrBlockRequest) {
         return null;
     }
 
     @Override
-    public DisassociateTransitGatewayMulticastDomainResult disassociateTransitGatewayMulticastDomain(DisassociateTransitGatewayMulticastDomainRequest disassociateTransitGatewayMulticastDomainRequest) {
+    public DisassociateTransitGatewayMulticastDomainResponse disassociateTransitGatewayMulticastDomain(DisassociateTransitGatewayMulticastDomainRequest disassociateTransitGatewayMulticastDomainRequest) {
         return null;
     }
 
     @Override
-    public DisassociateTransitGatewayPolicyTableResult disassociateTransitGatewayPolicyTable(DisassociateTransitGatewayPolicyTableRequest disassociateTransitGatewayPolicyTableRequest) {
+    public DisassociateTransitGatewayPolicyTableResponse disassociateTransitGatewayPolicyTable(DisassociateTransitGatewayPolicyTableRequest disassociateTransitGatewayPolicyTableRequest) {
         return null;
     }
 
     @Override
-    public DisassociateTransitGatewayRouteTableResult disassociateTransitGatewayRouteTable(DisassociateTransitGatewayRouteTableRequest disassociateTransitGatewayRouteTableRequest) {
+    public DisassociateTransitGatewayRouteTableResponse disassociateTransitGatewayRouteTable(DisassociateTransitGatewayRouteTableRequest disassociateTransitGatewayRouteTableRequest) {
         return null;
     }
 
     @Override
-    public DisassociateTrunkInterfaceResult disassociateTrunkInterface(DisassociateTrunkInterfaceRequest disassociateTrunkInterfaceRequest) {
+    public DisassociateTrunkInterfaceResponse disassociateTrunkInterface(DisassociateTrunkInterfaceRequest disassociateTrunkInterfaceRequest) {
         return null;
     }
 
     @Override
-    public DisassociateVpcCidrBlockResult disassociateVpcCidrBlock(DisassociateVpcCidrBlockRequest disassociateVpcCidrBlockRequest) {
+    public DisassociateVpcCidrBlockResponse disassociateVpcCidrBlock(DisassociateVpcCidrBlockRequest disassociateVpcCidrBlockRequest) {
         return null;
     }
 
     @Override
-    public EnableAddressTransferResult enableAddressTransfer(EnableAddressTransferRequest enableAddressTransferRequest) {
+    public EnableAddressTransferResponse enableAddressTransfer(EnableAddressTransferRequest enableAddressTransferRequest) {
         return null;
     }
 
     @Override
-    public EnableAwsNetworkPerformanceMetricSubscriptionResult enableAwsNetworkPerformanceMetricSubscription(EnableAwsNetworkPerformanceMetricSubscriptionRequest enableAwsNetworkPerformanceMetricSubscriptionRequest) {
+    public EnableAwsNetworkPerformanceMetricSubscriptionResponse enableAwsNetworkPerformanceMetricSubscription(EnableAwsNetworkPerformanceMetricSubscriptionRequest enableAwsNetworkPerformanceMetricSubscriptionRequest) {
         return null;
     }
 
     @Override
-    public EnableEbsEncryptionByDefaultResult enableEbsEncryptionByDefault(EnableEbsEncryptionByDefaultRequest enableEbsEncryptionByDefaultRequest) {
+    public EnableEbsEncryptionByDefaultResponse enableEbsEncryptionByDefault(EnableEbsEncryptionByDefaultRequest enableEbsEncryptionByDefaultRequest) {
         return null;
     }
 
     @Override
-    public EnableFastLaunchResult enableFastLaunch(EnableFastLaunchRequest enableFastLaunchRequest) {
+    public EnableFastLaunchResponse enableFastLaunch(EnableFastLaunchRequest enableFastLaunchRequest) {
         return null;
     }
 
     @Override
-    public EnableFastSnapshotRestoresResult enableFastSnapshotRestores(EnableFastSnapshotRestoresRequest enableFastSnapshotRestoresRequest) {
+    public EnableFastSnapshotRestoresResponse enableFastSnapshotRestores(EnableFastSnapshotRestoresRequest enableFastSnapshotRestoresRequest) {
         return null;
     }
 
     @Override
-    public EnableImageResult enableImage(EnableImageRequest enableImageRequest) {
+    public EnableImageResponse enableImage(EnableImageRequest enableImageRequest) {
         return null;
     }
 
     @Override
-    public EnableImageBlockPublicAccessResult enableImageBlockPublicAccess(EnableImageBlockPublicAccessRequest enableImageBlockPublicAccessRequest) {
+    public EnableImageBlockPublicAccessResponse enableImageBlockPublicAccess(EnableImageBlockPublicAccessRequest enableImageBlockPublicAccessRequest) {
         return null;
     }
 
     @Override
-    public EnableImageDeprecationResult enableImageDeprecation(EnableImageDeprecationRequest enableImageDeprecationRequest) {
+    public EnableImageDeprecationResponse enableImageDeprecation(EnableImageDeprecationRequest enableImageDeprecationRequest) {
         return null;
     }
 
     @Override
-    public EnableImageDeregistrationProtectionResult enableImageDeregistrationProtection(EnableImageDeregistrationProtectionRequest enableImageDeregistrationProtectionRequest) {
+    public EnableImageDeregistrationProtectionResponse enableImageDeregistrationProtection(EnableImageDeregistrationProtectionRequest enableImageDeregistrationProtectionRequest) {
         return null;
     }
 
     @Override
-    public EnableIpamOrganizationAdminAccountResult enableIpamOrganizationAdminAccount(EnableIpamOrganizationAdminAccountRequest enableIpamOrganizationAdminAccountRequest) {
+    public EnableIpamOrganizationAdminAccountResponse enableIpamOrganizationAdminAccount(EnableIpamOrganizationAdminAccountRequest enableIpamOrganizationAdminAccountRequest) {
         return null;
     }
 
     @Override
-    public EnableReachabilityAnalyzerOrganizationSharingResult enableReachabilityAnalyzerOrganizationSharing(EnableReachabilityAnalyzerOrganizationSharingRequest enableReachabilityAnalyzerOrganizationSharingRequest) {
+    public EnableReachabilityAnalyzerOrganizationSharingResponse enableReachabilityAnalyzerOrganizationSharing(EnableReachabilityAnalyzerOrganizationSharingRequest enableReachabilityAnalyzerOrganizationSharingRequest) {
         return null;
     }
 
     @Override
-    public EnableSerialConsoleAccessResult enableSerialConsoleAccess(EnableSerialConsoleAccessRequest enableSerialConsoleAccessRequest) {
+    public EnableSerialConsoleAccessResponse enableSerialConsoleAccess(EnableSerialConsoleAccessRequest enableSerialConsoleAccessRequest) {
         return null;
     }
 
     @Override
-    public EnableSnapshotBlockPublicAccessResult enableSnapshotBlockPublicAccess(EnableSnapshotBlockPublicAccessRequest enableSnapshotBlockPublicAccessRequest) {
+    public EnableSnapshotBlockPublicAccessResponse enableSnapshotBlockPublicAccess(EnableSnapshotBlockPublicAccessRequest enableSnapshotBlockPublicAccessRequest) {
         return null;
     }
 
     @Override
-    public EnableTransitGatewayRouteTablePropagationResult enableTransitGatewayRouteTablePropagation(EnableTransitGatewayRouteTablePropagationRequest enableTransitGatewayRouteTablePropagationRequest) {
+    public EnableTransitGatewayRouteTablePropagationResponse enableTransitGatewayRouteTablePropagation(EnableTransitGatewayRouteTablePropagationRequest enableTransitGatewayRouteTablePropagationRequest) {
         return null;
     }
 
     @Override
-    public EnableVgwRoutePropagationResult enableVgwRoutePropagation(EnableVgwRoutePropagationRequest enableVgwRoutePropagationRequest) {
+    public EnableVgwRoutePropagationResponse enableVgwRoutePropagation(EnableVgwRoutePropagationRequest enableVgwRoutePropagationRequest) {
         return null;
     }
 
     @Override
-    public EnableVolumeIOResult enableVolumeIO(EnableVolumeIORequest enableVolumeIORequest) {
+    public EnableVolumeIOResponse enableVolumeIO(EnableVolumeIoRequest enableVolumeIORequest) {
         return null;
     }
 
     @Override
-    public EnableVpcClassicLinkResult enableVpcClassicLink(EnableVpcClassicLinkRequest enableVpcClassicLinkRequest) {
+    public EnableVpcClassicLinkResponse enableVpcClassicLink(EnableVpcClassicLinkRequest enableVpcClassicLinkRequest) {
         return null;
     }
 
     @Override
-    public EnableVpcClassicLinkDnsSupportResult enableVpcClassicLinkDnsSupport(EnableVpcClassicLinkDnsSupportRequest enableVpcClassicLinkDnsSupportRequest) {
+    public EnableVpcClassicLinkDnsSupportResponse enableVpcClassicLinkDnsSupport(EnableVpcClassicLinkDnsSupportRequest enableVpcClassicLinkDnsSupportRequest) {
         return null;
     }
 
     @Override
-    public ExportClientVpnClientCertificateRevocationListResult exportClientVpnClientCertificateRevocationList(ExportClientVpnClientCertificateRevocationListRequest exportClientVpnClientCertificateRevocationListRequest) {
+    public ExportClientVpnClientCertificateRevocationListResponse exportClientVpnClientCertificateRevocationList(ExportClientVpnClientCertificateRevocationListRequest exportClientVpnClientCertificateRevocationListRequest) {
         return null;
     }
 
     @Override
-    public ExportClientVpnClientConfigurationResult exportClientVpnClientConfiguration(ExportClientVpnClientConfigurationRequest exportClientVpnClientConfigurationRequest) {
+    public ExportClientVpnClientConfigurationResponse exportClientVpnClientConfiguration(ExportClientVpnClientConfigurationRequest exportClientVpnClientConfigurationRequest) {
         return null;
     }
 
     @Override
-    public ExportImageResult exportImage(ExportImageRequest exportImageRequest) {
+    public ExportImageResponse exportImage(ExportImageRequest exportImageRequest) {
         return null;
     }
 
     @Override
-    public ExportTransitGatewayRoutesResult exportTransitGatewayRoutes(ExportTransitGatewayRoutesRequest exportTransitGatewayRoutesRequest) {
+    public ExportTransitGatewayRoutesResponse exportTransitGatewayRoutes(ExportTransitGatewayRoutesRequest exportTransitGatewayRoutesRequest) {
         return null;
     }
 
     @Override
-    public GetAssociatedEnclaveCertificateIamRolesResult getAssociatedEnclaveCertificateIamRoles(GetAssociatedEnclaveCertificateIamRolesRequest getAssociatedEnclaveCertificateIamRolesRequest) {
+    public GetAssociatedEnclaveCertificateIamRolesResponse getAssociatedEnclaveCertificateIamRoles(GetAssociatedEnclaveCertificateIamRolesRequest getAssociatedEnclaveCertificateIamRolesRequest) {
         return null;
     }
 
     @Override
-    public GetAssociatedIpv6PoolCidrsResult getAssociatedIpv6PoolCidrs(GetAssociatedIpv6PoolCidrsRequest getAssociatedIpv6PoolCidrsRequest) {
+    public GetAssociatedIpv6PoolCidrsResponse getAssociatedIpv6PoolCidrs(GetAssociatedIpv6PoolCidrsRequest getAssociatedIpv6PoolCidrsRequest) {
         return null;
     }
 
     @Override
-    public GetAwsNetworkPerformanceDataResult getAwsNetworkPerformanceData(GetAwsNetworkPerformanceDataRequest getAwsNetworkPerformanceDataRequest) {
+    public GetAwsNetworkPerformanceDataResponse getAwsNetworkPerformanceData(GetAwsNetworkPerformanceDataRequest getAwsNetworkPerformanceDataRequest) {
         return null;
     }
 
     @Override
-    public GetCapacityReservationUsageResult getCapacityReservationUsage(GetCapacityReservationUsageRequest getCapacityReservationUsageRequest) {
+    public GetCapacityReservationUsageResponse getCapacityReservationUsage(GetCapacityReservationUsageRequest getCapacityReservationUsageRequest) {
         return null;
     }
 
     @Override
-    public GetCoipPoolUsageResult getCoipPoolUsage(GetCoipPoolUsageRequest getCoipPoolUsageRequest) {
+    public GetCoipPoolUsageResponse getCoipPoolUsage(GetCoipPoolUsageRequest getCoipPoolUsageRequest) {
         return null;
     }
 
     @Override
-    public GetConsoleOutputResult getConsoleOutput(GetConsoleOutputRequest getConsoleOutputRequest) {
+    public GetConsoleOutputResponse getConsoleOutput(GetConsoleOutputRequest getConsoleOutputRequest) {
         return null;
     }
 
     @Override
-    public GetConsoleScreenshotResult getConsoleScreenshot(GetConsoleScreenshotRequest getConsoleScreenshotRequest) {
+    public GetConsoleScreenshotResponse getConsoleScreenshot(GetConsoleScreenshotRequest getConsoleScreenshotRequest) {
         return null;
     }
 
     @Override
-    public GetDefaultCreditSpecificationResult getDefaultCreditSpecification(GetDefaultCreditSpecificationRequest getDefaultCreditSpecificationRequest) {
+    public GetDefaultCreditSpecificationResponse getDefaultCreditSpecification(GetDefaultCreditSpecificationRequest getDefaultCreditSpecificationRequest) {
         return null;
     }
 
     @Override
-    public GetEbsDefaultKmsKeyIdResult getEbsDefaultKmsKeyId(GetEbsDefaultKmsKeyIdRequest getEbsDefaultKmsKeyIdRequest) {
+    public GetEbsDefaultKmsKeyIdResponse getEbsDefaultKmsKeyId(GetEbsDefaultKmsKeyIdRequest getEbsDefaultKmsKeyIdRequest) {
         return null;
     }
 
     @Override
-    public GetEbsEncryptionByDefaultResult getEbsEncryptionByDefault(GetEbsEncryptionByDefaultRequest getEbsEncryptionByDefaultRequest) {
+    public GetEbsEncryptionByDefaultResponse getEbsEncryptionByDefault(GetEbsEncryptionByDefaultRequest getEbsEncryptionByDefaultRequest) {
         return null;
     }
 
     @Override
-    public GetFlowLogsIntegrationTemplateResult getFlowLogsIntegrationTemplate(GetFlowLogsIntegrationTemplateRequest getFlowLogsIntegrationTemplateRequest) {
+    public GetFlowLogsIntegrationTemplateResponse getFlowLogsIntegrationTemplate(GetFlowLogsIntegrationTemplateRequest getFlowLogsIntegrationTemplateRequest) {
         return null;
     }
 
     @Override
-    public GetGroupsForCapacityReservationResult getGroupsForCapacityReservation(GetGroupsForCapacityReservationRequest getGroupsForCapacityReservationRequest) {
+    public GetGroupsForCapacityReservationResponse getGroupsForCapacityReservation(GetGroupsForCapacityReservationRequest getGroupsForCapacityReservationRequest) {
         return null;
     }
 
     @Override
-    public GetHostReservationPurchasePreviewResult getHostReservationPurchasePreview(GetHostReservationPurchasePreviewRequest getHostReservationPurchasePreviewRequest) {
+    public GetHostReservationPurchasePreviewResponse getHostReservationPurchasePreview(GetHostReservationPurchasePreviewRequest getHostReservationPurchasePreviewRequest) {
         return null;
     }
 
     @Override
-    public GetImageBlockPublicAccessStateResult getImageBlockPublicAccessState(GetImageBlockPublicAccessStateRequest getImageBlockPublicAccessStateRequest) {
+    public GetImageBlockPublicAccessStateResponse getImageBlockPublicAccessState(GetImageBlockPublicAccessStateRequest getImageBlockPublicAccessStateRequest) {
         return null;
     }
 
     @Override
-    public GetInstanceMetadataDefaultsResult getInstanceMetadataDefaults(GetInstanceMetadataDefaultsRequest getInstanceMetadataDefaultsRequest) {
+    public GetInstanceMetadataDefaultsResponse getInstanceMetadataDefaults(GetInstanceMetadataDefaultsRequest getInstanceMetadataDefaultsRequest) {
         return null;
     }
 
     @Override
-    public GetInstanceTpmEkPubResult getInstanceTpmEkPub(GetInstanceTpmEkPubRequest getInstanceTpmEkPubRequest) {
+    public GetInstanceTpmEkPubResponse getInstanceTpmEkPub(GetInstanceTpmEkPubRequest getInstanceTpmEkPubRequest) {
         return null;
     }
 
     @Override
-    public GetInstanceTypesFromInstanceRequirementsResult getInstanceTypesFromInstanceRequirements(GetInstanceTypesFromInstanceRequirementsRequest getInstanceTypesFromInstanceRequirementsRequest) {
+    public GetInstanceTypesFromInstanceRequirementsResponse getInstanceTypesFromInstanceRequirements(GetInstanceTypesFromInstanceRequirementsRequest getInstanceTypesFromInstanceRequirementsRequest) {
         return null;
     }
 
     @Override
-    public GetInstanceUefiDataResult getInstanceUefiData(GetInstanceUefiDataRequest getInstanceUefiDataRequest) {
+    public GetInstanceUefiDataResponse getInstanceUefiData(GetInstanceUefiDataRequest getInstanceUefiDataRequest) {
         return null;
     }
 
     @Override
-    public GetIpamAddressHistoryResult getIpamAddressHistory(GetIpamAddressHistoryRequest getIpamAddressHistoryRequest) {
+    public GetIpamAddressHistoryResponse getIpamAddressHistory(GetIpamAddressHistoryRequest getIpamAddressHistoryRequest) {
         return null;
     }
 
     @Override
-    public GetIpamDiscoveredAccountsResult getIpamDiscoveredAccounts(GetIpamDiscoveredAccountsRequest getIpamDiscoveredAccountsRequest) {
+    public GetIpamDiscoveredAccountsResponse getIpamDiscoveredAccounts(GetIpamDiscoveredAccountsRequest getIpamDiscoveredAccountsRequest) {
         return null;
     }
 
     @Override
-    public GetIpamDiscoveredPublicAddressesResult getIpamDiscoveredPublicAddresses(GetIpamDiscoveredPublicAddressesRequest getIpamDiscoveredPublicAddressesRequest) {
+    public GetIpamDiscoveredPublicAddressesResponse getIpamDiscoveredPublicAddresses(GetIpamDiscoveredPublicAddressesRequest getIpamDiscoveredPublicAddressesRequest) {
         return null;
     }
 
     @Override
-    public GetIpamDiscoveredResourceCidrsResult getIpamDiscoveredResourceCidrs(GetIpamDiscoveredResourceCidrsRequest getIpamDiscoveredResourceCidrsRequest) {
+    public GetIpamDiscoveredResourceCidrsResponse getIpamDiscoveredResourceCidrs(GetIpamDiscoveredResourceCidrsRequest getIpamDiscoveredResourceCidrsRequest) {
         return null;
     }
 
     @Override
-    public GetIpamPoolAllocationsResult getIpamPoolAllocations(GetIpamPoolAllocationsRequest getIpamPoolAllocationsRequest) {
+    public GetIpamPoolAllocationsResponse getIpamPoolAllocations(GetIpamPoolAllocationsRequest getIpamPoolAllocationsRequest) {
         return null;
     }
 
     @Override
-    public GetIpamPoolCidrsResult getIpamPoolCidrs(GetIpamPoolCidrsRequest getIpamPoolCidrsRequest) {
+    public GetIpamPoolCidrsResponse getIpamPoolCidrs(GetIpamPoolCidrsRequest getIpamPoolCidrsRequest) {
         return null;
     }
 
     @Override
-    public GetIpamResourceCidrsResult getIpamResourceCidrs(GetIpamResourceCidrsRequest getIpamResourceCidrsRequest) {
+    public GetIpamResourceCidrsResponse getIpamResourceCidrs(GetIpamResourceCidrsRequest getIpamResourceCidrsRequest) {
         return null;
     }
 
     @Override
-    public GetLaunchTemplateDataResult getLaunchTemplateData(GetLaunchTemplateDataRequest getLaunchTemplateDataRequest) {
+    public GetLaunchTemplateDataResponse getLaunchTemplateData(GetLaunchTemplateDataRequest getLaunchTemplateDataRequest) {
         return null;
     }
 
     @Override
-    public GetManagedPrefixListAssociationsResult getManagedPrefixListAssociations(GetManagedPrefixListAssociationsRequest getManagedPrefixListAssociationsRequest) {
+    public GetManagedPrefixListAssociationsResponse getManagedPrefixListAssociations(GetManagedPrefixListAssociationsRequest getManagedPrefixListAssociationsRequest) {
         return null;
     }
 
     @Override
-    public GetManagedPrefixListEntriesResult getManagedPrefixListEntries(GetManagedPrefixListEntriesRequest getManagedPrefixListEntriesRequest) {
+    public GetManagedPrefixListEntriesResponse getManagedPrefixListEntries(GetManagedPrefixListEntriesRequest getManagedPrefixListEntriesRequest) {
         return null;
     }
 
     @Override
-    public GetNetworkInsightsAccessScopeAnalysisFindingsResult getNetworkInsightsAccessScopeAnalysisFindings(GetNetworkInsightsAccessScopeAnalysisFindingsRequest getNetworkInsightsAccessScopeAnalysisFindingsRequest) {
+    public GetNetworkInsightsAccessScopeAnalysisFindingsResponse getNetworkInsightsAccessScopeAnalysisFindings(GetNetworkInsightsAccessScopeAnalysisFindingsRequest getNetworkInsightsAccessScopeAnalysisFindingsRequest) {
         return null;
     }
 
     @Override
-    public GetNetworkInsightsAccessScopeContentResult getNetworkInsightsAccessScopeContent(GetNetworkInsightsAccessScopeContentRequest getNetworkInsightsAccessScopeContentRequest) {
+    public GetNetworkInsightsAccessScopeContentResponse getNetworkInsightsAccessScopeContent(GetNetworkInsightsAccessScopeContentRequest getNetworkInsightsAccessScopeContentRequest) {
         return null;
     }
 
     @Override
-    public GetPasswordDataResult getPasswordData(GetPasswordDataRequest getPasswordDataRequest) {
+    public GetPasswordDataResponse getPasswordData(GetPasswordDataRequest getPasswordDataRequest) {
         return null;
     }
 
     @Override
-    public GetReservedInstancesExchangeQuoteResult getReservedInstancesExchangeQuote(GetReservedInstancesExchangeQuoteRequest getReservedInstancesExchangeQuoteRequest) {
+    public GetReservedInstancesExchangeQuoteResponse getReservedInstancesExchangeQuote(GetReservedInstancesExchangeQuoteRequest getReservedInstancesExchangeQuoteRequest) {
         return null;
     }
 
     @Override
-    public GetSecurityGroupsForVpcResult getSecurityGroupsForVpc(GetSecurityGroupsForVpcRequest getSecurityGroupsForVpcRequest) {
+    public GetSecurityGroupsForVpcResponse getSecurityGroupsForVpc(GetSecurityGroupsForVpcRequest getSecurityGroupsForVpcRequest) {
         return null;
     }
 
     @Override
-    public GetSerialConsoleAccessStatusResult getSerialConsoleAccessStatus(GetSerialConsoleAccessStatusRequest getSerialConsoleAccessStatusRequest) {
+    public GetSerialConsoleAccessStatusResponse getSerialConsoleAccessStatus(GetSerialConsoleAccessStatusRequest getSerialConsoleAccessStatusRequest) {
         return null;
     }
 
     @Override
-    public GetSnapshotBlockPublicAccessStateResult getSnapshotBlockPublicAccessState(GetSnapshotBlockPublicAccessStateRequest getSnapshotBlockPublicAccessStateRequest) {
+    public GetSnapshotBlockPublicAccessStateResponse getSnapshotBlockPublicAccessState(GetSnapshotBlockPublicAccessStateRequest getSnapshotBlockPublicAccessStateRequest) {
         return null;
     }
 
     @Override
-    public GetSpotPlacementScoresResult getSpotPlacementScores(GetSpotPlacementScoresRequest getSpotPlacementScoresRequest) {
+    public GetSpotPlacementScoresResponse getSpotPlacementScores(GetSpotPlacementScoresRequest getSpotPlacementScoresRequest) {
         return null;
     }
 
     @Override
-    public GetSubnetCidrReservationsResult getSubnetCidrReservations(GetSubnetCidrReservationsRequest getSubnetCidrReservationsRequest) {
+    public GetSubnetCidrReservationsResponse getSubnetCidrReservations(GetSubnetCidrReservationsRequest getSubnetCidrReservationsRequest) {
         return null;
     }
 
     @Override
-    public GetTransitGatewayAttachmentPropagationsResult getTransitGatewayAttachmentPropagations(GetTransitGatewayAttachmentPropagationsRequest getTransitGatewayAttachmentPropagationsRequest) {
+    public GetTransitGatewayAttachmentPropagationsResponse getTransitGatewayAttachmentPropagations(GetTransitGatewayAttachmentPropagationsRequest getTransitGatewayAttachmentPropagationsRequest) {
         return null;
     }
 
     @Override
-    public GetTransitGatewayMulticastDomainAssociationsResult getTransitGatewayMulticastDomainAssociations(GetTransitGatewayMulticastDomainAssociationsRequest getTransitGatewayMulticastDomainAssociationsRequest) {
+    public GetTransitGatewayMulticastDomainAssociationsResponse getTransitGatewayMulticastDomainAssociations(GetTransitGatewayMulticastDomainAssociationsRequest getTransitGatewayMulticastDomainAssociationsRequest) {
         return null;
     }
 
     @Override
-    public GetTransitGatewayPolicyTableAssociationsResult getTransitGatewayPolicyTableAssociations(GetTransitGatewayPolicyTableAssociationsRequest getTransitGatewayPolicyTableAssociationsRequest) {
+    public GetTransitGatewayPolicyTableAssociationsResponse getTransitGatewayPolicyTableAssociations(GetTransitGatewayPolicyTableAssociationsRequest getTransitGatewayPolicyTableAssociationsRequest) {
         return null;
     }
 
     @Override
-    public GetTransitGatewayPolicyTableEntriesResult getTransitGatewayPolicyTableEntries(GetTransitGatewayPolicyTableEntriesRequest getTransitGatewayPolicyTableEntriesRequest) {
+    public GetTransitGatewayPolicyTableEntriesResponse getTransitGatewayPolicyTableEntries(GetTransitGatewayPolicyTableEntriesRequest getTransitGatewayPolicyTableEntriesRequest) {
         return null;
     }
 
     @Override
-    public GetTransitGatewayPrefixListReferencesResult getTransitGatewayPrefixListReferences(GetTransitGatewayPrefixListReferencesRequest getTransitGatewayPrefixListReferencesRequest) {
+    public GetTransitGatewayPrefixListReferencesResponse getTransitGatewayPrefixListReferences(GetTransitGatewayPrefixListReferencesRequest getTransitGatewayPrefixListReferencesRequest) {
         return null;
     }
 
     @Override
-    public GetTransitGatewayRouteTableAssociationsResult getTransitGatewayRouteTableAssociations(GetTransitGatewayRouteTableAssociationsRequest getTransitGatewayRouteTableAssociationsRequest) {
+    public GetTransitGatewayRouteTableAssociationsResponse getTransitGatewayRouteTableAssociations(GetTransitGatewayRouteTableAssociationsRequest getTransitGatewayRouteTableAssociationsRequest) {
         return null;
     }
 
     @Override
-    public GetTransitGatewayRouteTablePropagationsResult getTransitGatewayRouteTablePropagations(GetTransitGatewayRouteTablePropagationsRequest getTransitGatewayRouteTablePropagationsRequest) {
+    public GetTransitGatewayRouteTablePropagationsResponse getTransitGatewayRouteTablePropagations(GetTransitGatewayRouteTablePropagationsRequest getTransitGatewayRouteTablePropagationsRequest) {
         return null;
     }
 
     @Override
-    public GetVerifiedAccessEndpointPolicyResult getVerifiedAccessEndpointPolicy(GetVerifiedAccessEndpointPolicyRequest getVerifiedAccessEndpointPolicyRequest) {
+    public GetVerifiedAccessEndpointPolicyResponse getVerifiedAccessEndpointPolicy(GetVerifiedAccessEndpointPolicyRequest getVerifiedAccessEndpointPolicyRequest) {
         return null;
     }
 
     @Override
-    public GetVerifiedAccessGroupPolicyResult getVerifiedAccessGroupPolicy(GetVerifiedAccessGroupPolicyRequest getVerifiedAccessGroupPolicyRequest) {
+    public GetVerifiedAccessGroupPolicyResponse getVerifiedAccessGroupPolicy(GetVerifiedAccessGroupPolicyRequest getVerifiedAccessGroupPolicyRequest) {
         return null;
     }
 
     @Override
-    public GetVpnConnectionDeviceSampleConfigurationResult getVpnConnectionDeviceSampleConfiguration(GetVpnConnectionDeviceSampleConfigurationRequest getVpnConnectionDeviceSampleConfigurationRequest) {
+    public GetVpnConnectionDeviceSampleConfigurationResponse getVpnConnectionDeviceSampleConfiguration(GetVpnConnectionDeviceSampleConfigurationRequest getVpnConnectionDeviceSampleConfigurationRequest) {
         return null;
     }
 
     @Override
-    public GetVpnConnectionDeviceTypesResult getVpnConnectionDeviceTypes(GetVpnConnectionDeviceTypesRequest getVpnConnectionDeviceTypesRequest) {
+    public GetVpnConnectionDeviceTypesResponse getVpnConnectionDeviceTypes(GetVpnConnectionDeviceTypesRequest getVpnConnectionDeviceTypesRequest) {
         return null;
     }
 
     @Override
-    public GetVpnTunnelReplacementStatusResult getVpnTunnelReplacementStatus(GetVpnTunnelReplacementStatusRequest getVpnTunnelReplacementStatusRequest) {
+    public GetVpnTunnelReplacementStatusResponse getVpnTunnelReplacementStatus(GetVpnTunnelReplacementStatusRequest getVpnTunnelReplacementStatusRequest) {
         return null;
     }
 
     @Override
-    public ImportClientVpnClientCertificateRevocationListResult importClientVpnClientCertificateRevocationList(ImportClientVpnClientCertificateRevocationListRequest importClientVpnClientCertificateRevocationListRequest) {
+    public ImportClientVpnClientCertificateRevocationListResponse importClientVpnClientCertificateRevocationList(ImportClientVpnClientCertificateRevocationListRequest importClientVpnClientCertificateRevocationListRequest) {
         return null;
     }
 
     @Override
-    public ImportImageResult importImage(ImportImageRequest importImageRequest) {
+    public ImportImageResponse importImage(ImportImageRequest importImageRequest) {
         return null;
     }
 
     @Override
-    public ImportImageResult importImage() {
+    public ImportImageResponse importImage() {
         return null;
     }
 
     @Override
-    public ImportInstanceResult importInstance(ImportInstanceRequest importInstanceRequest) {
+    public ImportInstanceResponse importInstance(ImportInstanceRequest importInstanceRequest) {
         return null;
     }
 
     @Override
-    public ImportKeyPairResult importKeyPair(ImportKeyPairRequest importKeyPairRequest) {
+    public ImportKeyPairResponse importKeyPair(ImportKeyPairRequest importKeyPairRequest) {
         return null;
     }
 
     @Override
-    public ImportSnapshotResult importSnapshot(ImportSnapshotRequest importSnapshotRequest) {
+    public ImportSnapshotResponse importSnapshot(ImportSnapshotRequest importSnapshotRequest) {
         return null;
     }
 
     @Override
-    public ImportSnapshotResult importSnapshot() {
+    public ImportSnapshotResponse importSnapshot() {
         return null;
     }
 
     @Override
-    public ImportVolumeResult importVolume(ImportVolumeRequest importVolumeRequest) {
+    public ImportVolumeResponse importVolume(ImportVolumeRequest importVolumeRequest) {
         return null;
     }
 
     @Override
-    public ListImagesInRecycleBinResult listImagesInRecycleBin(ListImagesInRecycleBinRequest listImagesInRecycleBinRequest) {
+    public ListImagesInRecycleBinResponse listImagesInRecycleBin(ListImagesInRecycleBinRequest listImagesInRecycleBinRequest) {
         return null;
     }
 
     @Override
-    public ListSnapshotsInRecycleBinResult listSnapshotsInRecycleBin(ListSnapshotsInRecycleBinRequest listSnapshotsInRecycleBinRequest) {
+    public ListSnapshotsInRecycleBinResponse listSnapshotsInRecycleBin(ListSnapshotsInRecycleBinRequest listSnapshotsInRecycleBinRequest) {
         return null;
     }
 
     @Override
-    public LockSnapshotResult lockSnapshot(LockSnapshotRequest lockSnapshotRequest) {
+    public LockSnapshotResponse lockSnapshot(LockSnapshotRequest lockSnapshotRequest) {
         return null;
     }
 
     @Override
-    public ModifyAddressAttributeResult modifyAddressAttribute(ModifyAddressAttributeRequest modifyAddressAttributeRequest) {
+    public ModifyAddressAttributeResponse modifyAddressAttribute(ModifyAddressAttributeRequest modifyAddressAttributeRequest) {
         return null;
     }
 
     @Override
-    public ModifyAvailabilityZoneGroupResult modifyAvailabilityZoneGroup(ModifyAvailabilityZoneGroupRequest modifyAvailabilityZoneGroupRequest) {
+    public ModifyAvailabilityZoneGroupResponse modifyAvailabilityZoneGroup(ModifyAvailabilityZoneGroupRequest modifyAvailabilityZoneGroupRequest) {
         return null;
     }
 
     @Override
-    public ModifyCapacityReservationResult modifyCapacityReservation(ModifyCapacityReservationRequest modifyCapacityReservationRequest) {
+    public ModifyCapacityReservationResponse modifyCapacityReservation(ModifyCapacityReservationRequest modifyCapacityReservationRequest) {
         return null;
     }
 
     @Override
-    public ModifyCapacityReservationFleetResult modifyCapacityReservationFleet(ModifyCapacityReservationFleetRequest modifyCapacityReservationFleetRequest) {
+    public ModifyCapacityReservationFleetResponse modifyCapacityReservationFleet(ModifyCapacityReservationFleetRequest modifyCapacityReservationFleetRequest) {
         return null;
     }
 
     @Override
-    public ModifyClientVpnEndpointResult modifyClientVpnEndpoint(ModifyClientVpnEndpointRequest modifyClientVpnEndpointRequest) {
+    public ModifyClientVpnEndpointResponse modifyClientVpnEndpoint(ModifyClientVpnEndpointRequest modifyClientVpnEndpointRequest) {
         return null;
     }
 
     @Override
-    public ModifyDefaultCreditSpecificationResult modifyDefaultCreditSpecification(ModifyDefaultCreditSpecificationRequest modifyDefaultCreditSpecificationRequest) {
+    public ModifyDefaultCreditSpecificationResponse modifyDefaultCreditSpecification(ModifyDefaultCreditSpecificationRequest modifyDefaultCreditSpecificationRequest) {
         return null;
     }
 
     @Override
-    public ModifyEbsDefaultKmsKeyIdResult modifyEbsDefaultKmsKeyId(ModifyEbsDefaultKmsKeyIdRequest modifyEbsDefaultKmsKeyIdRequest) {
+    public ModifyEbsDefaultKmsKeyIdResponse modifyEbsDefaultKmsKeyId(ModifyEbsDefaultKmsKeyIdRequest modifyEbsDefaultKmsKeyIdRequest) {
         return null;
     }
 
     @Override
-    public ModifyFleetResult modifyFleet(ModifyFleetRequest modifyFleetRequest) {
+    public ModifyFleetResponse modifyFleet(ModifyFleetRequest modifyFleetRequest) {
         return null;
     }
 
     @Override
-    public ModifyFpgaImageAttributeResult modifyFpgaImageAttribute(ModifyFpgaImageAttributeRequest modifyFpgaImageAttributeRequest) {
+    public ModifyFpgaImageAttributeResponse modifyFpgaImageAttribute(ModifyFpgaImageAttributeRequest modifyFpgaImageAttributeRequest) {
         return null;
     }
 
     @Override
-    public ModifyHostsResult modifyHosts(ModifyHostsRequest modifyHostsRequest) {
+    public ModifyHostsResponse modifyHosts(ModifyHostsRequest modifyHostsRequest) {
         return null;
     }
 
     @Override
-    public ModifyIdFormatResult modifyIdFormat(ModifyIdFormatRequest modifyIdFormatRequest) {
+    public ModifyIdFormatResponse modifyIdFormat(ModifyIdFormatRequest modifyIdFormatRequest) {
         return null;
     }
 
     @Override
-    public ModifyIdentityIdFormatResult modifyIdentityIdFormat(ModifyIdentityIdFormatRequest modifyIdentityIdFormatRequest) {
+    public ModifyIdentityIdFormatResponse modifyIdentityIdFormat(ModifyIdentityIdFormatRequest modifyIdentityIdFormatRequest) {
         return null;
     }
 
     @Override
-    public ModifyImageAttributeResult modifyImageAttribute(ModifyImageAttributeRequest modifyImageAttributeRequest) {
+    public ModifyImageAttributeResponse modifyImageAttribute(ModifyImageAttributeRequest modifyImageAttributeRequest) {
         return null;
     }
 
     @Override
-    public ModifyInstanceAttributeResult modifyInstanceAttribute(ModifyInstanceAttributeRequest modifyInstanceAttributeRequest) {
+    public ModifyInstanceAttributeResponse modifyInstanceAttribute(ModifyInstanceAttributeRequest modifyInstanceAttributeRequest) {
         return null;
     }
 
     @Override
-    public ModifyInstanceCapacityReservationAttributesResult modifyInstanceCapacityReservationAttributes(ModifyInstanceCapacityReservationAttributesRequest modifyInstanceCapacityReservationAttributesRequest) {
+    public ModifyInstanceCapacityReservationAttributesResponse modifyInstanceCapacityReservationAttributes(ModifyInstanceCapacityReservationAttributesRequest modifyInstanceCapacityReservationAttributesRequest) {
         return null;
     }
 
     @Override
-    public ModifyInstanceCreditSpecificationResult modifyInstanceCreditSpecification(ModifyInstanceCreditSpecificationRequest modifyInstanceCreditSpecificationRequest) {
+    public ModifyInstanceCreditSpecificationResponse modifyInstanceCreditSpecification(ModifyInstanceCreditSpecificationRequest modifyInstanceCreditSpecificationRequest) {
         return null;
     }
 
     @Override
-    public ModifyInstanceEventStartTimeResult modifyInstanceEventStartTime(ModifyInstanceEventStartTimeRequest modifyInstanceEventStartTimeRequest) {
+    public ModifyInstanceEventStartTimeResponse modifyInstanceEventStartTime(ModifyInstanceEventStartTimeRequest modifyInstanceEventStartTimeRequest) {
         return null;
     }
 
     @Override
-    public ModifyInstanceEventWindowResult modifyInstanceEventWindow(ModifyInstanceEventWindowRequest modifyInstanceEventWindowRequest) {
+    public ModifyInstanceEventWindowResponse modifyInstanceEventWindow(ModifyInstanceEventWindowRequest modifyInstanceEventWindowRequest) {
         return null;
     }
 
     @Override
-    public ModifyInstanceMaintenanceOptionsResult modifyInstanceMaintenanceOptions(ModifyInstanceMaintenanceOptionsRequest modifyInstanceMaintenanceOptionsRequest) {
+    public ModifyInstanceMaintenanceOptionsResponse modifyInstanceMaintenanceOptions(ModifyInstanceMaintenanceOptionsRequest modifyInstanceMaintenanceOptionsRequest) {
         return null;
     }
 
     @Override
-    public ModifyInstanceMetadataDefaultsResult modifyInstanceMetadataDefaults(ModifyInstanceMetadataDefaultsRequest modifyInstanceMetadataDefaultsRequest) {
+    public ModifyInstanceMetadataDefaultsResponse modifyInstanceMetadataDefaults(ModifyInstanceMetadataDefaultsRequest modifyInstanceMetadataDefaultsRequest) {
         return null;
     }
 
     @Override
-    public ModifyInstanceMetadataOptionsResult modifyInstanceMetadataOptions(ModifyInstanceMetadataOptionsRequest modifyInstanceMetadataOptionsRequest) {
+    public ModifyInstanceMetadataOptionsResponse modifyInstanceMetadataOptions(ModifyInstanceMetadataOptionsRequest modifyInstanceMetadataOptionsRequest) {
         return null;
     }
 
     @Override
-    public ModifyInstancePlacementResult modifyInstancePlacement(ModifyInstancePlacementRequest modifyInstancePlacementRequest) {
+    public ModifyInstancePlacementResponse modifyInstancePlacement(ModifyInstancePlacementRequest modifyInstancePlacementRequest) {
         return null;
     }
 
     @Override
-    public ModifyIpamResult modifyIpam(ModifyIpamRequest modifyIpamRequest) {
+    public ModifyIpamResponse modifyIpam(ModifyIpamRequest modifyIpamRequest) {
         return null;
     }
 
     @Override
-    public ModifyIpamPoolResult modifyIpamPool(ModifyIpamPoolRequest modifyIpamPoolRequest) {
+    public ModifyIpamPoolResponse modifyIpamPool(ModifyIpamPoolRequest modifyIpamPoolRequest) {
         return null;
     }
 
     @Override
-    public ModifyIpamResourceCidrResult modifyIpamResourceCidr(ModifyIpamResourceCidrRequest modifyIpamResourceCidrRequest) {
+    public ModifyIpamResourceCidrResponse modifyIpamResourceCidr(ModifyIpamResourceCidrRequest modifyIpamResourceCidrRequest) {
         return null;
     }
 
     @Override
-    public ModifyIpamResourceDiscoveryResult modifyIpamResourceDiscovery(ModifyIpamResourceDiscoveryRequest modifyIpamResourceDiscoveryRequest) {
+    public ModifyIpamResourceDiscoveryResponse modifyIpamResourceDiscovery(ModifyIpamResourceDiscoveryRequest modifyIpamResourceDiscoveryRequest) {
         return null;
     }
 
     @Override
-    public ModifyIpamScopeResult modifyIpamScope(ModifyIpamScopeRequest modifyIpamScopeRequest) {
+    public ModifyIpamScopeResponse modifyIpamScope(ModifyIpamScopeRequest modifyIpamScopeRequest) {
         return null;
     }
 
     @Override
-    public ModifyLaunchTemplateResult modifyLaunchTemplate(ModifyLaunchTemplateRequest modifyLaunchTemplateRequest) {
+    public ModifyLaunchTemplateResponse modifyLaunchTemplate(ModifyLaunchTemplateRequest modifyLaunchTemplateRequest) {
         return null;
     }
 
     @Override
-    public ModifyLocalGatewayRouteResult modifyLocalGatewayRoute(ModifyLocalGatewayRouteRequest modifyLocalGatewayRouteRequest) {
+    public ModifyLocalGatewayRouteResponse modifyLocalGatewayRoute(ModifyLocalGatewayRouteRequest modifyLocalGatewayRouteRequest) {
         return null;
     }
 
     @Override
-    public ModifyManagedPrefixListResult modifyManagedPrefixList(ModifyManagedPrefixListRequest modifyManagedPrefixListRequest) {
+    public ModifyManagedPrefixListResponse modifyManagedPrefixList(ModifyManagedPrefixListRequest modifyManagedPrefixListRequest) {
         return null;
     }
 
     @Override
-    public ModifyNetworkInterfaceAttributeResult modifyNetworkInterfaceAttribute(ModifyNetworkInterfaceAttributeRequest modifyNetworkInterfaceAttributeRequest) {
+    public ModifyNetworkInterfaceAttributeResponse modifyNetworkInterfaceAttribute(ModifyNetworkInterfaceAttributeRequest modifyNetworkInterfaceAttributeRequest) {
         return null;
     }
 
     @Override
-    public ModifyPrivateDnsNameOptionsResult modifyPrivateDnsNameOptions(ModifyPrivateDnsNameOptionsRequest modifyPrivateDnsNameOptionsRequest) {
+    public ModifyPrivateDnsNameOptionsResponse modifyPrivateDnsNameOptions(ModifyPrivateDnsNameOptionsRequest modifyPrivateDnsNameOptionsRequest) {
         return null;
     }
 
     @Override
-    public ModifyReservedInstancesResult modifyReservedInstances(ModifyReservedInstancesRequest modifyReservedInstancesRequest) {
+    public ModifyReservedInstancesResponse modifyReservedInstances(ModifyReservedInstancesRequest modifyReservedInstancesRequest) {
         return null;
     }
 
     @Override
-    public ModifySecurityGroupRulesResult modifySecurityGroupRules(ModifySecurityGroupRulesRequest modifySecurityGroupRulesRequest) {
+    public ModifySecurityGroupRulesResponse modifySecurityGroupRules(ModifySecurityGroupRulesRequest modifySecurityGroupRulesRequest) {
         return null;
     }
 
     @Override
-    public ModifySnapshotAttributeResult modifySnapshotAttribute(ModifySnapshotAttributeRequest modifySnapshotAttributeRequest) {
+    public ModifySnapshotAttributeResponse modifySnapshotAttribute(ModifySnapshotAttributeRequest modifySnapshotAttributeRequest) {
         return null;
     }
 
     @Override
-    public ModifySnapshotTierResult modifySnapshotTier(ModifySnapshotTierRequest modifySnapshotTierRequest) {
+    public ModifySnapshotTierResponse modifySnapshotTier(ModifySnapshotTierRequest modifySnapshotTierRequest) {
         return null;
     }
 
     @Override
-    public ModifySpotFleetRequestResult modifySpotFleetRequest(ModifySpotFleetRequestRequest modifySpotFleetRequestRequest) {
+    public ModifySpotFleetRequestResponse modifySpotFleetRequest(ModifySpotFleetRequestRequest modifySpotFleetRequestRequest) {
         return null;
     }
 
     @Override
-    public ModifySubnetAttributeResult modifySubnetAttribute(ModifySubnetAttributeRequest modifySubnetAttributeRequest) {
+    public ModifySubnetAttributeResponse modifySubnetAttribute(ModifySubnetAttributeRequest modifySubnetAttributeRequest) {
         return null;
     }
 
     @Override
-    public ModifyTrafficMirrorFilterNetworkServicesResult modifyTrafficMirrorFilterNetworkServices(ModifyTrafficMirrorFilterNetworkServicesRequest modifyTrafficMirrorFilterNetworkServicesRequest) {
+    public ModifyTrafficMirrorFilterNetworkServicesResponse modifyTrafficMirrorFilterNetworkServices(ModifyTrafficMirrorFilterNetworkServicesRequest modifyTrafficMirrorFilterNetworkServicesRequest) {
         return null;
     }
 
     @Override
-    public ModifyTrafficMirrorFilterRuleResult modifyTrafficMirrorFilterRule(ModifyTrafficMirrorFilterRuleRequest modifyTrafficMirrorFilterRuleRequest) {
+    public ModifyTrafficMirrorFilterRuleResponse modifyTrafficMirrorFilterRule(ModifyTrafficMirrorFilterRuleRequest modifyTrafficMirrorFilterRuleRequest) {
         return null;
     }
 
     @Override
-    public ModifyTrafficMirrorSessionResult modifyTrafficMirrorSession(ModifyTrafficMirrorSessionRequest modifyTrafficMirrorSessionRequest) {
+    public ModifyTrafficMirrorSessionResponse modifyTrafficMirrorSession(ModifyTrafficMirrorSessionRequest modifyTrafficMirrorSessionRequest) {
         return null;
     }
 
     @Override
-    public ModifyTransitGatewayResult modifyTransitGateway(ModifyTransitGatewayRequest modifyTransitGatewayRequest) {
+    public ModifyTransitGatewayResponse modifyTransitGateway(ModifyTransitGatewayRequest modifyTransitGatewayRequest) {
         return null;
     }
 
     @Override
-    public ModifyTransitGatewayPrefixListReferenceResult modifyTransitGatewayPrefixListReference(ModifyTransitGatewayPrefixListReferenceRequest modifyTransitGatewayPrefixListReferenceRequest) {
+    public ModifyTransitGatewayPrefixListReferenceResponse modifyTransitGatewayPrefixListReference(ModifyTransitGatewayPrefixListReferenceRequest modifyTransitGatewayPrefixListReferenceRequest) {
         return null;
     }
 
     @Override
-    public ModifyTransitGatewayVpcAttachmentResult modifyTransitGatewayVpcAttachment(ModifyTransitGatewayVpcAttachmentRequest modifyTransitGatewayVpcAttachmentRequest) {
+    public ModifyTransitGatewayVpcAttachmentResponse modifyTransitGatewayVpcAttachment(ModifyTransitGatewayVpcAttachmentRequest modifyTransitGatewayVpcAttachmentRequest) {
         return null;
     }
 
     @Override
-    public ModifyVerifiedAccessEndpointResult modifyVerifiedAccessEndpoint(ModifyVerifiedAccessEndpointRequest modifyVerifiedAccessEndpointRequest) {
+    public ModifyVerifiedAccessEndpointResponse modifyVerifiedAccessEndpoint(ModifyVerifiedAccessEndpointRequest modifyVerifiedAccessEndpointRequest) {
         return null;
     }
 
     @Override
-    public ModifyVerifiedAccessEndpointPolicyResult modifyVerifiedAccessEndpointPolicy(ModifyVerifiedAccessEndpointPolicyRequest modifyVerifiedAccessEndpointPolicyRequest) {
+    public ModifyVerifiedAccessEndpointPolicyResponse modifyVerifiedAccessEndpointPolicy(ModifyVerifiedAccessEndpointPolicyRequest modifyVerifiedAccessEndpointPolicyRequest) {
         return null;
     }
 
     @Override
-    public ModifyVerifiedAccessGroupResult modifyVerifiedAccessGroup(ModifyVerifiedAccessGroupRequest modifyVerifiedAccessGroupRequest) {
+    public ModifyVerifiedAccessGroupResponse modifyVerifiedAccessGroup(ModifyVerifiedAccessGroupRequest modifyVerifiedAccessGroupRequest) {
         return null;
     }
 
     @Override
-    public ModifyVerifiedAccessGroupPolicyResult modifyVerifiedAccessGroupPolicy(ModifyVerifiedAccessGroupPolicyRequest modifyVerifiedAccessGroupPolicyRequest) {
+    public ModifyVerifiedAccessGroupPolicyResponse modifyVerifiedAccessGroupPolicy(ModifyVerifiedAccessGroupPolicyRequest modifyVerifiedAccessGroupPolicyRequest) {
         return null;
     }
 
     @Override
-    public ModifyVerifiedAccessInstanceResult modifyVerifiedAccessInstance(ModifyVerifiedAccessInstanceRequest modifyVerifiedAccessInstanceRequest) {
+    public ModifyVerifiedAccessInstanceResponse modifyVerifiedAccessInstance(ModifyVerifiedAccessInstanceRequest modifyVerifiedAccessInstanceRequest) {
         return null;
     }
 
     @Override
-    public ModifyVerifiedAccessInstanceLoggingConfigurationResult modifyVerifiedAccessInstanceLoggingConfiguration(ModifyVerifiedAccessInstanceLoggingConfigurationRequest modifyVerifiedAccessInstanceLoggingConfigurationRequest) {
+    public ModifyVerifiedAccessInstanceLoggingConfigurationResponse modifyVerifiedAccessInstanceLoggingConfiguration(ModifyVerifiedAccessInstanceLoggingConfigurationRequest modifyVerifiedAccessInstanceLoggingConfigurationRequest) {
         return null;
     }
 
     @Override
-    public ModifyVerifiedAccessTrustProviderResult modifyVerifiedAccessTrustProvider(ModifyVerifiedAccessTrustProviderRequest modifyVerifiedAccessTrustProviderRequest) {
+    public ModifyVerifiedAccessTrustProviderResponse modifyVerifiedAccessTrustProvider(ModifyVerifiedAccessTrustProviderRequest modifyVerifiedAccessTrustProviderRequest) {
         return null;
     }
 
     @Override
-    public ModifyVolumeResult modifyVolume(ModifyVolumeRequest modifyVolumeRequest) {
+    public ModifyVolumeResponse modifyVolume(ModifyVolumeRequest modifyVolumeRequest) {
         return null;
     }
 
     @Override
-    public ModifyVolumeAttributeResult modifyVolumeAttribute(ModifyVolumeAttributeRequest modifyVolumeAttributeRequest) {
+    public ModifyVolumeAttributeResponse modifyVolumeAttribute(ModifyVolumeAttributeRequest modifyVolumeAttributeRequest) {
         return null;
     }
 
     @Override
-    public ModifyVpcAttributeResult modifyVpcAttribute(ModifyVpcAttributeRequest modifyVpcAttributeRequest) {
+    public ModifyVpcAttributeResponse modifyVpcAttribute(ModifyVpcAttributeRequest modifyVpcAttributeRequest) {
         return null;
     }
 
     @Override
-    public ModifyVpcEndpointResult modifyVpcEndpoint(ModifyVpcEndpointRequest modifyVpcEndpointRequest) {
+    public ModifyVpcEndpointResponse modifyVpcEndpoint(ModifyVpcEndpointRequest modifyVpcEndpointRequest) {
         return null;
     }
 
     @Override
-    public ModifyVpcEndpointConnectionNotificationResult modifyVpcEndpointConnectionNotification(ModifyVpcEndpointConnectionNotificationRequest modifyVpcEndpointConnectionNotificationRequest) {
+    public ModifyVpcEndpointConnectionNotificationResponse modifyVpcEndpointConnectionNotification(ModifyVpcEndpointConnectionNotificationRequest modifyVpcEndpointConnectionNotificationRequest) {
         return null;
     }
 
     @Override
-    public ModifyVpcEndpointServiceConfigurationResult modifyVpcEndpointServiceConfiguration(ModifyVpcEndpointServiceConfigurationRequest modifyVpcEndpointServiceConfigurationRequest) {
+    public ModifyVpcEndpointServiceConfigurationResponse modifyVpcEndpointServiceConfiguration(ModifyVpcEndpointServiceConfigurationRequest modifyVpcEndpointServiceConfigurationRequest) {
         return null;
     }
 
     @Override
-    public ModifyVpcEndpointServicePayerResponsibilityResult modifyVpcEndpointServicePayerResponsibility(ModifyVpcEndpointServicePayerResponsibilityRequest modifyVpcEndpointServicePayerResponsibilityRequest) {
+    public ModifyVpcEndpointServicePayerResponsibilityResponse modifyVpcEndpointServicePayerResponsibility(ModifyVpcEndpointServicePayerResponsibilityRequest modifyVpcEndpointServicePayerResponsibilityRequest) {
         return null;
     }
 
     @Override
-    public ModifyVpcEndpointServicePermissionsResult modifyVpcEndpointServicePermissions(ModifyVpcEndpointServicePermissionsRequest modifyVpcEndpointServicePermissionsRequest) {
+    public ModifyVpcEndpointServicePermissionsResponse modifyVpcEndpointServicePermissions(ModifyVpcEndpointServicePermissionsRequest modifyVpcEndpointServicePermissionsRequest) {
         return null;
     }
 
     @Override
-    public ModifyVpcPeeringConnectionOptionsResult modifyVpcPeeringConnectionOptions(ModifyVpcPeeringConnectionOptionsRequest modifyVpcPeeringConnectionOptionsRequest) {
+    public ModifyVpcPeeringConnectionOptionsResponse modifyVpcPeeringConnectionOptions(ModifyVpcPeeringConnectionOptionsRequest modifyVpcPeeringConnectionOptionsRequest) {
         return null;
     }
 
     @Override
-    public ModifyVpcTenancyResult modifyVpcTenancy(ModifyVpcTenancyRequest modifyVpcTenancyRequest) {
+    public ModifyVpcTenancyResponse modifyVpcTenancy(ModifyVpcTenancyRequest modifyVpcTenancyRequest) {
         return null;
     }
 
     @Override
-    public ModifyVpnConnectionResult modifyVpnConnection(ModifyVpnConnectionRequest modifyVpnConnectionRequest) {
+    public ModifyVpnConnectionResponse modifyVpnConnection(ModifyVpnConnectionRequest modifyVpnConnectionRequest) {
         return null;
     }
 
     @Override
-    public ModifyVpnConnectionOptionsResult modifyVpnConnectionOptions(ModifyVpnConnectionOptionsRequest modifyVpnConnectionOptionsRequest) {
+    public ModifyVpnConnectionOptionsResponse modifyVpnConnectionOptions(ModifyVpnConnectionOptionsRequest modifyVpnConnectionOptionsRequest) {
         return null;
     }
 
     @Override
-    public ModifyVpnTunnelCertificateResult modifyVpnTunnelCertificate(ModifyVpnTunnelCertificateRequest modifyVpnTunnelCertificateRequest) {
+    public ModifyVpnTunnelCertificateResponse modifyVpnTunnelCertificate(ModifyVpnTunnelCertificateRequest modifyVpnTunnelCertificateRequest) {
         return null;
     }
 
     @Override
-    public ModifyVpnTunnelOptionsResult modifyVpnTunnelOptions(ModifyVpnTunnelOptionsRequest modifyVpnTunnelOptionsRequest) {
+    public ModifyVpnTunnelOptionsResponse modifyVpnTunnelOptions(ModifyVpnTunnelOptionsRequest modifyVpnTunnelOptionsRequest) {
         return null;
     }
 
     @Override
-    public MonitorInstancesResult monitorInstances(MonitorInstancesRequest monitorInstancesRequest) {
+    public MonitorInstancesResponse monitorInstances(MonitorInstancesRequest monitorInstancesRequest) {
         return null;
     }
 
     @Override
-    public MoveAddressToVpcResult moveAddressToVpc(MoveAddressToVpcRequest moveAddressToVpcRequest) {
+    public MoveAddressToVpcResponse moveAddressToVpc(MoveAddressToVpcRequest moveAddressToVpcRequest) {
         return null;
     }
 
     @Override
-    public MoveByoipCidrToIpamResult moveByoipCidrToIpam(MoveByoipCidrToIpamRequest moveByoipCidrToIpamRequest) {
+    public MoveByoipCidrToIpamResponse moveByoipCidrToIpam(MoveByoipCidrToIpamRequest moveByoipCidrToIpamRequest) {
         return null;
     }
 
     @Override
-    public ProvisionByoipCidrResult provisionByoipCidr(ProvisionByoipCidrRequest provisionByoipCidrRequest) {
+    public ProvisionByoipCidrResponse provisionByoipCidr(ProvisionByoipCidrRequest provisionByoipCidrRequest) {
         return null;
     }
 
     @Override
-    public ProvisionIpamByoasnResult provisionIpamByoasn(ProvisionIpamByoasnRequest provisionIpamByoasnRequest) {
+    public ProvisionIpamByoasnResponse provisionIpamByoasn(ProvisionIpamByoasnRequest provisionIpamByoasnRequest) {
         return null;
     }
 
     @Override
-    public ProvisionIpamPoolCidrResult provisionIpamPoolCidr(ProvisionIpamPoolCidrRequest provisionIpamPoolCidrRequest) {
+    public ProvisionIpamPoolCidrResponse provisionIpamPoolCidr(ProvisionIpamPoolCidrRequest provisionIpamPoolCidrRequest) {
         return null;
     }
 
     @Override
-    public ProvisionPublicIpv4PoolCidrResult provisionPublicIpv4PoolCidr(ProvisionPublicIpv4PoolCidrRequest provisionPublicIpv4PoolCidrRequest) {
+    public ProvisionPublicIpv4PoolCidrResponse provisionPublicIpv4PoolCidr(ProvisionPublicIpv4PoolCidrRequest provisionPublicIpv4PoolCidrRequest) {
         return null;
     }
 
     @Override
-    public PurchaseCapacityBlockResult purchaseCapacityBlock(PurchaseCapacityBlockRequest purchaseCapacityBlockRequest) {
+    public PurchaseCapacityBlockResponse purchaseCapacityBlock(PurchaseCapacityBlockRequest purchaseCapacityBlockRequest) {
         return null;
     }
 
     @Override
-    public PurchaseHostReservationResult purchaseHostReservation(PurchaseHostReservationRequest purchaseHostReservationRequest) {
+    public PurchaseHostReservationResponse purchaseHostReservation(PurchaseHostReservationRequest purchaseHostReservationRequest) {
         return null;
     }
 
     @Override
-    public PurchaseReservedInstancesOfferingResult purchaseReservedInstancesOffering(PurchaseReservedInstancesOfferingRequest purchaseReservedInstancesOfferingRequest) {
+    public PurchaseReservedInstancesOfferingResponse purchaseReservedInstancesOffering(PurchaseReservedInstancesOfferingRequest purchaseReservedInstancesOfferingRequest) {
         return null;
     }
 
     @Override
-    public PurchaseScheduledInstancesResult purchaseScheduledInstances(PurchaseScheduledInstancesRequest purchaseScheduledInstancesRequest) {
+    public PurchaseScheduledInstancesResponse purchaseScheduledInstances(PurchaseScheduledInstancesRequest purchaseScheduledInstancesRequest) {
         return null;
     }
 
     @Override
-    public RebootInstancesResult rebootInstances(RebootInstancesRequest rebootInstancesRequest) {
+    public RebootInstancesResponse rebootInstances(RebootInstancesRequest rebootInstancesRequest) {
         return null;
     }
 
     @Override
-    public RegisterImageResult registerImage(RegisterImageRequest registerImageRequest) {
+    public RegisterImageResponse registerImage(RegisterImageRequest registerImageRequest) {
         return null;
     }
 
     @Override
-    public RegisterInstanceEventNotificationAttributesResult registerInstanceEventNotificationAttributes(RegisterInstanceEventNotificationAttributesRequest registerInstanceEventNotificationAttributesRequest) {
+    public RegisterInstanceEventNotificationAttributesResponse registerInstanceEventNotificationAttributes(RegisterInstanceEventNotificationAttributesRequest registerInstanceEventNotificationAttributesRequest) {
         return null;
     }
 
     @Override
-    public RegisterTransitGatewayMulticastGroupMembersResult registerTransitGatewayMulticastGroupMembers(RegisterTransitGatewayMulticastGroupMembersRequest registerTransitGatewayMulticastGroupMembersRequest) {
+    public RegisterTransitGatewayMulticastGroupMembersResponse registerTransitGatewayMulticastGroupMembers(RegisterTransitGatewayMulticastGroupMembersRequest registerTransitGatewayMulticastGroupMembersRequest) {
         return null;
     }
 
     @Override
-    public RegisterTransitGatewayMulticastGroupSourcesResult registerTransitGatewayMulticastGroupSources(RegisterTransitGatewayMulticastGroupSourcesRequest registerTransitGatewayMulticastGroupSourcesRequest) {
+    public RegisterTransitGatewayMulticastGroupSourcesResponse registerTransitGatewayMulticastGroupSources(RegisterTransitGatewayMulticastGroupSourcesRequest registerTransitGatewayMulticastGroupSourcesRequest) {
         return null;
     }
 
     @Override
-    public RejectTransitGatewayMulticastDomainAssociationsResult rejectTransitGatewayMulticastDomainAssociations(RejectTransitGatewayMulticastDomainAssociationsRequest rejectTransitGatewayMulticastDomainAssociationsRequest) {
+    public RejectTransitGatewayMulticastDomainAssociationsResponse rejectTransitGatewayMulticastDomainAssociations(RejectTransitGatewayMulticastDomainAssociationsRequest rejectTransitGatewayMulticastDomainAssociationsRequest) {
         return null;
     }
 
     @Override
-    public RejectTransitGatewayPeeringAttachmentResult rejectTransitGatewayPeeringAttachment(RejectTransitGatewayPeeringAttachmentRequest rejectTransitGatewayPeeringAttachmentRequest) {
+    public RejectTransitGatewayPeeringAttachmentResponse rejectTransitGatewayPeeringAttachment(RejectTransitGatewayPeeringAttachmentRequest rejectTransitGatewayPeeringAttachmentRequest) {
         return null;
     }
 
     @Override
-    public RejectTransitGatewayVpcAttachmentResult rejectTransitGatewayVpcAttachment(RejectTransitGatewayVpcAttachmentRequest rejectTransitGatewayVpcAttachmentRequest) {
+    public RejectTransitGatewayVpcAttachmentResponse rejectTransitGatewayVpcAttachment(RejectTransitGatewayVpcAttachmentRequest rejectTransitGatewayVpcAttachmentRequest) {
         return null;
     }
 
     @Override
-    public RejectVpcEndpointConnectionsResult rejectVpcEndpointConnections(RejectVpcEndpointConnectionsRequest rejectVpcEndpointConnectionsRequest) {
+    public RejectVpcEndpointConnectionsResponse rejectVpcEndpointConnections(RejectVpcEndpointConnectionsRequest rejectVpcEndpointConnectionsRequest) {
         return null;
     }
 
     @Override
-    public RejectVpcPeeringConnectionResult rejectVpcPeeringConnection(RejectVpcPeeringConnectionRequest rejectVpcPeeringConnectionRequest) {
+    public RejectVpcPeeringConnectionResponse rejectVpcPeeringConnection(RejectVpcPeeringConnectionRequest rejectVpcPeeringConnectionRequest) {
         return null;
     }
 
     @Override
-    public ReleaseAddressResult releaseAddress(ReleaseAddressRequest releaseAddressRequest) {
+    public ReleaseAddressResponse releaseAddress(ReleaseAddressRequest releaseAddressRequest) {
         return null;
     }
 
     @Override
-    public ReleaseHostsResult releaseHosts(ReleaseHostsRequest releaseHostsRequest) {
+    public ReleaseHostsResponse releaseHosts(ReleaseHostsRequest releaseHostsRequest) {
         return null;
     }
 
     @Override
-    public ReleaseIpamPoolAllocationResult releaseIpamPoolAllocation(ReleaseIpamPoolAllocationRequest releaseIpamPoolAllocationRequest) {
+    public ReleaseIpamPoolAllocationResponse releaseIpamPoolAllocation(ReleaseIpamPoolAllocationRequest releaseIpamPoolAllocationRequest) {
         return null;
     }
 
     @Override
-    public ReplaceIamInstanceProfileAssociationResult replaceIamInstanceProfileAssociation(ReplaceIamInstanceProfileAssociationRequest replaceIamInstanceProfileAssociationRequest) {
+    public ReplaceIamInstanceProfileAssociationResponse replaceIamInstanceProfileAssociation(ReplaceIamInstanceProfileAssociationRequest replaceIamInstanceProfileAssociationRequest) {
         return null;
     }
 
     @Override
-    public ReplaceNetworkAclAssociationResult replaceNetworkAclAssociation(ReplaceNetworkAclAssociationRequest replaceNetworkAclAssociationRequest) {
+    public ReplaceNetworkAclAssociationResponse replaceNetworkAclAssociation(ReplaceNetworkAclAssociationRequest replaceNetworkAclAssociationRequest) {
         return null;
     }
 
     @Override
-    public ReplaceNetworkAclEntryResult replaceNetworkAclEntry(ReplaceNetworkAclEntryRequest replaceNetworkAclEntryRequest) {
+    public ReplaceNetworkAclEntryResponse replaceNetworkAclEntry(ReplaceNetworkAclEntryRequest replaceNetworkAclEntryRequest) {
         return null;
     }
 
     @Override
-    public ReplaceRouteResult replaceRoute(ReplaceRouteRequest replaceRouteRequest) {
+    public ReplaceRouteResponse replaceRoute(ReplaceRouteRequest replaceRouteRequest) {
         return null;
     }
 
     @Override
-    public ReplaceRouteTableAssociationResult replaceRouteTableAssociation(ReplaceRouteTableAssociationRequest replaceRouteTableAssociationRequest) {
+    public ReplaceRouteTableAssociationResponse replaceRouteTableAssociation(ReplaceRouteTableAssociationRequest replaceRouteTableAssociationRequest) {
         return null;
     }
 
     @Override
-    public ReplaceTransitGatewayRouteResult replaceTransitGatewayRoute(ReplaceTransitGatewayRouteRequest replaceTransitGatewayRouteRequest) {
+    public ReplaceTransitGatewayRouteResponse replaceTransitGatewayRoute(ReplaceTransitGatewayRouteRequest replaceTransitGatewayRouteRequest) {
         return null;
     }
 
     @Override
-    public ReplaceVpnTunnelResult replaceVpnTunnel(ReplaceVpnTunnelRequest replaceVpnTunnelRequest) {
+    public ReplaceVpnTunnelResponse replaceVpnTunnel(ReplaceVpnTunnelRequest replaceVpnTunnelRequest) {
         return null;
     }
 
     @Override
-    public ReportInstanceStatusResult reportInstanceStatus(ReportInstanceStatusRequest reportInstanceStatusRequest) {
+    public ReportInstanceStatusResponse reportInstanceStatus(ReportInstanceStatusRequest reportInstanceStatusRequest) {
         return null;
     }
 
     @Override
-    public RequestSpotFleetResult requestSpotFleet(RequestSpotFleetRequest requestSpotFleetRequest) {
+    public RequestSpotFleetResponse requestSpotFleet(RequestSpotFleetRequest requestSpotFleetRequest) {
         return null;
     }
 
     @Override
-    public RequestSpotInstancesResult requestSpotInstances(RequestSpotInstancesRequest requestSpotInstancesRequest) {
+    public RequestSpotInstancesResponse requestSpotInstances(RequestSpotInstancesRequest requestSpotInstancesRequest) {
         return null;
     }
 
     @Override
-    public ResetAddressAttributeResult resetAddressAttribute(ResetAddressAttributeRequest resetAddressAttributeRequest) {
+    public ResetAddressAttributeResponse resetAddressAttribute(ResetAddressAttributeRequest resetAddressAttributeRequest) {
         return null;
     }
 
     @Override
-    public ResetEbsDefaultKmsKeyIdResult resetEbsDefaultKmsKeyId(ResetEbsDefaultKmsKeyIdRequest resetEbsDefaultKmsKeyIdRequest) {
+    public ResetEbsDefaultKmsKeyIdResponse resetEbsDefaultKmsKeyId(ResetEbsDefaultKmsKeyIdRequest resetEbsDefaultKmsKeyIdRequest) {
         return null;
     }
 
     @Override
-    public ResetFpgaImageAttributeResult resetFpgaImageAttribute(ResetFpgaImageAttributeRequest resetFpgaImageAttributeRequest) {
+    public ResetFpgaImageAttributeResponse resetFpgaImageAttribute(ResetFpgaImageAttributeRequest resetFpgaImageAttributeRequest) {
         return null;
     }
 
     @Override
-    public ResetImageAttributeResult resetImageAttribute(ResetImageAttributeRequest resetImageAttributeRequest) {
+    public ResetImageAttributeResponse resetImageAttribute(ResetImageAttributeRequest resetImageAttributeRequest) {
         return null;
     }
 
     @Override
-    public ResetInstanceAttributeResult resetInstanceAttribute(ResetInstanceAttributeRequest resetInstanceAttributeRequest) {
+    public ResetInstanceAttributeResponse resetInstanceAttribute(ResetInstanceAttributeRequest resetInstanceAttributeRequest) {
         return null;
     }
 
     @Override
-    public ResetNetworkInterfaceAttributeResult resetNetworkInterfaceAttribute(ResetNetworkInterfaceAttributeRequest resetNetworkInterfaceAttributeRequest) {
+    public ResetNetworkInterfaceAttributeResponse resetNetworkInterfaceAttribute(ResetNetworkInterfaceAttributeRequest resetNetworkInterfaceAttributeRequest) {
         return null;
     }
 
     @Override
-    public ResetSnapshotAttributeResult resetSnapshotAttribute(ResetSnapshotAttributeRequest resetSnapshotAttributeRequest) {
+    public ResetSnapshotAttributeResponse resetSnapshotAttribute(ResetSnapshotAttributeRequest resetSnapshotAttributeRequest) {
         return null;
     }
 
     @Override
-    public RestoreAddressToClassicResult restoreAddressToClassic(RestoreAddressToClassicRequest restoreAddressToClassicRequest) {
+    public RestoreAddressToClassicResponse restoreAddressToClassic(RestoreAddressToClassicRequest restoreAddressToClassicRequest) {
         return null;
     }
 
     @Override
-    public RestoreImageFromRecycleBinResult restoreImageFromRecycleBin(RestoreImageFromRecycleBinRequest restoreImageFromRecycleBinRequest) {
+    public RestoreImageFromRecycleBinResponse restoreImageFromRecycleBin(RestoreImageFromRecycleBinRequest restoreImageFromRecycleBinRequest) {
         return null;
     }
 
     @Override
-    public RestoreManagedPrefixListVersionResult restoreManagedPrefixListVersion(RestoreManagedPrefixListVersionRequest restoreManagedPrefixListVersionRequest) {
+    public RestoreManagedPrefixListVersionResponse restoreManagedPrefixListVersion(RestoreManagedPrefixListVersionRequest restoreManagedPrefixListVersionRequest) {
         return null;
     }
 
     @Override
-    public RestoreSnapshotFromRecycleBinResult restoreSnapshotFromRecycleBin(RestoreSnapshotFromRecycleBinRequest restoreSnapshotFromRecycleBinRequest) {
+    public RestoreSnapshotFromRecycleBinResponse restoreSnapshotFromRecycleBin(RestoreSnapshotFromRecycleBinRequest restoreSnapshotFromRecycleBinRequest) {
         return null;
     }
 
     @Override
-    public RestoreSnapshotTierResult restoreSnapshotTier(RestoreSnapshotTierRequest restoreSnapshotTierRequest) {
+    public RestoreSnapshotTierResponse restoreSnapshotTier(RestoreSnapshotTierRequest restoreSnapshotTierRequest) {
         return null;
     }
 
     @Override
-    public RevokeClientVpnIngressResult revokeClientVpnIngress(RevokeClientVpnIngressRequest revokeClientVpnIngressRequest) {
+    public RevokeClientVpnIngressResponse revokeClientVpnIngress(RevokeClientVpnIngressRequest revokeClientVpnIngressRequest) {
         return null;
     }
 
     @Override
-    public RevokeSecurityGroupEgressResult revokeSecurityGroupEgress(RevokeSecurityGroupEgressRequest revokeSecurityGroupEgressRequest) {
+    public RevokeSecurityGroupEgressResponse revokeSecurityGroupEgress(RevokeSecurityGroupEgressRequest revokeSecurityGroupEgressRequest) {
         return null;
     }
 
     @Override
-    public RevokeSecurityGroupIngressResult revokeSecurityGroupIngress(RevokeSecurityGroupIngressRequest revokeSecurityGroupIngressRequest) {
+    public RevokeSecurityGroupIngressResponse revokeSecurityGroupIngress(RevokeSecurityGroupIngressRequest revokeSecurityGroupIngressRequest) {
         return null;
     }
 
     @Override
-    public RevokeSecurityGroupIngressResult revokeSecurityGroupIngress() {
+    public RevokeSecurityGroupIngressResponse revokeSecurityGroupIngress() {
         return null;
     }
 
     @Override
-    public RunInstancesResult runInstances(RunInstancesRequest runInstancesRequest) {
+    public RunInstancesResponse runInstances(RunInstancesRequest runInstancesRequest) {
         return null;
     }
 
     @Override
-    public RunScheduledInstancesResult runScheduledInstances(RunScheduledInstancesRequest runScheduledInstancesRequest) {
+    public RunScheduledInstancesResponse runScheduledInstances(RunScheduledInstancesRequest runScheduledInstancesRequest) {
         return null;
     }
 
     @Override
-    public SearchLocalGatewayRoutesResult searchLocalGatewayRoutes(SearchLocalGatewayRoutesRequest searchLocalGatewayRoutesRequest) {
+    public SearchLocalGatewayRoutesResponse searchLocalGatewayRoutes(SearchLocalGatewayRoutesRequest searchLocalGatewayRoutesRequest) {
         return null;
     }
 
     @Override
-    public SearchTransitGatewayMulticastGroupsResult searchTransitGatewayMulticastGroups(SearchTransitGatewayMulticastGroupsRequest searchTransitGatewayMulticastGroupsRequest) {
+    public SearchTransitGatewayMulticastGroupsResponse searchTransitGatewayMulticastGroups(SearchTransitGatewayMulticastGroupsRequest searchTransitGatewayMulticastGroupsRequest) {
         return null;
     }
 
     @Override
-    public SearchTransitGatewayRoutesResult searchTransitGatewayRoutes(SearchTransitGatewayRoutesRequest searchTransitGatewayRoutesRequest) {
+    public SearchTransitGatewayRoutesResponse searchTransitGatewayRoutes(SearchTransitGatewayRoutesRequest searchTransitGatewayRoutesRequest) {
         return null;
     }
 
     @Override
-    public SendDiagnosticInterruptResult sendDiagnosticInterrupt(SendDiagnosticInterruptRequest sendDiagnosticInterruptRequest) {
+    public SendDiagnosticInterruptResponse sendDiagnosticInterrupt(SendDiagnosticInterruptRequest sendDiagnosticInterruptRequest) {
         return null;
     }
 
     @Override
-    public StartInstancesResult startInstances(StartInstancesRequest startInstancesRequest) {
+    public StartInstancesResponse startInstances(StartInstancesRequest startInstancesRequest) {
         return null;
     }
 
     @Override
-    public StartNetworkInsightsAccessScopeAnalysisResult startNetworkInsightsAccessScopeAnalysis(StartNetworkInsightsAccessScopeAnalysisRequest startNetworkInsightsAccessScopeAnalysisRequest) {
+    public StartNetworkInsightsAccessScopeAnalysisResponse startNetworkInsightsAccessScopeAnalysis(StartNetworkInsightsAccessScopeAnalysisRequest startNetworkInsightsAccessScopeAnalysisRequest) {
         return null;
     }
 
     @Override
-    public StartNetworkInsightsAnalysisResult startNetworkInsightsAnalysis(StartNetworkInsightsAnalysisRequest startNetworkInsightsAnalysisRequest) {
+    public StartNetworkInsightsAnalysisResponse startNetworkInsightsAnalysis(StartNetworkInsightsAnalysisRequest startNetworkInsightsAnalysisRequest) {
         return null;
     }
 
     @Override
-    public StartVpcEndpointServicePrivateDnsVerificationResult startVpcEndpointServicePrivateDnsVerification(StartVpcEndpointServicePrivateDnsVerificationRequest startVpcEndpointServicePrivateDnsVerificationRequest) {
+    public StartVpcEndpointServicePrivateDnsVerificationResponse startVpcEndpointServicePrivateDnsVerification(StartVpcEndpointServicePrivateDnsVerificationRequest startVpcEndpointServicePrivateDnsVerificationRequest) {
         return null;
     }
 
     @Override
-    public StopInstancesResult stopInstances(StopInstancesRequest stopInstancesRequest) {
+    public StopInstancesResponse stopInstances(StopInstancesRequest stopInstancesRequest) {
         return null;
     }
 
     @Override
-    public TerminateClientVpnConnectionsResult terminateClientVpnConnections(TerminateClientVpnConnectionsRequest terminateClientVpnConnectionsRequest) {
+    public TerminateClientVpnConnectionsResponse terminateClientVpnConnections(TerminateClientVpnConnectionsRequest terminateClientVpnConnectionsRequest) {
         return null;
     }
 
     @Override
-    public TerminateInstancesResult terminateInstances(TerminateInstancesRequest terminateInstancesRequest) {
+    public TerminateInstancesResponse terminateInstances(TerminateInstancesRequest terminateInstancesRequest) {
         return null;
     }
 
     @Override
-    public UnassignIpv6AddressesResult unassignIpv6Addresses(UnassignIpv6AddressesRequest unassignIpv6AddressesRequest) {
+    public UnassignIpv6AddressesResponse unassignIpv6Addresses(UnassignIpv6AddressesRequest unassignIpv6AddressesRequest) {
         return null;
     }
 
     @Override
-    public UnassignPrivateIpAddressesResult unassignPrivateIpAddresses(UnassignPrivateIpAddressesRequest unassignPrivateIpAddressesRequest) {
+    public UnassignPrivateIpAddressesResponse unassignPrivateIpAddresses(UnassignPrivateIpAddressesRequest unassignPrivateIpAddressesRequest) {
         return null;
     }
 
     @Override
-    public UnassignPrivateNatGatewayAddressResult unassignPrivateNatGatewayAddress(UnassignPrivateNatGatewayAddressRequest unassignPrivateNatGatewayAddressRequest) {
+    public UnassignPrivateNatGatewayAddressResponse unassignPrivateNatGatewayAddress(UnassignPrivateNatGatewayAddressRequest unassignPrivateNatGatewayAddressRequest) {
         return null;
     }
 
     @Override
-    public UnlockSnapshotResult unlockSnapshot(UnlockSnapshotRequest unlockSnapshotRequest) {
+    public UnlockSnapshotResponse unlockSnapshot(UnlockSnapshotRequest unlockSnapshotRequest) {
         return null;
     }
 
     @Override
-    public UnmonitorInstancesResult unmonitorInstances(UnmonitorInstancesRequest unmonitorInstancesRequest) {
+    public UnmonitorInstancesResponse unmonitorInstances(UnmonitorInstancesRequest unmonitorInstancesRequest) {
         return null;
     }
 
     @Override
-    public UpdateSecurityGroupRuleDescriptionsEgressResult updateSecurityGroupRuleDescriptionsEgress(UpdateSecurityGroupRuleDescriptionsEgressRequest updateSecurityGroupRuleDescriptionsEgressRequest) {
+    public UpdateSecurityGroupRuleDescriptionsEgressResponse updateSecurityGroupRuleDescriptionsEgress(UpdateSecurityGroupRuleDescriptionsEgressRequest updateSecurityGroupRuleDescriptionsEgressRequest) {
         return null;
     }
 
     @Override
-    public UpdateSecurityGroupRuleDescriptionsIngressResult updateSecurityGroupRuleDescriptionsIngress(UpdateSecurityGroupRuleDescriptionsIngressRequest updateSecurityGroupRuleDescriptionsIngressRequest) {
+    public UpdateSecurityGroupRuleDescriptionsIngressResponse updateSecurityGroupRuleDescriptionsIngress(UpdateSecurityGroupRuleDescriptionsIngressRequest updateSecurityGroupRuleDescriptionsIngressRequest) {
         return null;
     }
 
     @Override
-    public WithdrawByoipCidrResult withdrawByoipCidr(WithdrawByoipCidrRequest withdrawByoipCidrRequest) {
+    public WithdrawByoipCidrResponse withdrawByoipCidr(WithdrawByoipCidrRequest withdrawByoipCidrRequest) {
         return null;
     }
 
     @Override
-    public <X extends AmazonWebServiceRequest> DryRunResult<X> dryRun(DryRunSupportedRequest<X> request) throws AmazonServiceException, AmazonClientException {
+    public <X extends AmazonWebServiceRequest> DryRunResponse<X> dryRun(DryRunSupportedRequest<X> request) throws AwsServiceException, SdkException {
         return null;
     }
 
@@ -3441,7 +3441,7 @@ public class EmptyAmazonEC2 implements AmazonEC2 {
     }
 
     @Override
-    public AmazonEC2Waiters waiters() {
+    public Ec2WaitersClient waiters() {
         return null;
     }
 }

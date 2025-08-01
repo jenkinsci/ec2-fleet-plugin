@@ -1,6 +1,5 @@
 package com.amazon.jenkins.ec2fleet;
 
-import com.amazonaws.services.ec2.model.InstanceStateName;
 import hudson.model.FreeStyleBuild;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.slaves.ComputerConnector;
@@ -10,6 +9,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import software.amazon.awssdk.services.ec2.model.InstanceStateName;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -50,7 +50,7 @@ public class NoDelayProvisionStrategyPerformanceTest extends IntegrationTest {
         final int scheduleInterval = 15;
         final int batchSize = 9;
 
-        mockEc2FleetApiToEc2SpotFleetWithDelay(InstanceStateName.Running, 500);
+        mockEc2FleetApiToEc2SpotFleetWithDelay(InstanceStateName.RUNNING, 500);
 
         final ComputerConnector computerConnector = new LocalComputerConnector(j);
         final String label = "momo";

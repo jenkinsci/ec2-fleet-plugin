@@ -1,25 +1,24 @@
 package com.amazon.jenkins.ec2fleet.aws;
 
 import com.amazon.jenkins.ec2fleet.EC2FleetLabelParameters;
-import com.amazonaws.ClientConfiguration;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.RegionUtils;
-import com.amazonaws.services.cloudformation.AmazonCloudFormation;
-import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
-import com.amazonaws.services.cloudformation.model.Capability;
-import com.amazonaws.services.cloudformation.model.CreateStackRequest;
-import com.amazonaws.services.cloudformation.model.DeleteStackRequest;
-import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
-import com.amazonaws.services.cloudformation.model.DescribeStacksResult;
-import com.amazonaws.services.cloudformation.model.Parameter;
-import com.amazonaws.services.cloudformation.model.Stack;
-import com.amazonaws.services.cloudformation.model.StackStatus;
-import com.amazonaws.services.cloudformation.model.Tag;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
 import com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentials;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
+import software.amazon.awssdk.services.cloudformation.model.Capability;
+import software.amazon.awssdk.services.cloudformation.model.CreateStackRequest;
+import software.amazon.awssdk.services.cloudformation.model.DeleteStackRequest;
+import software.amazon.awssdk.services.cloudformation.model.DescribeStacksRequest;
+import software.amazon.awssdk.services.cloudformation.model.DescribeStacksResponse;
+import software.amazon.awssdk.services.cloudformation.model.Parameter;
+import software.amazon.awssdk.services.cloudformation.model.Stack;
+import software.amazon.awssdk.services.cloudformation.model.StackStatus;
+import software.amazon.awssdk.services.cloudformation.model.Tag;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -27,13 +26,13 @@ import java.util.Map;
 
 public class CloudFormationApi {
 
-    public AmazonCloudFormation connect(final String awsCredentialsId, final String regionName, final String endpoint) {
-        final ClientConfiguration clientConfiguration = AWSUtils.getClientConfiguration(endpoint);
+    public CloudFormationClient connect(final String awsCredentialsId, final String regionName, final String endpoint) {
+        final ClientOverrideConfiguration clientConfiguration = AWSUtils.getClientConfiguration(endpoint);
         final AmazonWebServicesCredentials credentials = AWSCredentialsHelper.getCredentials(awsCredentialsId, Jenkins.get());
-        final AmazonCloudFormation client =
+        final CloudFormationClient client =
                 credentials != null ?
-                        new AmazonCloudFormationClient(credentials, clientConfiguration) :
-                        new AmazonCloudFormationClient(clientConfiguration);
+                        new CloudFormationClient(credentials, clientConfiguration) :
+                        new CloudFormationClient(clientConfiguration);
 
         final String effectiveEndpoint = getEndpoint(regionName, endpoint);
         if (effectiveEndpoint != null) client.setEndpoint(effectiveEndpoint);
@@ -58,12 +57,13 @@ public class CloudFormationApi {
         }
     }
 
-    public void delete(final AmazonCloudFormation client, final String stackId) {
-        client.deleteStack(new DeleteStackRequest().withStackName(stackId));
+    public void delete(final CloudFormationClient client, final String stackId) {
+        client.deleteStack(DeleteStackRequest.builder().stackName(stackId)
+                .build());
     }
 
     public void create(
-            final AmazonCloudFormation client, final String fleetName, final String keyName, final String parametersString) {
+            final CloudFormationClient client, final String fleetName, final String keyName, final String parametersString) {
         final EC2FleetLabelParameters parameters = new EC2FleetLabelParameters(parametersString);
 
         try {
@@ -76,23 +76,31 @@ public class CloudFormationApi {
 
             final String template = "/com/amazon/jenkins/ec2fleet/" + (type.equals("asg") ? "auto-scaling-group.yml" : "ec2-spot-fleet.yml");
             client.createStack(
-                    new CreateStackRequest()
-                            .withStackName(fleetName + "-" + System.currentTimeMillis())
-                            .withTags(
-                                    new Tag().withKey("ec2-fleet-plugin")
-                                            .withValue(parametersString)
+                    CreateStackRequest.builder()
+                            .stackName(fleetName + "-" + System.currentTimeMillis())
+                            .tags(
+                                    Tag.builder().key("ec2-fleet-plugin")
+                                            .value(parametersString)
+                                    .build()
                             )
-                            .withTemplateBody(IOUtils.toString(CloudFormationApi.class.getResourceAsStream(template)))
+                            .templateBody(IOUtils.toString(CloudFormationApi.class.getResourceAsStream(template)))
                             // to allow some of templates create iam
-                            .withCapabilities(Capability.CAPABILITY_IAM)
-                            .withParameters(
-                                    new Parameter().withParameterKey("ImageId").withParameterValue(imageId),
-                                    new Parameter().withParameterKey("InstanceType").withParameterValue(instanceType),
-                                    new Parameter().withParameterKey("MaxSize").withParameterValue(Integer.toString(maxSize)),
-                                    new Parameter().withParameterKey("MinSize").withParameterValue(Integer.toString(minSize)),
-                                    new Parameter().withParameterKey("SpotPrice").withParameterValue(spotPrice),
-                                    new Parameter().withParameterKey("KeyName").withParameterValue(keyName)
-                            ));
+                            .capabilities(Capability.CAPABILITY_IAM)
+                            .parameters(
+                                    Parameter.builder().parameterKey("ImageId").parameterValue(imageId)
+                                    .build(), 
+                                    Parameter.builder().parameterKey("InstanceType").parameterValue(instanceType)
+                                    .build(), 
+                                    Parameter.builder().parameterKey("MaxSize").parameterValue(Integer.toString(maxSize))
+                                    .build(), 
+                                    Parameter.builder().parameterKey("MinSize").parameterValue(Integer.toString(minSize))
+                                    .build(), 
+                                    Parameter.builder().parameterKey("SpotPrice").parameterValue(spotPrice)
+                                    .build(), 
+                                    Parameter.builder().parameterKey("KeyName").parameterValue(keyName)
+                                    .build()
+                            )
+                            .build());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -111,21 +119,22 @@ public class CloudFormationApi {
     }
 
     public Map<String, StackInfo> describe(
-            final AmazonCloudFormation client, final String fleetName) {
+            final CloudFormationClient client, final String fleetName) {
         Map<String, StackInfo> r = new HashMap<>();
 
         String nextToken = null;
         do {
-            DescribeStacksResult describeStacksResult = client.describeStacks(
-                    new DescribeStacksRequest().withNextToken(nextToken));
-            for (Stack stack : describeStacksResult.getStacks()) {
-                if (stack.getStackName().startsWith(fleetName)) {
-                    final String fleetId = stack.getOutputs().isEmpty() ? null : stack.getOutputs().get(0).getOutputValue();
-                    r.put(stack.getTags().get(0).getValue(), new StackInfo(
-                            stack.getStackId(), fleetId, StackStatus.valueOf(stack.getStackStatus())));
+            DescribeStacksResponse describeStacksResult = client.describeStacks(
+                    DescribeStacksRequest.builder().nextToken(nextToken)
+                    .build());
+            for (Stack stack : describeStacksResult.stacks()) {
+                if (stack.stackName().startsWith(fleetName)) {
+                    final String fleetId = stack.outputs().isEmpty() ? null : stack.outputs().get(0).outputValue();
+                    r.put(stack.tags().get(0).value(), new StackInfo(
+                            stack.stackId(), fleetId, StackStatus.valueOf(stack.stackStatus())));
                 }
             }
-            nextToken = describeStacksResult.getNextToken();
+            nextToken = describeStacksResult.nextToken();
         } while (nextToken != null);
 
         return r;

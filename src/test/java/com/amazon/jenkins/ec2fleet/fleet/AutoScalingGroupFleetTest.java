@@ -19,16 +19,6 @@ import java.util.Map;
 
 import com.amazon.jenkins.ec2fleet.FleetStateStats;
 import com.amazon.jenkins.ec2fleet.aws.AWSUtils;
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
-import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
-import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
-import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsResult;
-import com.amazonaws.services.autoscaling.model.Instance;
-import com.amazonaws.services.autoscaling.model.LaunchTemplate;
-import com.amazonaws.services.autoscaling.model.LaunchTemplateOverrides;
-import com.amazonaws.services.autoscaling.model.MixedInstancesPolicy;
-import com.amazonaws.services.autoscaling.model.UpdateAutoScalingGroupRequest;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
 import com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentials;
 import hudson.util.ListBoxModel;
@@ -42,6 +32,9 @@ import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.services.autoscaling.AutoScalingClient;
+import software.amazon.awssdk.services.autoscaling.model.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AutoScalingGroupFleetTest {
@@ -62,7 +55,7 @@ public class AutoScalingGroupFleetTest {
     @Mock
     private AmazonWebServicesCredentials amazonWebServicesCredentials;
     @Mock
-    private ClientConfiguration clientConfiguration;
+    private ClientOverrideConfiguration clientConfiguration;
 
     @Before
     public void before() {
@@ -84,8 +77,8 @@ public class AutoScalingGroupFleetTest {
 
     @Test
     public void createAsgClientWithInstanceProfileWhenCredsNull() throws Exception {
-        try (MockedConstruction<AmazonAutoScalingClient> mockedAmazonAutoScalingClient = Mockito.mockConstruction(AmazonAutoScalingClient.class)) {
-            final AmazonAutoScalingClient result = new AutoScalingGroupFleet().createClient(null, REGION, ENDPOINT);
+        try (MockedConstruction<AutoScalingClient> mockedAmazonAutoScalingClient = Mockito.mockConstruction(AutoScalingClient.class)) {
+            final AutoScalingClient result = new AutoScalingGroupFleet().createClient(null, REGION, ENDPOINT);
             assertEquals(mockedAmazonAutoScalingClient.constructed().get(0), result);
         }
     }
@@ -94,8 +87,8 @@ public class AutoScalingGroupFleetTest {
     public void createAsgClientWithAWSCredentialsWhenCredentialIdExists() throws Exception {
         mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
 
-        try (MockedConstruction<AmazonAutoScalingClient> mockedAmazonAutoScalingClient = Mockito.mockConstruction(AmazonAutoScalingClient.class)) {
-            final AmazonAutoScalingClient result = new AutoScalingGroupFleet().createClient(CREDS_ID, REGION, ENDPOINT);
+        try (MockedConstruction<AutoScalingClient> mockedAmazonAutoScalingClient = Mockito.mockConstruction(AutoScalingClient.class)) {
+            final AutoScalingClient result = new AutoScalingGroupFleet().createClient(CREDS_ID, REGION, ENDPOINT);
             assertEquals(mockedAmazonAutoScalingClient.constructed().get(0), result);
         }
     }
@@ -106,8 +99,9 @@ public class AutoScalingGroupFleetTest {
 
         mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
 
-        try (MockedConstruction<AmazonAutoScalingClient> mockedAmazonAutoScalingClient = Mockito.mockConstruction(AmazonAutoScalingClient.class, (autoScalingClient, context) -> {
-            final DescribeAutoScalingGroupsResult result = new DescribeAutoScalingGroupsResult().withAutoScalingGroups(new ArrayList<>());
+        try (MockedConstruction<AutoScalingClient> mockedAmazonAutoScalingClient = Mockito.mockConstruction(AutoScalingClient.class, (autoScalingClient, context) -> {
+            final DescribeAutoScalingGroupsResponse result = DescribeAutoScalingGroupsResponse.builder().autoScalingGroups(new ArrayList<>())
+                    .build();
             when(autoScalingClient.describeAutoScalingGroups(any(DescribeAutoScalingGroupsRequest.class))).thenReturn(result);
         })) {
             new AutoScalingGroupFleet().describe(CREDS_ID, REGION, ENDPOINT, listBoxModel, ASG_NAME, true);
@@ -123,9 +117,11 @@ public class AutoScalingGroupFleetTest {
         mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
         final ListBoxModel listBoxModel = new ListBoxModel();
 
-        try (MockedConstruction<AmazonAutoScalingClient> mockedAmazonAutoScalingClient = Mockito.mockConstruction(AmazonAutoScalingClient.class, (autoScalingClient, context) -> {
-            final AutoScalingGroup asg = new AutoScalingGroup().withAutoScalingGroupName(selectedAsgName);
-            final DescribeAutoScalingGroupsResult result = new DescribeAutoScalingGroupsResult().withAutoScalingGroups(Collections.singleton(asg));
+        try (MockedConstruction<AutoScalingClient> mockedAmazonAutoScalingClient = Mockito.mockConstruction(AutoScalingClient.class, (autoScalingClient, context) -> {
+            final AutoScalingGroup asg = AutoScalingGroup.builder().autoScalingGroupName(selectedAsgName)
+                    .build();
+            final DescribeAutoScalingGroupsResponse result = DescribeAutoScalingGroupsResponse.builder().autoScalingGroups(Collections.singleton(asg))
+                    .build();
             when(autoScalingClient.describeAutoScalingGroups(any(DescribeAutoScalingGroupsRequest.class))).thenReturn(result);
         })) {
             new AutoScalingGroupFleet().describe(CREDS_ID, REGION, ENDPOINT, listBoxModel, selectedAsgName, true);
@@ -144,11 +140,14 @@ public class AutoScalingGroupFleetTest {
         mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
         ListBoxModel listBoxModel = new ListBoxModel();
 
-        try (MockedConstruction<AmazonAutoScalingClient> mockedAmazonAutoScalingClient = Mockito.mockConstruction(AmazonAutoScalingClient.class, (autoScalingClient, context) -> {
-            final AutoScalingGroup selectedAsg = new AutoScalingGroup().withAutoScalingGroupName(selectedAsgName);
-            final AutoScalingGroup asg = new AutoScalingGroup().withAutoScalingGroupName(ASG_NAME);
+        try (MockedConstruction<AutoScalingClient> mockedAmazonAutoScalingClient = Mockito.mockConstruction(AutoScalingClient.class, (autoScalingClient, context) -> {
+            final AutoScalingGroup selectedAsg = AutoScalingGroup.builder().autoScalingGroupName(selectedAsgName)
+                    .build();
+            final AutoScalingGroup asg = AutoScalingGroup.builder().autoScalingGroupName(ASG_NAME)
+                    .build();
             final List<AutoScalingGroup> asgs = Arrays.asList(selectedAsg, asg);
-            final DescribeAutoScalingGroupsResult result = new DescribeAutoScalingGroupsResult().withAutoScalingGroups(asgs);
+            final DescribeAutoScalingGroupsResponse result = DescribeAutoScalingGroupsResponse.builder().autoScalingGroups(asgs)
+                    .build();
             when(autoScalingClient.describeAutoScalingGroups(any(DescribeAutoScalingGroupsRequest.class))).thenReturn(result);
         })) {
             new AutoScalingGroupFleet().describe(CREDS_ID, REGION, ENDPOINT, listBoxModel, selectedAsgName, true);
@@ -178,16 +177,18 @@ public class AutoScalingGroupFleetTest {
         mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
         ListBoxModel listBoxModel = new ListBoxModel();
 
-        try (MockedConstruction<AmazonAutoScalingClient> mockedAmazonAutoScalingClient = Mockito.mockConstruction(AmazonAutoScalingClient.class)) {
-            final UpdateAutoScalingGroupRequest requestWithoutScaleIn = new UpdateAutoScalingGroupRequest()
-                    .withAutoScalingGroupName(ASG_NAME)
-                    .withMinSize(min).withMaxSize(max)
-                    .withDesiredCapacity(targetCapacity);
-            final UpdateAutoScalingGroupRequest requestWithScaleIn = new UpdateAutoScalingGroupRequest()
-                    .withAutoScalingGroupName(ASG_NAME)
-                    .withMinSize(min).withMaxSize(max)
-                    .withDesiredCapacity(targetCapacity)
-                    .withNewInstancesProtectedFromScaleIn(Boolean.TRUE);
+        try (MockedConstruction<AutoScalingClient> mockedAmazonAutoScalingClient = Mockito.mockConstruction(AutoScalingClient.class)) {
+            final UpdateAutoScalingGroupRequest requestWithoutScaleIn = UpdateAutoScalingGroupRequest.builder()
+                    .autoScalingGroupName(ASG_NAME)
+                    .minSize(min).maxSize(max)
+                    .desiredCapacity(targetCapacity)
+                    .build();
+            final UpdateAutoScalingGroupRequest requestWithScaleIn = UpdateAutoScalingGroupRequest.builder()
+                    .autoScalingGroupName(ASG_NAME)
+                    .minSize(min).maxSize(max)
+                    .desiredCapacity(targetCapacity)
+                    .newInstancesProtectedFromScaleIn(Boolean.TRUE)
+                    .build();
             new AutoScalingGroupFleet().modify(CREDS_ID, REGION, ENDPOINT, ASG_NAME, targetCapacity, min, max);
             verify(mockedAmazonAutoScalingClient.constructed().get(0), times(0)).updateAutoScalingGroup(requestWithoutScaleIn);
             verify(mockedAmazonAutoScalingClient.constructed().get(0), times(1)).updateAutoScalingGroup(requestWithScaleIn);
@@ -199,9 +200,11 @@ public class AutoScalingGroupFleetTest {
         mockedJenkins.when(Jenkins::get).thenReturn(jenkins);
         mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
 
-        try (MockedConstruction<AmazonAutoScalingClient> mockedAmazonAutoScalingClient = Mockito.mockConstruction(AmazonAutoScalingClient.class, (autoScalingClient, context) -> {
-            final DescribeAutoScalingGroupsRequest describeAutoScalingGroupsRequest = new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(ASG_NAME);
-            final DescribeAutoScalingGroupsResult result = new DescribeAutoScalingGroupsResult().withAutoScalingGroups(new ArrayList<>());
+        try (MockedConstruction<AutoScalingClient> mockedAmazonAutoScalingClient = Mockito.mockConstruction(AutoScalingClient.class, (autoScalingClient, context) -> {
+            final DescribeAutoScalingGroupsRequest describeAutoScalingGroupsRequest = DescribeAutoScalingGroupsRequest.builder().autoScalingGroupNames(ASG_NAME)
+                    .build();
+            final DescribeAutoScalingGroupsResponse result = DescribeAutoScalingGroupsResponse.builder().autoScalingGroups(new ArrayList<>())
+                    .build();
             when(autoScalingClient.describeAutoScalingGroups(describeAutoScalingGroupsRequest)).thenReturn(result);
         })) {
             final FleetStateStats fleetStateStats = new AutoScalingGroupFleet().getState(CREDS_ID, REGION, ENDPOINT, ASG_NAME);
@@ -217,14 +220,18 @@ public class AutoScalingGroupFleetTest {
         mockedJenkins.when(Jenkins::get).thenReturn(jenkins);
         mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
 
-        try (MockedConstruction<AmazonAutoScalingClient> mockedAmazonAutoScalingClient = Mockito.mockConstruction(AmazonAutoScalingClient.class, (autoScalingClient, context) -> {
-            final DescribeAutoScalingGroupsRequest describeAutoScalingGroupsRequest = new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(ASG_NAME);
-            final AutoScalingGroup asg = new AutoScalingGroup()
-                    .withAutoScalingGroupName(ASG_NAME)
-                    .withDesiredCapacity(desiredCapacity)
-                    .withInstances(Collections.singleton(new Instance().withInstanceId("i-123")));
+        try (MockedConstruction<AutoScalingClient> mockedAmazonAutoScalingClient = Mockito.mockConstruction(AutoScalingClient.class, (autoScalingClient, context) -> {
+            final DescribeAutoScalingGroupsRequest describeAutoScalingGroupsRequest = DescribeAutoScalingGroupsRequest.builder().autoScalingGroupNames(ASG_NAME)
+                    .build();
+            final AutoScalingGroup asg = AutoScalingGroup.builder()
+                    .autoScalingGroupName(ASG_NAME)
+                    .desiredCapacity(desiredCapacity)
+                    .instances(Collections.singleton(Instance.builder().instanceId("i-123")
+                            .build()))
+                    .build();
 
-            final DescribeAutoScalingGroupsResult describeAutoScalingGroupsResult = new DescribeAutoScalingGroupsResult().withAutoScalingGroups(asg);
+            final DescribeAutoScalingGroupsResponse describeAutoScalingGroupsResult = DescribeAutoScalingGroupsResponse.builder().autoScalingGroups(asg)
+                    .build();
             when(autoScalingClient.describeAutoScalingGroups(describeAutoScalingGroupsRequest)).thenReturn(describeAutoScalingGroupsResult);
         })) {
             final FleetStateStats result = new AutoScalingGroupFleet().getState(CREDS_ID, REGION, ENDPOINT, ASG_NAME);
@@ -242,28 +249,37 @@ public class AutoScalingGroupFleetTest {
         mockedJenkins.when(Jenkins::get).thenReturn(jenkins);
         mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
 
-        try (MockedConstruction<AmazonAutoScalingClient> mockedAmazonAutoScalingClient = Mockito.mockConstruction(AmazonAutoScalingClient.class, (autoScalingClient, context) -> {
-            final DescribeAutoScalingGroupsRequest describeAutoScalingGroupsRequest = new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(ASG_NAME);
-            final AutoScalingGroup asg = new AutoScalingGroup()
-                    .withAutoScalingGroupName(ASG_NAME)
-                    .withDesiredCapacity(desiredCapacity)
-                    .withMixedInstancesPolicy(new MixedInstancesPolicy()
-                            .withLaunchTemplate(new LaunchTemplate()
-                                    .withOverrides(
-                                            new LaunchTemplateOverrides()
-                                                    .withInstanceType("t3.small")
-                                                    .withWeightedCapacity("1"),
-                                            new LaunchTemplateOverrides()
-                                                    .withInstanceType("t3.large")
-                                                    .withWeightedCapacity("2"),
-                                            new LaunchTemplateOverrides()
-                                                    .withInstanceType("t3.xlarge")
+        try (MockedConstruction<AutoScalingClient> mockedAmazonAutoScalingClient = Mockito.mockConstruction(AutoScalingClient.class, (autoScalingClient, context) -> {
+            final DescribeAutoScalingGroupsRequest describeAutoScalingGroupsRequest = DescribeAutoScalingGroupsRequest.builder().autoScalingGroupNames(ASG_NAME)
+                    .build();
+            final AutoScalingGroup asg = AutoScalingGroup.builder()
+                    .autoScalingGroupName(ASG_NAME)
+                    .desiredCapacity(desiredCapacity)
+                    .mixedInstancesPolicy(MixedInstancesPolicy.builder()
+                            .launchTemplate(LaunchTemplate.builder()
+                                    .overrides(
+                                            LaunchTemplateOverrides.builder()
+                                                    .instanceType("t3.small")
+                                                    .weightedCapacity("1")
+                                            .build(), 
+                                            LaunchTemplateOverrides.builder()
+                                                    .instanceType("t3.large")
+                                                    .weightedCapacity("2")
+                                            .build(), 
+                                            LaunchTemplateOverrides.builder()
+                                                    .instanceType("t3.xlarge")
+                                            .build()
                                     )
+                                    .build()
                             )
+                            .build()
                     )
-                    .withInstances(Collections.singleton(new Instance().withInstanceId("i-123")));
+                    .instances(Collections.singleton(Instance.builder().instanceId("i-123")
+                            .build()))
+                    .build();
 
-            final DescribeAutoScalingGroupsResult describeAutoScalingGroupsResult = new DescribeAutoScalingGroupsResult().withAutoScalingGroups(asg);
+            final DescribeAutoScalingGroupsResponse describeAutoScalingGroupsResult = DescribeAutoScalingGroupsResponse.builder().autoScalingGroups(asg)
+                    .build();
             when(autoScalingClient.describeAutoScalingGroups(describeAutoScalingGroupsRequest)).thenReturn(describeAutoScalingGroupsResult);
         })) {
             final FleetStateStats result = new AutoScalingGroupFleet().getState(CREDS_ID, REGION, ENDPOINT, ASG_NAME);

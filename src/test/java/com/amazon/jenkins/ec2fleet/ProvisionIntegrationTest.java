@@ -3,20 +3,6 @@ package com.amazon.jenkins.ec2fleet;
 import com.amazon.jenkins.ec2fleet.aws.EC2Api;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
-import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.model.ActiveInstance;
-import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
-import com.amazonaws.services.ec2.model.DescribeInstancesResult;
-import com.amazonaws.services.ec2.model.DescribeSpotFleetInstancesRequest;
-import com.amazonaws.services.ec2.model.DescribeSpotFleetInstancesResult;
-import com.amazonaws.services.ec2.model.DescribeSpotFleetRequestsRequest;
-import com.amazonaws.services.ec2.model.DescribeSpotFleetRequestsResult;
-import com.amazonaws.services.ec2.model.Instance;
-import com.amazonaws.services.ec2.model.InstanceState;
-import com.amazonaws.services.ec2.model.InstanceStateName;
-import com.amazonaws.services.ec2.model.Reservation;
-import com.amazonaws.services.ec2.model.SpotFleetRequestConfig;
-import com.amazonaws.services.ec2.model.SpotFleetRequestConfigData;
 import hudson.model.TaskListener;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.slaves.Cloud;
@@ -28,6 +14,8 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
+import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -77,7 +65,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         final EC2Api ec2Api = spy(EC2Api.class);
         Registry.setEc2Api(ec2Api);
 
-        AmazonEC2 amazonEC2 = mock(AmazonEC2.class);
+        Ec2Client amazonEC2 = mock(Ec2Client.class);
         when(ec2Api.connect(anyString(), anyString(), Mockito.nullable(String.class))).thenReturn(amazonEC2);
 
         List<QueueTaskFuture> rs = enqueTask(5);
@@ -144,7 +132,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
         j.jenkins.clouds.add(cloud);
 
-        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Running);
+        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.RUNNING);
 
         List<QueueTaskFuture> rs = enqueTask(1);
 
@@ -177,7 +165,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                 10, false, false, noScaling));
         j.jenkins.clouds.add(cloud);
 
-        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Running);
+        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.RUNNING);
 
         enqueTask(1);
 
@@ -192,7 +180,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
     @Test
     public void should_not_allow_jenkins_to_provision_if_address_not_available() throws Exception {
-        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Running);
+        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.RUNNING);
 
         ComputerLauncher computerLauncher = mock(ComputerLauncher.class);
         ComputerConnector computerConnector = mock(ComputerConnector.class);
@@ -212,27 +200,36 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         EC2Api ec2Api = spy(EC2Api.class);
         Registry.setEc2Api(ec2Api);
 
-        AmazonEC2 amazonEC2 = mock(AmazonEC2.class);
+        Ec2Client amazonEC2 = mock(Ec2Client.class);
         when(ec2Api.connect(anyString(), anyString(), Mockito.nullable(String.class))).thenReturn(amazonEC2);
 
         when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class))).thenReturn(
-                new DescribeInstancesResult().withReservations(
-                        new Reservation().withInstances(
-                                new Instance()
-                                        .withState(new InstanceState().withName(InstanceStateName.Running))
+                DescribeInstancesResponse.builder().reservations(
+                        Reservation.builder().instances(
+                                Instance.builder()
+                                        .state(InstanceState.builder().name(InstanceStateName.RUNNING)
+                                                .build())
 //                                        .withPublicIpAddress("public-io")
-                                        .withInstanceId("i-1")
-                        )));
+                                        .instanceId("i-1")
+                                .build()
+                        )
+                        .build())
+                .build());
 
         when(amazonEC2.describeSpotFleetInstances(any(DescribeSpotFleetInstancesRequest.class))).thenReturn(
-                new DescribeSpotFleetInstancesResult().withActiveInstances(new ActiveInstance().withInstanceId("i-1")));
+                DescribeSpotFleetInstancesResponse.builder().activeInstances(ActiveInstance.builder().instanceId("i-1")
+                        .build())
+                .build());
 
-        DescribeSpotFleetRequestsResult describeSpotFleetRequestsResult = new DescribeSpotFleetRequestsResult();
-        describeSpotFleetRequestsResult.setSpotFleetRequestConfigs(Arrays.asList(
-                new SpotFleetRequestConfig()
-                        .withSpotFleetRequestState("active")
-                        .withSpotFleetRequestConfig(
-                                new SpotFleetRequestConfigData().withTargetCapacity(1))));
+        DescribeSpotFleetRequestsResponse describeSpotFleetRequestsResult = DescribeSpotFleetRequestsResponse.builder()
+                .build();
+        describeSpotFleetRequestsResult = describeSpotFleetRequestsResult.toBuilder().spotFleetRequestConfigs(Arrays.asList(
+                SpotFleetRequestConfig.builder()
+                        .spotFleetRequestState("active")
+                        .spotFleetRequestConfig(
+                                SpotFleetRequestConfigData.builder().targetCapacity(1)
+                                .build())
+                .build())).build();
         when(amazonEC2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
                 .thenReturn(describeSpotFleetRequestsResult);
 
@@ -266,7 +263,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                 2, false, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
-        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Pending);
+        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.PENDING);
 
         final List<QueueTaskFuture> rs = enqueTask(1);
 
@@ -303,7 +300,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                 2, false, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
-        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Running);
+        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.RUNNING);
 
         final List<QueueTaskFuture> rs = enqueTask(2);
 
@@ -324,7 +321,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
     @Test
     public void should_continue_update_after_termination() throws IOException {
-        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Running, 5);
+        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.RUNNING, 5);
 
         final ComputerConnector computerConnector = new LocalComputerConnector(j);
         final EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",

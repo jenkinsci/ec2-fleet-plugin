@@ -1,9 +1,9 @@
 package com.amazon.jenkins.ec2fleet.aws;
 
-import com.amazonaws.ClientConfiguration;
 import com.amazonaws.retry.PredefinedRetryPolicies;
 import hudson.ProxyConfiguration;
 import jenkins.model.Jenkins;
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
@@ -16,8 +16,8 @@ public final class AWSUtils {
     private static final int MAX_ERROR_RETRY = 5;
 
     /**
-     * Create {@link ClientConfiguration} for AWS-SDK with proper inited
-     * {@link ClientConfiguration#getUserAgentPrefix()} and proxy if
+     * Create {@link ClientOverrideConfiguration} for AWS-SDK with proper inited
+     * {@link ClientOverrideConfiguration#getUserAgentPrefix()} and proxy if
      * Jenkins configured to use proxy
      *
      * @param endpoint real endpoint which need to be called,
@@ -25,10 +25,11 @@ public final class AWSUtils {
      *                 and real host in that whitelist
      * @return client configuration
      */
-    public static ClientConfiguration getClientConfiguration(final String endpoint) {
-        final ClientConfiguration clientConfiguration = new ClientConfiguration()
-                .withRetryPolicy(PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(MAX_ERROR_RETRY));
-        clientConfiguration.setUserAgentPrefix(USER_AGENT_PREFIX);
+    public static ClientOverrideConfiguration getClientConfiguration(final String endpoint) {
+        final ClientOverrideConfiguration clientConfiguration = ClientOverrideConfiguration.builder()
+                .retryPolicy(PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(MAX_ERROR_RETRY))
+                .build();
+        clientConfiguration/*AWS SDK for Java v2 migration: userAgentPrefix override is a request-level config in v2. See https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/core/RequestOverrideConfiguration.Builder.html#addApiName(software.amazon.awssdk.core.ApiName).*/.setUserAgentPrefix(USER_AGENT_PREFIX);
 
         final ProxyConfiguration proxyConfig = Jenkins.get().proxy;
         if (proxyConfig != null) {

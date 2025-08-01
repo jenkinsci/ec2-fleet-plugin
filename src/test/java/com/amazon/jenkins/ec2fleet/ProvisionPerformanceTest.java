@@ -1,6 +1,5 @@
 package com.amazon.jenkins.ec2fleet;
 
-import com.amazonaws.services.ec2.model.InstanceStateName;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Result;
 import hudson.model.queue.QueueTaskFuture;
@@ -10,6 +9,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import software.amazon.awssdk.services.ec2.model.InstanceStateName;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,7 +38,7 @@ public class ProvisionPerformanceTest extends IntegrationTest {
     }
 
     private void test(int workers, int maxTasks) throws IOException, InterruptedException {
-        mockEc2FleetApiToEc2SpotFleetWithDelay(InstanceStateName.Running, 500);
+        mockEc2FleetApiToEc2SpotFleetWithDelay(InstanceStateName.RUNNING, 500);
 
         final ComputerConnector computerConnector = new LocalComputerConnector(j);
         final EC2FleetCloudWithMeter cloud = new EC2FleetCloudWithMeter(null, "credId", null, "region",

@@ -1,8 +1,5 @@
 package com.amazon.jenkins.ec2fleet;
 
-import com.amazonaws.services.cloudformation.AmazonCloudFormation;
-import com.amazonaws.services.cloudformation.model.DeleteStackRequest;
-import com.amazonaws.services.ec2.model.InstanceStateName;
 import hudson.model.FreeStyleProject;
 import hudson.model.labels.LabelAtom;
 import hudson.model.queue.QueueTaskFuture;
@@ -10,6 +7,9 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
+import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
+import software.amazon.awssdk.services.cloudformation.model.DeleteStackRequest;
+import software.amazon.awssdk.services.ec2.model.InstanceStateName;
 
 import java.util.Collections;
 import java.util.List;
@@ -26,7 +26,7 @@ public class EC2FleetLabelCloudIntegrationTest extends IntegrationTest {
 
     @Test
     public void should_create_stack_and_provision_node_for_task_execution() throws Exception {
-        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Running);
+        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.RUNNING);
         mockCloudFormationApi();
 
         EC2FleetLabelCloud cloud = new EC2FleetLabelCloud("FleetLabel", "credId", "region",
@@ -55,8 +55,8 @@ public class EC2FleetLabelCloudIntegrationTest extends IntegrationTest {
 
     @Test
     public void should_delete_resources_if_label_unused() throws Exception {
-        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.Running);
-        final AmazonCloudFormation amazonCloudFormation = mockCloudFormationApi();
+        mockEc2FleetApiToEc2SpotFleet(InstanceStateName.RUNNING);
+        final CloudFormationClient amazonCloudFormation = mockCloudFormationApi();
 
         EC2FleetLabelCloud cloud = new EC2FleetLabelCloud("FleetLabel", "credId", "region",
                 null, null, new LocalComputerConnector(j), false, false,

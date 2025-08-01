@@ -21,7 +21,6 @@
     <jenkins.baseline>2.479</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-    <aws-sdk.version>1.12.780-480.v4a_0819121a_9e</aws-sdk.version>
   </properties>
 
   <name>EC2 Fleet Jenkins Plugin</name>
@@ -105,9 +104,35 @@
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>aws-java-sdk</artifactId>
-      <version>${aws-sdk.version}</version>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>apache-client</artifactId>
+      <version>2.31.63</version>
+    </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>netty-nio-client</artifactId>
+      <version>2.31.63</version>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins.aws-java-sdk2</groupId>
+      <artifactId>aws-java-sdk2-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins.aws-java-sdk2</groupId>
+      <artifactId>aws-java-sdk2-ec2</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins.aws-java-sdk2</groupId>
+      <artifactId>aws-java-sdk2-autoscaling</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins.aws-java-sdk2</groupId>
+      <artifactId>aws-java-sdk2-cloudformation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>4.5.14</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>

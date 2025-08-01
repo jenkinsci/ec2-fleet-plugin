@@ -1,23 +1,14 @@
 package com.amazon.jenkins.ec2fleet.aws;
 
 import com.amazon.jenkins.ec2fleet.aws.EC2Api;
-import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.model.AmazonEC2Exception;
-import com.amazonaws.services.ec2.model.CreateTagsRequest;
-import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
-import com.amazonaws.services.ec2.model.DescribeInstancesResult;
-import com.amazonaws.services.ec2.model.Instance;
-import com.amazonaws.services.ec2.model.InstanceState;
-import com.amazonaws.services.ec2.model.InstanceStateName;
-import com.amazonaws.services.ec2.model.Reservation;
-import com.amazonaws.services.ec2.model.Tag;
-import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.*;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,7 +29,7 @@ import static org.mockito.Mockito.when;
 public class EC2ApiTest {
 
     @Mock
-    private AmazonEC2 amazonEC2;
+    private Ec2Client amazonEC2;
 
     @Test
     public void describeInstances_shouldReturnEmptyResultAndNoCallIfEmptyListOfInstances() {
@@ -55,16 +46,22 @@ public class EC2ApiTest {
         instanceIds.add("i-1");
         instanceIds.add("i-2");
 
-        DescribeInstancesResult describeInstancesResult = new DescribeInstancesResult();
-        Reservation reservation = new Reservation();
-        Instance instance1 = new Instance()
-                .withInstanceId("i-1")
-                .withState(new InstanceState().withName(InstanceStateName.Running));
-        Instance instance2 = new Instance()
-                .withInstanceId("i-2")
-                .withState(new InstanceState().withName(InstanceStateName.Running));
-        reservation.setInstances(Arrays.asList(instance1, instance2));
-        describeInstancesResult.setReservations(Arrays.asList(reservation));
+        DescribeInstancesResponse describeInstancesResult = DescribeInstancesResponse.builder()
+                .build();
+        Reservation reservation = Reservation.builder()
+                .build();
+        Instance instance1 = Instance.builder()
+                .instanceId("i-1")
+                .state(InstanceState.builder().name(InstanceStateName.RUNNING)
+                        .build())
+                .build();
+        Instance instance2 = Instance.builder()
+                .instanceId("i-2")
+                .state(InstanceState.builder().name(InstanceStateName.RUNNING)
+                        .build())
+                .build();
+        reservation = reservation.toBuilder().instances(Arrays.asList(instance1, instance2)).build();
+        describeInstancesResult = describeInstancesResult.toBuilder().reservations(Arrays.asList(reservation)).build();
 
         when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class))).thenReturn(describeInstancesResult);
 
@@ -86,8 +83,8 @@ public class EC2ApiTest {
         Set<String> instanceIds = new HashSet<>();
         instanceIds.add("i-1");
 
-        final AmazonEC2Exception exception = new AmazonEC2Exception("NOT INSTANCE NOT FOUND");
-        exception.setErrorCode("NOT INSTANCE_NOT_FOUND_ERROR_CODE");
+        final Ec2Exception exception = new Ec2Exception("NOT INSTANCE NOT FOUND");
+        exception = exception.toBuilder().errorCode("NOT INSTANCE_NOT_FOUND_ERROR_CODE").build();
         when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class)))
                 .thenThrow(exception);
 
@@ -95,9 +92,9 @@ public class EC2ApiTest {
         try {
             new EC2Api().describeInstances(amazonEC2, instanceIds);
             Assert.fail();
-        } catch (AmazonEC2Exception e) {
-            Assert.assertEquals("NOT INSTANCE NOT FOUND", e.getErrorMessage());
-            Assert.assertEquals(AmazonEC2Exception.class, e.getClass());
+        } catch (Ec2Exception e) {
+            Assert.assertEquals("NOT INSTANCE NOT FOUND", e.awsErrorDetails().errorMessage());
+            Assert.assertEquals(Ec2Exception.class, e.getClass());
         }
     }
 
@@ -109,26 +106,36 @@ public class EC2ApiTest {
         instanceIds.add("i-2");
         instanceIds.add("i-3");
 
-        final Instance instance1 = new Instance()
-                .withInstanceId("i-1")
-                .withState(new InstanceState().withName(InstanceStateName.Running));
-        DescribeInstancesResult describeInstancesResult1 =
-                new DescribeInstancesResult()
-                        .withReservations(
-                                new Reservation().withInstances(instance1))
-                        .withNextToken("a");
+        final Instance instance1 = Instance.builder()
+                .instanceId("i-1")
+                .state(InstanceState.builder().name(InstanceStateName.RUNNING)
+                        .build())
+                .build();
+        DescribeInstancesResponse describeInstancesResult1 =
+                DescribeInstancesResponse.builder()
+                        .reservations(
+                                Reservation.builder().instances(instance1)
+                                .build())
+                        .nextToken("a")
+                .build();
 
-        final Instance instance2 = new Instance()
-                .withInstanceId("i-2")
-                .withState(new InstanceState().withName(InstanceStateName.Running));
-        DescribeInstancesResult describeInstancesResult2 =
-                new DescribeInstancesResult()
-                        .withReservations(new Reservation().withInstances(
-                                instance2,
-                                new Instance()
-                                        .withInstanceId("i-3")
-                                        .withState(new InstanceState().withName(InstanceStateName.Terminated))
-                        ));
+        final Instance instance2 = Instance.builder()
+                .instanceId("i-2")
+                .state(InstanceState.builder().name(InstanceStateName.RUNNING)
+                        .build())
+                .build();
+        DescribeInstancesResponse describeInstancesResult2 =
+                DescribeInstancesResponse.builder()
+                        .reservations(Reservation.builder().instances(
+                                instance2, 
+                                Instance.builder()
+                                        .instanceId("i-3")
+                                        .state(InstanceState.builder().name(InstanceStateName.TERMINATED)
+                                                .build())
+                                .build()
+                        )
+                        .build())
+                .build();
 
         when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class)))
                 .thenReturn(describeInstancesResult1)
@@ -156,22 +163,32 @@ public class EC2ApiTest {
         instanceIds.add("stopping");
         instanceIds.add("shutting-down");
 
-        DescribeInstancesResult describeInstancesResult1 =
-                new DescribeInstancesResult()
-                        .withReservations(
-                                new Reservation().withInstances(new Instance()
-                                                .withInstanceId("stopped")
-                                                .withState(new InstanceState().withName(InstanceStateName.Stopped)),
-                                        new Instance()
-                                                .withInstanceId("stopping")
-                                                .withState(new InstanceState().withName(InstanceStateName.Stopping)),
-                                        new Instance()
-                                                .withInstanceId("shutting-down")
-                                                .withState(new InstanceState().withName(InstanceStateName.ShuttingDown)),
-                                        new Instance()
-                                                .withInstanceId("terminated")
-                                                .withState(new InstanceState().withName(InstanceStateName.Terminated))
-                                ));
+        DescribeInstancesResponse describeInstancesResult1 =
+                DescribeInstancesResponse.builder()
+                        .reservations(
+                                Reservation.builder().instances(Instance.builder()
+                                        .instanceId("stopped")
+                                        .state(InstanceState.builder().name(InstanceStateName.STOPPED)
+                                                .build())
+                                        .build(), 
+                                        Instance.builder()
+                                                .instanceId("stopping")
+                                                .state(InstanceState.builder().name(InstanceStateName.STOPPING)
+                                                        .build())
+                                        .build(), 
+                                        Instance.builder()
+                                                .instanceId("shutting-down")
+                                                .state(InstanceState.builder().name(InstanceStateName.SHUTTING_DOWN)
+                                                        .build())
+                                        .build(), 
+                                        Instance.builder()
+                                                .instanceId("terminated")
+                                                .state(InstanceState.builder().name(InstanceStateName.TERMINATED)
+                                                        .build())
+                                        .build()
+                                )
+                                .build())
+                .build();
 
 
         when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class)))
@@ -194,18 +211,25 @@ public class EC2ApiTest {
         instanceIds.add("i2");
         instanceIds.add("i3");
 
-        DescribeInstancesResult describeInstancesResult1 =
-                new DescribeInstancesResult()
-                        .withReservations(
-                                new Reservation().withInstances(new Instance()
-                                                .withInstanceId("stopped")
-                                                .withState(new InstanceState().withName(InstanceStateName.Running)),
-                                        new Instance()
-                                                .withInstanceId("stopping")
-                                                .withState(new InstanceState().withName(InstanceStateName.Running))
-                                ));
+        DescribeInstancesResponse describeInstancesResult1 =
+                DescribeInstancesResponse.builder()
+                        .reservations(
+                                Reservation.builder().instances(Instance.builder()
+                                        .instanceId("stopped")
+                                        .state(InstanceState.builder().name(InstanceStateName.RUNNING)
+                                                .build())
+                                        .build(), 
+                                        Instance.builder()
+                                                .instanceId("stopping")
+                                                .state(InstanceState.builder().name(InstanceStateName.RUNNING)
+                                                        .build())
+                                        .build()
+                                )
+                                .build())
+                .build();
 
-        DescribeInstancesResult describeInstancesResult2 = new DescribeInstancesResult();
+        DescribeInstancesResponse describeInstancesResult2 = DescribeInstancesResponse.builder()
+                .build();
 
         when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class)))
                 .thenReturn(describeInstancesResult1)
@@ -215,8 +239,10 @@ public class EC2ApiTest {
         new EC2Api().describeInstances(amazonEC2, instanceIds, 2);
 
         // then
-        verify(amazonEC2).describeInstances(new DescribeInstancesRequest().withInstanceIds(Arrays.asList("i1", "i2")));
-        verify(amazonEC2).describeInstances(new DescribeInstancesRequest().withInstanceIds(Arrays.asList("i3")));
+        verify(amazonEC2).describeInstances(DescribeInstancesRequest.builder().instanceIds(Arrays.asList("i1", "i2"))
+                .build());
+        verify(amazonEC2).describeInstances(DescribeInstancesRequest.builder().instanceIds(Arrays.asList("i3"))
+                .build());
         verifyNoMoreInteractions(amazonEC2);
     }
 
@@ -248,15 +274,19 @@ public class EC2ApiTest {
         instanceIds.add("i-f");
         instanceIds.add("i-3");
 
-        AmazonEC2Exception notFoundException = new AmazonEC2Exception(
+        Ec2Exception notFoundException = new Ec2Exception(
                 "The instance IDs 'i-1, i-f' do not exist");
-        notFoundException.setErrorCode("InvalidInstanceID.NotFound");
+        notFoundException = notFoundException.toBuilder().errorCode("InvalidInstanceID.NotFound").build();
 
-        final Instance instance3 = new Instance().withInstanceId("i-3")
-                .withState(new InstanceState().withName(InstanceStateName.Running));
-        DescribeInstancesResult describeInstancesResult2 = new DescribeInstancesResult()
-                .withReservations(new Reservation().withInstances(
-                        instance3));
+        final Instance instance3 = Instance.builder().instanceId("i-3")
+                .state(InstanceState.builder().name(InstanceStateName.RUNNING)
+                        .build())
+                .build();
+        DescribeInstancesResponse describeInstancesResult2 = DescribeInstancesResponse.builder()
+                .reservations(Reservation.builder().instances(
+                        instance3)
+                        .build())
+                .build();
 
         when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class)))
                 .thenThrow(notFoundException)
@@ -267,8 +297,10 @@ public class EC2ApiTest {
 
         // then
         Assert.assertEquals(Collections.singletonMap("i-3", instance3), described);
-        verify(amazonEC2).describeInstances(new DescribeInstancesRequest().withInstanceIds(Arrays.asList("i-1", "i-3", "i-f")));
-        verify(amazonEC2).describeInstances(new DescribeInstancesRequest().withInstanceIds(Arrays.asList("i-3")));
+        verify(amazonEC2).describeInstances(DescribeInstancesRequest.builder().instanceIds(Arrays.asList("i-1", "i-3", "i-f"))
+                .build());
+        verify(amazonEC2).describeInstances(DescribeInstancesRequest.builder().instanceIds(Arrays.asList("i-3"))
+                .build());
         verifyNoMoreInteractions(amazonEC2);
     }
 
@@ -280,9 +312,9 @@ public class EC2ApiTest {
         instanceIds.add("i-f");
         instanceIds.add("i-3");
 
-        AmazonEC2Exception notFoundException = new AmazonEC2Exception(
+        Ec2Exception notFoundException = new Ec2Exception(
                 "unparseable");
-        notFoundException.setErrorCode("InvalidInstanceID.NotFound");
+        notFoundException = notFoundException.toBuilder().errorCode("InvalidInstanceID.NotFound").build();
 
         when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class)))
                 .thenThrow(notFoundException);
@@ -291,7 +323,7 @@ public class EC2ApiTest {
         try {
             new EC2Api().describeInstances(amazonEC2, instanceIds);
             Assert.fail();
-        } catch (AmazonEC2Exception exception) {
+        } catch (Ec2Exception exception) {
             Assert.assertSame(notFoundException, exception);
         }
     }
@@ -330,9 +362,11 @@ public class EC2ApiTest {
         new EC2Api().tagInstances(amazonEC2, new HashSet<>(Arrays.asList("i-1", "i-2")), "opa", "v");
 
         // then
-        verify(amazonEC2).createTags(new CreateTagsRequest()
-                .withResources(new HashSet<>(Arrays.asList("i-1", "i-2")))
-                .withTags(new Tag().withKey("opa").withValue("v")));
+        verify(amazonEC2).createTags(CreateTagsRequest.builder()
+                .resources(new HashSet<>(Arrays.asList("i-1", "i-2")))
+                .tags(Tag.builder().key("opa").value("v")
+                        .build())
+                .build());
         verifyNoMoreInteractions(amazonEC2);
     }
 
@@ -342,9 +376,11 @@ public class EC2ApiTest {
         new EC2Api().tagInstances(amazonEC2, new HashSet<>(Arrays.asList("i-1", "i-2")), "opa", null);
 
         // then
-        verify(amazonEC2).createTags(new CreateTagsRequest()
-                .withResources(new HashSet<>(Arrays.asList("i-1", "i-2")))
-                .withTags(new Tag().withKey("opa").withValue("")));
+        verify(amazonEC2).createTags(CreateTagsRequest.builder()
+                .resources(new HashSet<>(Arrays.asList("i-1", "i-2")))
+                .tags(Tag.builder().key("opa").value("")
+                        .build())
+                .build());
         verifyNoMoreInteractions(amazonEC2);
     }
 
@@ -386,11 +422,12 @@ public class EC2ApiTest {
                 Mockito.any(TerminateInstancesRequest.class));
     }
 
-    @Test (expected = AmazonEC2Exception.class)
+    @Test (expected = Ec2Exception.class)
     public void testTerminateInstanceRethrowException() {
-        final AmazonEC2Exception exception = new AmazonEC2Exception("You are not authorized to perform this operation");
-        exception.setErrorCode("403");
-        when(amazonEC2.terminateInstances(new TerminateInstancesRequest().withInstanceIds(Arrays.asList("i-123"))))
+        final Ec2Exception exception = new Ec2Exception("You are not authorized to perform this operation");
+        exception = exception.toBuilder().errorCode("403").build();
+        when(amazonEC2.terminateInstances(TerminateInstancesRequest.builder().instanceIds(Arrays.asList("i-123"))
+                        .build()))
                 .thenThrow(exception);
         final EC2Api client = new EC2Api();
 

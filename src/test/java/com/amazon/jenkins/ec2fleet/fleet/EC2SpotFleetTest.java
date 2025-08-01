@@ -3,17 +3,6 @@ package com.amazon.jenkins.ec2fleet.fleet;
 import com.amazon.jenkins.ec2fleet.aws.EC2Api;
 import com.amazon.jenkins.ec2fleet.FleetStateStats;
 import com.amazon.jenkins.ec2fleet.Registry;
-import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.model.ActiveInstance;
-import com.amazonaws.services.ec2.model.BatchState;
-import com.amazonaws.services.ec2.model.DescribeSpotFleetInstancesRequest;
-import com.amazonaws.services.ec2.model.DescribeSpotFleetInstancesResult;
-import com.amazonaws.services.ec2.model.DescribeSpotFleetRequestsRequest;
-import com.amazonaws.services.ec2.model.DescribeSpotFleetRequestsResult;
-import com.amazonaws.services.ec2.model.FleetType;
-import com.amazonaws.services.ec2.model.SpotFleetLaunchSpecification;
-import com.amazonaws.services.ec2.model.SpotFleetRequestConfig;
-import com.amazonaws.services.ec2.model.SpotFleetRequestConfigData;
 import hudson.util.ListBoxModel;
 import org.junit.After;
 import org.junit.Assert;
@@ -22,6 +11,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.*;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,7 +29,7 @@ import static org.mockito.Mockito.when;
 public class EC2SpotFleetTest {
 
     @Mock
-    private AmazonEC2 ec2;
+    private Ec2Client ec2;
 
     @Mock
     private EC2Api ec2Api;
@@ -50,15 +41,19 @@ public class EC2SpotFleetTest {
         when(ec2Api.connect(anyString(), anyString(), anyString())).thenReturn(ec2);
 
         when(ec2.describeSpotFleetInstances(any(DescribeSpotFleetInstancesRequest.class)))
-                .thenReturn(new DescribeSpotFleetInstancesResult());
+                .thenReturn(DescribeSpotFleetInstancesResponse.builder()
+                .build());
 
         when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenReturn(new DescribeSpotFleetRequestsResult()
-                        .withSpotFleetRequestConfigs(
-                                new SpotFleetRequestConfig()
-                                        .withSpotFleetRequestConfig(
-                                                new SpotFleetRequestConfigData()
-                                                        .withTargetCapacity(0))));
+                .thenReturn(DescribeSpotFleetRequestsResponse.builder()
+                .spotFleetRequestConfigs(
+                        SpotFleetRequestConfig.builder()
+                                .spotFleetRequestConfig(
+                                        SpotFleetRequestConfigData.builder()
+                                                .targetCapacity(0)
+                                        .build())
+                        .build())
+                .build());
     }
 
     @After
@@ -69,7 +64,8 @@ public class EC2SpotFleetTest {
     @Test(expected = IllegalStateException.class)
     public void getState_failIfNoFleet() {
         when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenReturn(new DescribeSpotFleetRequestsResult());
+                .thenReturn(DescribeSpotFleetRequestsResponse.builder()
+                .build());
 
         new EC2SpotFleet().getState("cred", "region", "", "f");
     }
@@ -77,13 +73,16 @@ public class EC2SpotFleetTest {
     @Test
     public void getState_returnFleetInfo() {
         when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenReturn(new DescribeSpotFleetRequestsResult()
-                        .withSpotFleetRequestConfigs(
-                                new SpotFleetRequestConfig()
-                                        .withSpotFleetRequestState(BatchState.Active)
-                                        .withSpotFleetRequestConfig(
-                                                new SpotFleetRequestConfigData()
-                                                        .withTargetCapacity(12))));
+                .thenReturn(DescribeSpotFleetRequestsResponse.builder()
+                .spotFleetRequestConfigs(
+                        SpotFleetRequestConfig.builder()
+                                .spotFleetRequestState(BatchState.ACTIVE)
+                                .spotFleetRequestConfig(
+                                        SpotFleetRequestConfigData.builder()
+                                                .targetCapacity(12)
+                                        .build())
+                        .build())
+                .build());
 
         FleetStateStats stats = new EC2SpotFleet().getState("cred", "region", "", "f-id");
 
@@ -103,36 +102,46 @@ public class EC2SpotFleetTest {
     @Test
     public void getState_returnAllDescribedInstancesForFleet() {
         when(ec2.describeSpotFleetInstances(any(DescribeSpotFleetInstancesRequest.class)))
-                .thenReturn(new DescribeSpotFleetInstancesResult()
-                        .withActiveInstances(
-                                new ActiveInstance().withInstanceId("i-1"),
-                                new ActiveInstance().withInstanceId("i-2")));
+                .thenReturn(DescribeSpotFleetInstancesResponse.builder()
+                .activeInstances(
+                        ActiveInstance.builder().instanceId("i-1")
+                        .build(), 
+                        ActiveInstance.builder().instanceId("i-2")
+                        .build())
+                .build());
 
         FleetStateStats stats = new EC2SpotFleet().getState("cred", "region", "", "f");
 
         Assert.assertEquals(new HashSet<>(Arrays.asList("i-1", "i-2")), stats.getInstances());
         Assert.assertEquals(2, stats.getNumActive());
-        verify(ec2).describeSpotFleetInstances(new DescribeSpotFleetInstancesRequest()
-                .withSpotFleetRequestId("f"));
+        verify(ec2).describeSpotFleetInstances(DescribeSpotFleetInstancesRequest.builder()
+                .spotFleetRequestId("f")
+                .build());
     }
 
     @Test
     public void getState_returnAllPagesDescribedInstancesForFleet() {
         when(ec2.describeSpotFleetInstances(any(DescribeSpotFleetInstancesRequest.class)))
-                .thenReturn(new DescribeSpotFleetInstancesResult()
-                        .withNextToken("p1")
-                        .withActiveInstances(new ActiveInstance().withInstanceId("i-1")))
-                .thenReturn(new DescribeSpotFleetInstancesResult()
-                        .withActiveInstances(new ActiveInstance().withInstanceId("i-2")));
+                .thenReturn(DescribeSpotFleetInstancesResponse.builder()
+                        .nextToken("p1")
+                        .activeInstances(ActiveInstance.builder().instanceId("i-1")
+                                .build())
+                        .build())
+                .thenReturn(DescribeSpotFleetInstancesResponse.builder()
+                .activeInstances(ActiveInstance.builder().instanceId("i-2")
+                        .build())
+                .build());
 
         FleetStateStats stats = new EC2SpotFleet().getState("cred", "region", "", "f");
 
         Assert.assertEquals(new HashSet<>(Arrays.asList("i-1", "i-2")), stats.getInstances());
         Assert.assertEquals(2, stats.getNumActive());
-        verify(ec2).describeSpotFleetInstances(new DescribeSpotFleetInstancesRequest()
-                .withSpotFleetRequestId("f").withNextToken("p1"));
-        verify(ec2).describeSpotFleetInstances(new DescribeSpotFleetInstancesRequest()
-                .withSpotFleetRequestId("f"));
+        verify(ec2).describeSpotFleetInstances(DescribeSpotFleetInstancesRequest.builder()
+                .spotFleetRequestId("f").nextToken("p1")
+                .build());
+        verify(ec2).describeSpotFleetInstances(DescribeSpotFleetInstancesRequest.builder()
+                .spotFleetRequestId("f")
+                .build());
     }
 
     @Test
@@ -145,14 +154,19 @@ public class EC2SpotFleetTest {
     @Test
     public void getState_returnInstanceTypeWeightsFromLaunchSpecification() {
         when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenReturn(new DescribeSpotFleetRequestsResult()
-                        .withSpotFleetRequestConfigs(new SpotFleetRequestConfig()
-                                .withSpotFleetRequestState(BatchState.Active)
-                                .withSpotFleetRequestConfig(new SpotFleetRequestConfigData()
-                                        .withTargetCapacity(1)
-                                        .withLaunchSpecifications(
-                                                new SpotFleetLaunchSpecification().withInstanceType("t1").withWeightedCapacity(0.1),
-                                                new SpotFleetLaunchSpecification().withInstanceType("t2").withWeightedCapacity(12.0)))));
+                .thenReturn(DescribeSpotFleetRequestsResponse.builder()
+                .spotFleetRequestConfigs(SpotFleetRequestConfig.builder()
+                        .spotFleetRequestState(BatchState.ACTIVE)
+                        .spotFleetRequestConfig(SpotFleetRequestConfigData.builder()
+                                .targetCapacity(1)
+                                .launchSpecifications(
+                                        SpotFleetLaunchSpecification.builder().instanceType("t1").weightedCapacity(0.1)
+                                        .build(), 
+                                        SpotFleetLaunchSpecification.builder().instanceType("t2").weightedCapacity(12.0)
+                                        .build())
+                                .build())
+                        .build())
+                .build());
 
         FleetStateStats stats = new EC2SpotFleet().getState("cred", "region", "", "f");
 
@@ -165,14 +179,19 @@ public class EC2SpotFleetTest {
     @Test
     public void getState_returnInstanceTypeWeightsForLaunchSpecificationIfItHasIt() {
         when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenReturn(new DescribeSpotFleetRequestsResult()
-                        .withSpotFleetRequestConfigs(new SpotFleetRequestConfig()
-                                .withSpotFleetRequestState(BatchState.Active)
-                                .withSpotFleetRequestConfig(new SpotFleetRequestConfigData()
-                                        .withTargetCapacity(1)
-                                        .withLaunchSpecifications(
-                                                new SpotFleetLaunchSpecification().withInstanceType("t1"),
-                                                new SpotFleetLaunchSpecification().withWeightedCapacity(12.0)))));
+                .thenReturn(DescribeSpotFleetRequestsResponse.builder()
+                .spotFleetRequestConfigs(SpotFleetRequestConfig.builder()
+                        .spotFleetRequestState(BatchState.ACTIVE)
+                        .spotFleetRequestConfig(SpotFleetRequestConfigData.builder()
+                                .targetCapacity(1)
+                                .launchSpecifications(
+                                        SpotFleetLaunchSpecification.builder().instanceType("t1")
+                                        .build(), 
+                                        SpotFleetLaunchSpecification.builder().weightedCapacity(12.0)
+                                        .build())
+                                .build())
+                        .build())
+                .build());
 
         FleetStateStats stats = new EC2SpotFleet().getState("cred", "region", "", "f");
 
@@ -183,18 +202,23 @@ public class EC2SpotFleetTest {
     public void describe_whenAllFleetsEnabled_shouldIncludeAllFleetsInAllStates() {
         // given
         when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenReturn(new DescribeSpotFleetRequestsResult().withSpotFleetRequestConfigs(
-                        new SpotFleetRequestConfig()
-                                .withSpotFleetRequestId("f1")
-                                .withSpotFleetRequestState(BatchState.Active)
-                                .withSpotFleetRequestConfig(new SpotFleetRequestConfigData()
-                                        .withType(FleetType.Maintain)),
-                        new SpotFleetRequestConfig()
-                                .withSpotFleetRequestId("f2")
-                                .withSpotFleetRequestState(BatchState.Modifying)
-                                .withSpotFleetRequestConfig(new SpotFleetRequestConfigData()
-                                        .withType(FleetType.Request))
-                ));
+                .thenReturn(DescribeSpotFleetRequestsResponse.builder().spotFleetRequestConfigs(
+                SpotFleetRequestConfig.builder()
+                        .spotFleetRequestId("f1")
+                        .spotFleetRequestState(BatchState.ACTIVE)
+                        .spotFleetRequestConfig(SpotFleetRequestConfigData.builder()
+                                .type(FleetType.MAINTAIN)
+                                .build())
+                .build(), 
+                SpotFleetRequestConfig.builder()
+                        .spotFleetRequestId("f2")
+                        .spotFleetRequestState(BatchState.MODIFYING)
+                        .spotFleetRequestConfig(SpotFleetRequestConfigData.builder()
+                                .type(FleetType.REQUEST)
+                                .build())
+                .build()
+        )
+        .build());
         // when
         ListBoxModel model = new ListBoxModel();
         new EC2SpotFleet().describe("cred", "region", "", model, "selected", true);
@@ -208,18 +232,23 @@ public class EC2SpotFleetTest {
     public void describe_whenAllFleetsDisabled_shouldSkipNonMaintain() {
         // given
         when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenReturn(new DescribeSpotFleetRequestsResult().withSpotFleetRequestConfigs(
-                        new SpotFleetRequestConfig()
-                                .withSpotFleetRequestId("f1")
-                                .withSpotFleetRequestState(BatchState.Active)
-                                .withSpotFleetRequestConfig(new SpotFleetRequestConfigData()
-                                        .withType(FleetType.Maintain)),
-                        new SpotFleetRequestConfig()
-                                .withSpotFleetRequestId("f2")
-                                .withSpotFleetRequestState(BatchState.Active)
-                                .withSpotFleetRequestConfig(new SpotFleetRequestConfigData()
-                                        .withType(FleetType.Request))
-                ));
+                .thenReturn(DescribeSpotFleetRequestsResponse.builder().spotFleetRequestConfigs(
+                SpotFleetRequestConfig.builder()
+                        .spotFleetRequestId("f1")
+                        .spotFleetRequestState(BatchState.ACTIVE)
+                        .spotFleetRequestConfig(SpotFleetRequestConfigData.builder()
+                                .type(FleetType.MAINTAIN)
+                                .build())
+                .build(), 
+                SpotFleetRequestConfig.builder()
+                        .spotFleetRequestId("f2")
+                        .spotFleetRequestState(BatchState.ACTIVE)
+                        .spotFleetRequestConfig(SpotFleetRequestConfigData.builder()
+                                .type(FleetType.REQUEST)
+                                .build())
+                .build()
+        )
+        .build());
         // when
         ListBoxModel model = new ListBoxModel();
         new EC2SpotFleet().describe("cred", "region", "", model, "selected", false);
@@ -233,28 +262,37 @@ public class EC2SpotFleetTest {
     public void describe_whenAllFleetsDisabled_shouldSkipNonCancelledOrFailed() {
         // given
         when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenReturn(new DescribeSpotFleetRequestsResult().withSpotFleetRequestConfigs(
-                        new SpotFleetRequestConfig()
-                                .withSpotFleetRequestId("f1")
-                                .withSpotFleetRequestState(BatchState.Active)
-                                .withSpotFleetRequestConfig(new SpotFleetRequestConfigData()
-                                        .withType(FleetType.Maintain)),
-                        new SpotFleetRequestConfig()
-                                .withSpotFleetRequestId("f2")
-                                .withSpotFleetRequestState(BatchState.Cancelled_running)
-                                .withSpotFleetRequestConfig(new SpotFleetRequestConfigData()
-                                        .withType(FleetType.Maintain)),
-                        new SpotFleetRequestConfig()
-                                .withSpotFleetRequestId("f3")
-                                .withSpotFleetRequestState(BatchState.Cancelled_terminating)
-                                .withSpotFleetRequestConfig(new SpotFleetRequestConfigData()
-                                        .withType(FleetType.Maintain)),
-                        new SpotFleetRequestConfig()
-                                .withSpotFleetRequestId("f3")
-                                .withSpotFleetRequestState(BatchState.Failed)
-                                .withSpotFleetRequestConfig(new SpotFleetRequestConfigData()
-                                        .withType(FleetType.Maintain))
-                ));
+                .thenReturn(DescribeSpotFleetRequestsResponse.builder().spotFleetRequestConfigs(
+                SpotFleetRequestConfig.builder()
+                        .spotFleetRequestId("f1")
+                        .spotFleetRequestState(BatchState.ACTIVE)
+                        .spotFleetRequestConfig(SpotFleetRequestConfigData.builder()
+                                .type(FleetType.MAINTAIN)
+                                .build())
+                .build(), 
+                SpotFleetRequestConfig.builder()
+                        .spotFleetRequestId("f2")
+                        .spotFleetRequestState(BatchState.CANCELLED_RUNNING)
+                        .spotFleetRequestConfig(SpotFleetRequestConfigData.builder()
+                                .type(FleetType.MAINTAIN)
+                                .build())
+                .build(), 
+                SpotFleetRequestConfig.builder()
+                        .spotFleetRequestId("f3")
+                        .spotFleetRequestState(BatchState.CANCELLED_TERMINATING)
+                        .spotFleetRequestConfig(SpotFleetRequestConfigData.builder()
+                                .type(FleetType.MAINTAIN)
+                                .build())
+                .build(), 
+                SpotFleetRequestConfig.builder()
+                        .spotFleetRequestId("f3")
+                        .spotFleetRequestState(BatchState.FAILED)
+                        .spotFleetRequestConfig(SpotFleetRequestConfigData.builder()
+                                .type(FleetType.MAINTAIN)
+                                .build())
+                .build()
+        )
+        .build());
         // when
         ListBoxModel model = new ListBoxModel();
         new EC2SpotFleet().describe("cred", "region", "", model, "selected", false);
@@ -268,23 +306,30 @@ public class EC2SpotFleetTest {
     public void describe_whenAllFleetsDisabled_shouldIncludeSubmittedModifiedActive() {
         // given
         when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenReturn(new DescribeSpotFleetRequestsResult().withSpotFleetRequestConfigs(
-                        new SpotFleetRequestConfig()
-                                .withSpotFleetRequestId("f1")
-                                .withSpotFleetRequestState(BatchState.Active)
-                                .withSpotFleetRequestConfig(new SpotFleetRequestConfigData()
-                                        .withType(FleetType.Maintain)),
-                        new SpotFleetRequestConfig()
-                                .withSpotFleetRequestId("f2")
-                                .withSpotFleetRequestState(BatchState.Submitted)
-                                .withSpotFleetRequestConfig(new SpotFleetRequestConfigData()
-                                        .withType(FleetType.Maintain)),
-                        new SpotFleetRequestConfig()
-                                .withSpotFleetRequestId("f3")
-                                .withSpotFleetRequestState(BatchState.Modifying)
-                                .withSpotFleetRequestConfig(new SpotFleetRequestConfigData()
-                                        .withType(FleetType.Maintain))
-                ));
+                .thenReturn(DescribeSpotFleetRequestsResponse.builder().spotFleetRequestConfigs(
+                SpotFleetRequestConfig.builder()
+                        .spotFleetRequestId("f1")
+                        .spotFleetRequestState(BatchState.ACTIVE)
+                        .spotFleetRequestConfig(SpotFleetRequestConfigData.builder()
+                                .type(FleetType.MAINTAIN)
+                                .build())
+                .build(), 
+                SpotFleetRequestConfig.builder()
+                        .spotFleetRequestId("f2")
+                        .spotFleetRequestState(BatchState.SUBMITTED)
+                        .spotFleetRequestConfig(SpotFleetRequestConfigData.builder()
+                                .type(FleetType.MAINTAIN)
+                                .build())
+                .build(), 
+                SpotFleetRequestConfig.builder()
+                        .spotFleetRequestId("f3")
+                        .spotFleetRequestState(BatchState.MODIFYING)
+                        .spotFleetRequestConfig(SpotFleetRequestConfigData.builder()
+                                .type(FleetType.MAINTAIN)
+                                .build())
+                .build()
+        )
+        .build());
         // when
         ListBoxModel model = new ListBoxModel();
         new EC2SpotFleet().describe("cred", "region", "", model, "selected", false);
