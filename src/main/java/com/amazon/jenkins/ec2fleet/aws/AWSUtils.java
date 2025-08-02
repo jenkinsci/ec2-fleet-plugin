@@ -74,8 +74,8 @@ public final class AWSUtils {
      */
     public static AwsCredentialsProvider toSdkV2CredentialsProvider(AmazonWebServicesCredentials credentials) {
         if (credentials == null) return null;
-        String accessKey = credentials.getCredentials().getAWSAccessKeyId();
-        String secretKey = credentials.getCredentials().getAWSSecretKey();
+        String accessKey = credentials.resolveCredentials().accessKeyId();
+        String secretKey = credentials.resolveCredentials().secretAccessKey();
         AwsBasicCredentials awsCreds = AwsBasicCredentials.create(accessKey, secretKey);
         return StaticCredentialsProvider.create(awsCreds);
     }
