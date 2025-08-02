@@ -130,11 +130,6 @@
       <artifactId>aws-java-sdk2-cloudformation</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>aws-java-sdk</artifactId>
-      <version>1.12.780-480.v4a_0819121a_9e</version>
-    </dependency>
-    <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
       <version>4.5.14</version>
