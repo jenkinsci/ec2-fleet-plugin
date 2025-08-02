@@ -28,12 +28,7 @@ public class EC2SpotFleet implements EC2Fleet {
             final String awsCredentialsId, final String regionName, final String endpoint,
             final ListBoxModel model, final String selectedId, final boolean showAll) {
         final Ec2Client client = Registry.getEc2Api().connect(awsCredentialsId, regionName, endpoint);
-        String token = null;
-        do {
-            final DescribeSpotFleetRequestsRequest req = DescribeSpotFleetRequestsRequest.builder()
-                    .build();
-            req.nextToken(token);
-            final DescribeSpotFleetRequestsResponse result = client.describeSpotFleetRequests(req);
+        for (DescribeSpotFleetRequestsResponse result : client.describeSpotFleetRequestsPaginator(DescribeSpotFleetRequestsRequest.builder().build())) {
             for (final SpotFleetRequestConfig config : result.spotFleetRequestConfigs()) {
                 final String curFleetId = config.spotFleetRequestId();
                 final boolean selected = ObjectUtils.nullSafeEquals(selectedId, curFleetId);
@@ -44,13 +39,12 @@ public class EC2SpotFleet implements EC2Fleet {
                     model.add(new ListBoxModel.Option(displayStr, curFleetId, selected));
                 }
             }
-            token = result.nextToken();
-        } while (token != null);
+        }
     }
 
     /**
      * @param config - config
-     * @return return <code>true</code> not only for {@link BatchState#Active} but for any other
+     * @return return <code>true</code> not only for {@link BatchState#ACTIVE} but for any other
      * in which fleet in theory could accept load.
      */
     private static boolean isActiveAndMaintain(final SpotFleetRequestConfig config) {
@@ -73,10 +67,10 @@ public class EC2SpotFleet implements EC2Fleet {
             final String awsCredentialsId, final String regionName, final String endpoint,
             String id, int targetCapacity, int min, int max) {
         final ModifySpotFleetRequestRequest request = ModifySpotFleetRequestRequest.builder()
+                .spotFleetRequestId(id)
+                .targetCapacity(targetCapacity)
+                .excessCapacityTerminationPolicy("NoTermination")
                 .build();
-        request = request.toBuilder().spotFleetRequestId(id).build();
-        request = request.toBuilder().targetCapacity(targetCapacity).build();
-        request = request.toBuilder().excessCapacityTerminationPolicy("NoTermination").build();
 
         final Ec2Client ec2 = Registry.getEc2Api().connect(awsCredentialsId, regionName, endpoint);
         ec2.modifySpotFleetRequest(request);
@@ -92,9 +86,9 @@ public class EC2SpotFleet implements EC2Fleet {
         final Set<String> instances = new HashSet<>();
         do {
             final DescribeSpotFleetInstancesRequest request = DescribeSpotFleetInstancesRequest.builder()
+                    .spotFleetRequestId(id)
+                    .nextToken(token)
                     .build();
-            request = request.toBuilder().spotFleetRequestId(id).build();
-            request = request.toBuilder().nextToken(token).build();
             final DescribeSpotFleetInstancesResponse res = ec2.describeSpotFleetInstances(request);
             for (final ActiveInstance instance : res.activeInstances()) {
                 instances.add(instance.instanceId());
@@ -104,8 +98,8 @@ public class EC2SpotFleet implements EC2Fleet {
         } while (token != null);
 
         final DescribeSpotFleetRequestsRequest request = DescribeSpotFleetRequestsRequest.builder()
+                .spotFleetRequestIds(Collections.singleton(id))
                 .build();
-        request = request.toBuilder().spotFleetRequestIds(Collections.singleton(id)).build();
         final DescribeSpotFleetRequestsResponse fleet = ec2.describeSpotFleetRequests(request);
         if (fleet.spotFleetRequestConfigs().isEmpty())
             throw new IllegalStateException("Fleet " + id + " can't be described");
@@ -116,7 +110,7 @@ public class EC2SpotFleet implements EC2Fleet {
         // Index configured instance types by weight:
         final Map<String, Double> instanceTypeWeights = new HashMap<>();
         for (SpotFleetLaunchSpecification launchSpecification : fleetRequestConfig.launchSpecifications()) {
-            final String instanceType = launchSpecification.instanceType();
+            final String instanceType = String.valueOf(launchSpecification.instanceType());
             if (instanceType == null) continue;
 
             final Double instanceWeight = launchSpecification.weightedCapacity();
@@ -132,7 +126,7 @@ public class EC2SpotFleet implements EC2Fleet {
                 new FleetStateStats.State(
                         isActive(fleetConfig),
                         isModifying(fleetConfig),
-                        fleetConfig.spotFleetRequestState()),
+                        fleetConfig.spotFleetRequestState().toString()),
                 instances,
                 instanceTypeWeights);
     }
@@ -161,9 +155,9 @@ public class EC2SpotFleet implements EC2Fleet {
             state.instances = new HashSet<>();
             do {
                 final DescribeSpotFleetInstancesRequest request = DescribeSpotFleetInstancesRequest.builder()
+                        .spotFleetRequestId(state.id)
+                        .nextToken(token)
                         .build();
-                request = request.toBuilder().spotFleetRequestId(state.id).build();
-                request = request.toBuilder().nextToken(token).build();
                 final DescribeSpotFleetInstancesResponse res = ec2.describeSpotFleetInstances(request);
                 for (final ActiveInstance instance : res.activeInstances()) {
                     state.instances.add(instance.instanceId());
@@ -174,8 +168,8 @@ public class EC2SpotFleet implements EC2Fleet {
         }
 
         final DescribeSpotFleetRequestsRequest request = DescribeSpotFleetRequestsRequest.builder()
+                .spotFleetRequestIds(ids)
                 .build();
-        request = request.toBuilder().spotFleetRequestIds(ids).build();
         final DescribeSpotFleetRequestsResponse fleet = ec2.describeSpotFleetRequests(request);
         for (SpotFleetRequestConfig c : fleet.spotFleetRequestConfigs()) {
             for (State state : states) {
@@ -190,7 +184,7 @@ public class EC2SpotFleet implements EC2Fleet {
                     new FleetStateStats.State(
                             isActive(state.config),
                             isModifying(state.config),
-                            state.config.spotFleetRequestState()),
+                            state.config.spotFleetRequestState().toString()),
                     state.instances,
                     Collections.<String, Double>emptyMap()));
         }

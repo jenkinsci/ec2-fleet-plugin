@@ -10,6 +10,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
+import software.amazon.awssdk.services.cloudformation.CloudFormationClientBuilder;
 import software.amazon.awssdk.services.cloudformation.model.Capability;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackRequest;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackRequest;
@@ -21,22 +22,27 @@ import software.amazon.awssdk.services.cloudformation.model.StackStatus;
 import software.amazon.awssdk.services.cloudformation.model.Tag;
 
 import javax.annotation.Nullable;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
 public class CloudFormationApi {
 
     public CloudFormationClient connect(final String awsCredentialsId, final String regionName, final String endpoint) {
-        final ClientOverrideConfiguration clientConfiguration = AWSUtils.getClientConfiguration(endpoint);
+        final ClientOverrideConfiguration clientConfiguration = AWSUtils.getClientConfiguration();
         final AmazonWebServicesCredentials credentials = AWSCredentialsHelper.getCredentials(awsCredentialsId, Jenkins.get());
-        final CloudFormationClient client =
+        CloudFormationClientBuilder clientBuilder =
                 credentials != null ?
-                        new CloudFormationClient(credentials, clientConfiguration) :
-                        new CloudFormationClient(clientConfiguration);
+                        CloudFormationClient.builder()
+                                        .credentialsProvider(AWSUtils.toSdkV2CredentialsProvider(credentials))
+                                        .overrideConfiguration(clientConfiguration) :
+                        CloudFormationClient.builder()
+                                        .overrideConfiguration(clientConfiguration);
 
         final String effectiveEndpoint = getEndpoint(regionName, endpoint);
-        if (effectiveEndpoint != null) client.setEndpoint(effectiveEndpoint);
-        return client;
+        if (effectiveEndpoint != null) clientBuilder.endpointOverride(URI.create(effectiveEndpoint));
+        clientBuilder.httpClient(AWSUtils.getApacheHttpClient(endpoint));
+        return clientBuilder.build();
     }
 
     // todo do we want to merge with EC2Api#getEndpoint
@@ -131,7 +137,7 @@ public class CloudFormationApi {
                 if (stack.stackName().startsWith(fleetName)) {
                     final String fleetId = stack.outputs().isEmpty() ? null : stack.outputs().get(0).outputValue();
                     r.put(stack.tags().get(0).value(), new StackInfo(
-                            stack.stackId(), fleetId, StackStatus.valueOf(stack.stackStatus())));
+                            stack.stackId(), fleetId, StackStatus.valueOf(String.valueOf(stack.stackStatus()))));
                 }
             }
             nextToken = describeStacksResult.nextToken();

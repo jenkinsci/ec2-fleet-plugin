@@ -63,7 +63,7 @@ public class AutoScalingGroupFleetTest {
         mockedJenkins.when(Jenkins::get).thenReturn(jenkins);
 
         mockedAWSUtils = mockStatic(AWSUtils.class);
-        mockedAWSUtils.when(() -> AWSUtils.getClientConfiguration(ENDPOINT)).thenReturn(clientConfiguration);
+        mockedAWSUtils.when(AWSUtils::getClientConfiguration).thenReturn(clientConfiguration);
 
         mockedAWSCredentialsHelper = mockStatic(AWSCredentialsHelper.class);
     }

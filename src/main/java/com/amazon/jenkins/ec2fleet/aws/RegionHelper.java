@@ -33,14 +33,14 @@ public class RegionHelper {
             final Ec2Client client = Registry.getEc2Api().connect(awsCredentialsId, null, null);
             final DescribeRegionsResponse regions = client.describeRegions();
             regionDisplayNames.putAll(regions.regions().stream()
-                    .collect(Collectors.toMap(Region::getRegionName, Region::getRegionName)));
+                    .collect(Collectors.toMap(Region::regionName, Region::regionName)));
         } catch (final Exception ex) {
             // ignore exception it could be case that credentials are not belong to default region
             // which we are using to describe regions
         }
         // Add SDK regions as user can have latest SDK
-        regionDisplayNames.putAll(com.amazonaws.regions.RegionUtils.getRegions().stream()
-                .collect(Collectors.toMap(software.amazon.awssdk.regions.Region::getName, software.amazon.awssdk.regions.Region::getName)));
+        regionDisplayNames.putAll(software.amazon.awssdk.regions.Region.regions().stream()
+                .collect(Collectors.toMap(software.amazon.awssdk.regions.Region::id, software.amazon.awssdk.regions.Region::id)));
         // Add regions from enum as user may have older SDK
         regionDisplayNames.putAll(RegionInfo.getRegionNames().stream()
                 .collect(Collectors.toMap(r -> r, r -> r)));
@@ -54,7 +54,7 @@ public class RegionHelper {
                     regionDescription = region.getDescription();
                 } else {
                     // Fallback to SDK when region description not found in RegionInfo
-                    regionDescription = software.amazon.awssdk.regions.Region.of(regionName).getDescription();
+                    regionDescription = software.amazon.awssdk.regions.Region.of(regionName).metadata().description();
                 }
                 final String regionDisplayName = String.format("%s %s", regionName, regionDescription);
 

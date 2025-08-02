@@ -822,7 +822,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         final String instanceId = instance.instanceId();
 
         // instance state check enabled and not running, skip adding
-        if (addNodeOnlyIfRunning && InstanceStateName.RUNNING != InstanceStateName.fromValue(instance.state().name())) {
+        if (addNodeOnlyIfRunning && InstanceStateName.RUNNING != InstanceStateName.fromValue(String.valueOf(instance.state().name()))) {
             return;
         }
 
@@ -1060,7 +1060,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
         protected ExecutorScaler(){}
 
-        public abstract int scale(String instanceType, FleetStateStats stats, Ec2Client ec2);
+        public abstract int scale(InstanceType instanceType, FleetStateStats stats, Ec2Client ec2);
 
         public ExecutorScaler withNumExecutors(int numExecutors) {
             setNumExecutors(numExecutors);
@@ -1082,7 +1082,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         public NoScaler() {}
 
         @Override
-        public int scale(String instanceType, FleetStateStats stats, Ec2Client ec2) { return numExecutors; }
+        public int scale(InstanceType instanceType, FleetStateStats stats, Ec2Client ec2) { return numExecutors; }
 
         @Extension
         public static class DescriptorImpl extends ExecutorScaleDescriptor {
@@ -1096,7 +1096,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         @DataBoundConstructor
         public WeightedScaler() {}
         @Override
-        public int scale(String instanceType, FleetStateStats stats, Ec2Client ec2) {
+        public int scale(InstanceType instanceType, FleetStateStats stats, Ec2Client ec2) {
             if(stats == null) {
                 return numExecutors;
             }
@@ -1140,7 +1140,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         }
 
         @Override
-        public int scale(final String instanceType, final FleetStateStats stats, final Ec2Client ec2) {
+        public int scale(final InstanceType instanceType, final FleetStateStats stats, final Ec2Client ec2) {
             if(this.vCpuPerExecutor == 0 && this.memoryGiBPerExecutor == 0) {
                 return numExecutors;
             }
@@ -1154,7 +1154,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             }
 
             if(this.memoryGiBPerExecutor != 0) {
-                long instanceMemory = instanceTypeInfo.memoryInfo().sizeInMib()/1024;
+                long instanceMemory = instanceTypeInfo.memoryInfo().sizeInMiB()/1024;
                 memoryNumExecutors = Math.max(Math.round((float) instanceMemory /this.memoryGiBPerExecutor), 1);
             }
             return Math.min(vCPUNumExecutors, memoryNumExecutors);
@@ -1166,7 +1166,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             public String getDisplayName() { return "Scale by node hardware";}
         }
 
-        private InstanceTypeInfo getInstanceTypeInfo(final Ec2Client ec2, final String instanceType) {
+        private InstanceTypeInfo getInstanceTypeInfo(final Ec2Client ec2, final InstanceType instanceType) {
             DescribeInstanceTypesRequest request = DescribeInstanceTypesRequest.builder().instanceTypes(instanceType)
                     .build();
             DescribeInstanceTypesResponse result = ec2.describeInstanceTypes(request);

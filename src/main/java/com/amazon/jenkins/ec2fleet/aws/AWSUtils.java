@@ -1,14 +1,18 @@
 package com.amazon.jenkins.ec2fleet.aws;
 
-import com.amazonaws.retry.PredefinedRetryPolicies;
+import com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentials;
 import hudson.ProxyConfiguration;
 import jenkins.model.Jenkins;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.core.client.config.SdkAdvancedClientOption;
+import software.amazon.awssdk.core.retry.RetryMode;
+import software.amazon.awssdk.core.retry.RetryPolicy;
+import software.amazon.awssdk.http.apache.ApacheHttpClient;
 
-import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
-import java.net.Proxy;
-import java.net.URL;
+import java.net.*;
 
 public final class AWSUtils {
 
@@ -17,42 +21,63 @@ public final class AWSUtils {
 
     /**
      * Create {@link ClientOverrideConfiguration} for AWS-SDK with proper inited
-     * {@link ClientOverrideConfiguration#getUserAgentPrefix()} and proxy if
+     * {@link SdkAdvancedClientOption#USER_AGENT_PREFIX} and proxy if
      * Jenkins configured to use proxy
      *
-     * @param endpoint real endpoint which need to be called,
-     *                 required to find if proxy configured to bypass some of hosts
-     *                 and real host in that whitelist
      * @return client configuration
      */
-    public static ClientOverrideConfiguration getClientConfiguration(final String endpoint) {
-        final ClientOverrideConfiguration clientConfiguration = ClientOverrideConfiguration.builder()
-                .retryPolicy(PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(MAX_ERROR_RETRY))
-                .build();
-        clientConfiguration/*AWS SDK for Java v2 migration: userAgentPrefix override is a request-level config in v2. See https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/core/RequestOverrideConfiguration.Builder.html#addApiName(software.amazon.awssdk.core.ApiName).*/.setUserAgentPrefix(USER_AGENT_PREFIX);
+    public static ClientOverrideConfiguration getClientConfiguration() {
+        ClientOverrideConfiguration.Builder overrideConfig = ClientOverrideConfiguration.builder()
+                .retryPolicy(RetryPolicy.forRetryMode(RetryMode.STANDARD).builder().numRetries(MAX_ERROR_RETRY).build())
+                .putAdvancedOption(SdkAdvancedClientOption.USER_AGENT_PREFIX, USER_AGENT_PREFIX);
+        return overrideConfig.build();
+    }
 
+    /**
+     * Creates an {@link ApacheHttpClient} with proxy configuration if Jenkins is configured to use a proxy.
+     * If no proxy is configured, it returns a default ApacheHttpClient.
+     * @param endpoint real endpoint which need to be called,
+     *      *                 required to find if proxy configured to bypass some of hosts
+     *      *                 and real host in that whitelist
+     * @return http client
+     */
+    public static ApacheHttpClient getApacheHttpClient(final String endpoint) {
         final ProxyConfiguration proxyConfig = Jenkins.get().proxy;
         if (proxyConfig != null) {
-            Proxy proxy;
+            String host;
             try {
-                proxy = proxyConfig.createProxy(new URL(endpoint).getHost());
+                host = new URL(endpoint).getHost();
             } catch (MalformedURLException e) {
-                // no to fix it here, so just skip
-                proxy = proxyConfig.createProxy(endpoint);
+                host = endpoint;
             }
-
+            Proxy proxy = proxyConfig.createProxy(host);
             if (!proxy.equals(Proxy.NO_PROXY) && proxy.address() instanceof InetSocketAddress) {
                 InetSocketAddress address = (InetSocketAddress) proxy.address();
-                clientConfiguration.setProxyHost(address.getHostName());
-                clientConfiguration.setProxyPort(address.getPort());
-                if (null != proxyConfig.getUserName()) {
-                    clientConfiguration.setProxyUsername(proxyConfig.getUserName());
-                    clientConfiguration.setProxyPassword(proxyConfig.getSecretPassword().getPlainText());
+                String proxyHost = address.getHostName();
+                int proxyPort = address.getPort();
+                String proxyScheme = "http"; // Jenkins ProxyConfiguration does not expose scheme, default to http
+                URI proxyUri = URI.create(proxyScheme + "://" + proxyHost + ":" + proxyPort);
+                software.amazon.awssdk.http.apache.ProxyConfiguration.Builder sdkProxyBuilder = software.amazon.awssdk.http.apache.ProxyConfiguration.builder()
+                        .endpoint(proxyUri);
+                if (proxyConfig.getUserName() != null) {
+                    sdkProxyBuilder.username(proxyConfig.getUserName());
+                    sdkProxyBuilder.password(proxyConfig.getSecretPassword().getPlainText());
                 }
+                return (ApacheHttpClient) ApacheHttpClient.builder().proxyConfiguration(sdkProxyBuilder.build()).build();
             }
         }
+        return (ApacheHttpClient) ApacheHttpClient.builder().build();
+    }
 
-        return clientConfiguration;
+    /**
+     * Converts Jenkins AmazonWebServicesCredentials to AWS SDK v2 AwsCredentialsProvider.
+     */
+    public static AwsCredentialsProvider toSdkV2CredentialsProvider(AmazonWebServicesCredentials credentials) {
+        if (credentials == null) return null;
+        String accessKey = credentials.getCredentials().getAWSAccessKeyId();
+        String secretKey = credentials.getCredentials().getAWSSecretKey();
+        AwsBasicCredentials awsCreds = AwsBasicCredentials.create(accessKey, secretKey);
+        return StaticCredentialsProvider.create(awsCreds);
     }
 
     private AWSUtils() {

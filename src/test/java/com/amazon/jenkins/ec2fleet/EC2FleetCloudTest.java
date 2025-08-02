@@ -1760,7 +1760,7 @@ public class EC2FleetCloudTest {
                         InstanceTypeInfo.builder()
                                 .memoryInfo(
                                         MemoryInfo.builder()
-                                                .sizeInMib((long) 4 * MiB_TO_GiB_MULTIPLIER)
+                                                .sizeInMiB((long) 4 * MiB_TO_GiB_MULTIPLIER)
                                         .build())
                                 .vCpuInfo(
                                         VCpuInfo.builder()
@@ -1818,7 +1818,7 @@ public class EC2FleetCloudTest {
                         InstanceTypeInfo.builder()
                                 .memoryInfo(
                                         MemoryInfo.builder()
-                                                .sizeInMib((long) 6 * MiB_TO_GiB_MULTIPLIER)
+                                                .sizeInMiB((long) 6 * MiB_TO_GiB_MULTIPLIER)
                                         .build())
                                 .vCpuInfo(
                                         VCpuInfo.builder()
@@ -1876,7 +1876,7 @@ public class EC2FleetCloudTest {
                         InstanceTypeInfo.builder()
                                 .memoryInfo(
                                         MemoryInfo.builder()
-                                                .sizeInMib((long) 4 * MiB_TO_GiB_MULTIPLIER)
+                                                .sizeInMiB((long) 4 * MiB_TO_GiB_MULTIPLIER)
                                         .build())
                                 .vCpuInfo(
                                         VCpuInfo.builder()
@@ -1934,7 +1934,7 @@ public class EC2FleetCloudTest {
                         InstanceTypeInfo.builder()
                                 .memoryInfo(
                                         MemoryInfo.builder()
-                                                .sizeInMib((long) 3 * MiB_TO_GiB_MULTIPLIER)
+                                                .sizeInMiB((long) 3 * MiB_TO_GiB_MULTIPLIER)
                                         .build())
                                 .vCpuInfo(
                                         VCpuInfo.builder()
@@ -1992,7 +1992,7 @@ public class EC2FleetCloudTest {
                         InstanceTypeInfo.builder()
                                 .memoryInfo(
                                         MemoryInfo.builder()
-                                                .sizeInMib((long) 2 * MiB_TO_GiB_MULTIPLIER)
+                                                .sizeInMiB((long) 2 * MiB_TO_GiB_MULTIPLIER)
                                         .build())
                                 .vCpuInfo(
                                         VCpuInfo.builder()
@@ -2050,7 +2050,7 @@ public class EC2FleetCloudTest {
                         InstanceTypeInfo.builder()
                                 .memoryInfo(
                                         MemoryInfo.builder()
-                                                .sizeInMib((long) 4 * MiB_TO_GiB_MULTIPLIER)
+                                                .sizeInMiB((long) 4 * MiB_TO_GiB_MULTIPLIER)
                                         .build())
                                 .vCpuInfo(
                                         VCpuInfo.builder()
@@ -2108,7 +2108,7 @@ public class EC2FleetCloudTest {
                         InstanceTypeInfo.builder()
                                 .memoryInfo(
                                         MemoryInfo.builder()
-                                                .sizeInMib((long) 4 * MiB_TO_GiB_MULTIPLIER)
+                                                .sizeInMiB((long) 4 * MiB_TO_GiB_MULTIPLIER)
                                         .build())
                                 .vCpuInfo(
                                         VCpuInfo.builder()

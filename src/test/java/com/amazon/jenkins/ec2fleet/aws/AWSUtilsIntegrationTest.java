@@ -7,6 +7,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.http.apache.ApacheHttpClient;
+
+import java.lang.reflect.Field;
 
 public class AWSUtilsIntegrationTest {
 
@@ -17,38 +20,50 @@ public class AWSUtilsIntegrationTest {
     public JenkinsRule j = new JenkinsRule();
 
     @Test
-    public void getClientConfiguration_when_no_proxy_returns_configuration_without_proxy() {
+    public void getHttpClient_when_no_proxy_returns_configuration_without_proxy() throws NoSuchFieldException, IllegalAccessException {
         j.jenkins.proxy = null;
-        ClientOverrideConfiguration clientConfiguration = AWSUtils.getClientConfiguration("somehost");
-        Assert.assertNull(clientConfiguration.getProxyHost());
+        ApacheHttpClient client = AWSUtils.getApacheHttpClient("somehost");
+        Field proxyConfigField = client.getClass().getDeclaredField("proxyConfiguration");
+        proxyConfigField.setAccessible(true);
+        ProxyConfiguration proxyConfig = (ProxyConfiguration) proxyConfigField.get(client);
+        Assert.assertNull(proxyConfig);
     }
 
     @Test
-    public void getClientConfiguration_when_proxy_returns_configuration_with_proxy() {
+    public void getHttpClient_when_proxy_returns_configuration_with_proxy() throws NoSuchFieldException, IllegalAccessException {
         j.jenkins.proxy = new ProxyConfiguration(PROXY_HOST, PROXY_PORT);
-        ClientOverrideConfiguration clientConfiguration = AWSUtils.getClientConfiguration("somehost");
-        Assert.assertEquals(PROXY_HOST, clientConfiguration.getProxyHost());
-        Assert.assertEquals(PROXY_PORT, clientConfiguration.getProxyPort());
-        Assert.assertNull(clientConfiguration.getProxyUsername());
-        Assert.assertNull(clientConfiguration.getProxyPassword());
+        ApacheHttpClient client = AWSUtils.getApacheHttpClient("somehost");
+        Field proxyConfigField = client.getClass().getDeclaredField("proxyConfiguration");
+        proxyConfigField.setAccessible(true);
+        ProxyConfiguration proxyConfig = (ProxyConfiguration) proxyConfigField.get(client);
+        Assert.assertEquals(PROXY_HOST, proxyConfig.getName());
+        Assert.assertEquals(PROXY_PORT, proxyConfig.getPort());
+        Assert.assertNull(proxyConfig.getUserName());
+        Assert.assertNull(proxyConfig.getSecretPassword());
     }
 
     @Test
-    public void getClientConfiguration_when_proxy_with_credentials_returns_configuration_with_proxy() {
+    public void getHttpClient_when_proxy_with_credentials_returns_configuration_with_proxy() throws NoSuchFieldException, IllegalAccessException {
         j.jenkins.proxy = new ProxyConfiguration(PROXY_HOST, PROXY_PORT, "a", "b");
-        ClientOverrideConfiguration clientConfiguration = AWSUtils.getClientConfiguration("somehost");
-        Assert.assertEquals(PROXY_HOST, clientConfiguration.getProxyHost());
-        Assert.assertEquals(PROXY_PORT, clientConfiguration.getProxyPort());
-        Assert.assertEquals("a", clientConfiguration.getProxyUsername());
-        Assert.assertEquals("b", clientConfiguration.getProxyPassword());
+        ApacheHttpClient client = AWSUtils.getApacheHttpClient("somehost");
+        Field proxyConfigField = client.getClass().getDeclaredField("proxyConfiguration");
+        proxyConfigField.setAccessible(true);
+        ProxyConfiguration proxyConfig = (ProxyConfiguration) proxyConfigField.get(client);
+        Assert.assertEquals(PROXY_HOST, proxyConfig.getName());
+        Assert.assertEquals(PROXY_PORT, proxyConfig.getPort());
+        Assert.assertEquals("a", proxyConfig.getUserName());
+        Assert.assertEquals("b", proxyConfig.getPassword());
     }
 
     @Test
-    public void getClientConfiguration_when_endpoint_is_invalid_url_use_it_as_is() {
+    public void getHttpClient_when_endpoint_is_invalid_url_use_it_as_is() throws NoSuchFieldException, IllegalAccessException {
         j.jenkins.proxy = new ProxyConfiguration(PROXY_HOST, PROXY_PORT);
-        ClientOverrideConfiguration clientConfiguration = AWSUtils.getClientConfiguration("rumba");
-        Assert.assertEquals(PROXY_HOST, clientConfiguration.getProxyHost());
-        Assert.assertEquals(PROXY_PORT, clientConfiguration.getProxyPort());
+        ApacheHttpClient client = AWSUtils.getApacheHttpClient("rumba");
+        Field proxyConfigField = client.getClass().getDeclaredField("proxyConfiguration");
+        proxyConfigField.setAccessible(true);
+        ProxyConfiguration proxyConfig = (ProxyConfiguration) proxyConfigField.get(client);
+        Assert.assertEquals(PROXY_HOST, proxyConfig.getName());
+        Assert.assertEquals(PROXY_PORT, proxyConfig.getPort());
     }
 
 }

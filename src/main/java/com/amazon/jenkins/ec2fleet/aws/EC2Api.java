@@ -8,6 +8,7 @@ import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.Ec2ClientBuilder;
 import software.amazon.awssdk.services.ec2.model.CreateTagsRequest;
 import software.amazon.awssdk.services.ec2.model.DescribeInstancesRequest;
 import software.amazon.awssdk.services.ec2.model.DescribeInstancesResponse;
@@ -19,6 +20,7 @@ import software.amazon.awssdk.services.ec2.model.Tag;
 import software.amazon.awssdk.services.ec2.model.TerminateInstancesRequest;
 
 import javax.annotation.Nullable;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -90,9 +92,9 @@ public class EC2Api {
 
         // because instances could be terminated at any time we do multiple
         // retry to get status and all time remove from request all non found instances if any
-        while (copy.size() > 0) {
+        while (!copy.isEmpty()) {
             try {
-                final DescribeInstancesRequest request = DescribeInstancesRequest.builder().instanceIds(copy)
+                DescribeInstancesRequest request = DescribeInstancesRequest.builder().instanceIds(copy)
                         .build();
 
                 DescribeInstancesResponse result;
@@ -103,7 +105,7 @@ public class EC2Api {
                     for (final Reservation r : result.reservations()) {
                         for (final Instance instance : r.instances()) {
                             // if instance not in terminated state, add it to described
-                            if (!TERMINATED_STATES.contains(instance.state().name())) {
+                            if (!TERMINATED_STATES.contains(instance.state().name().toString())) {
                                 described.put(instance.instanceId(), instance);
                             }
                         }
@@ -138,9 +140,12 @@ public class EC2Api {
     public void terminateInstances(final Ec2Client ec2, final Collection<String> instanceIds) {
         final List<String> temp = new ArrayList<>(instanceIds);
         // Retry if termination failed due to NOT_FOUND_ERROR_CODE
-        while (temp.size() > 0) {
+        while (!temp.isEmpty()) {
             try {
-                ec2.terminateInstances(new TerminateInstancesRequest(temp));
+                TerminateInstancesRequest request = TerminateInstancesRequest.builder()
+                        .instanceIds(temp)
+                        .build();
+                ec2.terminateInstances(request);
                 // clear after successful termination
                 temp.clear();
             } catch (Ec2Exception exception) {
@@ -175,16 +180,20 @@ public class EC2Api {
     }
 
     public Ec2Client connect(final String awsCredentialsId, final String regionName, final String endpoint) {
-        final ClientOverrideConfiguration clientConfiguration = AWSUtils.getClientConfiguration(endpoint);
+        final ClientOverrideConfiguration clientConfiguration = AWSUtils.getClientConfiguration();
         final AmazonWebServicesCredentials credentials = AWSCredentialsHelper.getCredentials(awsCredentialsId, Jenkins.get());
-        final Ec2Client client =
+        Ec2ClientBuilder clientBuilder =
                 credentials != null ?
-                        new Ec2Client(credentials, clientConfiguration) :
-                        new Ec2Client(clientConfiguration);
+                        Ec2Client.builder()
+                                .credentialsProvider(AWSUtils.toSdkV2CredentialsProvider(credentials))
+                                .overrideConfiguration(clientConfiguration) :
+                        Ec2Client.builder()
+                                .overrideConfiguration(clientConfiguration);
 
         final String effectiveEndpoint = getEndpoint(regionName, endpoint);
-        if (effectiveEndpoint != null) client.setEndpoint(effectiveEndpoint);
-        return client;
+        if (effectiveEndpoint != null) clientBuilder.endpointOverride(URI.create(effectiveEndpoint));
+        clientBuilder.httpClient(AWSUtils.getApacheHttpClient(endpoint));
+        return clientBuilder.build();
     }
 
     /**

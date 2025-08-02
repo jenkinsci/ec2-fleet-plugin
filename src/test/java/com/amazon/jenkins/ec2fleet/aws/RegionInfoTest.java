@@ -5,6 +5,8 @@ import com.amazon.jenkins.ec2fleet.aws.RegionInfo;
 import org.junit.Test;
 import software.amazon.awssdk.regions.Region;
 
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
 
 public class RegionInfoTest {
@@ -12,10 +14,10 @@ public class RegionInfoTest {
     @Test
     public void verifyRegionInfoDescriptionIsSameAsSDK() {
         // Get regions from SDK
-        final Region[] regions = Region.values();
+        final List<Region> regions = Region.regions();
 
         for(final Region region : regions) {
-            assertEquals(RegionInfo.fromName(region.id()).getDescription(), region.getDescription());
+            assertEquals(RegionInfo.fromName(region.id()).getDescription(), region.metadata().description());
         }
     }
 }

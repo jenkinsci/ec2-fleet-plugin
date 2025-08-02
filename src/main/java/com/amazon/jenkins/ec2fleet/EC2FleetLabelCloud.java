@@ -590,7 +590,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
         final String instanceId = instance.instanceId();
 
         // instance state check enabled and not running, skip adding
-        if (InstanceStateName.RUNNING != InstanceStateName.fromValue(instance.state().name()))
+        if (InstanceStateName.RUNNING != instance.state().name())
             return;
 
         final String address = privateIpUsed ? instance.privateIpAddress() : instance.publicIpAddress();

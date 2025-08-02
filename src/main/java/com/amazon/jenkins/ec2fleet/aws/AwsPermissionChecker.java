@@ -6,6 +6,7 @@ import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.model.AmazonAutoScalingException;
 import com.amazonaws.services.ec2.AmazonEC2;
+import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.*;
 import org.apache.commons.lang.StringUtils;
 
@@ -43,7 +44,8 @@ public class AwsPermissionChecker {
     ;
 
     public List<String> getMissingPermissions(final String fleet) {
-        final AmazonEC2 ec2Client = Registry.getEc2Api().connect(awsCrendentialsId, regionName, endpoint);
+        //final AmazonEC2 ec2Client = Registry.getEc2Api().connect(awsCrendentialsId, regionName, endpoint);
+        final AmazonEC2 ec2Client = new AmazonEC2Client();
         final List<String> missingPermissions = new ArrayList<>(getMissingCommonPermissions(ec2Client));
         if (StringUtils.isBlank(fleet)) { // Since we don't know the fleet type, show all permissions
             missingPermissions.addAll(getMissingPermissionsForEC2SpotFleet(ec2Client, fleet));
@@ -88,7 +90,8 @@ public class AwsPermissionChecker {
     }
 
     private List<String> getMissingPermissionsForASG() {
-        final AmazonAutoScalingClient asgClient = new AutoScalingGroupFleet().createClient(awsCrendentialsId, regionName, endpoint);
+        //final AmazonAutoScalingClient asgClient = new AutoScalingGroupFleet().createClient(awsCrendentialsId, regionName, endpoint);
+        final AmazonAutoScalingClient asgClient = new AmazonAutoScalingClient();
         List<String> missingAsgPermissions = new ArrayList<>();
         if (!hasDescribeAutoScalingGroupsPermission(asgClient)) {
             missingAsgPermissions.add(FleetAPI.DescribeAutoScalingGroups.name());

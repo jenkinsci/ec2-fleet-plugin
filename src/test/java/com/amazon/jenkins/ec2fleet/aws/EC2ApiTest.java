@@ -7,6 +7,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
 import software.amazon.awssdk.services.ec2.Ec2Client;
 import software.amazon.awssdk.services.ec2.model.*;
 
@@ -83,8 +84,7 @@ public class EC2ApiTest {
         Set<String> instanceIds = new HashSet<>();
         instanceIds.add("i-1");
 
-        final Ec2Exception exception = new Ec2Exception("NOT INSTANCE NOT FOUND");
-        exception = exception.toBuilder().errorCode("NOT INSTANCE_NOT_FOUND_ERROR_CODE").build();
+        final Ec2Exception exception = (Ec2Exception) Ec2Exception.builder().message("NOT INSTANCE NOT FOUND").awsErrorDetails(AwsErrorDetails.builder().errorCode("NOT INSTANCE_NOT_FOUND_ERROR_CODE").build()).build();
         when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class)))
                 .thenThrow(exception);
 
@@ -274,9 +274,7 @@ public class EC2ApiTest {
         instanceIds.add("i-f");
         instanceIds.add("i-3");
 
-        Ec2Exception notFoundException = new Ec2Exception(
-                "The instance IDs 'i-1, i-f' do not exist");
-        notFoundException = notFoundException.toBuilder().errorCode("InvalidInstanceID.NotFound").build();
+        Ec2Exception notFoundException = (Ec2Exception) Ec2Exception.builder().message("The instance IDs 'i-1, i-f' do not exist").awsErrorDetails(AwsErrorDetails.builder().errorCode("InvalidInstanceID.NotFound").build()).build();
 
         final Instance instance3 = Instance.builder().instanceId("i-3")
                 .state(InstanceState.builder().name(InstanceStateName.RUNNING)
@@ -312,9 +310,7 @@ public class EC2ApiTest {
         instanceIds.add("i-f");
         instanceIds.add("i-3");
 
-        Ec2Exception notFoundException = new Ec2Exception(
-                "unparseable");
-        notFoundException = notFoundException.toBuilder().errorCode("InvalidInstanceID.NotFound").build();
+        Ec2Exception notFoundException = (Ec2Exception) Ec2Exception.builder().message("unparseable").awsErrorDetails(AwsErrorDetails.builder().errorCode("InvalidInstanceID.NotFound").build()).build();
 
         when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class)))
                 .thenThrow(notFoundException);
@@ -424,8 +420,7 @@ public class EC2ApiTest {
 
     @Test (expected = Ec2Exception.class)
     public void testTerminateInstanceRethrowException() {
-        final Ec2Exception exception = new Ec2Exception("You are not authorized to perform this operation");
-        exception = exception.toBuilder().errorCode("403").build();
+        final Ec2Exception exception = (Ec2Exception) Ec2Exception.builder().message("You are not authorized to perform this operation").statusCode(403).build();
         when(amazonEC2.terminateInstances(TerminateInstancesRequest.builder().instanceIds(Arrays.asList("i-123"))
                         .build()))
                 .thenThrow(exception);

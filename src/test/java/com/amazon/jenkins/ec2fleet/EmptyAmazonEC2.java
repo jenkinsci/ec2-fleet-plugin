@@ -7,18 +7,11 @@ import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.ec2.Ec2Client;
 import software.amazon.awssdk.services.ec2.model.*;
-import software.amazon.awssdk.services.ec2.waiters.Ec2WaitersClient;
+import software.amazon.awssdk.services.ec2.waiters.Ec2Waiter;
+
+import java.util.function.Consumer;
 
 public class EmptyAmazonEC2 implements Ec2Client {
-    @Override
-    public void setEndpoint(String endpoint) {
-
-    }
-
-    @Override
-    public void setRegion(Region region) {
-
-    }
 
     @Override
     public AcceptAddressTransferResponse acceptAddressTransfer(AcceptAddressTransferRequest acceptAddressTransferRequest) {
@@ -56,7 +49,7 @@ public class EmptyAmazonEC2 implements Ec2Client {
     }
 
     @Override
-    public AcceptVpcPeeringConnectionResponse acceptVpcPeeringConnection() {
+    public AcceptVpcPeeringConnectionResponse acceptVpcPeeringConnection(Consumer<AcceptVpcPeeringConnectionRequest.Builder> acceptVpcPeeringConnectionRequest) {
         return null;
     }
 
@@ -271,7 +264,7 @@ public class EmptyAmazonEC2 implements Ec2Client {
     }
 
     @Override
-    public CancelImportTaskResponse cancelImportTask() {
+    public CancelImportTaskResponse cancelImportTask(Consumer<CancelImportTaskRequest.Builder> cancelImportTaskRequest) {
         return null;
     }
 
@@ -716,7 +709,7 @@ public class EmptyAmazonEC2 implements Ec2Client {
     }
 
     @Override
-    public CreateVpcPeeringConnectionResponse createVpcPeeringConnection() {
+    public CreateVpcPeeringConnectionResponse createVpcPeeringConnection(Consumer<CreateVpcPeeringConnectionRequest.Builder> createVpcPeeringConnectionRequest) {
         return null;
     }
 
@@ -2411,7 +2404,7 @@ public class EmptyAmazonEC2 implements Ec2Client {
     }
 
     @Override
-    public EnableVolumeIOResponse enableVolumeIO(EnableVolumeIoRequest enableVolumeIORequest) {
+    public EnableVolumeIoResponse enableVolumeIO(EnableVolumeIoRequest enableVolumeIORequest) {
         return null;
     }
 
@@ -2701,7 +2694,7 @@ public class EmptyAmazonEC2 implements Ec2Client {
     }
 
     @Override
-    public ImportImageResponse importImage() {
+    public ImportImageResponse importImage(Consumer<ImportImageRequest.Builder> importImageRequest) {
         return null;
     }
 
@@ -2721,7 +2714,7 @@ public class EmptyAmazonEC2 implements Ec2Client {
     }
 
     @Override
-    public ImportSnapshotResponse importSnapshot() {
+    public ImportSnapshotResponse importSnapshot(Consumer<ImportSnapshotRequest.Builder> importSnapshotRequest) {
         return null;
     }
 
@@ -3316,7 +3309,7 @@ public class EmptyAmazonEC2 implements Ec2Client {
     }
 
     @Override
-    public RevokeSecurityGroupIngressResponse revokeSecurityGroupIngress() {
+    public RevokeSecurityGroupIngressResponse revokeSecurityGroupIngress(Consumer<RevokeSecurityGroupIngressRequest.Builder> revokeSecurityGroupIngressRequest) {
         return null;
     }
 
@@ -3425,23 +3418,19 @@ public class EmptyAmazonEC2 implements Ec2Client {
         return null;
     }
 
+
     @Override
-    public <X extends AmazonWebServiceRequest> DryRunResponse<X> dryRun(DryRunSupportedRequest<X> request) throws AwsServiceException, SdkException {
+    public Ec2Waiter waiter() {
         return null;
     }
 
     @Override
-    public void shutdown() {
-
+    public String serviceName() {
+        return "";
     }
 
     @Override
-    public ResponseMetadata getCachedResponseMetadata(AmazonWebServiceRequest request) {
-        return null;
-    }
+    public void close() {
 
-    @Override
-    public Ec2WaitersClient waiters() {
-        return null;
     }
 }

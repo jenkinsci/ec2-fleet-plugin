@@ -12,10 +12,12 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.util.ObjectUtils;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.services.autoscaling.AutoScalingClient;
+import software.amazon.awssdk.services.autoscaling.AutoScalingClientBuilder;
 import software.amazon.awssdk.services.autoscaling.model.*;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
+import java.net.URI;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -30,20 +32,16 @@ public class AutoScalingGroupFleet implements EC2Fleet {
             final String awsCredentialsId, final String regionName, final String endpoint,
             final ListBoxModel model, final String selectedId, final boolean showAll) {
         final AutoScalingClient client = createClient(awsCredentialsId, regionName, endpoint);
-        String token = null;
-        do {
-            final DescribeAutoScalingGroupsRequest request = DescribeAutoScalingGroupsRequest.builder()
-                    .build();
-            request.nextToken(token);
-            final DescribeAutoScalingGroupsResponse result = client.describeAutoScalingGroups(request);
+        final DescribeAutoScalingGroupsRequest request = DescribeAutoScalingGroupsRequest.builder()
+                .build();
+        for (DescribeAutoScalingGroupsResponse result : client.describeAutoScalingGroupsPaginator(request)) {
             for (final AutoScalingGroup group : result.autoScalingGroups()) {
                 final String curName = group.autoScalingGroupName();
                 final boolean selected = ObjectUtils.nullSafeEquals(selectedId, curName);
                 final String displayStr = "Auto Scaling Group - " + curName;
                 model.add(new ListBoxModel.Option(displayStr, curName, selected));
             }
-            token = result.nextToken();
-        } while (token != null);
+        }
     }
 
     @Override
@@ -86,11 +84,11 @@ public class AutoScalingGroupFleet implements EC2Fleet {
         }
 
         Map<String, Double> instanceWeights = Optional.ofNullable(group.mixedInstancesPolicy())
-                .map(MixedInstancesPolicy::getLaunchTemplate)
-                .map(LaunchTemplate::getOverrides)
+                .map(MixedInstancesPolicy::launchTemplate)
+                .map(LaunchTemplate::overrides)
                 .map(overrides -> overrides.stream()
                         .filter(o -> o.weightedCapacity() != null)
-                        .collect(Collectors.toMap(LaunchTemplateOverrides::getInstanceType,
+                        .collect(Collectors.toMap(LaunchTemplateOverrides::instanceType,
                                 override -> Double.parseDouble(override.weightedCapacity()))))
                 .orElse(Collections.emptyMap());
 
@@ -115,14 +113,18 @@ public class AutoScalingGroupFleet implements EC2Fleet {
     public AutoScalingClient createClient(
             final String awsCredentialsId, final String regionName, final String endpoint) {
         final AmazonWebServicesCredentials credentials = AWSCredentialsHelper.getCredentials(awsCredentialsId, Jenkins.get());
-        final ClientOverrideConfiguration clientConfiguration = AWSUtils.getClientConfiguration(endpoint);
-        final AutoScalingClient client =
+        final ClientOverrideConfiguration clientConfiguration = AWSUtils.getClientConfiguration();
+        final AutoScalingClientBuilder clientBuilder =
                 credentials != null ?
-                        new AutoScalingClient(credentials, clientConfiguration) :
-                        new AutoScalingClient(clientConfiguration);
+                        AutoScalingClient.builder()
+                                .credentialsProvider(AWSUtils.toSdkV2CredentialsProvider(credentials))
+                                .overrideConfiguration(clientConfiguration) :
+                        AutoScalingClient.builder()
+                                .overrideConfiguration(clientConfiguration);
         final String effectiveEndpoint = getEndpoint(regionName, endpoint);
-        if (effectiveEndpoint != null) client.setEndpoint(effectiveEndpoint);
-        return client;
+        if (effectiveEndpoint != null) clientBuilder.endpointOverride(URI.create(effectiveEndpoint));
+        clientBuilder.httpClient(AWSUtils.getApacheHttpClient(endpoint));
+        return clientBuilder.build();
     }
 
     public void terminateInstances(final String awsCredentialsId, final String regionName, final String endpoint, final Collection<String> instanceIds) {

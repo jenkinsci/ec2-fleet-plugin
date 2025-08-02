@@ -157,7 +157,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
         }
         cloud.update();
 
-        verify((amazonEC2), times(0)).terminateInstances(any());
+        verify((amazonEC2), times(0)).terminateInstances((TerminateInstancesRequest) any());
         cancelTasks(rs);
     }
 
@@ -213,7 +213,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
         }
         cloud.update();
 
-        verify((amazonEC2), times(0)).terminateInstances(any());
+        verify((amazonEC2), times(0)).terminateInstances((TerminateInstancesRequest) any());
     }
 
     @Test
@@ -237,7 +237,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
         }
         cloud.update();
 
-        verify((amazonEC2), times(0)).terminateInstances(any());
+        verify((amazonEC2), times(0)).terminateInstances((TerminateInstancesRequest) any());
     }
 
     @Test
