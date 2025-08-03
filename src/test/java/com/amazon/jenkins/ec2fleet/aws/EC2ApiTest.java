@@ -84,7 +84,7 @@ public class EC2ApiTest {
         Set<String> instanceIds = new HashSet<>();
         instanceIds.add("i-1");
 
-        final Ec2Exception exception = (Ec2Exception) Ec2Exception.builder().message("NOT INSTANCE NOT FOUND").awsErrorDetails(AwsErrorDetails.builder().errorCode("NOT INSTANCE_NOT_FOUND_ERROR_CODE").build()).build();
+        final Ec2Exception exception = (Ec2Exception) Ec2Exception.builder().message("NOT INSTANCE NOT FOUND").awsErrorDetails(AwsErrorDetails.builder().errorCode("NOT INSTANCE_NOT_FOUND_ERROR_CODE").errorMessage("NOT INSTANCE NOT FOUND").build()).build();
         when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class)))
                 .thenThrow(exception);
 
@@ -420,7 +420,7 @@ public class EC2ApiTest {
 
     @Test (expected = Ec2Exception.class)
     public void testTerminateInstanceRethrowException() {
-        final Ec2Exception exception = (Ec2Exception) Ec2Exception.builder().message("You are not authorized to perform this operation").statusCode(403).build();
+        final Ec2Exception exception = (Ec2Exception) Ec2Exception.builder().message("You are not authorized to perform this operation").awsErrorDetails(AwsErrorDetails.builder().errorCode("403").build()).build();
         when(amazonEC2.terminateInstances(TerminateInstancesRequest.builder().instanceIds(Arrays.asList("i-123"))
                         .build()))
                 .thenThrow(exception);

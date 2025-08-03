@@ -1,12 +1,10 @@
 package com.amazon.jenkins.ec2fleet.aws;
 
-import com.amazon.jenkins.ec2fleet.aws.AWSUtils;
 import hudson.ProxyConfiguration;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
 
 import java.lang.reflect.Field;
