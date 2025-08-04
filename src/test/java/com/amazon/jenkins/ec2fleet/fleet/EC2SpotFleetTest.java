@@ -25,8 +25,7 @@ import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class EC2SpotFleetTest {
@@ -221,7 +220,7 @@ public class EC2SpotFleetTest {
                 .build()
         )
         .build();
-        when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class))).thenReturn(response);
+        lenient().when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class))).thenReturn(response);
         // paginator mock
         software.amazon.awssdk.services.ec2.paginators.DescribeSpotFleetRequestsIterable paginator = Mockito.mock(software.amazon.awssdk.services.ec2.paginators.DescribeSpotFleetRequestsIterable.class);
         when(paginator.iterator()).thenReturn(Collections.singleton(response).iterator());
@@ -255,7 +254,7 @@ public class EC2SpotFleetTest {
                 .build()
         )
         .build();
-        when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class))).thenReturn(response);
+        lenient().when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class))).thenReturn(response);
         // paginator mock
         software.amazon.awssdk.services.ec2.paginators.DescribeSpotFleetRequestsIterable paginator = Mockito.mock(software.amazon.awssdk.services.ec2.paginators.DescribeSpotFleetRequestsIterable.class);
         when(paginator.iterator()).thenReturn(Collections.singleton(response).iterator());
@@ -303,7 +302,7 @@ public class EC2SpotFleetTest {
                 .build()
         )
         .build();
-        when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class))).thenReturn(response);
+        lenient().when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class))).thenReturn(response);
         // paginator mock
         software.amazon.awssdk.services.ec2.paginators.DescribeSpotFleetRequestsIterable paginator = Mockito.mock(software.amazon.awssdk.services.ec2.paginators.DescribeSpotFleetRequestsIterable.class);
         when(paginator.iterator()).thenReturn(Collections.singleton(response).iterator());
@@ -344,7 +343,7 @@ public class EC2SpotFleetTest {
                 .build()
         )
         .build();
-        when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class))).thenReturn(response);
+        lenient().when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class))).thenReturn(response);
         // paginator mock
         software.amazon.awssdk.services.ec2.paginators.DescribeSpotFleetRequestsIterable paginator = Mockito.mock(software.amazon.awssdk.services.ec2.paginators.DescribeSpotFleetRequestsIterable.class);
         when(paginator.iterator()).thenReturn(Collections.singleton(response).iterator());

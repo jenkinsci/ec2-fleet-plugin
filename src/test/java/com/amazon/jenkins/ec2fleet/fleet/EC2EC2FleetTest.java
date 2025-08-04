@@ -19,8 +19,7 @@ import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class EC2EC2FleetTest {
@@ -338,7 +337,7 @@ public class EC2EC2FleetTest {
                         .type(FleetType.REQUEST)
                 .build())
                 .build();
-        when(ec2.describeFleets(any(DescribeFleetsRequest.class))).thenReturn(response);
+        lenient().when(ec2.describeFleets(any(DescribeFleetsRequest.class))).thenReturn(response);
         // paginator mock
         software.amazon.awssdk.services.ec2.paginators.DescribeFleetsIterable paginator = Mockito.mock(software.amazon.awssdk.services.ec2.paginators.DescribeFleetsIterable.class);
         when(paginator.iterator()).thenReturn(Collections.singleton(response).iterator());
@@ -367,7 +366,7 @@ public class EC2EC2FleetTest {
                         .type(FleetType.REQUEST)
                 .build())
                 .build();
-        when(ec2.describeFleets(any(DescribeFleetsRequest.class))).thenReturn(response);
+        lenient().when(ec2.describeFleets(any(DescribeFleetsRequest.class))).thenReturn(response);
         // paginator mock
         software.amazon.awssdk.services.ec2.paginators.DescribeFleetsIterable paginator = Mockito.mock(software.amazon.awssdk.services.ec2.paginators.DescribeFleetsIterable.class);
         when(paginator.iterator()).thenReturn(Collections.singleton(response).iterator());
@@ -406,7 +405,7 @@ public class EC2EC2FleetTest {
                         .type(FleetType.MAINTAIN)
                 .build())
                 .build();
-        when(ec2.describeFleets(any(DescribeFleetsRequest.class))).thenReturn(response);
+        lenient().when(ec2.describeFleets(any(DescribeFleetsRequest.class))).thenReturn(response);
         // paginator mock
         software.amazon.awssdk.services.ec2.paginators.DescribeFleetsIterable paginator = Mockito.mock(software.amazon.awssdk.services.ec2.paginators.DescribeFleetsIterable.class);
         when(paginator.iterator()).thenReturn(Collections.singleton(response).iterator());
@@ -440,7 +439,7 @@ public class EC2EC2FleetTest {
                         .type(FleetType.MAINTAIN)
                 .build())
                 .build();
-        when(ec2.describeFleets(any(DescribeFleetsRequest.class))).thenReturn(response);
+        lenient().when(ec2.describeFleets(any(DescribeFleetsRequest.class))).thenReturn(response);
         // paginator mock
         software.amazon.awssdk.services.ec2.paginators.DescribeFleetsIterable paginator = Mockito.mock(software.amazon.awssdk.services.ec2.paginators.DescribeFleetsIterable.class);
         when(paginator.iterator()).thenReturn(Collections.singleton(response).iterator());
