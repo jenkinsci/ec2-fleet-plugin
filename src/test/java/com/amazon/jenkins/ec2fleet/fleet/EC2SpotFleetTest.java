@@ -10,6 +10,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import software.amazon.awssdk.services.ec2.Ec2Client;
 import software.amazon.awssdk.services.ec2.model.*;
@@ -18,6 +19,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -160,9 +163,9 @@ public class EC2SpotFleetTest {
                         .spotFleetRequestConfig(SpotFleetRequestConfigData.builder()
                                 .targetCapacity(1)
                                 .launchSpecifications(
-                                        SpotFleetLaunchSpecification.builder().instanceType("t1").weightedCapacity(0.1)
+                                        SpotFleetLaunchSpecification.builder().instanceType("t3a.small").weightedCapacity(0.1)
                                         .build(), 
-                                        SpotFleetLaunchSpecification.builder().instanceType("t2").weightedCapacity(12.0)
+                                        SpotFleetLaunchSpecification.builder().instanceType("t3a.medium").weightedCapacity(12.0)
                                         .build())
                                 .build())
                         .build())
@@ -171,8 +174,8 @@ public class EC2SpotFleetTest {
         FleetStateStats stats = new EC2SpotFleet().getState("cred", "region", "", "f");
 
         Map<String, Double> expected = new HashMap<>();
-        expected.put("t1", 0.1);
-        expected.put("t2", 12.0);
+        expected.put("t3a.small", 0.1);
+        expected.put("t3a.medium", 12.0);
         Assert.assertEquals(expected, stats.getInstanceTypeWeights());
     }
 
@@ -201,8 +204,7 @@ public class EC2SpotFleetTest {
     @Test
     public void describe_whenAllFleetsEnabled_shouldIncludeAllFleetsInAllStates() {
         // given
-        when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenReturn(DescribeSpotFleetRequestsResponse.builder().spotFleetRequestConfigs(
+        DescribeSpotFleetRequestsResponse response = DescribeSpotFleetRequestsResponse.builder().spotFleetRequestConfigs(
                 SpotFleetRequestConfig.builder()
                         .spotFleetRequestId("f1")
                         .spotFleetRequestState(BatchState.ACTIVE)
@@ -218,7 +220,12 @@ public class EC2SpotFleetTest {
                                 .build())
                 .build()
         )
-        .build());
+        .build();
+        when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class))).thenReturn(response);
+        // paginator mock
+        software.amazon.awssdk.services.ec2.paginators.DescribeSpotFleetRequestsIterable paginator = Mockito.mock(software.amazon.awssdk.services.ec2.paginators.DescribeSpotFleetRequestsIterable.class);
+        when(paginator.iterator()).thenReturn(Collections.singleton(response).iterator());
+        when(ec2.describeSpotFleetRequestsPaginator(any(DescribeSpotFleetRequestsRequest.class))).thenReturn(paginator);
         // when
         ListBoxModel model = new ListBoxModel();
         new EC2SpotFleet().describe("cred", "region", "", model, "selected", true);
@@ -231,8 +238,7 @@ public class EC2SpotFleetTest {
     @Test
     public void describe_whenAllFleetsDisabled_shouldSkipNonMaintain() {
         // given
-        when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenReturn(DescribeSpotFleetRequestsResponse.builder().spotFleetRequestConfigs(
+        DescribeSpotFleetRequestsResponse response = DescribeSpotFleetRequestsResponse.builder().spotFleetRequestConfigs(
                 SpotFleetRequestConfig.builder()
                         .spotFleetRequestId("f1")
                         .spotFleetRequestState(BatchState.ACTIVE)
@@ -248,7 +254,12 @@ public class EC2SpotFleetTest {
                                 .build())
                 .build()
         )
-        .build());
+        .build();
+        when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class))).thenReturn(response);
+        // paginator mock
+        software.amazon.awssdk.services.ec2.paginators.DescribeSpotFleetRequestsIterable paginator = Mockito.mock(software.amazon.awssdk.services.ec2.paginators.DescribeSpotFleetRequestsIterable.class);
+        when(paginator.iterator()).thenReturn(Collections.singleton(response).iterator());
+        when(ec2.describeSpotFleetRequestsPaginator(any(DescribeSpotFleetRequestsRequest.class))).thenReturn(paginator);
         // when
         ListBoxModel model = new ListBoxModel();
         new EC2SpotFleet().describe("cred", "region", "", model, "selected", false);
@@ -261,8 +272,7 @@ public class EC2SpotFleetTest {
     @Test
     public void describe_whenAllFleetsDisabled_shouldSkipNonCancelledOrFailed() {
         // given
-        when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenReturn(DescribeSpotFleetRequestsResponse.builder().spotFleetRequestConfigs(
+        DescribeSpotFleetRequestsResponse response = DescribeSpotFleetRequestsResponse.builder().spotFleetRequestConfigs(
                 SpotFleetRequestConfig.builder()
                         .spotFleetRequestId("f1")
                         .spotFleetRequestState(BatchState.ACTIVE)
@@ -292,7 +302,12 @@ public class EC2SpotFleetTest {
                                 .build())
                 .build()
         )
-        .build());
+        .build();
+        when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class))).thenReturn(response);
+        // paginator mock
+        software.amazon.awssdk.services.ec2.paginators.DescribeSpotFleetRequestsIterable paginator = Mockito.mock(software.amazon.awssdk.services.ec2.paginators.DescribeSpotFleetRequestsIterable.class);
+        when(paginator.iterator()).thenReturn(Collections.singleton(response).iterator());
+        when(ec2.describeSpotFleetRequestsPaginator(any(DescribeSpotFleetRequestsRequest.class))).thenReturn(paginator);
         // when
         ListBoxModel model = new ListBoxModel();
         new EC2SpotFleet().describe("cred", "region", "", model, "selected", false);
@@ -305,8 +320,7 @@ public class EC2SpotFleetTest {
     @Test
     public void describe_whenAllFleetsDisabled_shouldIncludeSubmittedModifiedActive() {
         // given
-        when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenReturn(DescribeSpotFleetRequestsResponse.builder().spotFleetRequestConfigs(
+        DescribeSpotFleetRequestsResponse response = DescribeSpotFleetRequestsResponse.builder().spotFleetRequestConfigs(
                 SpotFleetRequestConfig.builder()
                         .spotFleetRequestId("f1")
                         .spotFleetRequestState(BatchState.ACTIVE)
@@ -329,7 +343,12 @@ public class EC2SpotFleetTest {
                                 .build())
                 .build()
         )
-        .build());
+        .build();
+        when(ec2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class))).thenReturn(response);
+        // paginator mock
+        software.amazon.awssdk.services.ec2.paginators.DescribeSpotFleetRequestsIterable paginator = Mockito.mock(software.amazon.awssdk.services.ec2.paginators.DescribeSpotFleetRequestsIterable.class);
+        when(paginator.iterator()).thenReturn(Collections.singleton(response).iterator());
+        when(ec2.describeSpotFleetRequestsPaginator(any(DescribeSpotFleetRequestsRequest.class))).thenReturn(paginator);
         // when
         ListBoxModel model = new ListBoxModel();
         new EC2SpotFleet().describe("cred", "region", "", model, "selected", false);

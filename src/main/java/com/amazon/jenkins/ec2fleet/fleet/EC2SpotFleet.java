@@ -48,18 +48,18 @@ public class EC2SpotFleet implements EC2Fleet {
      * in which fleet in theory could accept load.
      */
     private static boolean isActiveAndMaintain(final SpotFleetRequestConfig config) {
-        return FleetType.MAINTAIN.toString().equals(config.spotFleetRequestConfig().type()) && isActive(config);
+        return FleetType.MAINTAIN.toString().equals(String.valueOf(config.spotFleetRequestConfig().type())) && isActive(config);
     }
 
     private static boolean isActive(final SpotFleetRequestConfig config) {
-        return BatchState.ACTIVE.toString().equals(config.spotFleetRequestState())
-                || BatchState.MODIFYING.toString().equals(config.spotFleetRequestState())
-                || BatchState.SUBMITTED.toString().equals(config.spotFleetRequestState());
+        return BatchState.ACTIVE.toString().equals(String.valueOf(config.spotFleetRequestState()))
+                || BatchState.MODIFYING.toString().equals(String.valueOf(config.spotFleetRequestState()))
+                || BatchState.SUBMITTED.toString().equals(String.valueOf(config.spotFleetRequestState()));
     }
 
     private static boolean isModifying(final SpotFleetRequestConfig config) {
-        return BatchState.SUBMITTED.toString().equals(config.spotFleetRequestState())
-                || BatchState.MODIFYING.toString().equals(config.spotFleetRequestState());
+        return BatchState.SUBMITTED.toString().equals(String.valueOf(config.spotFleetRequestState()))
+                || BatchState.MODIFYING.toString().equals(String.valueOf(config.spotFleetRequestState()));
     }
 
     @Override
@@ -110,15 +110,15 @@ public class EC2SpotFleet implements EC2Fleet {
         // Index configured instance types by weight:
         final Map<String, Double> instanceTypeWeights = new HashMap<>();
         for (SpotFleetLaunchSpecification launchSpecification : fleetRequestConfig.launchSpecifications()) {
-            final String instanceType = String.valueOf(launchSpecification.instanceType());
+            final InstanceType instanceType = launchSpecification.instanceType();
             if (instanceType == null) continue;
-
+            final String instanceTypeName = instanceType.toString();
             final Double instanceWeight = launchSpecification.weightedCapacity();
-            final Double existingWeight = instanceTypeWeights.get(instanceType);
+            final Double existingWeight = instanceTypeWeights.get(instanceTypeName);
             if (instanceWeight == null || (existingWeight != null && existingWeight > instanceWeight)) {
                 continue;
             }
-            instanceTypeWeights.put(instanceType, instanceWeight);
+            instanceTypeWeights.put(instanceTypeName, instanceWeight);
         }
 
         return new FleetStateStats(id,
@@ -126,7 +126,7 @@ public class EC2SpotFleet implements EC2Fleet {
                 new FleetStateStats.State(
                         isActive(fleetConfig),
                         isModifying(fleetConfig),
-                        fleetConfig.spotFleetRequestState().toString()),
+                        String.valueOf(fleetConfig.spotFleetRequestState())),
                 instances,
                 instanceTypeWeights);
     }
@@ -184,7 +184,7 @@ public class EC2SpotFleet implements EC2Fleet {
                     new FleetStateStats.State(
                             isActive(state.config),
                             isModifying(state.config),
-                            state.config.spotFleetRequestState().toString()),
+                            String.valueOf(state.config.spotFleetRequestState())),
                     state.instances,
                     Collections.<String, Double>emptyMap()));
         }

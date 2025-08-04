@@ -3,6 +3,7 @@ package com.amazon.jenkins.ec2fleet.fleet;
 import com.amazon.jenkins.ec2fleet.aws.EC2Api;
 import com.amazon.jenkins.ec2fleet.FleetStateStats;
 import com.amazon.jenkins.ec2fleet.Registry;
+import org.mockito.Mockito;
 import software.amazon.awssdk.services.ec2.Ec2Client;
 import software.amazon.awssdk.services.ec2.model.*;
 import hudson.util.ListBoxModel;
@@ -160,9 +161,9 @@ public class EC2EC2FleetTest {
                                 .build())
                         .launchTemplateConfigs(FleetLaunchTemplateConfig.builder()
                                 .overrides(
-                                        FleetLaunchTemplateOverrides.builder().instanceType("t1").weightedCapacity(0.1)
+                                        FleetLaunchTemplateOverrides.builder().instanceType("t3a.small").weightedCapacity(0.1)
                                         .build(), 
-                                        FleetLaunchTemplateOverrides.builder().instanceType("t2").weightedCapacity(12.0)
+                                        FleetLaunchTemplateOverrides.builder().instanceType("t3a.medium").weightedCapacity(12.0)
                                         .build())
                                 .build())
                         .build())
@@ -171,8 +172,8 @@ public class EC2EC2FleetTest {
         FleetStateStats stats = new EC2EC2Fleet().getState("cred", "region", "", "f");
 
         Map<String, Double> expected = new HashMap<>();
-        expected.put("t1", 0.1);
-        expected.put("t2", 12.0);
+        expected.put("t3a.small", 0.1);
+        expected.put("t3a.medium", 12.0);
         Assert.assertEquals(expected, stats.getInstanceTypeWeights());
     }
 
@@ -325,8 +326,7 @@ public class EC2EC2FleetTest {
     @Test
     public void describe_whenAllFleetsEnabled_shouldIncludeAllFleetsInAllStates() {
         // given
-        when(ec2.describeFleets(any(DescribeFleetsRequest.class)))
-                .thenReturn(DescribeFleetsResponse.builder().fleets(
+        DescribeFleetsResponse response = DescribeFleetsResponse.builder().fleets(
                 FleetData.builder()
                         .fleetId("f1")
                         .fleetState(String.valueOf(BatchState.ACTIVE))
@@ -337,7 +337,12 @@ public class EC2EC2FleetTest {
                         .fleetState(String.valueOf(BatchState.MODIFYING))
                         .type(FleetType.REQUEST)
                 .build())
-                .build());
+                .build();
+        when(ec2.describeFleets(any(DescribeFleetsRequest.class))).thenReturn(response);
+        // paginator mock
+        software.amazon.awssdk.services.ec2.paginators.DescribeFleetsIterable paginator = Mockito.mock(software.amazon.awssdk.services.ec2.paginators.DescribeFleetsIterable.class);
+        when(paginator.iterator()).thenReturn(Collections.singleton(response).iterator());
+        when(ec2.describeFleetsPaginator(any(DescribeFleetsRequest.class))).thenReturn(paginator);
         // when
         ListBoxModel model = new ListBoxModel();
         new EC2EC2Fleet().describe("cred", "region", "", model, "selected", true);
@@ -350,8 +355,7 @@ public class EC2EC2FleetTest {
     @Test
     public void describe_whenAllFleetsDisabled_shouldSkipNonMaintain() {
         // given
-        when(ec2.describeFleets(any(DescribeFleetsRequest.class)))
-                .thenReturn(DescribeFleetsResponse.builder().fleets(
+        DescribeFleetsResponse response = DescribeFleetsResponse.builder().fleets(
                 FleetData.builder()
                         .fleetId("f1")
                         .fleetState(String.valueOf(BatchState.ACTIVE))
@@ -362,7 +366,12 @@ public class EC2EC2FleetTest {
                         .fleetState(String.valueOf(BatchState.ACTIVE))
                         .type(FleetType.REQUEST)
                 .build())
-                .build());
+                .build();
+        when(ec2.describeFleets(any(DescribeFleetsRequest.class))).thenReturn(response);
+        // paginator mock
+        software.amazon.awssdk.services.ec2.paginators.DescribeFleetsIterable paginator = Mockito.mock(software.amazon.awssdk.services.ec2.paginators.DescribeFleetsIterable.class);
+        when(paginator.iterator()).thenReturn(Collections.singleton(response).iterator());
+        when(ec2.describeFleetsPaginator(any(DescribeFleetsRequest.class))).thenReturn(paginator);
         // when
         ListBoxModel model = new ListBoxModel();
         new EC2EC2Fleet().describe("cred", "region", "", model, "selected", false);
@@ -375,8 +384,7 @@ public class EC2EC2FleetTest {
     @Test
     public void describe_whenAllFleetsDisabled_shouldSkipNonCancelledOrFailed() {
         // given
-        when(ec2.describeFleets(any(DescribeFleetsRequest.class)))
-                .thenReturn(DescribeFleetsResponse.builder().fleets(
+        DescribeFleetsResponse response = DescribeFleetsResponse.builder().fleets(
                 FleetData.builder()
                         .fleetId("f1")
                         .fleetState(String.valueOf(BatchState.ACTIVE))
@@ -397,7 +405,12 @@ public class EC2EC2FleetTest {
                         .fleetState(String.valueOf(BatchState.FAILED))
                         .type(FleetType.MAINTAIN)
                 .build())
-                .build());
+                .build();
+        when(ec2.describeFleets(any(DescribeFleetsRequest.class))).thenReturn(response);
+        // paginator mock
+        software.amazon.awssdk.services.ec2.paginators.DescribeFleetsIterable paginator = Mockito.mock(software.amazon.awssdk.services.ec2.paginators.DescribeFleetsIterable.class);
+        when(paginator.iterator()).thenReturn(Collections.singleton(response).iterator());
+        when(ec2.describeFleetsPaginator(any(DescribeFleetsRequest.class))).thenReturn(paginator);
         // when
         ListBoxModel model = new ListBoxModel();
         new EC2EC2Fleet().describe("cred", "region", "", model, "selected", false);
@@ -410,8 +423,7 @@ public class EC2EC2FleetTest {
     @Test
     public void describe_whenAllFleetsDisabled_shouldIncludeSubmittedModifiedActive() {
         // given
-        when(ec2.describeFleets(any(DescribeFleetsRequest.class)))
-                .thenReturn(DescribeFleetsResponse.builder().fleets(
+        DescribeFleetsResponse response = DescribeFleetsResponse.builder().fleets(
                 FleetData.builder()
                         .fleetId("f1")
                         .fleetState(String.valueOf(BatchState.ACTIVE))
@@ -427,7 +439,12 @@ public class EC2EC2FleetTest {
                         .fleetState(String.valueOf(BatchState.MODIFYING))
                         .type(FleetType.MAINTAIN)
                 .build())
-                .build());
+                .build();
+        when(ec2.describeFleets(any(DescribeFleetsRequest.class))).thenReturn(response);
+        // paginator mock
+        software.amazon.awssdk.services.ec2.paginators.DescribeFleetsIterable paginator = Mockito.mock(software.amazon.awssdk.services.ec2.paginators.DescribeFleetsIterable.class);
+        when(paginator.iterator()).thenReturn(Collections.singleton(response).iterator());
+        when(ec2.describeFleetsPaginator(any(DescribeFleetsRequest.class))).thenReturn(paginator);
         // when
         ListBoxModel model = new ListBoxModel();
         new EC2EC2Fleet().describe("cred", "region", "", model, "selected", false);
@@ -452,3 +469,4 @@ public class EC2EC2FleetTest {
         Assert.assertFalse(isEC2EC2Fleet);
     }
 }
+

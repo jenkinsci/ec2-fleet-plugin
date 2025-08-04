@@ -28,18 +28,18 @@ public class EC2EC2Fleet implements EC2Fleet {
     }
 
     private static boolean isActiveAndMaintain(final FleetData fleetData) {
-        return FleetType.MAINTAIN.toString().equals(fleetData.type()) && isActive(fleetData);
+        return FleetType.MAINTAIN.toString().equals(String.valueOf(fleetData.type())) && isActive(fleetData);
     }
 
     private static boolean isActive(final FleetData fleetData) {
-        return BatchState.ACTIVE.toString().equals(fleetData.fleetState())
-                || BatchState.MODIFYING.toString().equals(fleetData.fleetState())
-                || BatchState.SUBMITTED.toString().equals(fleetData.fleetState());
+        return BatchState.ACTIVE.toString().equals(String.valueOf(fleetData.fleetState()))
+                || BatchState.MODIFYING.toString().equals(String.valueOf(fleetData.fleetState()))
+                || BatchState.SUBMITTED.toString().equals(String.valueOf(fleetData.fleetState()));
     }
 
     private static boolean isModifying(final FleetData fleetData) {
-        return BatchState.SUBMITTED.toString().equals(fleetData.fleetState())
-                || BatchState.MODIFYING.toString().equals(fleetData.fleetState());
+        return BatchState.SUBMITTED.toString().equals(String.valueOf(fleetData.fleetState()))
+                || BatchState.MODIFYING.toString().equals(String.valueOf(fleetData.fleetState()));
     }
 
     @Override
@@ -74,15 +74,15 @@ public class EC2EC2Fleet implements EC2Fleet {
         final Map<String, Double> instanceTypeWeights = new HashMap<>();
         for (FleetLaunchTemplateConfig templateConfig : templateConfigs) {
             for (FleetLaunchTemplateOverrides launchOverrides : templateConfig.overrides()) {
-                final String instanceType = String.valueOf(launchOverrides.instanceType());
+                final InstanceType instanceType = launchOverrides.instanceType();
                 if (instanceType == null) continue;
-
+                final String instanceTypeName = instanceType.toString();
                 final Double instanceWeight = launchOverrides.weightedCapacity();
-                final Double existingWeight = instanceTypeWeights.get(instanceType);
+                final Double existingWeight = instanceTypeWeights.get(instanceTypeName);
                 if (instanceWeight == null || (existingWeight != null && existingWeight >= instanceWeight)) {
                     continue;
                 }
-                instanceTypeWeights.put(instanceType, instanceWeight);
+                instanceTypeWeights.put(instanceTypeName, instanceWeight);
             }
         }
 
@@ -91,7 +91,7 @@ public class EC2EC2Fleet implements EC2Fleet {
                 new FleetStateStats.State(
                         isActive(fleetData),
                         isModifying(fleetData),
-                        fleetData.fleetState().toString()),
+                        String.valueOf(fleetData.fleetState())),
                 getActiveFleetInstances(ec2, id),
                 instanceTypeWeights);
     }
@@ -154,7 +154,7 @@ public class EC2EC2Fleet implements EC2Fleet {
                         new FleetStateStats.State(
                                 isActive(state.fleetData),
                                 isModifying(state.fleetData),
-                                state.fleetData.fleetState().toString()),
+                                String.valueOf(state.fleetData.fleetState())),
                         state.instances,
                         Collections.<String, Double>emptyMap()));
             }
