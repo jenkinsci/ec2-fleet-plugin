@@ -1362,7 +1362,7 @@ public class EC2FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        final String instanceType = "t";
+        final String instanceType = "t3a.medium";
         final String instanceId = "i-0";
         final Instance instance = Instance.builder()
                 .publicIpAddress("p-ip")
@@ -1491,7 +1491,7 @@ public class EC2FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        final String instanceType = "t";
+        final String instanceType = "t3a.medium";
         final String instanceId = "i-0";
         final Instance instance = Instance.builder()
                 .publicIpAddress("p-ip")
@@ -1774,6 +1774,7 @@ public class EC2FleetCloudTest {
         final Instance instance = Instance.builder()
                 .publicIpAddress("p-ip")
                 .instanceId("i-0")
+                .instanceType(InstanceType.T3_A_MEDIUM)
                 .state(InstanceState.builder()
                         .name(InstanceStateName.RUNNING)
                         .build())
@@ -1832,6 +1833,7 @@ public class EC2FleetCloudTest {
         final Instance instance = Instance.builder()
                 .publicIpAddress("p-ip")
                 .instanceId("i-0")
+                .instanceType(InstanceType.T3_A_MEDIUM)
                 .state(InstanceState.builder()
                         .name(InstanceStateName.RUNNING)
                         .build())
@@ -1890,6 +1892,7 @@ public class EC2FleetCloudTest {
         final Instance instance = Instance.builder()
                 .publicIpAddress("p-ip")
                 .instanceId("i-0")
+                .instanceType(InstanceType.T3_A_MEDIUM)
                 .state(InstanceState.builder()
                         .name(InstanceStateName.RUNNING)
                         .build())
@@ -1948,6 +1951,7 @@ public class EC2FleetCloudTest {
         final Instance instance = Instance.builder()
                 .publicIpAddress("p-ip")
                 .instanceId("i-0")
+                .instanceType(InstanceType.T3_A_MEDIUM)
                 .state(InstanceState.builder()
                         .name(InstanceStateName.RUNNING)
                         .build())
@@ -2006,6 +2010,7 @@ public class EC2FleetCloudTest {
         final Instance instance = Instance.builder()
                 .publicIpAddress("p-ip")
                 .instanceId("i-0")
+                .instanceType(InstanceType.T3_A_MEDIUM)
                 .state(InstanceState.builder()
                         .name(InstanceStateName.RUNNING)
                         .build())
@@ -2064,6 +2069,7 @@ public class EC2FleetCloudTest {
         final Instance instance = Instance.builder()
                 .publicIpAddress("p-ip")
                 .instanceId("i-0")
+                .instanceType(InstanceType.T3_A_MEDIUM)
                 .state(InstanceState.builder()
                         .name(InstanceStateName.RUNNING)
                         .build())

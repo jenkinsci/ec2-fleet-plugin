@@ -1102,7 +1102,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                 return numExecutors;
             }
 
-            final Double instanceTypeWeight = stats.getInstanceTypeWeights().get(instanceType);
+            final Double instanceTypeWeight = stats.getInstanceTypeWeights().get(instanceType.toString());
             if (instanceTypeWeight == null) {
                 return numExecutors;
             }

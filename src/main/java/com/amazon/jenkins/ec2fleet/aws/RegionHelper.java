@@ -54,9 +54,15 @@ public class RegionHelper {
                     regionDescription = region.getDescription();
                 } else {
                     // Fallback to SDK when region description not found in RegionInfo
-                    regionDescription = software.amazon.awssdk.regions.Region.of(regionName).metadata().description();
+                    software.amazon.awssdk.regions.Region sdkRegion = software.amazon.awssdk.regions.Region.of(regionName);
+                    if (sdkRegion != null && sdkRegion.metadata() != null && sdkRegion.metadata().description() != null) {
+                        regionDescription = sdkRegion.metadata().description();
+                    } else {
+                        // If metadata or description is missing, use region code
+                        regionDescription = null;
+                    }
                 }
-                final String regionDisplayName = String.format("%s %s", regionName, regionDescription);
+                final String regionDisplayName = regionDescription != null ? String.format("%s %s", regionName, regionDescription) : regionName;
 
                 // Update map only when description exists else leave default to region code eg. us-east-1
                 regionDisplayNames.put(regionName, regionDisplayName);
