@@ -34,6 +34,13 @@ public final class AWSUtils {
     }
 
     /**
+     * For testability: create a ProxyConfiguration builder. Can be spied/mocked in tests.
+     */
+    static software.amazon.awssdk.http.apache.ProxyConfiguration.Builder createSdkProxyBuilder() {
+        return software.amazon.awssdk.http.apache.ProxyConfiguration.builder();
+    }
+
+    /**
      * Creates an {@link ApacheHttpClient} with proxy configuration if Jenkins is configured to use a proxy.
      * If no proxy is configured, it returns a default ApacheHttpClient.
      * @param endpoint real endpoint which need to be called,
@@ -57,8 +64,8 @@ public final class AWSUtils {
                 int proxyPort = address.getPort();
                 String proxyScheme = "http"; // Jenkins ProxyConfiguration does not expose scheme, default to http
                 URI proxyUri = URI.create(proxyScheme + "://" + proxyHost + ":" + proxyPort);
-                software.amazon.awssdk.http.apache.ProxyConfiguration.Builder sdkProxyBuilder = software.amazon.awssdk.http.apache.ProxyConfiguration.builder()
-                        .endpoint(proxyUri);
+                software.amazon.awssdk.http.apache.ProxyConfiguration.Builder sdkProxyBuilder = createSdkProxyBuilder();
+                sdkProxyBuilder.endpoint(proxyUri);
                 if (proxyConfig.getUserName() != null) {
                     sdkProxyBuilder.username(proxyConfig.getUserName());
                     sdkProxyBuilder.password(proxyConfig.getSecretPassword().getPlainText());
