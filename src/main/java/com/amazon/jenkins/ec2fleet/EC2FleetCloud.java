@@ -623,7 +623,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                             .terminateInstances(awsCredentialsId, region, endpoint, currentInstanceIdsToTerminate.keySet());
                 } catch (TerminateAutoScalingException e){
                     EC2FleetExecutionErrorMonitor.getInstance().reportError(e.getMessage());
-                    stats.getState().isWarning(true);
+                    updatedState.getState().isWarning(true);
                 }
             }
             else {
