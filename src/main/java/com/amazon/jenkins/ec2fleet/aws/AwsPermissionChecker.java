@@ -37,7 +37,8 @@ public class AwsPermissionChecker {
         ModifyFleet,
         DescribeInstanceTypes,
         TerminateInstances, // TODO: Dry-run throws invalid instanceID first then AuthZ error. We need to find a better way to test
-        UpdateAutoScalingGroup; // TODO: There is no dry-run for AutoScalingClient
+        UpdateAutoScalingGroup, // TODO: There is no dry-run for AutoScalingClient
+        TerminateInstanceInAutoScalingGroup; // TODO: There is no dry-run for AutoScalingClient. We need to find a better way to test
     };
 
     public List<String> getMissingPermissions(final String fleet) {

@@ -41,7 +41,7 @@ public class EC2FleetStatusWidgetUpdater extends PeriodicWork {
 
             info.add(new EC2FleetStatusInfo(
                     fleetCloud.getFleet(), stats.getState().getDetailed(), fleetCloud.getLabelString(),
-                    stats.getNumActive(), stats.getNumDesired()));
+                    stats.getNumActive(), stats.getNumDesired(), stats.getState().getWarning().get()));
         }
 
         for (final Widget w : getWidgets()) {

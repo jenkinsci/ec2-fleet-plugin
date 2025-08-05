@@ -113,8 +113,8 @@ public class EC2FleetStatusWidgetUpdaterTest {
         getMockEC2FleetStatusWidgetUpdater().doRun();
 
         verify(widget1).setStatusList(Arrays.asList(
-                new EC2FleetStatusInfo(cloud1.getFleet(), stats1.getState().getDetailed(), cloud1.getLabelString(), stats1.getNumActive(), stats1.getNumDesired()),
-                new EC2FleetStatusInfo(cloud2.getFleet(), stats2.getState().getDetailed(), cloud2.getLabelString(), stats2.getNumActive(), stats2.getNumDesired())
+                new EC2FleetStatusInfo(cloud1.getFleet(), stats1.getState().getDetailed(), cloud1.getLabelString(), stats1.getNumActive(), stats1.getNumDesired(), stats1.getState().getWarning().get()),
+                new EC2FleetStatusInfo(cloud2.getFleet(), stats2.getState().getDetailed(), cloud2.getLabelString(), stats2.getNumActive(), stats2.getNumDesired(), stats2.getState().getWarning().get())
         ));
     }
 

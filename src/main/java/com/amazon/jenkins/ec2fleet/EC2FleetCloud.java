@@ -2,9 +2,11 @@ package com.amazon.jenkins.ec2fleet;
 
 import com.amazon.jenkins.ec2fleet.aws.AwsPermissionChecker;
 import com.amazon.jenkins.ec2fleet.aws.RegionHelper;
+import com.amazon.jenkins.ec2fleet.exceptions.TerminateAutoScalingException;
 import com.amazon.jenkins.ec2fleet.fleet.AutoScalingGroupFleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
+import com.amazon.jenkins.ec2fleet.monitor.EC2FleetExecutionErrorMonitor;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.*;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
@@ -616,7 +618,13 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             });
             if(EC2Fleets.get(fleet).isAutoScalingGroup()){
                 fine("Terminating instances in AutoScalingGroup: %s", currentInstanceIdsToTerminate.keySet());
-                ((AutoScalingGroupFleet) EC2Fleets.get(fleet)).terminateInstances(awsCredentialsId, region, endpoint, currentInstanceIdsToTerminate.keySet());
+                try {
+                    ((AutoScalingGroupFleet) EC2Fleets.get(fleet))
+                            .terminateInstances(awsCredentialsId, region, endpoint, currentInstanceIdsToTerminate.keySet());
+                } catch (TerminateAutoScalingException e){
+                    EC2FleetExecutionErrorMonitor.getInstance().reportError(e.getMessage());
+                    stats.getState().isWarning(true);
+                }
             }
             else {
                 fine("Terminating instances: %s", currentInstanceIdsToTerminate.keySet());
@@ -1035,9 +1043,10 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             final AwsPermissionChecker awsPermissionChecker = new AwsPermissionChecker(awsCredentialsId, region, endpoint);
             final List<String> missingPermissions = awsPermissionChecker.getMissingPermissions(fleet);
             // TODO: DryRun does not work as expected for TerminateInstances and does not exists for UpdateAutoScalingGroup
-            final String disclaimer = String.format("Skipping validation for following permissions: %s, %s",
+            final String disclaimer = String.format("Skipping validation for following permissions: %s, %s, %s",
                     AwsPermissionChecker.FleetAPI.TerminateInstances,
-                    AwsPermissionChecker.FleetAPI.UpdateAutoScalingGroup);
+                    AwsPermissionChecker.FleetAPI.UpdateAutoScalingGroup,
+                    AwsPermissionChecker.FleetAPI.TerminateInstanceInAutoScalingGroup);
             if(missingPermissions.isEmpty()) {
                 return FormValidation.ok(String.format("Success! %s", disclaimer));
             }

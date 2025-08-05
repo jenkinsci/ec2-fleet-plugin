@@ -1,12 +1,14 @@
 package com.amazon.jenkins.ec2fleet;
 
 import com.amazon.jenkins.ec2fleet.aws.EC2Api;
+import com.amazon.jenkins.ec2fleet.exceptions.TerminateAutoScalingException;
 import com.amazon.jenkins.ec2fleet.fleet.AutoScalingGroupFleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 import com.amazon.jenkins.ec2fleet.fleet.EC2SpotFleet;
 import com.amazon.jenkins.ec2fleet.aws.RegionInfo;
 import com.amazon.jenkins.ec2fleet.aws.AwsPermissionChecker;
+import com.amazon.jenkins.ec2fleet.monitor.EC2FleetExecutionErrorMonitor;
 import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2Client;
@@ -63,15 +65,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.nullable;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @SuppressWarnings("unchecked")
 @RunWith(MockitoJUnitRunner.class)
@@ -146,16 +140,16 @@ public class EC2FleetCloudTest {
         spotFleetRequestConfig8.setSpotFleetRequestConfig(new SpotFleetRequestConfigData().withType(FleetType.Request));
 
         Registry.setEc2Api(ec2Api);
-        mockedEc2Fleets = Mockito.mockStatic(EC2Fleets.class);
+        mockedEc2Fleets = mockStatic(EC2Fleets.class);
         mockedEc2Fleets.when(() -> EC2Fleets.get(anyString())).thenReturn(ec2Fleet);
-        mockedJenkins = Mockito.mockStatic(Jenkins.class);
+        mockedJenkins = mockStatic(Jenkins.class);
         mockedJenkins.when(Jenkins::get).thenReturn(jenkins);
 
         Mockito.when(idleComputer.isIdle()).thenReturn(true);
         Mockito.when(busyComputer.isIdle()).thenReturn(false);
 
-        mockedFleetStateStats = Mockito.mockStatic(FleetStateStats.class);
-        mockedLabelFinder = Mockito.mockStatic(LabelFinder.class);
+        mockedFleetStateStats = mockStatic(FleetStateStats.class);
+        mockedLabelFinder = mockStatic(LabelFinder.class);
 
         noScaling = new EC2FleetCloud.NoScaler();
         weightedScaling = new EC2FleetCloud.WeightedScaler();
@@ -2109,6 +2103,45 @@ public class EC2FleetCloudTest {
 
         // Assert
         verify(autoScalingGroupFleet).terminateInstances(anyString(), any(), any(), eq(Collections.singleton("i-0")));
+    }
+
+    @Test
+    public void update_shouldShowMessageWarningWhenExceptionOccursDuringTerminateInstancesInAutoScalingGroup() throws IllegalAccessException, NoSuchFieldException {
+        // Arrange
+        EC2FleetExecutionErrorMonitor mockMonitor = mock(EC2FleetExecutionErrorMonitor.class);
+        final AutoScalingGroupFleet autoScalingGroupFleet = mock(AutoScalingGroupFleet.class);
+        when(EC2Fleets.get(anyString())).thenReturn(autoScalingGroupFleet);
+        when(autoScalingGroupFleet.isAutoScalingGroup()).thenReturn(true);
+
+        final FleetStateStats stats = new FleetStateStats("fleetId", 1, FleetStateStats.State.active(),
+                Collections.singleton("i-0"), Collections.<String, Double>emptyMap());
+        when(autoScalingGroupFleet.getState(anyString(), any(), any(), anyString())).thenReturn(stats);
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
+                null, "fleetId", null, null, mock(ComputerConnector.class), false, false,
+                0, 0, 10, 0, 1, false, false, null, false, null, null, null, false, false, null);
+
+        // Set up instanceIdsToTerminate
+        HashMap<String, EC2AgentTerminationReason> toTerminate = new HashMap<>();
+        toTerminate.put("i-0", EC2AgentTerminationReason.MAX_TOTAL_USES_EXHAUSTED);
+        fleetCloud.setStats(stats);
+        Field field = EC2FleetCloud.class.getDeclaredField("instanceIdsToTerminate");
+        field.setAccessible(true);
+        field.set(fleetCloud, toTerminate);
+
+        doThrow(new TerminateAutoScalingException("Test"))
+                .when(autoScalingGroupFleet)
+                .terminateInstances(anyString(), any(), any(), eq(Collections.singleton("i-0")));
+
+        // Act
+        try (MockedStatic<EC2FleetExecutionErrorMonitor> mockedStatic = mockStatic(EC2FleetExecutionErrorMonitor.class)) {
+            mockedStatic.when(EC2FleetExecutionErrorMonitor::getInstance).thenReturn(mockMonitor);
+            fleetCloud.update();
+        }
+
+        // Assert
+        verify(autoScalingGroupFleet).terminateInstances(anyString(), any(), any(), eq(Collections.singleton("i-0")));
+        verify(mockMonitor).reportError(anyString());
     }
 
     @Test

@@ -22,13 +22,15 @@ public class EC2FleetStatusInfo extends Widget {
     private final String label;
     private final int numActive;
     private final int numDesired;
+    private final boolean warning;
 
-    public EC2FleetStatusInfo(String id, String state, String label, int numActive, int numDesired) {
+    public EC2FleetStatusInfo(String id, String state, String label, int numActive, int numDesired, boolean warning) {
         this.id = id;
         this.state = state;
         this.label = label;
         this.numActive = numActive;
         this.numDesired = numDesired;
+        this.warning = warning;
     }
 
     public String getId() {
@@ -68,4 +70,7 @@ public class EC2FleetStatusInfo extends Widget {
         return numDesired;
     }
 
+    public boolean isWarning() {
+        return warning;
+    }
 }

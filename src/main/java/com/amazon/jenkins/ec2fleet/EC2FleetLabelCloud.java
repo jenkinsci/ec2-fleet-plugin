@@ -845,9 +845,10 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
             final AwsPermissionChecker awsPermissionChecker = new AwsPermissionChecker(awsCredentialsId, region, endpoint);
             final List<String> missingPermissions = awsPermissionChecker.getMissingPermissions(fleet);
             // TODO: DryRun does not work as expected for TerminateInstances and does not exists for UpdateAutoScalingGroup
-            final String disclaimer = String.format("Skipping validation for following permissions: %s, %s",
+            final String disclaimer = String.format("Skipping validation for following permissions: %s, %s, %s",
                     AwsPermissionChecker.FleetAPI.TerminateInstances,
-                    AwsPermissionChecker.FleetAPI.UpdateAutoScalingGroup);
+                    AwsPermissionChecker.FleetAPI.UpdateAutoScalingGroup,
+                    AwsPermissionChecker.FleetAPI.TerminateInstanceInAutoScalingGroup);
             if(missingPermissions.isEmpty()) {
                 return FormValidation.ok(String.format("Success! %s", disclaimer));
             }

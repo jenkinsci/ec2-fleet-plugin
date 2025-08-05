@@ -2,6 +2,7 @@ package com.amazon.jenkins.ec2fleet.fleet;
 
 import com.amazon.jenkins.ec2fleet.FleetStateStats;
 import com.amazon.jenkins.ec2fleet.aws.AWSUtils;
+import com.amazon.jenkins.ec2fleet.exceptions.TerminateAutoScalingException;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.RegionUtils;
@@ -133,6 +134,8 @@ public class AutoScalingGroupFleet implements EC2Fleet {
     public void terminateInstances(final String awsCredentialsId, final String regionName, final String endpoint, final Collection<String> instanceIds) {
         final AmazonAutoScalingClient client = createClient(awsCredentialsId, regionName, endpoint);
 
+        List<String> failedInstances = new ArrayList<>();
+
         for(String instanceId : instanceIds) {
             if (StringUtils.isBlank(instanceId)) {
                 throw new IllegalArgumentException("Instance ID cannot be null or empty");
@@ -143,8 +146,16 @@ public class AutoScalingGroupFleet implements EC2Fleet {
                         .withInstanceId(instanceId)
                         .withShouldDecrementDesiredCapacity(false));
             } catch (Exception e) {
-                LOGGER.warning(String.format("Failed to terminate instance %s in Auto Scaling group: %s", instanceId, e.getMessage()));
+                String errorMessage = String.format(
+                        "Failed to terminate instance %s in Auto Scaling group: %s", instanceId, e.getMessage()
+                );
+                LOGGER.warning(errorMessage);
+                failedInstances.add(errorMessage);
             }
+        }
+
+        if(!failedInstances.isEmpty()){
+            throw new TerminateAutoScalingException(String.join(", ", failedInstances));
         }
     }
 

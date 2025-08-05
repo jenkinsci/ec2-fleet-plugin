@@ -5,9 +5,8 @@ import com.amazonaws.services.ec2.model.BatchState;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.ThreadSafe;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @see EC2FleetCloud
@@ -41,6 +40,7 @@ public final class FleetStateStats {
         private final String detailed;
         private final boolean active;
         private final boolean modifying;
+        private final AtomicBoolean warning = new AtomicBoolean(false);
 
         public State(final boolean active, final boolean modifying, final String detailed) {
             this.detailed = detailed;
@@ -100,6 +100,13 @@ public final class FleetStateStats {
             return Objects.hash(detailed, active);
         }
 
+        public AtomicBoolean getWarning() {
+            return warning;
+        }
+
+        public void isWarning(boolean warning) {
+            this.warning.set(warning);
+        }
     }
 
     @Nonnull
