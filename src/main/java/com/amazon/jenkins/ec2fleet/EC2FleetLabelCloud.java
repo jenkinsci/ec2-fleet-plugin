@@ -28,7 +28,7 @@ import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.services.cloudformation.model.StackStatus;
 import software.amazon.awssdk.services.ec2.Ec2Client;
@@ -883,7 +883,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
         public Boolean isExistingCloudNameDuplicated(@QueryParameter final String name) { return CloudNames.isDuplicated(name); }
 
         @Override
-        public boolean configure(final StaplerRequest req, final JSONObject formData) throws FormException {
+        public boolean configure(final StaplerRequest2 req, final JSONObject formData) throws FormException {
             req.bindJSON(this, formData);
             save();
             return super.configure(req, formData);
