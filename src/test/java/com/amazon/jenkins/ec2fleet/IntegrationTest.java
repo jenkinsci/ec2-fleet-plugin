@@ -439,11 +439,10 @@ public abstract class IntegrationTest {
         when(amazonCloudFormation.describeStacks(any(DescribeStacksRequest.class))).thenAnswer(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocation) {
-                final DescribeStacksResponse result = DescribeStacksResponse.builder()
-                        .build();
+                List<Stack> stackList = new java.util.ArrayList<>();
                 synchronized (lock) {
                     for (Map.Entry<String, CreateStackRequest> entry : createStackRequests.entrySet()) {
-                        result.stacks().add(Stack.builder()
+                        stackList.add(Stack.builder()
                                 .stackId(entry.getValue().stackName())
                                 .stackName(entry.getValue().stackName())
                                 .stackStatus(StackStatus.CREATE_COMPLETE)
@@ -454,7 +453,9 @@ public abstract class IntegrationTest {
                         );
                     }
                 }
-                return result;
+                return DescribeStacksResponse.builder()
+                        .stacks(stackList)
+                        .build();
             }
         });
 
