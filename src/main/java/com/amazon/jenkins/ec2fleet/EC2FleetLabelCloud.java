@@ -6,12 +6,6 @@ import com.amazon.jenkins.ec2fleet.aws.EC2Api;
 import com.amazon.jenkins.ec2fleet.aws.RegionHelper;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 import com.amazon.jenkins.ec2fleet.fleet.EC2SpotFleet;
-import com.amazonaws.services.cloudformation.AmazonCloudFormation;
-import com.amazonaws.services.cloudformation.model.StackStatus;
-import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.model.Instance;
-import com.amazonaws.services.ec2.model.InstanceStateName;
-import com.amazonaws.services.ec2.model.KeyPairInfo;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
 import hudson.Extension;
 import hudson.model.AbstractProject;
@@ -35,6 +29,12 @@ import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest2;
+import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
+import software.amazon.awssdk.services.cloudformation.model.StackStatus;
+import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.Instance;
+import software.amazon.awssdk.services.ec2.model.InstanceStateName;
+import software.amazon.awssdk.services.ec2.model.KeyPairInfo;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -400,7 +400,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
     private void updateByState(final Map<String, State> states) {
         final Jenkins jenkins = Jenkins.get();
 
-        final AmazonEC2 ec2 = Registry.getEc2Api().connect(getAwsCredentialsId(), region, endpoint);
+        final Ec2Client ec2 = Registry.getEc2Api().connect(getAwsCredentialsId(), region, endpoint);
 
         for (State state : states.values()) {
             if (state.toAdd > 0 || state.instanceIdsToTerminate.size() > 0) {
@@ -586,19 +586,19 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
     }
 
     private void addNewAgent(
-            final AmazonEC2 ec2, final Instance instance, final String labelString, final State state) throws Exception {
-        final String instanceId = instance.getInstanceId();
+            final Ec2Client ec2, final Instance instance, final String labelString, final State state) throws Exception {
+        final String instanceId = instance.instanceId();
 
         // instance state check enabled and not running, skip adding
-        if (InstanceStateName.Running != InstanceStateName.fromValue(instance.getState().getName()))
+        if (InstanceStateName.RUNNING != instance.state().name())
             return;
 
-        final String address = privateIpUsed ? instance.getPrivateIpAddress() : instance.getPublicIpAddress();
+        final String address = privateIpUsed ? instance.privateIpAddress() : instance.publicIpAddress();
         // Check if we have the address to use. Nodes don't get it immediately.
         if (address == null) {
             if (!privateIpUsed) {
                 info("%s instance public IP address not assigned, it could take some time or" +
-                        " Spot Request is not configured to assign public IPs", instance.getInstanceId());
+                        " Spot Request is not configured to assign public IPs", instance.instanceId());
             }
             return; // wait more time, probably IP address not yet assigned
         }
@@ -611,7 +611,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
             effectiveFsRoot = fsRoot;
         }
 
-        final Double instanceTypeWeight = state.stats.getInstanceTypeWeights().get(instance.getInstanceType());
+        final Double instanceTypeWeight = state.stats.getInstanceTypeWeights().get(String.valueOf(instance.instanceType()));
         final int effectiveNumExecutors;
         // todo add scaleExecutorsByWeight
         if (instanceTypeWeight != null) {
@@ -695,7 +695,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
 
         final Jenkins jenkins = Jenkins.get();
         final CloudFormationApi cloudFormationApi = Registry.getCloudFormationApi();
-        final AmazonCloudFormation client = cloudFormationApi.connect(awsCredentialsId, region, endpoint);
+        final CloudFormationClient client = cloudFormationApi.connect(awsCredentialsId, region, endpoint);
         final Map<String, CloudFormationApi.StackInfo> allStacks = cloudFormationApi.describe(client, name);
 
         // labels
@@ -823,10 +823,10 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
             final ListBoxModel model = new ListBoxModel();
 
             try {
-                final AmazonEC2 amazonEC2 = new EC2Api().connect(awsCredentialsId, region, endpoint);
-                final List<KeyPairInfo> keyPairs = amazonEC2.describeKeyPairs().getKeyPairs();
+                final Ec2Client amazonEC2 = new EC2Api().connect(awsCredentialsId, region, endpoint);
+                final List<KeyPairInfo> keyPairs = amazonEC2.describeKeyPairs().keyPairs();
                 for (final KeyPairInfo keyPair : keyPairs) {
-                    model.add(new ListBoxModel.Option(keyPair.getKeyName(), keyPair.getKeyName()));
+                    model.add(new ListBoxModel.Option(keyPair.keyName(), keyPair.keyName()));
                 }
             } catch (Exception e) {
                 LOGGER.log(Level.WARNING, String.format(

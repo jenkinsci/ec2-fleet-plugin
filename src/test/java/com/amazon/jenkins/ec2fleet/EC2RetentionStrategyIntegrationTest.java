@@ -3,23 +3,14 @@ package com.amazon.jenkins.ec2fleet;
 import com.amazon.jenkins.ec2fleet.aws.EC2Api;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
-import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
-import com.amazonaws.services.ec2.model.DescribeInstancesResult;
-import com.amazonaws.services.ec2.model.DescribeSpotFleetRequestsRequest;
-import com.amazonaws.services.ec2.model.DescribeSpotFleetRequestsResult;
-import com.amazonaws.services.ec2.model.Instance;
-import com.amazonaws.services.ec2.model.InstanceState;
-import com.amazonaws.services.ec2.model.InstanceStateName;
-import com.amazonaws.services.ec2.model.Reservation;
-import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
-import com.amazonaws.services.ec2.model.TerminateInstancesResult;
 import hudson.model.Node;
 import hudson.model.queue.QueueTaskFuture;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,7 +28,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
 
     private final EC2FleetCloud.ExecutorScaler noScaling = new EC2FleetCloud.NoScaler();
 
-    private AmazonEC2 amazonEC2;
+    private Ec2Client amazonEC2;
 
     @Before
     public void before() {
@@ -45,27 +36,34 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
         EC2Fleets.setGet(ec2Fleet);
         final EC2Api ec2Api = spy(EC2Api.class);
         Registry.setEc2Api(ec2Api);
-        amazonEC2 = mock(AmazonEC2.class);
+        amazonEC2 = mock(Ec2Client.class);
 
         when(ec2Fleet.getState(anyString(), anyString(), nullable(String.class), anyString()))
                 .thenReturn(new FleetStateStats("", 2, FleetStateStats.State.active(), new HashSet<>(Arrays.asList("i-1", "i-2")), Collections.emptyMap()));
         when(ec2Api.connect(anyString(), anyString(), Mockito.nullable(String.class))).thenReturn(amazonEC2);
 
-        final Instance instance = new Instance()
-                .withState(new InstanceState().withName(InstanceStateName.Running))
-                .withPublicIpAddress("public-io")
-                .withInstanceId("i-1");
-        final Instance instance1 = new Instance()
-                .withState(new InstanceState().withName(InstanceStateName.Running))
-                .withPublicIpAddress("public-io")
-                .withInstanceId("i-2");
+        final Instance instance = Instance.builder()
+                .state(InstanceState.builder().name(InstanceStateName.RUNNING)
+                        .build())
+                .publicIpAddress("public-io")
+                .instanceId("i-1")
+                .build();
+        final Instance instance1 = Instance.builder()
+                .state(InstanceState.builder().name(InstanceStateName.RUNNING)
+                        .build())
+                .publicIpAddress("public-io")
+                .instanceId("i-2")
+                .build();
 
         when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class))).thenReturn(
-                new DescribeInstancesResult().withReservations(
-                        new Reservation().withInstances(
+                DescribeInstancesResponse.builder().reservations(
+                        Reservation.builder().instances(
                                 instance, instance1
-                        )));
-        when(amazonEC2.terminateInstances(any(TerminateInstancesRequest.class))).thenReturn(new TerminateInstancesResult());
+                        )
+                        .build())
+                .build());
+        when(amazonEC2.terminateInstances(any(TerminateInstancesRequest.class))).thenReturn(TerminateInstancesResponse.builder()
+                .build());
     }
 
     @Test
@@ -89,7 +87,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
 
         final ArgumentCaptor<TerminateInstancesRequest> argument = ArgumentCaptor.forClass(TerminateInstancesRequest.class);
         verify(amazonEC2, times(1)).terminateInstances(argument.capture());
-        assertTrue(argument.getAllValues().get(0).getInstanceIds().containsAll(Arrays.asList("i-1")));
+        assertTrue(argument.getAllValues().get(0).instanceIds().containsAll(Arrays.asList("i-1")));
     }
 
     @Test
@@ -124,7 +122,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
         instanceIds.add("i-2");
         instanceIds.add("i-1");
 
-        assertTrue(argument.getAllValues().get(0).getInstanceIds().containsAll(instanceIds));
+        assertTrue(argument.getAllValues().get(0).instanceIds().containsAll(instanceIds));
     }
 
     @Test
@@ -159,7 +157,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
         }
         cloud.update();
 
-        verify((amazonEC2), times(0)).terminateInstances(any());
+        verify((amazonEC2), times(0)).terminateInstances((TerminateInstancesRequest) any());
         cancelTasks(rs);
     }
 
@@ -191,7 +189,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
         final List<String> instanceIds = new ArrayList<String>();
         instanceIds.add("i-2");
         instanceIds.add("i-1");
-        assertTrue(argument.getAllValues().get(0).getInstanceIds().containsAll(instanceIds));
+        assertTrue(argument.getAllValues().get(0).instanceIds().containsAll(instanceIds));
     }
 
     @Test
@@ -215,7 +213,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
         }
         cloud.update();
 
-        verify((amazonEC2), times(0)).terminateInstances(any());
+        verify((amazonEC2), times(0)).terminateInstances((TerminateInstancesRequest) any());
     }
 
     @Test
@@ -239,7 +237,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
         }
         cloud.update();
 
-        verify((amazonEC2), times(0)).terminateInstances(any());
+        verify((amazonEC2), times(0)).terminateInstances((TerminateInstancesRequest) any());
     }
 
     @Test
@@ -266,6 +264,6 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
 
         final ArgumentCaptor<TerminateInstancesRequest> argument = ArgumentCaptor.forClass(TerminateInstancesRequest.class);
         verify((amazonEC2), atLeastOnce()).terminateInstances(argument.capture());
-        assertTrue(argument.getAllValues().get(0).getInstanceIds().containsAll(Arrays.asList("i-1", "i-2")));
+        assertTrue(argument.getAllValues().get(0).instanceIds().containsAll(Arrays.asList("i-1", "i-2")));
     }
 }

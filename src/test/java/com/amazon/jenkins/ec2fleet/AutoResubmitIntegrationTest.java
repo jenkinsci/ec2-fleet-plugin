@@ -3,13 +3,6 @@ package com.amazon.jenkins.ec2fleet;
 import com.amazon.jenkins.ec2fleet.aws.EC2Api;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
-import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
-import com.amazonaws.services.ec2.model.DescribeInstancesResult;
-import com.amazonaws.services.ec2.model.Instance;
-import com.amazonaws.services.ec2.model.InstanceState;
-import com.amazonaws.services.ec2.model.InstanceStateName;
-import com.amazonaws.services.ec2.model.Reservation;
 import hudson.Functions;
 import hudson.model.FreeStyleProject;
 import hudson.model.Node;
@@ -27,6 +20,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -58,19 +53,23 @@ public class AutoResubmitIntegrationTest extends IntegrationTest {
                 new FleetStateStats("", 1, FleetStateStats.State.active(), Collections.singleton("i-1"),
                         Collections.<String, Double>emptyMap()));
 
-        AmazonEC2 amazonEC2 = mock(AmazonEC2.class);
+        Ec2Client amazonEC2 = mock(Ec2Client.class);
         when(ec2Api.connect(anyString(), anyString(), Mockito.nullable(String.class))).thenReturn(amazonEC2);
 
-        final Instance instance = new Instance()
-                .withState(new InstanceState().withName(InstanceStateName.Running))
-                .withPublicIpAddress("public-io")
-                .withInstanceId("i-1");
+        final Instance instance = Instance.builder()
+                .state(InstanceState.builder().name(InstanceStateName.RUNNING)
+                        .build())
+                .publicIpAddress("public-io")
+                .instanceId("i-1")
+                .build();
 
         when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class))).thenReturn(
-                new DescribeInstancesResult().withReservations(
-                        new Reservation().withInstances(
+                DescribeInstancesResponse.builder().reservations(
+                        Reservation.builder().instances(
                                 instance
-                        )));
+                        )
+                        .build())
+                .build());
 
         noScaling = new EC2FleetCloud.NoScaler();
     }

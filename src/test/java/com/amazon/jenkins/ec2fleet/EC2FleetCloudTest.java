@@ -8,9 +8,9 @@ import com.amazon.jenkins.ec2fleet.fleet.EC2SpotFleet;
 import com.amazon.jenkins.ec2fleet.aws.RegionInfo;
 import com.amazon.jenkins.ec2fleet.aws.AwsPermissionChecker;
 import com.amazonaws.regions.RegionUtils;
-import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.AmazonEC2Client;
-import com.amazonaws.services.ec2.model.*;
+import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.*;
+import software.amazon.awssdk.services.ec2.Ec2Client;
 import hudson.ExtensionList;
 import hudson.model.Computer;
 import hudson.model.Label;
@@ -104,7 +104,7 @@ public class EC2FleetCloudTest {
     private EC2Api ec2Api;
 
     @Mock(strictness = Mock.Strictness.LENIENT)
-    private AmazonEC2 amazonEC2;
+    private Ec2Client amazonEC2;
 
     @Mock
     private EC2FleetNodeComputer idleComputer;
@@ -120,30 +120,46 @@ public class EC2FleetCloudTest {
 
     @Before
     public void before() {
-        spotFleetRequestConfig1 = new SpotFleetRequestConfig();
-        spotFleetRequestConfig1.setSpotFleetRequestState(BatchState.Active);
-        spotFleetRequestConfig1.setSpotFleetRequestConfig(new SpotFleetRequestConfigData().withType(FleetType.Maintain));
-        spotFleetRequestConfig2 = new SpotFleetRequestConfig();
-        spotFleetRequestConfig2.setSpotFleetRequestState(BatchState.Submitted);
-        spotFleetRequestConfig2.setSpotFleetRequestConfig(new SpotFleetRequestConfigData().withType(FleetType.Maintain));
-        spotFleetRequestConfig3 = new SpotFleetRequestConfig();
-        spotFleetRequestConfig3.setSpotFleetRequestState(BatchState.Modifying);
-        spotFleetRequestConfig3.setSpotFleetRequestConfig(new SpotFleetRequestConfigData().withType(FleetType.Maintain));
-        spotFleetRequestConfig4 = new SpotFleetRequestConfig();
-        spotFleetRequestConfig4.setSpotFleetRequestState(BatchState.Cancelled);
-        spotFleetRequestConfig4.setSpotFleetRequestConfig(new SpotFleetRequestConfigData().withType(FleetType.Maintain));
-        spotFleetRequestConfig5 = new SpotFleetRequestConfig();
-        spotFleetRequestConfig5.setSpotFleetRequestState(BatchState.Cancelled_running);
-        spotFleetRequestConfig5.setSpotFleetRequestConfig(new SpotFleetRequestConfigData().withType(FleetType.Maintain));
-        spotFleetRequestConfig6 = new SpotFleetRequestConfig();
-        spotFleetRequestConfig6.setSpotFleetRequestState(BatchState.Cancelled_terminating);
-        spotFleetRequestConfig6.setSpotFleetRequestConfig(new SpotFleetRequestConfigData().withType(FleetType.Maintain));
-        spotFleetRequestConfig7 = new SpotFleetRequestConfig();
-        spotFleetRequestConfig7.setSpotFleetRequestState(BatchState.Failed);
-        spotFleetRequestConfig7.setSpotFleetRequestConfig(new SpotFleetRequestConfigData().withType(FleetType.Maintain));
-        spotFleetRequestConfig8 = new SpotFleetRequestConfig();
-        spotFleetRequestConfig8.setSpotFleetRequestState(BatchState.Active);
-        spotFleetRequestConfig8.setSpotFleetRequestConfig(new SpotFleetRequestConfigData().withType(FleetType.Request));
+        spotFleetRequestConfig1 = SpotFleetRequestConfig.builder()
+                .build();
+        spotFleetRequestConfig1 = spotFleetRequestConfig1.toBuilder().spotFleetRequestState(BatchState.ACTIVE).build();
+        spotFleetRequestConfig1 = spotFleetRequestConfig1.toBuilder().spotFleetRequestConfig(SpotFleetRequestConfigData.builder().type(FleetType.MAINTAIN)
+                .build()).build();
+        spotFleetRequestConfig2 = SpotFleetRequestConfig.builder()
+                .build();
+        spotFleetRequestConfig2 = spotFleetRequestConfig2.toBuilder().spotFleetRequestState(BatchState.SUBMITTED).build();
+        spotFleetRequestConfig2 = spotFleetRequestConfig2.toBuilder().spotFleetRequestConfig(SpotFleetRequestConfigData.builder().type(FleetType.MAINTAIN)
+                .build()).build();
+        spotFleetRequestConfig3 = SpotFleetRequestConfig.builder()
+                .build();
+        spotFleetRequestConfig3 = spotFleetRequestConfig3.toBuilder().spotFleetRequestState(BatchState.MODIFYING).build();
+        spotFleetRequestConfig3 = spotFleetRequestConfig3.toBuilder().spotFleetRequestConfig(SpotFleetRequestConfigData.builder().type(FleetType.MAINTAIN)
+                .build()).build();
+        spotFleetRequestConfig4 = SpotFleetRequestConfig.builder()
+                .build();
+        spotFleetRequestConfig4 = spotFleetRequestConfig4.toBuilder().spotFleetRequestState(BatchState.CANCELLED).build();
+        spotFleetRequestConfig4 = spotFleetRequestConfig4.toBuilder().spotFleetRequestConfig(SpotFleetRequestConfigData.builder().type(FleetType.MAINTAIN)
+                .build()).build();
+        spotFleetRequestConfig5 = SpotFleetRequestConfig.builder()
+                .build();
+        spotFleetRequestConfig5 = spotFleetRequestConfig5.toBuilder().spotFleetRequestState(BatchState.CANCELLED_RUNNING).build();
+        spotFleetRequestConfig5 = spotFleetRequestConfig5.toBuilder().spotFleetRequestConfig(SpotFleetRequestConfigData.builder().type(FleetType.MAINTAIN)
+                .build()).build();
+        spotFleetRequestConfig6 = SpotFleetRequestConfig.builder()
+                .build();
+        spotFleetRequestConfig6 = spotFleetRequestConfig6.toBuilder().spotFleetRequestState(BatchState.CANCELLED_TERMINATING).build();
+        spotFleetRequestConfig6 = spotFleetRequestConfig6.toBuilder().spotFleetRequestConfig(SpotFleetRequestConfigData.builder().type(FleetType.MAINTAIN)
+                .build()).build();
+        spotFleetRequestConfig7 = SpotFleetRequestConfig.builder()
+                .build();
+        spotFleetRequestConfig7 = spotFleetRequestConfig7.toBuilder().spotFleetRequestState(BatchState.FAILED).build();
+        spotFleetRequestConfig7 = spotFleetRequestConfig7.toBuilder().spotFleetRequestConfig(SpotFleetRequestConfigData.builder().type(FleetType.MAINTAIN)
+                .build()).build();
+        spotFleetRequestConfig8 = SpotFleetRequestConfig.builder()
+                .build();
+        spotFleetRequestConfig8 = spotFleetRequestConfig8.toBuilder().spotFleetRequestState(BatchState.ACTIVE).build();
+        spotFleetRequestConfig8 = spotFleetRequestConfig8.toBuilder().spotFleetRequestConfig(SpotFleetRequestConfigData.builder().type(FleetType.REQUEST)
+                .build()).build();
 
         Registry.setEc2Api(ec2Api);
         mockedEc2Fleets = Mockito.mockStatic(EC2Fleets.class);
@@ -800,14 +816,15 @@ public class EC2FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        final Instance instance = new Instance()
-                .withPublicIpAddress("p-ip")
-                .withInstanceId("i-0");
+        final Instance instance = Instance.builder()
+                .publicIpAddress("p-ip")
+                .instanceId("i-0")
+                .build();
 
         final HashMap<String, Instance> instanceIdMap = new HashMap<>();
         instanceIdMap.put("i-0", instance);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
         Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
@@ -843,13 +860,15 @@ public class EC2FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        final Instance instance1 = new Instance().withPublicIpAddress("p-ip").withInstanceId("i-0");
-        final Instance instance2 = new Instance().withPublicIpAddress("p-ip").withInstanceId("i-1");
+        final Instance instance1 = Instance.builder().publicIpAddress("p-ip").instanceId("i-0")
+                .build();
+        final Instance instance2 = Instance.builder().publicIpAddress("p-ip").instanceId("i-1")
+                .build();
         final HashMap<String, Instance> instanceIdMap = new HashMap<>();
         instanceIdMap.put("i-0", instance1);
         instanceIdMap.put("i-1", instance2);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
         Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
@@ -881,11 +900,12 @@ public class EC2FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        final Instance instance1 = new Instance().withPublicIpAddress("p-ip").withInstanceId("i-0");
+        final Instance instance1 = Instance.builder().publicIpAddress("p-ip").instanceId("i-0")
+                .build();
         final HashMap<String, Instance> instanceIdMap = new HashMap<>();
         instanceIdMap.put("i-0", instance1);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
         Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
@@ -917,16 +937,17 @@ public class EC2FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
         doThrow(new UnsupportedOperationException("testexception"))
-                .when(ec2Api).tagInstances(any(AmazonEC2.class), any(Set.class), anyString(), anyString());
+                .when(ec2Api).tagInstances(any(Ec2Client.class), any(Set.class), anyString(), anyString());
 
-        final Instance instance = new Instance()
-                .withPublicIpAddress("p-ip")
-                .withInstanceId("i-0");
+        final Instance instance = Instance.builder()
+                .publicIpAddress("p-ip")
+                .instanceId("i-0")
+                .build();
 
         final HashMap<String, Instance> instanceIdMap = new HashMap<>();
         instanceIdMap.put("i-0", instance);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
         Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
@@ -962,13 +983,14 @@ public class EC2FleetCloudTest {
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
                         Collections.singleton("i-0"), Collections.<String, Double>emptyMap()));
 
-        final Instance instance = new Instance()
-                .withPublicIpAddress("p-ip")
-                .withInstanceId("i-0");
+        final Instance instance = Instance.builder()
+                .publicIpAddress("p-ip")
+                .instanceId("i-0")
+                .build();
         final HashMap<String, Instance> instanceIdMap = new HashMap<>();
         instanceIdMap.put("i-0", instance);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
         mockNodeCreatingPart();
@@ -1001,14 +1023,15 @@ public class EC2FleetCloudTest {
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
         final String instanceType = "t";
-        final Instance instance = new Instance()
-                .withPublicIpAddress("p-ip")
-                .withInstanceType(instanceType)
-                .withInstanceId("i-0");
+        final Instance instance = Instance.builder()
+                .publicIpAddress("p-ip")
+                .instanceType(instanceType)
+                .instanceId("i-0")
+                .build();
         final HashMap<String, Instance> instanceIdMap = new HashMap<>();
         instanceIdMap.put("i-0", instance);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
         Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
@@ -1040,7 +1063,7 @@ public class EC2FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 Collections.emptyMap());
 
         final FleetStateStats initState = new FleetStateStats("fleetId", 0,
@@ -1077,7 +1100,7 @@ public class EC2FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 Collections.emptyMap());
 
         final FleetStateStats initState = new FleetStateStats("fleetId", 0,
@@ -1125,7 +1148,7 @@ public class EC2FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 Collections.emptyMap());
 
         final FleetStateStats initState = new FleetStateStats("fleetId", 0,
@@ -1170,14 +1193,15 @@ public class EC2FleetCloudTest {
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
         final String instanceType = "t";
-        final Instance instance = new Instance()
-                .withPublicIpAddress("p-ip")
-                .withInstanceType(instanceType)
-                .withInstanceId("i-0");
+        final Instance instance = Instance.builder()
+                .publicIpAddress("p-ip")
+                .instanceType(instanceType)
+                .instanceId("i-0")
+                .build();
         final HashMap<String, Instance> instanceIdMap = new HashMap<>();
         instanceIdMap.put("i-0", instance);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
         final FleetStateStats initState = new FleetStateStats("fleetId", 5,
@@ -1215,15 +1239,16 @@ public class EC2FleetCloudTest {
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
         final String instanceType = "t";
-        final Instance instance = new Instance()
-                .withPublicIpAddress("p-ip")
-                .withInstanceType(instanceType)
-                .withInstanceId("i-0");
+        final Instance instance = Instance.builder()
+                .publicIpAddress("p-ip")
+                .instanceType(instanceType)
+                .instanceId("i-0")
+                .build();
 
         final HashMap<String, Instance> instanceIdMap = new HashMap<>();
         instanceIdMap.put("i-0", instance);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
         final FleetStateStats initState = new FleetStateStats("fleetId", 5,
@@ -1259,10 +1284,13 @@ public class EC2FleetCloudTest {
     public void update_shouldTerminateIdleOrNullInstancesOnly() {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(new HashMap<String, Instance>(){{
-                put("i-1", new Instance().withPublicIpAddress("p-ip").withInstanceId("i-1"));
-                put("i-2", new Instance().withPublicIpAddress("p-ip").withInstanceId("i-2"));
-                put("i-3", new Instance().withPublicIpAddress("p-ip").withInstanceId("i-3"));
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(new HashMap<String, Instance>(){{
+                put("i-1", Instance.builder().publicIpAddress("p-ip").instanceId("i-1")
+                        .build());
+                put("i-2", Instance.builder().publicIpAddress("p-ip").instanceId("i-2")
+                        .build());
+                put("i-3", Instance.builder().publicIpAddress("p-ip").instanceId("i-3")
+                        .build());
             }});
         Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("fleetId", 0, FleetStateStats.State.active(),
@@ -1303,7 +1331,7 @@ public class EC2FleetCloudTest {
 
         final HashMap<String, Instance> instanceIdMap = new HashMap<>();
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 instanceIdMap);
         when(jenkins.getComputers()).thenReturn(new Computer[0]);
 
@@ -1334,17 +1362,18 @@ public class EC2FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        final String instanceType = "t";
+        final String instanceType = "t3a.medium";
         final String instanceId = "i-0";
-        final Instance instance = new Instance()
-                .withPublicIpAddress("p-ip")
-                .withInstanceType(instanceType)
-                .withInstanceId(instanceId);
+        final Instance instance = Instance.builder()
+                .publicIpAddress("p-ip")
+                .instanceType(instanceType)
+                .instanceId(instanceId)
+                .build();
 
         final HashMap<String, Instance> instanceIdMap = new HashMap<>();
         instanceIdMap.put(instanceId, instance);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
         Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
@@ -1378,15 +1407,16 @@ public class EC2FleetCloudTest {
 
         final String instanceType = "t";
         final String instanceId = "i-0";
-        final Instance instance = new Instance()
-                .withPublicIpAddress("p-ip")
-                .withInstanceType(instanceType)
-                .withInstanceId(instanceId);
+        final Instance instance = Instance.builder()
+                .publicIpAddress("p-ip")
+                .instanceType(instanceType)
+                .instanceId(instanceId)
+                .build();
 
         final HashMap<String, Instance> instanceIdMap = new HashMap<>();
         instanceIdMap.put(instanceId, instance);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
         Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
@@ -1420,15 +1450,16 @@ public class EC2FleetCloudTest {
 
         final String instanceType = "t";
         final String instanceId = "i-0";
-        final Instance instance = new Instance()
-                .withPublicIpAddress("p-ip")
-                .withInstanceType(instanceType)
-                .withInstanceId(instanceId);
+        final Instance instance = Instance.builder()
+                .publicIpAddress("p-ip")
+                .instanceType(instanceType)
+                .instanceId(instanceId)
+                .build();
 
         final HashMap<String, Instance> instanceIdMap = new HashMap<>();
         instanceIdMap.put(instanceId, instance);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
         Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
@@ -1460,17 +1491,18 @@ public class EC2FleetCloudTest {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        final String instanceType = "t";
+        final String instanceType = "t3a.medium";
         final String instanceId = "i-0";
-        final Instance instance = new Instance()
-                .withPublicIpAddress("p-ip")
-                .withInstanceType(instanceType)
-                .withInstanceId(instanceId);
+        final Instance instance = Instance.builder()
+                .publicIpAddress("p-ip")
+                .instanceType(instanceType)
+                .instanceId(instanceId)
+                .build();
 
         final HashMap<String, Instance> instanceIdMap = new HashMap<>();
         instanceIdMap.put(instanceId, instance);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
         Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
@@ -1504,15 +1536,16 @@ public class EC2FleetCloudTest {
 
         final String instanceType = "t";
         final String instanceId = "i-0";
-        final Instance instance = new Instance()
-                .withPublicIpAddress("p-ip")
-                .withInstanceType(instanceType)
-                .withInstanceId(instanceId);
+        final Instance instance = Instance.builder()
+                .publicIpAddress("p-ip")
+                .instanceType(instanceType)
+                .instanceId(instanceId)
+                .build();
 
         final HashMap<String, Instance> instanceIdMap = new HashMap<>();
         instanceIdMap.put(instanceId, instance);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
         Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
@@ -1550,15 +1583,16 @@ public class EC2FleetCloudTest {
 
         final String instanceType = "t";
         final String instanceId = "i-0";
-        final Instance instance = new Instance()
-                .withPublicIpAddress("p-ip")
-                .withInstanceType(instanceType)
-                .withInstanceId(instanceId);
+        final Instance instance = Instance.builder()
+                .publicIpAddress("p-ip")
+                .instanceType(instanceType)
+                .instanceId(instanceId)
+                .build();
 
         final HashMap<String, Instance> instanceIdMap = new HashMap<>();
         instanceIdMap.put(instanceId, instance);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
         Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
@@ -1592,15 +1626,16 @@ public class EC2FleetCloudTest {
 
         final String instanceType = "t";
         final String instanceId = "i-0";
-        final Instance instance = new Instance()
-                .withPublicIpAddress("p-ip")
-                .withInstanceType(instanceType)
-                .withInstanceId(instanceId);
+        final Instance instance = Instance.builder()
+                .publicIpAddress("p-ip")
+                .instanceType(instanceType)
+                .instanceId(instanceId)
+                .build();
 
         final HashMap<String, Instance> instanceIdMap = new HashMap<>();
         instanceIdMap.put(instanceId, instance);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
         final FleetStateStats stats = new FleetStateStats("fleetId", 0,
@@ -1720,28 +1755,35 @@ public class EC2FleetCloudTest {
     @Test
     public void update_whenScalingByNodeHardwareWithLessVCPUs_shouldScaleExecutorsByVCPUs() throws IOException {
         when(amazonEC2.describeInstanceTypes(any(DescribeInstanceTypesRequest.class)))
-                .thenReturn(new DescribeInstanceTypesResult()
-                        .withInstanceTypes(
-                                new InstanceTypeInfo()
-                                        .withMemoryInfo(
-                                                new MemoryInfo()
-                                                        .withSizeInMiB((long)4*MiB_TO_GiB_MULTIPLIER))
-                                        .withVCpuInfo(
-                                                new VCpuInfo()
-                                                        .withDefaultVCpus(2))));
+                .thenReturn(DescribeInstanceTypesResponse.builder()
+                .instanceTypes(
+                        InstanceTypeInfo.builder()
+                                .memoryInfo(
+                                        MemoryInfo.builder()
+                                                .sizeInMiB((long) 4 * MiB_TO_GiB_MULTIPLIER)
+                                        .build())
+                                .vCpuInfo(
+                                        VCpuInfo.builder()
+                                                .defaultVCpus(2)
+                                        .build())
+                        .build())
+                .build());
 
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        final Instance instance = new Instance()
-                .withPublicIpAddress("p-ip")
-                .withInstanceId("i-0")
-                .withState(new InstanceState()
-                            .withName(InstanceStateName.Running));
+        final Instance instance = Instance.builder()
+                .publicIpAddress("p-ip")
+                .instanceId("i-0")
+                .instanceType(InstanceType.T3_A_MEDIUM)
+                .state(InstanceState.builder()
+                        .name(InstanceStateName.RUNNING)
+                        .build())
+                .build();
 
         final HashMap<String, Instance> instanceIdMap = new HashMap<>();
         instanceIdMap.put("i-0", instance);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
         Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
@@ -1772,28 +1814,35 @@ public class EC2FleetCloudTest {
     @Test
     public void update_whenScalingByNodeHardwareWithLessMemory_shouldScaleExecutorsByMemory() throws IOException {
         when(amazonEC2.describeInstanceTypes(any(DescribeInstanceTypesRequest.class)))
-                .thenReturn(new DescribeInstanceTypesResult()
-                        .withInstanceTypes(
-                                new InstanceTypeInfo()
-                                        .withMemoryInfo(
-                                                new MemoryInfo()
-                                                        .withSizeInMiB((long)6*MiB_TO_GiB_MULTIPLIER))
-                                        .withVCpuInfo(
-                                                new VCpuInfo()
-                                                        .withDefaultVCpus(8))));
+                .thenReturn(DescribeInstanceTypesResponse.builder()
+                .instanceTypes(
+                        InstanceTypeInfo.builder()
+                                .memoryInfo(
+                                        MemoryInfo.builder()
+                                                .sizeInMiB((long) 6 * MiB_TO_GiB_MULTIPLIER)
+                                        .build())
+                                .vCpuInfo(
+                                        VCpuInfo.builder()
+                                                .defaultVCpus(8)
+                                        .build())
+                        .build())
+                .build());
 
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        final Instance instance = new Instance()
-                .withPublicIpAddress("p-ip")
-                .withInstanceId("i-0")
-                .withState(new InstanceState()
-                        .withName(InstanceStateName.Running));
+        final Instance instance = Instance.builder()
+                .publicIpAddress("p-ip")
+                .instanceId("i-0")
+                .instanceType(InstanceType.T3_A_MEDIUM)
+                .state(InstanceState.builder()
+                        .name(InstanceStateName.RUNNING)
+                        .build())
+                .build();
 
         final HashMap<String, Instance> instanceIdMap = new HashMap<>();
         instanceIdMap.put("i-0", instance);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
         Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
@@ -1824,28 +1873,35 @@ public class EC2FleetCloudTest {
     @Test
     public void update_whenScalingByNodeHardwareWithNoVCPUs_shouldScaleExecutorsByMemory() throws IOException {
         when(amazonEC2.describeInstanceTypes(any(DescribeInstanceTypesRequest.class)))
-                .thenReturn(new DescribeInstanceTypesResult()
-                        .withInstanceTypes(
-                                new InstanceTypeInfo()
-                                        .withMemoryInfo(
-                                                new MemoryInfo()
-                                                        .withSizeInMiB((long)4*MiB_TO_GiB_MULTIPLIER))
-                                        .withVCpuInfo(
-                                                new VCpuInfo()
-                                                        .withDefaultVCpus(2))));
+                .thenReturn(DescribeInstanceTypesResponse.builder()
+                .instanceTypes(
+                        InstanceTypeInfo.builder()
+                                .memoryInfo(
+                                        MemoryInfo.builder()
+                                                .sizeInMiB((long) 4 * MiB_TO_GiB_MULTIPLIER)
+                                        .build())
+                                .vCpuInfo(
+                                        VCpuInfo.builder()
+                                                .defaultVCpus(2)
+                                        .build())
+                        .build())
+                .build());
 
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        final Instance instance = new Instance()
-                .withPublicIpAddress("p-ip")
-                .withInstanceId("i-0")
-                .withState(new InstanceState()
-                        .withName(InstanceStateName.Running));
+        final Instance instance = Instance.builder()
+                .publicIpAddress("p-ip")
+                .instanceId("i-0")
+                .instanceType(InstanceType.T3_A_MEDIUM)
+                .state(InstanceState.builder()
+                        .name(InstanceStateName.RUNNING)
+                        .build())
+                .build();
 
         final HashMap<String, Instance> instanceIdMap = new HashMap<>();
         instanceIdMap.put("i-0", instance);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
         Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
@@ -1876,28 +1932,35 @@ public class EC2FleetCloudTest {
     @Test
     public void update_whenScalingByNodeHardwareWithNoMemory_shouldScaleExecutorsByVCPUs() throws IOException {
         when(amazonEC2.describeInstanceTypes(any(DescribeInstanceTypesRequest.class)))
-                .thenReturn(new DescribeInstanceTypesResult()
-                        .withInstanceTypes(
-                                new InstanceTypeInfo()
-                                        .withMemoryInfo(
-                                                new MemoryInfo()
-                                                        .withSizeInMiB((long)3*MiB_TO_GiB_MULTIPLIER))
-                                        .withVCpuInfo(
-                                                new VCpuInfo()
-                                                        .withDefaultVCpus(8))));
+                .thenReturn(DescribeInstanceTypesResponse.builder()
+                .instanceTypes(
+                        InstanceTypeInfo.builder()
+                                .memoryInfo(
+                                        MemoryInfo.builder()
+                                                .sizeInMiB((long) 3 * MiB_TO_GiB_MULTIPLIER)
+                                        .build())
+                                .vCpuInfo(
+                                        VCpuInfo.builder()
+                                                .defaultVCpus(8)
+                                        .build())
+                        .build())
+                .build());
 
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        final Instance instance = new Instance()
-                .withPublicIpAddress("p-ip")
-                .withInstanceId("i-0")
-                .withState(new InstanceState()
-                        .withName(InstanceStateName.Running));
+        final Instance instance = Instance.builder()
+                .publicIpAddress("p-ip")
+                .instanceId("i-0")
+                .instanceType(InstanceType.T3_A_MEDIUM)
+                .state(InstanceState.builder()
+                        .name(InstanceStateName.RUNNING)
+                        .build())
+                .build();
 
         final HashMap<String, Instance> instanceIdMap = new HashMap<>();
         instanceIdMap.put("i-0", instance);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
         Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
@@ -1928,28 +1991,35 @@ public class EC2FleetCloudTest {
     @Test
     public void update_whenScalingByNodeHardwareByMemoryWithLowMemory_shouldSetOneExecutor() throws IOException {
         when(amazonEC2.describeInstanceTypes(any(DescribeInstanceTypesRequest.class)))
-                .thenReturn(new DescribeInstanceTypesResult()
-                        .withInstanceTypes(
-                                new InstanceTypeInfo()
-                                        .withMemoryInfo(
-                                                new MemoryInfo()
-                                                        .withSizeInMiB((long)2*MiB_TO_GiB_MULTIPLIER))
-                                        .withVCpuInfo(
-                                                new VCpuInfo()
-                                                        .withDefaultVCpus(2))));
+                .thenReturn(DescribeInstanceTypesResponse.builder()
+                .instanceTypes(
+                        InstanceTypeInfo.builder()
+                                .memoryInfo(
+                                        MemoryInfo.builder()
+                                                .sizeInMiB((long) 2 * MiB_TO_GiB_MULTIPLIER)
+                                        .build())
+                                .vCpuInfo(
+                                        VCpuInfo.builder()
+                                                .defaultVCpus(2)
+                                        .build())
+                        .build())
+                .build());
 
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        final Instance instance = new Instance()
-                .withPublicIpAddress("p-ip")
-                .withInstanceId("i-0")
-                .withState(new InstanceState()
-                        .withName(InstanceStateName.Running));
+        final Instance instance = Instance.builder()
+                .publicIpAddress("p-ip")
+                .instanceId("i-0")
+                .instanceType(InstanceType.T3_A_MEDIUM)
+                .state(InstanceState.builder()
+                        .name(InstanceStateName.RUNNING)
+                        .build())
+                .build();
 
         final HashMap<String, Instance> instanceIdMap = new HashMap<>();
         instanceIdMap.put("i-0", instance);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
         Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
@@ -1980,28 +2050,35 @@ public class EC2FleetCloudTest {
     @Test
     public void update_whenScalingByNodeHardwareByVCPUsWithLowVCPUCount_shouldSetOneExecutor() throws IOException {
         when(amazonEC2.describeInstanceTypes(any(DescribeInstanceTypesRequest.class)))
-                .thenReturn(new DescribeInstanceTypesResult()
-                        .withInstanceTypes(
-                                new InstanceTypeInfo()
-                                        .withMemoryInfo(
-                                                new MemoryInfo()
-                                                        .withSizeInMiB((long)4*MiB_TO_GiB_MULTIPLIER))
-                                        .withVCpuInfo(
-                                                new VCpuInfo()
-                                                        .withDefaultVCpus(2))));
+                .thenReturn(DescribeInstanceTypesResponse.builder()
+                .instanceTypes(
+                        InstanceTypeInfo.builder()
+                                .memoryInfo(
+                                        MemoryInfo.builder()
+                                                .sizeInMiB((long) 4 * MiB_TO_GiB_MULTIPLIER)
+                                        .build())
+                                .vCpuInfo(
+                                        VCpuInfo.builder()
+                                                .defaultVCpus(2)
+                                        .build())
+                        .build())
+                .build());
 
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        final Instance instance = new Instance()
-                .withPublicIpAddress("p-ip")
-                .withInstanceId("i-0")
-                .withState(new InstanceState()
-                        .withName(InstanceStateName.Running));
+        final Instance instance = Instance.builder()
+                .publicIpAddress("p-ip")
+                .instanceId("i-0")
+                .instanceType(InstanceType.T3_A_MEDIUM)
+                .state(InstanceState.builder()
+                        .name(InstanceStateName.RUNNING)
+                        .build())
+                .build();
 
         final HashMap<String, Instance> instanceIdMap = new HashMap<>();
         instanceIdMap.put("i-0", instance);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
         Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
@@ -2032,28 +2109,34 @@ public class EC2FleetCloudTest {
     @Test
     public void update_whenScalingByNodeHardwareWithNoVCPUsAndNoMemory_shouldSetExecutorsToNumExecutors() throws IOException {
         when(amazonEC2.describeInstanceTypes(any(DescribeInstanceTypesRequest.class)))
-                .thenReturn(new DescribeInstanceTypesResult()
-                        .withInstanceTypes(
-                                new InstanceTypeInfo()
-                                        .withMemoryInfo(
-                                                new MemoryInfo()
-                                                        .withSizeInMiB((long)4*MiB_TO_GiB_MULTIPLIER))
-                                        .withVCpuInfo(
-                                                new VCpuInfo()
-                                                        .withDefaultVCpus(2))));
+                .thenReturn(DescribeInstanceTypesResponse.builder()
+                .instanceTypes(
+                        InstanceTypeInfo.builder()
+                                .memoryInfo(
+                                        MemoryInfo.builder()
+                                                .sizeInMiB((long) 4 * MiB_TO_GiB_MULTIPLIER)
+                                        .build())
+                                .vCpuInfo(
+                                        VCpuInfo.builder()
+                                                .defaultVCpus(2)
+                                        .build())
+                        .build())
+                .build());
 
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
 
-        final Instance instance = new Instance()
-                .withPublicIpAddress("p-ip")
-                .withInstanceId("i-0")
-                .withState(new InstanceState()
-                        .withName(InstanceStateName.Running));
+        final Instance instance = Instance.builder()
+                .publicIpAddress("p-ip")
+                .instanceId("i-0")
+                .state(InstanceState.builder()
+                        .name(InstanceStateName.RUNNING)
+                        .build())
+                .build();
 
         final HashMap<String, Instance> instanceIdMap = new HashMap<>();
         instanceIdMap.put("i-0", instance);
 
-        when(ec2Api.describeInstances(any(AmazonEC2.class), any(Set.class))).thenReturn(
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(
                 instanceIdMap);
 
         Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
@@ -2118,7 +2201,7 @@ public class EC2FleetCloudTest {
         when(EC2Fleets.get(anyString())).thenReturn(ec2Fleet);
         when(ec2Fleet.isAutoScalingGroup()).thenReturn(false);
 
-        final AmazonEC2 amazonEC2 = mock(AmazonEC2.class);
+        final Ec2Client amazonEC2 = mock(Ec2Client.class);
         when(Registry.getEc2Api().connect(anyString(), any(), any())).thenReturn(amazonEC2);
 
         final FleetStateStats stats = new FleetStateStats("fleetId", 1, FleetStateStats.State.active(),
@@ -2207,7 +2290,7 @@ public class EC2FleetCloudTest {
 
     @Test
     public void descriptorImpl_doFillRegionItems_returnStaticRegionsIfApiCallFailed() {
-        AmazonEC2Client amazonEC2Client = mock(AmazonEC2Client.class);
+        Ec2Client amazonEC2Client = mock(Ec2Client.class);
         when(ec2Api.connect(anyString(), anyString(), anyString())).thenReturn(amazonEC2Client);
 
         ListBoxModel r = new EC2FleetCloud.DescriptorImpl().doFillRegionItems("");
@@ -2258,9 +2341,11 @@ public class EC2FleetCloudTest {
 
     @Test
     public void descriptorImpl_doFillRegionItems_returnStaticRegionsAndDynamic() {
-        AmazonEC2Client amazonEC2Client = mock(AmazonEC2Client.class);
+        Ec2Client amazonEC2Client = mock(Ec2Client.class);
         when(ec2Api.connect(anyString(), nullable(String.class), nullable(String.class))).thenReturn(amazonEC2Client);
-        when(amazonEC2Client.describeRegions()).thenReturn(new DescribeRegionsResult().withRegions(new Region().withRegionName("dynamic-region")));
+        when(amazonEC2Client.describeRegions()).thenReturn(DescribeRegionsResponse.builder().regions(Region.builder().regionName("dynamic-region")
+                .build())
+                .build());
 
         ListBoxModel r = new EC2FleetCloud.DescriptorImpl().doFillRegionItems("");
         HashSet<String> staticRegions = new HashSet<>(RegionInfo.getRegionNames());
@@ -2274,9 +2359,11 @@ public class EC2FleetCloudTest {
     @Test
     public void descriptorImpl_doFillRegionItems_shouldDisplayRegionCodeWhenRegionDescriptionMissing() {
         final String dynamicRegion = "dynamic-region";
-        AmazonEC2Client amazonEC2Client = mock(AmazonEC2Client.class);
+        Ec2Client amazonEC2Client = mock(Ec2Client.class);
         when(ec2Api.connect(anyString(), nullable(String.class), nullable(String.class))).thenReturn(amazonEC2Client);
-        when(amazonEC2Client.describeRegions()).thenReturn(new DescribeRegionsResult().withRegions(new Region().withRegionName(dynamicRegion)));
+        when(amazonEC2Client.describeRegions()).thenReturn(DescribeRegionsResponse.builder().regions(Region.builder().regionName(dynamicRegion)
+                .build())
+                .build());
 
         final ListBoxModel regionsListBoxModel = new EC2FleetCloud.DescriptorImpl().doFillRegionItems("");
         boolean isPresent = false;
@@ -2297,9 +2384,11 @@ public class EC2FleetCloudTest {
     public void descriptorImpl_doFillRegionItems_shouldDisplayVirginiaDescription() {
         final String regionName = "us-east-1";
         final String displayName = "us-east-1 US East (N. Virginia)";
-        AmazonEC2Client amazonEC2Client = mock(AmazonEC2Client.class);
+        Ec2Client amazonEC2Client = mock(Ec2Client.class);
         when(ec2Api.connect(anyString(), nullable(String.class), nullable(String.class))).thenReturn(amazonEC2Client);
-        when(amazonEC2Client.describeRegions()).thenReturn(new DescribeRegionsResult().withRegions(new Region().withRegionName(regionName)));
+        when(amazonEC2Client.describeRegions()).thenReturn(DescribeRegionsResponse.builder().regions(Region.builder().regionName(regionName)
+                .build())
+                .build());
 
         final ListBoxModel regionsListBoxModel = new EC2FleetCloud.DescriptorImpl().doFillRegionItems("");
         boolean isPresent = false;
@@ -2317,9 +2406,11 @@ public class EC2FleetCloudTest {
 
     @Test
     public void descriptorImpl_doFillRegionItems_returnConsistOrderBetweenCalls() {
-        AmazonEC2Client amazonEC2Client = mock(AmazonEC2Client.class);
+        Ec2Client amazonEC2Client = mock(Ec2Client.class);
         when(ec2Api.connect(anyString(), nullable(String.class), nullable(String.class))).thenReturn(amazonEC2Client);
-        when(amazonEC2Client.describeRegions()).thenReturn(new DescribeRegionsResult().withRegions(new Region().withRegionName("dynamic-region")));
+        when(amazonEC2Client.describeRegions()).thenReturn(DescribeRegionsResponse.builder().regions(Region.builder().regionName("dynamic-region")
+                .build())
+                .build());
 
         ListBoxModel r1 = new EC2FleetCloud.DescriptorImpl().doFillRegionItems("");
         ListBoxModel r2 = new EC2FleetCloud.DescriptorImpl().doFillRegionItems("");

@@ -3,7 +3,6 @@ package com.amazon.jenkins.ec2fleet;
 import com.amazon.jenkins.ec2fleet.aws.EC2Api;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
-import com.amazonaws.services.ec2.AmazonEC2;
 
 import org.htmlunit.html.DomElement;
 import org.htmlunit.html.HtmlAnchor;
@@ -26,6 +25,7 @@ import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mockito;
 import org.xml.sax.SAXException;
+import software.amazon.awssdk.services.ec2.Ec2Client;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -65,7 +65,7 @@ public class UiIntegrationTest {
         EC2Fleets.setGet(ec2Fleet);
         final EC2Api ec2Api = spy(EC2Api.class);
         Registry.setEc2Api(ec2Api);
-        final AmazonEC2 amazonEC2 = mock(AmazonEC2.class);
+        final Ec2Client amazonEC2 = mock(Ec2Client.class);
 
         when(ec2Fleet.getState(anyString(), anyString(), nullable(String.class), anyString()))
                 .thenReturn(new FleetStateStats("", 2, FleetStateStats.State.active(), new HashSet<>(Arrays.asList("i-1", "i-2")), Collections.emptyMap()));

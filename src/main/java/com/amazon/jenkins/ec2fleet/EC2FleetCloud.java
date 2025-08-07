@@ -5,8 +5,8 @@ import com.amazon.jenkins.ec2fleet.aws.RegionHelper;
 import com.amazon.jenkins.ec2fleet.fleet.AutoScalingGroupFleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
-import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.model.*;
+import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.*;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
 import com.google.common.collect.Sets;
 import hudson.Extension;
@@ -577,7 +577,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     private FleetStateStats updateByState(
             final int currentToAdd, final Map<String, EC2AgentTerminationReason> currentInstanceIdsToTerminate, final FleetStateStats currentState) {
         final Jenkins jenkins = Jenkins.get();
-        final AmazonEC2 ec2 = Registry.getEc2Api().connect(getAwsCredentialsId(), region, endpoint);
+        final Ec2Client ec2 = Registry.getEc2Api().connect(getAwsCredentialsId(), region, endpoint);
 
         // Ensure target capacity is not negative (covers capacity updates from outside the plugin)
         final int targetCapacity = Math.max(minSize,
@@ -818,20 +818,20 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
      * @param ec2      ec2 client
      * @param instance instance
      */
-    private void addNewAgent(final AmazonEC2 ec2, final Instance instance, FleetStateStats stats) throws Exception {
-        final String instanceId = instance.getInstanceId();
+    private void addNewAgent(final Ec2Client ec2, final Instance instance, FleetStateStats stats) throws Exception {
+        final String instanceId = instance.instanceId();
 
         // instance state check enabled and not running, skip adding
-        if (addNodeOnlyIfRunning && InstanceStateName.Running != InstanceStateName.fromValue(instance.getState().getName())) {
+        if (addNodeOnlyIfRunning && InstanceStateName.RUNNING != InstanceStateName.fromValue(String.valueOf(instance.state().name()))) {
             return;
         }
 
-        final String address = privateIpUsed ? instance.getPrivateIpAddress() : instance.getPublicIpAddress();
+        final String address = privateIpUsed ? instance.privateIpAddress() : instance.publicIpAddress();
         // Check if we have the address to use. Nodes don't get it immediately.
         if (address == null) {
             if (!privateIpUsed) {
                 info("Instance '%s' public IP address not assigned. Either it could take some time or" +
-                        " the Spot Request is not configured to assign public IPs", instance.getInstanceId());
+                        " the Spot Request is not configured to assign public IPs", instance.instanceId());
             }
             return; // wait more time, probably IP address not yet assigned
         }
@@ -844,7 +844,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             effectiveFsRoot = fsRoot;
         }
 
-        int effectiveNumExecutors = this.executorScaler.scale(instance.getInstanceType(), stats, ec2);
+        int effectiveNumExecutors = this.executorScaler.scale(instance.instanceType(), stats, ec2);
 
         final EC2FleetAutoResubmitComputerLauncher computerLauncher = new EC2FleetAutoResubmitComputerLauncher(
                 computerConnector.launch(address, TaskListener.NULL));
@@ -1034,10 +1034,11 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             // Check if any missing AWS Permissions
             final AwsPermissionChecker awsPermissionChecker = new AwsPermissionChecker(awsCredentialsId, region, endpoint);
             final List<String> missingPermissions = awsPermissionChecker.getMissingPermissions(fleet);
-            // TODO: DryRun does not work as expected for TerminateInstances and does not exists for UpdateAutoScalingGroup
-            final String disclaimer = String.format("Skipping validation for following permissions: %s, %s",
+            // TODO: DryRun does not work as expected for TerminateInstances and does not exists for UpdateAutoScalingGroup or ModifySpotFleetRequest
+            final String disclaimer = String.format("Skipping validation for following permissions: %s, %s, %s",
                     AwsPermissionChecker.FleetAPI.TerminateInstances,
-                    AwsPermissionChecker.FleetAPI.UpdateAutoScalingGroup);
+                    AwsPermissionChecker.FleetAPI.UpdateAutoScalingGroup,
+                    AwsPermissionChecker.FleetAPI.ModifySpotFleetRequest);
             if(missingPermissions.isEmpty()) {
                 return FormValidation.ok(String.format("Success! %s", disclaimer));
             }
@@ -1060,7 +1061,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
         protected ExecutorScaler(){}
 
-        public abstract int scale(String instanceType, FleetStateStats stats, AmazonEC2 ec2);
+        public abstract int scale(InstanceType instanceType, FleetStateStats stats, Ec2Client ec2);
 
         public ExecutorScaler withNumExecutors(int numExecutors) {
             setNumExecutors(numExecutors);
@@ -1082,7 +1083,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         public NoScaler() {}
 
         @Override
-        public int scale(String instanceType, FleetStateStats stats, AmazonEC2 ec2) { return numExecutors; }
+        public int scale(InstanceType instanceType, FleetStateStats stats, Ec2Client ec2) { return numExecutors; }
 
         @Extension
         public static class DescriptorImpl extends ExecutorScaleDescriptor {
@@ -1096,12 +1097,12 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         @DataBoundConstructor
         public WeightedScaler() {}
         @Override
-        public int scale(String instanceType, FleetStateStats stats, AmazonEC2 ec2) {
+        public int scale(InstanceType instanceType, FleetStateStats stats, Ec2Client ec2) {
             if(stats == null) {
                 return numExecutors;
             }
 
-            final Double instanceTypeWeight = stats.getInstanceTypeWeights().get(instanceType);
+            final Double instanceTypeWeight = stats.getInstanceTypeWeights().get(instanceType.toString());
             if (instanceTypeWeight == null) {
                 return numExecutors;
             }
@@ -1140,7 +1141,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         }
 
         @Override
-        public int scale(final String instanceType, final FleetStateStats stats, final AmazonEC2 ec2) {
+        public int scale(final InstanceType instanceType, final FleetStateStats stats, final Ec2Client ec2) {
             if(this.vCpuPerExecutor == 0 && this.memoryGiBPerExecutor == 0) {
                 return numExecutors;
             }
@@ -1149,12 +1150,12 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             int memoryNumExecutors = Integer.MAX_VALUE;
             InstanceTypeInfo instanceTypeInfo = getInstanceTypeInfo(ec2, instanceType);
             if(this.vCpuPerExecutor != 0) {
-                int instanceVCPUs = instanceTypeInfo.getVCpuInfo().getDefaultVCpus();
+                int instanceVCPUs = instanceTypeInfo.vCpuInfo().defaultVCpus();
                 vCPUNumExecutors = Math.max(instanceVCPUs/this.vCpuPerExecutor, 1);
             }
 
             if(this.memoryGiBPerExecutor != 0) {
-                long instanceMemory = instanceTypeInfo.getMemoryInfo().getSizeInMiB()/1024;
+                long instanceMemory = instanceTypeInfo.memoryInfo().sizeInMiB()/1024;
                 memoryNumExecutors = Math.max(Math.round((float) instanceMemory /this.memoryGiBPerExecutor), 1);
             }
             return Math.min(vCPUNumExecutors, memoryNumExecutors);
@@ -1166,10 +1167,11 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             public String getDisplayName() { return "Scale by node hardware";}
         }
 
-        private InstanceTypeInfo getInstanceTypeInfo(final AmazonEC2 ec2, final String instanceType) {
-            DescribeInstanceTypesRequest request = new DescribeInstanceTypesRequest().withInstanceTypes(instanceType);
-            DescribeInstanceTypesResult result = ec2.describeInstanceTypes(request);
-            return result.getInstanceTypes().get(0);
+        private InstanceTypeInfo getInstanceTypeInfo(final Ec2Client ec2, final InstanceType instanceType) {
+            DescribeInstanceTypesRequest request = DescribeInstanceTypesRequest.builder().instanceTypes(instanceType)
+                    .build();
+            DescribeInstanceTypesResponse result = ec2.describeInstanceTypes(request);
+            return result.instanceTypes().get(0);
         }
     }
 }

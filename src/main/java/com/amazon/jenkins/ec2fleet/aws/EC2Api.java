@@ -1,25 +1,26 @@
 package com.amazon.jenkins.ec2fleet.aws;
 
-import com.amazonaws.ClientConfiguration;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.RegionUtils;
-import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.AmazonEC2Client;
-import com.amazonaws.services.ec2.model.AmazonEC2Exception;
-import com.amazonaws.services.ec2.model.CreateTagsRequest;
-import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
-import com.amazonaws.services.ec2.model.DescribeInstancesResult;
-import com.amazonaws.services.ec2.model.Instance;
-import com.amazonaws.services.ec2.model.InstanceStateName;
-import com.amazonaws.services.ec2.model.Reservation;
-import com.amazonaws.services.ec2.model.Tag;
-import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
 import com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentials;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.Ec2ClientBuilder;
+import software.amazon.awssdk.services.ec2.model.CreateTagsRequest;
+import software.amazon.awssdk.services.ec2.model.DescribeInstancesRequest;
+import software.amazon.awssdk.services.ec2.model.DescribeInstancesResponse;
+import software.amazon.awssdk.services.ec2.model.Ec2Exception;
+import software.amazon.awssdk.services.ec2.model.Instance;
+import software.amazon.awssdk.services.ec2.model.InstanceStateName;
+import software.amazon.awssdk.services.ec2.model.Reservation;
+import software.amazon.awssdk.services.ec2.model.Tag;
+import software.amazon.awssdk.services.ec2.model.TerminateInstancesRequest;
 
 import javax.annotation.Nullable;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -39,10 +40,10 @@ public class EC2Api {
     private static final Logger LOGGER = Logger.getLogger(EC2Api.class.getName());
 
     private static final Set<String> TERMINATED_STATES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-            InstanceStateName.Terminated.toString(),
-            InstanceStateName.Stopped.toString(),
-            InstanceStateName.Stopping.toString(),
-            InstanceStateName.ShuttingDown.toString()
+            InstanceStateName.TERMINATED.toString(),
+            InstanceStateName.STOPPED.toString(),
+            InstanceStateName.STOPPING.toString(),
+            InstanceStateName.SHUTTING_DOWN.toString()
     )));
 
     private static final int BATCH_SIZE = 900;
@@ -61,11 +62,11 @@ public class EC2Api {
         return instanceIds;
     }
 
-    public Map<String, Instance> describeInstances(final AmazonEC2 ec2, final Set<String> instanceIds) {
+    public Map<String, Instance> describeInstances(final Ec2Client ec2, final Set<String> instanceIds) {
         return describeInstances(ec2, instanceIds, BATCH_SIZE);
     }
 
-    public Map<String, Instance> describeInstances(final AmazonEC2 ec2, final Set<String> instanceIds, final int batchSize) {
+    public Map<String, Instance> describeInstances(final Ec2Client ec2, final Set<String> instanceIds, final int batchSize) {
         final Map<String, Instance> described = new HashMap<>();
         // don't do actual call if no data
         if (instanceIds.isEmpty()) return described;
@@ -82,7 +83,7 @@ public class EC2Api {
     }
 
     private static void describeInstancesBatch(
-            final AmazonEC2 ec2, final Map<String, Instance> described, final List<String> batch) {
+            final Ec2Client ec2, final Map<String, Instance> described, final List<String> batch) {
         // we are going to modify list, so copy
         final List<String> copy = new ArrayList<>(batch);
 
@@ -91,31 +92,32 @@ public class EC2Api {
 
         // because instances could be terminated at any time we do multiple
         // retry to get status and all time remove from request all non found instances if any
-        while (copy.size() > 0) {
+        while (!copy.isEmpty()) {
             try {
-                final DescribeInstancesRequest request = new DescribeInstancesRequest().withInstanceIds(copy);
+                DescribeInstancesRequest request = DescribeInstancesRequest.builder().instanceIds(copy)
+                        .build();
 
-                DescribeInstancesResult result;
+                DescribeInstancesResponse result;
                 do {
                     result = ec2.describeInstances(request);
-                    request.setNextToken(result.getNextToken());
+                    request = request.toBuilder().nextToken(result.nextToken()).build();
 
-                    for (final Reservation r : result.getReservations()) {
-                        for (final Instance instance : r.getInstances()) {
+                    for (final Reservation r : result.reservations()) {
+                        for (final Instance instance : r.instances()) {
                             // if instance not in terminated state, add it to described
-                            if (!TERMINATED_STATES.contains(instance.getState().getName())) {
-                                described.put(instance.getInstanceId(), instance);
+                            if (!TERMINATED_STATES.contains(instance.state().name().toString())) {
+                                described.put(instance.instanceId(), instance);
                             }
                         }
                     }
-                } while (result.getNextToken() != null);
+                } while (result.nextToken() != null);
 
                 // all good, clear request batch to stop
                 copy.clear();
-            } catch (final AmazonEC2Exception exception) {
+            } catch (final Ec2Exception exception) {
                 // if we cannot find instance, that's fine assume them as terminated
                 // remove from request and try again
-                if (exception.getErrorCode().equals(NOT_FOUND_ERROR_CODE)) {
+                if (exception.awsErrorDetails().errorCode().equals(NOT_FOUND_ERROR_CODE)) {
                     final List<String> notFoundInstanceIds = parseInstanceIdsFromNotFoundException(exception.getMessage());
                     if (notFoundInstanceIds.isEmpty()) {
                         // looks like we cannot parse correctly, rethrow
@@ -135,18 +137,21 @@ public class EC2Api {
      * @param ec2 ec2 client
      * @param instanceIds set of instance ids
      */
-    public void terminateInstances(final AmazonEC2 ec2, final Collection<String> instanceIds) {
+    public void terminateInstances(final Ec2Client ec2, final Collection<String> instanceIds) {
         final List<String> temp = new ArrayList<>(instanceIds);
         // Retry if termination failed due to NOT_FOUND_ERROR_CODE
-        while (temp.size() > 0) {
+        while (!temp.isEmpty()) {
             try {
-                ec2.terminateInstances(new TerminateInstancesRequest(temp));
+                TerminateInstancesRequest request = TerminateInstancesRequest.builder()
+                        .instanceIds(temp)
+                        .build();
+                ec2.terminateInstances(request);
                 // clear after successful termination
                 temp.clear();
-            } catch (AmazonEC2Exception exception) {
+            } catch (Ec2Exception exception) {
                 // if we cannot find instance, that's fine assume them as terminated
                 // remove from request and try again
-                if (exception.getErrorCode().equals(NOT_FOUND_ERROR_CODE)) {
+                if (exception.awsErrorDetails().errorCode().equals(NOT_FOUND_ERROR_CODE)) {
                     final List<String> notFoundInstanceIds = parseInstanceIdsFromNotFoundException(exception.getMessage());
                     if (notFoundInstanceIds.isEmpty()) {
                         // looks like we cannot parse correctly, rethrow
@@ -162,27 +167,33 @@ public class EC2Api {
         }
     }
 
-    public void tagInstances(final AmazonEC2 ec2, final Set<String> instanceIds, final String key, final String value) {
+    public void tagInstances(final Ec2Client ec2, final Set<String> instanceIds, final String key, final String value) {
         if (instanceIds.isEmpty()) return;
 
-        final CreateTagsRequest request = new CreateTagsRequest()
-                .withResources(instanceIds)
+        final CreateTagsRequest request = CreateTagsRequest.builder()
+                .resources(instanceIds)
                 // if you don't need value EC2 API requires empty string
-                .withTags(Collections.singletonList(new Tag().withKey(key).withValue(value == null ? "" : value)));
+                .tags(Collections.singletonList(Tag.builder().key(key).value(value == null ? "" : value)
+                        .build()))
+                .build();
         ec2.createTags(request);
     }
 
-    public AmazonEC2 connect(final String awsCredentialsId, final String regionName, final String endpoint) {
-        final ClientConfiguration clientConfiguration = AWSUtils.getClientConfiguration(endpoint);
+    public Ec2Client connect(final String awsCredentialsId, final String regionName, final String endpoint) {
+        final ClientOverrideConfiguration clientConfiguration = AWSUtils.getClientConfiguration();
         final AmazonWebServicesCredentials credentials = AWSCredentialsHelper.getCredentials(awsCredentialsId, Jenkins.get());
-        final AmazonEC2Client client =
+        Ec2ClientBuilder clientBuilder =
                 credentials != null ?
-                        new AmazonEC2Client(credentials, clientConfiguration) :
-                        new AmazonEC2Client(clientConfiguration);
+                        Ec2Client.builder()
+                                .credentialsProvider(AWSUtils.toSdkV2CredentialsProvider(credentials))
+                                .overrideConfiguration(clientConfiguration) :
+                        Ec2Client.builder()
+                                .overrideConfiguration(clientConfiguration);
 
         final String effectiveEndpoint = getEndpoint(regionName, endpoint);
-        if (effectiveEndpoint != null) client.setEndpoint(effectiveEndpoint);
-        return client;
+        if (effectiveEndpoint != null) clientBuilder.endpointOverride(URI.create(effectiveEndpoint));
+        clientBuilder.httpClient(AWSUtils.getApacheHttpClient(endpoint));
+        return clientBuilder.build();
     }
 
     /**

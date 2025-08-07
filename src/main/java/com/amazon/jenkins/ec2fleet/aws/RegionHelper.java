@@ -1,12 +1,11 @@
 package com.amazon.jenkins.ec2fleet.aws;
 
 import com.amazon.jenkins.ec2fleet.Registry;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.model.DescribeRegionsResult;
-import com.amazonaws.services.ec2.model.Region;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.util.ListBoxModel;
+import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.DescribeRegionsResponse;
+import software.amazon.awssdk.services.ec2.model.Region;
 
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -31,17 +30,17 @@ public class RegionHelper {
         // to keep user consistent order tree map, default value to regionCode (eg. us-east-1)
         final TreeMap<String, String> regionDisplayNames = new TreeMap<>();
         try {
-            final AmazonEC2 client = Registry.getEc2Api().connect(awsCredentialsId, null, null);
-            final DescribeRegionsResult regions = client.describeRegions();
-            regionDisplayNames.putAll(regions.getRegions().stream()
-                    .collect(Collectors.toMap(Region::getRegionName, Region::getRegionName)));
+            final Ec2Client client = Registry.getEc2Api().connect(awsCredentialsId, null, null);
+            final DescribeRegionsResponse regions = client.describeRegions();
+            regionDisplayNames.putAll(regions.regions().stream()
+                    .collect(Collectors.toMap(Region::regionName, Region::regionName)));
         } catch (final Exception ex) {
             // ignore exception it could be case that credentials are not belong to default region
             // which we are using to describe regions
         }
         // Add SDK regions as user can have latest SDK
-        regionDisplayNames.putAll(com.amazonaws.regions.RegionUtils.getRegions().stream()
-                .collect(Collectors.toMap(com.amazonaws.regions.Region::getName, com.amazonaws.regions.Region::getName)));
+        regionDisplayNames.putAll(software.amazon.awssdk.regions.Region.regions().stream()
+                .collect(Collectors.toMap(software.amazon.awssdk.regions.Region::id, software.amazon.awssdk.regions.Region::id)));
         // Add regions from enum as user may have older SDK
         regionDisplayNames.putAll(RegionInfo.getRegionNames().stream()
                 .collect(Collectors.toMap(r -> r, r -> r)));
@@ -55,9 +54,15 @@ public class RegionHelper {
                     regionDescription = region.getDescription();
                 } else {
                     // Fallback to SDK when region description not found in RegionInfo
-                    regionDescription = Regions.fromName(regionName).getDescription();
+                    software.amazon.awssdk.regions.Region sdkRegion = software.amazon.awssdk.regions.Region.of(regionName);
+                    if (sdkRegion != null && sdkRegion.metadata() != null && sdkRegion.metadata().description() != null) {
+                        regionDescription = sdkRegion.metadata().description();
+                    } else {
+                        // If metadata or description is missing, use region code
+                        regionDescription = null;
+                    }
                 }
-                final String regionDisplayName = String.format("%s %s", regionName, regionDescription);
+                final String regionDisplayName = regionDescription != null ? String.format("%s %s", regionName, regionDescription) : regionName;
 
                 // Update map only when description exists else leave default to region code eg. us-east-1
                 regionDisplayNames.put(regionName, regionDisplayName);

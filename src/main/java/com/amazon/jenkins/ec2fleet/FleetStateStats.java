@@ -1,6 +1,6 @@
 package com.amazon.jenkins.ec2fleet;
 
-import com.amazonaws.services.ec2.model.BatchState;
+import software.amazon.awssdk.services.ec2.model.BatchState;
 
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;

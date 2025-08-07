@@ -2,8 +2,8 @@ package com.amazon.jenkins.ec2fleet.fleet;
 
 import com.amazon.jenkins.ec2fleet.FleetStateStats;
 import com.amazon.jenkins.ec2fleet.Registry;
-import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.model.*;
+import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.*;
 import hudson.util.ListBoxModel;
 import org.springframework.util.ObjectUtils;
 
@@ -12,104 +12,104 @@ import java.util.*;
 public class EC2EC2Fleet implements EC2Fleet {
     @Override
     public void describe(String awsCredentialsId, String regionName, String endpoint, ListBoxModel model, String selectedId, boolean showAll) {
-        final AmazonEC2 client = Registry.getEc2Api().connect(awsCredentialsId, regionName, endpoint);
-        String token = null;
-        do {
-            final DescribeFleetsRequest request = new DescribeFleetsRequest();
-            request.withNextToken(token);
-            final DescribeFleetsResult result = client.describeFleets(request);
-            for(final FleetData fleetData : result.getFleets()) {
-                final String curFleetId = fleetData.getFleetId();
+        final Ec2Client client = Registry.getEc2Api().connect(awsCredentialsId, regionName, endpoint);
+        for (DescribeFleetsResponse page : client.describeFleetsPaginator(DescribeFleetsRequest.builder().build())) {
+            for (final FleetData fleetData : page.fleets()) {
+                final String curFleetId = fleetData.fleetId();
                 final boolean selected = ObjectUtils.nullSafeEquals(selectedId, curFleetId);
                 if (selected || showAll || isActiveAndMaintain(fleetData)) {
                     final String displayStr = "EC2 Fleet - " + curFleetId +
-                            " (" + fleetData.getFleetState() + ")" +
-                            " (" + fleetData.getType() + ")";
+                            " (" + fleetData.fleetState() + ")" +
+                            " (" + fleetData.type() + ")";
                     model.add(new ListBoxModel.Option(displayStr, curFleetId, selected));
                 }
             }
-            token = result.getNextToken();
-        } while (token != null);
+        }
     }
 
     private static boolean isActiveAndMaintain(final FleetData fleetData) {
-        return FleetType.Maintain.toString().equals(fleetData.getType()) && isActive(fleetData);
+        return FleetType.MAINTAIN.toString().equals(String.valueOf(fleetData.type())) && isActive(fleetData);
     }
 
     private static boolean isActive(final FleetData fleetData) {
-        return BatchState.Active.toString().equals(fleetData.getFleetState())
-                || BatchState.Modifying.toString().equals(fleetData.getFleetState())
-                || BatchState.Submitted.toString().equals(fleetData.getFleetState());
+        return BatchState.ACTIVE.toString().equals(String.valueOf(fleetData.fleetState()))
+                || BatchState.MODIFYING.toString().equals(String.valueOf(fleetData.fleetState()))
+                || BatchState.SUBMITTED.toString().equals(String.valueOf(fleetData.fleetState()));
     }
 
     private static boolean isModifying(final FleetData fleetData) {
-        return BatchState.Submitted.toString().equals(fleetData.getFleetState())
-                || BatchState.Modifying.toString().equals(fleetData.getFleetState());
+        return BatchState.SUBMITTED.toString().equals(String.valueOf(fleetData.fleetState()))
+                || BatchState.MODIFYING.toString().equals(String.valueOf(fleetData.fleetState()));
     }
 
     @Override
     public void modify(String awsCredentialsId, String regionName, String endpoint, String id, int targetCapacity, int min, int max) {
-        final ModifyFleetRequest request = new ModifyFleetRequest();
-        request.setFleetId(id);
-        request.setTargetCapacitySpecification(new TargetCapacitySpecificationRequest().withTotalTargetCapacity(targetCapacity));
-        request.setExcessCapacityTerminationPolicy("no-termination");
+        final ModifyFleetRequest request = ModifyFleetRequest.builder()
+                .fleetId(id)
+                .targetCapacitySpecification(TargetCapacitySpecificationRequest.builder()
+                        .totalTargetCapacity(targetCapacity)
+                        .build())
+                .excessCapacityTerminationPolicy("no-termination")
+                .build();
 
-        final AmazonEC2 ec2 = Registry.getEc2Api().connect(awsCredentialsId, regionName, endpoint);
+        final Ec2Client ec2 = Registry.getEc2Api().connect(awsCredentialsId, regionName, endpoint);
         ec2.modifyFleet(request);
     }
 
     @Override
     public FleetStateStats getState(String awsCredentialsId, String regionName, String endpoint, String id) {
-        final AmazonEC2 ec2 = Registry.getEc2Api().connect(awsCredentialsId, regionName, endpoint);
+        final Ec2Client ec2 = Registry.getEc2Api().connect(awsCredentialsId, regionName, endpoint);
 
-        final DescribeFleetsRequest request = new DescribeFleetsRequest();
-        request.setFleetIds(Collections.singleton(id));
-        final DescribeFleetsResult result = ec2.describeFleets(request);
-        if (result.getFleets().isEmpty())
+        final DescribeFleetsRequest request = DescribeFleetsRequest.builder()
+                .fleetIds(Collections.singleton(id))
+                .build();
+        final DescribeFleetsResponse result = ec2.describeFleets(request);
+        if (result.fleets().isEmpty())
             throw new IllegalStateException("Fleet " + id + " doesn't exist");
 
-        final FleetData fleetData = result.getFleets().get(0);
-        final List<FleetLaunchTemplateConfig> templateConfigs = fleetData.getLaunchTemplateConfigs();
+        final FleetData fleetData = result.fleets().get(0);
+        final List<FleetLaunchTemplateConfig> templateConfigs = fleetData.launchTemplateConfigs();
 
         // Index configured instance types by weight:
         final Map<String, Double> instanceTypeWeights = new HashMap<>();
         for (FleetLaunchTemplateConfig templateConfig : templateConfigs) {
-            for (FleetLaunchTemplateOverrides launchOverrides : templateConfig.getOverrides()) {
-                final String instanceType = launchOverrides.getInstanceType();
+            for (FleetLaunchTemplateOverrides launchOverrides : templateConfig.overrides()) {
+                final InstanceType instanceType = launchOverrides.instanceType();
                 if (instanceType == null) continue;
-
-                final Double instanceWeight = launchOverrides.getWeightedCapacity();
-                final Double existingWeight = instanceTypeWeights.get(instanceType);
+                final String instanceTypeName = instanceType.toString();
+                final Double instanceWeight = launchOverrides.weightedCapacity();
+                final Double existingWeight = instanceTypeWeights.get(instanceTypeName);
                 if (instanceWeight == null || (existingWeight != null && existingWeight >= instanceWeight)) {
                     continue;
                 }
-                instanceTypeWeights.put(instanceType, instanceWeight);
+                instanceTypeWeights.put(instanceTypeName, instanceWeight);
             }
         }
 
         return new FleetStateStats(id,
-                fleetData.getTargetCapacitySpecification().getTotalTargetCapacity(),
+                fleetData.targetCapacitySpecification().totalTargetCapacity(),
                 new FleetStateStats.State(
                         isActive(fleetData),
                         isModifying(fleetData),
-                        fleetData.getFleetState()),
+                        String.valueOf(fleetData.fleetState())),
                 getActiveFleetInstances(ec2, id),
                 instanceTypeWeights);
     }
 
-    private Set<String> getActiveFleetInstances(AmazonEC2 ec2, String fleetId) {
+    private Set<String> getActiveFleetInstances(Ec2Client ec2, String fleetId) {
         String token = null;
         final Set<String> instances = new HashSet<>();
         do {
-            final DescribeFleetInstancesRequest request = new DescribeFleetInstancesRequest();
-            request.setFleetId(fleetId);
-            request.setNextToken(token);
-            final DescribeFleetInstancesResult result = ec2.describeFleetInstances(request);
-            for (final ActiveInstance instance : result.getActiveInstances()) {
-                instances.add(instance.getInstanceId());
+            final DescribeFleetInstancesRequest request = DescribeFleetInstancesRequest.builder()
+                    .fleetId(fleetId)
+                    .nextToken(token)
+                    .build();
+            final DescribeFleetInstancesResponse result = ec2.describeFleetInstances(request);
+            for (final ActiveInstance instance : result.activeInstances()) {
+                instances.add(instance.instanceId());
             }
 
-            token = result.getNextToken();
+            token = result.nextToken();
         } while (token != null);
         return instances;
     }
@@ -122,7 +122,7 @@ public class EC2EC2Fleet implements EC2Fleet {
 
     @Override
     public Map<String, FleetStateStats> getStateBatch(String awsCredentialsId, String regionName, String endpoint, Collection<String> ids) {
-        final AmazonEC2 ec2 = Registry.getEc2Api().connect(awsCredentialsId, regionName, endpoint);
+        final Ec2Client ec2 = Registry.getEc2Api().connect(awsCredentialsId, regionName, endpoint);
 
         List<State> states = new ArrayList<>();
         for (String id : ids) {
@@ -135,13 +135,14 @@ public class EC2EC2Fleet implements EC2Fleet {
             state.instances = getActiveFleetInstances(ec2, state.id);
         }
 
-        final DescribeFleetsRequest request = new DescribeFleetsRequest();
-        request.setFleetIds(ids);
-        final DescribeFleetsResult result = ec2.describeFleets(request);
+        final DescribeFleetsRequest request = DescribeFleetsRequest.builder()
+                .fleetIds(ids)
+                .build();
+        final DescribeFleetsResponse result = ec2.describeFleets(request);
 
-        for (FleetData fleetData: result.getFleets()) {
+        for (FleetData fleetData: result.fleets()) {
             for (State state : states) {
-                if (state.id.equals(fleetData.getFleetId())) state.fleetData = fleetData;
+                if (state.id.equals(fleetData.fleetId())) state.fleetData = fleetData;
             }
         }
 
@@ -149,11 +150,11 @@ public class EC2EC2Fleet implements EC2Fleet {
         for (State state : states) {
             if(state.fleetData != null) {
                 r.put(state.id, new FleetStateStats(state.id,
-                        state.fleetData.getTargetCapacitySpecification().getTotalTargetCapacity(),
+                        state.fleetData.targetCapacitySpecification().totalTargetCapacity(),
                         new FleetStateStats.State(
                                 isActive(state.fleetData),
                                 isModifying(state.fleetData),
-                                state.fleetData.getFleetState()),
+                                String.valueOf(state.fleetData.fleetState())),
                         state.instances,
                         Collections.<String, Double>emptyMap()));
             }

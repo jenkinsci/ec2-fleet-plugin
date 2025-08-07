@@ -21,7 +21,6 @@
     <jenkins.baseline>2.492</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-    <aws-sdk.version>1.12.780-480.v4a_0819121a_9e</aws-sdk.version>
   </properties>
 
   <name>EC2 Fleet Jenkins Plugin</name>
@@ -77,9 +76,35 @@
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>aws-java-sdk</artifactId>
-      <version>${aws-sdk.version}</version>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>apache-client</artifactId>
+      <version>2.31.63</version>
+    </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>netty-nio-client</artifactId>
+      <version>2.31.63</version>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins.aws-java-sdk2</groupId>
+      <artifactId>aws-java-sdk2-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins.aws-java-sdk2</groupId>
+      <artifactId>aws-java-sdk2-ec2</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins.aws-java-sdk2</groupId>
+      <artifactId>aws-java-sdk2-autoscaling</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins.aws-java-sdk2</groupId>
+      <artifactId>aws-java-sdk2-cloudformation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>4.5.14</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -104,6 +129,11 @@
     <dependency>
       <groupId>io.jenkins.configuration-as-code</groupId>
       <artifactId>test-harness</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins.aws-java-sdk2</groupId>
+      <artifactId>aws-java-sdk2-iam</artifactId>
       <scope>test</scope>
     </dependency>
 
@@ -136,7 +166,7 @@
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-surefire-plugin</artifactId>
               <configuration>
-                <argLine>-Xms768M -Xmx768M -XX:+HeapDumpOnOutOfMemoryError -XX:+TieredCompilation -XX:TieredStopAtLevel=1 @{jenkins.addOpens} @{jenkins.insaneHook} @{jenkins.javaAgent} --add-opens java.base/java.util.concurrent=ALL-UNNAMED --add-opens java.base/java.util.concurrent.locks=ALL-UNNAMED</argLine>
+                <argLine>-Xms768M -Xmx768M -XX:+HeapDumpOnOutOfMemoryError -XX:+TieredCompilation -XX:TieredStopAtLevel=1 @{jenkins.addOpens} @{jenkins.insaneHook} @{jenkins.javaAgent} --add-opens java.base/java.util.concurrent=ALL-UNNAMED --add-opens java.base/java.util.concurrent.locks=ALL-UNNAMED -Daws.region=us-east-1</argLine>
               </configuration>
             </plugin>
           </plugins>
