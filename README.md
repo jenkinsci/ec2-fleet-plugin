@@ -33,7 +33,7 @@ and terminating idle instances that breach that criteria or those in your Jenkin
 Use Auto Scaling Groups instead.
 
 # Features
-Minimum Jenkins version: 2.479.3
+Minimum Jenkins version: 2.492.3
 
 > [!NOTE]
 > [Jenkins version 2.403](https://github.com/jenkinsci/jenkins/releases/tag/jenkins-2.403) includes [significant changes to cloud management](https://issues.jenkins.io/browse/JENKINS-70729).
