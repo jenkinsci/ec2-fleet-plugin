@@ -611,7 +611,10 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
             effectiveFsRoot = fsRoot;
         }
 
-        final Double instanceTypeWeight = state.stats.getInstanceTypeWeights().get(instance.instanceType().toString());
+        System.out.println("InstanceTypeWeights keys: " + state.stats.getInstanceTypeWeights().keySet());
+        System.out.println("Current instance.instanceType(): " + instance.instanceType());
+        System.out.println("Current instance.instanceType().toString(): " + instance.instanceType().toString());
+        final Double instanceTypeWeight = state.stats.getInstanceTypeWeights().get(instance.instanceType());
         final int effectiveNumExecutors;
         // todo add scaleExecutorsByWeight
         if (instanceTypeWeight != null) {
