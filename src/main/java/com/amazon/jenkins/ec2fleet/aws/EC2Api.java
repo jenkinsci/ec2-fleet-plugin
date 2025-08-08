@@ -1,7 +1,5 @@
 package com.amazon.jenkins.ec2fleet.aws;
 
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.RegionUtils;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
 import com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentials;
 import jenkins.model.Jenkins;
@@ -198,19 +196,10 @@ public class EC2Api {
 
     /**
      * Derive EC2 API endpoint. If <code>endpoint</code> parameter not empty will use
-     * it as first priority, otherwise will try to find region in {@link RegionUtils} by <code>regionName</code>
-     * and use endpoint from it, if not available will generate endpoint as string and check if
+     * it as first priority, otherwise will generate endpoint as string and check if
      * region name looks like China <code>cn-</code> prefix.
      * <p>
      * Implementation details
-     * <p>
-     * {@link RegionUtils} is static information, and to get new region required to be updated,
-     * as it's not possible too fast as you need to check new version of lib, moreover new version of lib
-     * could be pointed to new version of Jenkins which is not a case for our plugin as some of installation
-     * still on <code>1.6.x</code>
-     * <p>
-     * For example latest AWS SDK lib depends on Jackson2 plugin which starting from version <code>2.8.7.0</code>
-     * require Jenkins at least <code>2.60</code> https://plugins.jenkins.io/jackson2-api
      * <p>
      * List of all AWS endpoints
      * https://docs.aws.amazon.com/general/latest/gr/rande.html
@@ -224,13 +213,8 @@ public class EC2Api {
         if (StringUtils.isNotEmpty(endpoint)) {
             return endpoint;
         } else if (StringUtils.isNotEmpty(regionName)) {
-            final Region region = RegionUtils.getRegion(regionName);
-            if (region != null && region.isServiceSupported(endpoint)) {
-                return region.getServiceEndpoint(endpoint);
-            } else {
-                final String domain = regionName.startsWith("cn-") ? "amazonaws.com.cn" : "amazonaws.com";
-                return "https://ec2." + regionName + "." + domain;
-            }
+            final String domain = regionName.startsWith("cn-") ? "amazonaws.com.cn" : "amazonaws.com";
+            return "https://ec2." + regionName + "." + domain;
         } else {
             return null;
         }

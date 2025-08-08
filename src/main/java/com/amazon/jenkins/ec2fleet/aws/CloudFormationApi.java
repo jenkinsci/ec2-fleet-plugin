@@ -1,8 +1,6 @@
 package com.amazon.jenkins.ec2fleet.aws;
 
 import com.amazon.jenkins.ec2fleet.EC2FleetLabelParameters;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.RegionUtils;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
 import com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentials;
 import jenkins.model.Jenkins;
@@ -51,13 +49,8 @@ public class CloudFormationApi {
         if (StringUtils.isNotEmpty(endpoint)) {
             return endpoint;
         } else if (StringUtils.isNotEmpty(regionName)) {
-            final Region region = RegionUtils.getRegion(regionName);
-            if (region != null && region.isServiceSupported(endpoint)) {
-                return region.getServiceEndpoint(endpoint);
-            } else {
-                final String domain = regionName.startsWith("cn-") ? "amazonaws.com.cn" : "amazonaws.com";
-                return "https://cloudformation." + regionName + "." + domain;
-            }
+            final String domain = regionName.startsWith("cn-") ? "amazonaws.com.cn" : "amazonaws.com";
+            return "https://cloudformation." + regionName + "." + domain;
         } else {
             return null;
         }
