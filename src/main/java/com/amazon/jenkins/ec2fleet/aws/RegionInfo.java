@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *  Copied from SDK <code>com.amazonaws.regions.Regions</code> to avoid upgrading SDK for newer regions
+ *  Copied from SDK to avoid upgrading SDK for newer regions
  */
 public enum RegionInfo {
     GovCloud("us-gov-west-1", "AWS GovCloud (US-West)"),

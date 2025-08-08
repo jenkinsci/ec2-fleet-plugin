@@ -15,7 +15,6 @@ automatically for your Jenkins workload.
 * [Usage](#usage)
   * [Setup](#setup)
   * [Scaling](#scaling)
-  * [Groovy](#groovy)
   * [Preconfigure Agent](#preconfigure-agent)
   * [Label Based Configuration (beta)](docs/LABEL-BASED-CONFIGURATION.md)
   * [Windows Agent](docs/SETUP-WINDOWS-AGENT.md)
@@ -197,106 +196,6 @@ You can specify the scaling limits in your cloud settings. By default, Jenkins w
 if there are enough tasks waiting in the build queue and scale down idle nodes after a specified idleness period.
 
 You can use the History tab in the AWS console to view the scaling history.
-
-## Groovy
-
-Below is a Groovy script to setup Spot Fleet Plugin for Jenkins and configure it. You can
-run the script with [Jenkins Script Console](https://wiki.jenkins.io/display/JENKINS/Jenkins+Script+Console).
-
-```groovy
-import com.amazonaws.services.ec2.model.InstanceType
-import com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey.DirectEntryPrivateKeySource
-import com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey
-import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsImpl
-import hudson.plugins.sshslaves.SSHConnector
-import hudson.plugins.sshslaves.verifiers.NonVerifyingKeyVerificationStrategy
-import com.cloudbees.plugins.credentials.*
-import com.cloudbees.plugins.credentials.domains.Domain
-import hudson.model.*
-import com.amazon.jenkins.ec2fleet.EC2FleetCloud
-import jenkins.model.Jenkins
-
-// just modify this config other code just logic
-config = [
-    region: "us-east-1",
-    // Spot Fleet ID, EC2 Fleet ID, or Auto Scaling Group Name
-    fleetId: "...", 
-    idleMinutes: 10,
-    minSize: 0,
-    maxSize: 10,
-    numExecutors: 1,
-    awsKeyId: "...",
-    secretKey: "...",
-    ec2PrivateKey: '''-----BEGIN RSA PRIVATE KEY-----
-...
------END RSA PRIVATE KEY-----'''
-]
-
-// https://github.com/jenkinsci/aws-credentials-plugin/blob/aws-credentials-1.23/src/main/java/com/cloudbees/jenkins/plugins/awscredentials/AWSCredentialsImpl.java
-AWSCredentialsImpl awsCredentials = new AWSCredentialsImpl(
-  CredentialsScope.GLOBAL,
-  "aws-credentials",
-  config.awsKeyId,
-  config.secretKey,
-  "my aws credentials"
-)
-
-BasicSSHUserPrivateKey instanceCredentials = new BasicSSHUserPrivateKey(
-  CredentialsScope.GLOBAL,
-  "instance-ssh-key",
-  "ec2-user",
-  new DirectEntryPrivateKeySource(config.ec2PrivateKey),
-  "",
-  "my private key to ssh ec2 for jenkins"
-)
-// find detailed information about parameters on plugin config page or
-// https://github.com/jenkinsci/ec2-fleet-plugin/blob/master/src/main/java/com/amazon/jenkins/ec2fleet/EC2FleetCloud.java
-EC2FleetCloud ec2FleetCloud = new EC2FleetCloud(
-  "", // fleetCloudName
-  null,
-  awsCredentials.id,
-  config.region,
-  "",
-  config.fleetId,
-  "ec2-fleet",  // labels
-  "", // fs root
-  new SSHConnector(22,
-                   instanceCredentials.id, "", "", "", "", null, 0, 0,
-                   // consult doc for line below, this one say no host verification, but you can use more strict mode
-                   // https://github.com/jenkinsci/ssh-slaves-plugin/blob/master/src/main/java/hudson/plugins/sshslaves/verifiers/NonVerifyingKeyVerificationStrategy.java
-                   new NonVerifyingKeyVerificationStrategy()),
-  false, // if need to use privateIpUsed
-  false, // if need alwaysReconnect
-  config.idleMinutes, // if need to allow downscale set > 0 in min
-  config.minSize, // minSize
-  config.maxSize, // maxSize
-  0,
-  config.numExecutors, // numExecutors
-  false, // addNodeOnlyIfRunning
-  false, // restrictUsage allow execute only jobs with proper label
-  "",
-  false,
-  180,
-  null,
-  30,
-  true,
-  new EC2FleetCloud.NoScaler()
-)
-
-// get Jenkins instance
-Jenkins jenkins = Jenkins.get()
-// get credentials domain
-def domain = Domain.global()
-// get credentials store
-def store = jenkins.getExtensionList('com.cloudbees.plugins.credentials.SystemCredentialsProvider')[0].getStore()
-// add credential to store
-store.addCredentials(domain, awsCredentials)
-store.addCredentials(domain, instanceCredentials)
-// add cloud configuration to Jenkins
-jenkins.clouds.add(ec2FleetCloud)
-// save current Jenkins state to disk
-jenkins.save()
-```
 
 ## Preconfigure Agent
 

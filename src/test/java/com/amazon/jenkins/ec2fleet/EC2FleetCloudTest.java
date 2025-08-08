@@ -7,7 +7,6 @@ import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 import com.amazon.jenkins.ec2fleet.fleet.EC2SpotFleet;
 import com.amazon.jenkins.ec2fleet.aws.RegionInfo;
 import com.amazon.jenkins.ec2fleet.aws.AwsPermissionChecker;
-import com.amazonaws.regions.RegionUtils;
 import software.amazon.awssdk.services.ec2.Ec2Client;
 import software.amazon.awssdk.services.ec2.model.*;
 import software.amazon.awssdk.services.ec2.Ec2Client;
@@ -2295,7 +2294,7 @@ public class EC2FleetCloudTest {
 
         ListBoxModel r = new EC2FleetCloud.DescriptorImpl().doFillRegionItems("");
         HashSet<String> staticRegions = new HashSet<>(RegionInfo.getRegionNames());
-        staticRegions.addAll(RegionUtils.getRegions().stream().map(com.amazonaws.regions.Region::getName).collect(Collectors.toSet()));
+        staticRegions.addAll(software.amazon.awssdk.regions.Region.regions().stream().map(software.amazon.awssdk.regions.Region::id).collect(Collectors.toSet()));
 
         Assert.assertThat(staticRegions.size(), Matchers.greaterThan(0));
         assertEquals(staticRegions.size(), r.size());
@@ -2349,7 +2348,7 @@ public class EC2FleetCloudTest {
 
         ListBoxModel r = new EC2FleetCloud.DescriptorImpl().doFillRegionItems("");
         HashSet<String> staticRegions = new HashSet<>(RegionInfo.getRegionNames());
-        staticRegions.addAll(RegionUtils.getRegions().stream().map(com.amazonaws.regions.Region::getName).collect(Collectors.toSet()));
+        staticRegions.addAll(software.amazon.awssdk.regions.Region.regions().stream().map(software.amazon.awssdk.regions.Region::id).collect(Collectors.toSet()));
 
         Assert.assertThat(r.size(), Matchers.greaterThan(0));
         Assert.assertThat(r.toString(), Matchers.containsString("dynamic-region"));
