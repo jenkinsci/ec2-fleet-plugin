@@ -253,16 +253,16 @@ public class EC2ApiTest {
      * Single instance
      * requestId = "0fd56c54-e11a-4928-843c-9a80a24bedd1"
      * errorCode = "InvalidInstanceID.NotFound"
-     * errorType = {AmazonServiceException$ErrorType@11247} "Unknown"
+     * errorType = {AwsServiceException$ErrorType@11247} "Unknown"
      * errorMessage = "The instance ID 'i-1233f' does not exist"
      * </code>
      * <p>
      * Multiple instances
      * <code>
-     * ex = {AmazonEC2Exception@11233} "com.amazonaws.services.ec2.model.AmazonEC2Exception: The instance IDs 'i-1233f, i-ffffff' do not exist (Service: AmazonEC2; Status Code: 400; Error Code: InvalidInstanceID.NotFound; Request ID:)"
+     * ex = {Ec2Exception@11233} "software.amazon.awssdk.services.ec2.model.Ec2Exception: The instance IDs 'i-1233f, i-ffffff' do not exist (Service: AmazonEC2; Status Code: 400; Error Code: InvalidInstanceID.NotFound; Request ID:)"
      * requestId = "1a353313-ef52-4626-b87b-fd828db6343f"
      * errorCode = "InvalidInstanceID.NotFound"
-     * errorType = {AmazonServiceException$ErrorType@11251} "Unknown"
+     * errorType = {AwsServiceException$ErrorType@11251} "Unknown"
      * errorMessage = "The instance IDs 'i-1233f, i-ffffff' do not exist"
      * </code>
      */
