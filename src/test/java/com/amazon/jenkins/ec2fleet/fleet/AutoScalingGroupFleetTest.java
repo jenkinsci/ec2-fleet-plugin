@@ -1,10 +1,6 @@
 package com.amazon.jenkins.ec2fleet.fleet;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
@@ -20,23 +16,25 @@ import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
 import com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentials;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.services.autoscaling.AutoScalingClient;
 import software.amazon.awssdk.services.autoscaling.AutoScalingClientBuilder;
 import software.amazon.awssdk.services.autoscaling.model.*;
 import software.amazon.awssdk.services.autoscaling.paginators.DescribeAutoScalingGroupsIterable;
 
-@RunWith(MockitoJUnitRunner.class)
-public class AutoScalingGroupFleetTest {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class AutoScalingGroupFleetTest {
 
     private MockedStatic<Jenkins> mockedJenkins;
 
@@ -56,8 +54,8 @@ public class AutoScalingGroupFleetTest {
     @Mock
     private ClientOverrideConfiguration clientConfiguration;
 
-    @Before
-    public void before() {
+    @BeforeEach
+    void before() {
         mockedJenkins = mockStatic(Jenkins.class);
         mockedJenkins.when(Jenkins::get).thenReturn(jenkins);
 
@@ -67,15 +65,15 @@ public class AutoScalingGroupFleetTest {
         mockedAWSCredentialsHelper = mockStatic(AWSCredentialsHelper.class);
     }
 
-    @After
-    public void after() {
+    @AfterEach
+    void after() {
         mockedAWSCredentialsHelper.close();
         mockedAWSUtils.close();
         mockedJenkins.close();
     }
 
     @Test
-    public void createAsgClientWithInstanceProfileWhenCredsNull() {
+    void createAsgClientWithInstanceProfileWhenCredsNull() {
         try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
             AutoScalingClientBuilder builderMock = Mockito.mock(AutoScalingClientBuilder.class, Mockito.RETURNS_SELF);
             mockedStatic.when(AutoScalingClient::builder).thenReturn(builderMock);
@@ -85,7 +83,7 @@ public class AutoScalingGroupFleetTest {
     }
 
     @Test
-    public void createAsgClientWithAWSCredentialsWhenCredentialIdExists() {
+    void createAsgClientWithAWSCredentialsWhenCredentialIdExists() {
         mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
 
         try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
@@ -100,7 +98,7 @@ public class AutoScalingGroupFleetTest {
     }
 
     @Test
-    public void describeAutoScalingGroupsWithNoASG() {
+    void describeAutoScalingGroupsWithNoASG() {
         final ListBoxModel listBoxModel = new ListBoxModel();
         mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
         try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
@@ -124,7 +122,7 @@ public class AutoScalingGroupFleetTest {
     }
 
     @Test
-    public void describeAutoScalingGroupsWithSingleASG() {
+    void describeAutoScalingGroupsWithSingleASG() {
         final String selectedAsgName = "selected-asg";
         mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
         final ListBoxModel listBoxModel = new ListBoxModel();
@@ -151,7 +149,7 @@ public class AutoScalingGroupFleetTest {
     }
 
     @Test
-    public void describeAutoScalingGroupsWithMultipleASG() {
+    void describeAutoScalingGroupsWithMultipleASG() {
         final String selectedAsgName = "selected-asg";
         mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
         ListBoxModel listBoxModel = new ListBoxModel();
@@ -189,7 +187,7 @@ public class AutoScalingGroupFleetTest {
     }
 
     @Test
-    public void modifyAutoScalingGroupsShouldContainInstanceProtectedFromScaleIn() {
+    void modifyAutoScalingGroupsShouldContainInstanceProtectedFromScaleIn() {
         final int targetCapacity = 3;
         final int min = 1;
         final int max = 5;
@@ -219,29 +217,28 @@ public class AutoScalingGroupFleetTest {
         }
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void getFleetStateStatesWithEmptyASGs() {
+    @Test
+    void getFleetStateStatesWithEmptyASGs() {
         mockedJenkins.when(Jenkins::get).thenReturn(jenkins);
         mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
         try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
-            AutoScalingClientBuilder builderMock = Mockito.mock(AutoScalingClientBuilder.class, Mockito.RETURNS_SELF);
-            AutoScalingClient clientMock = Mockito.mock(AutoScalingClient.class);
-            mockedStatic.when(AutoScalingClient::builder).thenReturn(builderMock);
-            when(builderMock.build()).thenReturn(clientMock);
+                AutoScalingClientBuilder builderMock = Mockito.mock(AutoScalingClientBuilder.class, Mockito.RETURNS_SELF);
+                AutoScalingClient clientMock = Mockito.mock(AutoScalingClient.class);
+                mockedStatic.when(AutoScalingClient::builder).thenReturn(builderMock);
+                when(builderMock.build()).thenReturn(clientMock);
 
-            final DescribeAutoScalingGroupsRequest describeAutoScalingGroupsRequest = DescribeAutoScalingGroupsRequest.builder().autoScalingGroupNames(ASG_NAME)
-                    .build();
-            final DescribeAutoScalingGroupsResponse result = DescribeAutoScalingGroupsResponse.builder().autoScalingGroups(new ArrayList<>())
-                    .build();
-            when(clientMock.describeAutoScalingGroups(describeAutoScalingGroupsRequest)).thenReturn(result);
+                final DescribeAutoScalingGroupsRequest describeAutoScalingGroupsRequest = DescribeAutoScalingGroupsRequest.builder().autoScalingGroupNames(ASG_NAME)
+                        .build();
+                final DescribeAutoScalingGroupsResponse result = DescribeAutoScalingGroupsResponse.builder().autoScalingGroups(new ArrayList<>())
+                        .build();
+                when(clientMock.describeAutoScalingGroups(describeAutoScalingGroupsRequest)).thenReturn(result);
 
-            new AutoScalingGroupFleet().getState(CREDS_ID, REGION, ENDPOINT, ASG_NAME);
-        }
-        fail("Exception not raised");
+                assertThrows(IllegalArgumentException.class, () -> new AutoScalingGroupFleet().getState(CREDS_ID, REGION, ENDPOINT, ASG_NAME));
+            }
     }
 
     @Test
-    public void getFleetStateStates() {
+    void getFleetStateStates() {
         final int desiredCapacity = 5;
         mockedJenkins.when(Jenkins::get).thenReturn(jenkins);
         mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
@@ -274,7 +271,7 @@ public class AutoScalingGroupFleetTest {
     }
 
     @Test
-    public void getFleetStatesWithASGInstanceWeights() {
+    void getFleetStatesWithASGInstanceWeights() {
         final int desiredCapacity = 5;
         mockedJenkins.when(Jenkins::get).thenReturn(jenkins);
         mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);

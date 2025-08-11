@@ -3,9 +3,8 @@ package com.amazon.jenkins.ec2fleet;
 import hudson.model.FreeStyleProject;
 import hudson.model.labels.LabelAtom;
 import hudson.model.queue.QueueTaskFuture;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackRequest;
@@ -15,17 +14,18 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 
-public class EC2FleetLabelCloudIntegrationTest extends IntegrationTest {
+class EC2FleetLabelCloudIntegrationTest extends IntegrationTest {
 
-    @BeforeClass
-    public static void beforeClass() {
+    @BeforeAll
+    static void beforeClass() {
         setJenkinsTestTimoutTo720();
     }
 
     @Test
-    public void should_create_stack_and_provision_node_for_task_execution() throws Exception {
+    void should_create_stack_and_provision_node_for_task_execution() throws Exception {
         mockEc2FleetApiToEc2SpotFleet(InstanceStateName.RUNNING);
         mockCloudFormationApi();
 
@@ -40,21 +40,18 @@ public class EC2FleetLabelCloudIntegrationTest extends IntegrationTest {
         final String labelString = "FleetLabel_maxSize=1";
         final List<QueueTaskFuture> rs = enqueTask(1, labelString, JOB_SLEEP_TIME);
 
-        Assert.assertEquals(0, j.jenkins.getNodes().size());
+        assertEquals(0, j.jenkins.getNodes().size());
 
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                triggerSuggestReviewNow(labelString);
-                assertTasksDone(rs);
-            }
+        tryUntil(() -> {
+            triggerSuggestReviewNow(labelString);
+            assertTasksDone(rs);
         }, TimeUnit.MINUTES.toMillis(4));
 
         cancelTasks(rs);
     }
 
     @Test
-    public void should_delete_resources_if_label_unused() throws Exception {
+    void should_delete_resources_if_label_unused() throws Exception {
         mockEc2FleetApiToEc2SpotFleet(InstanceStateName.RUNNING);
         final CloudFormationClient amazonCloudFormation = mockCloudFormationApi();
 
@@ -70,12 +67,9 @@ public class EC2FleetLabelCloudIntegrationTest extends IntegrationTest {
         final List<QueueTaskFuture> rs = enqueTask(1, labelString, JOB_SLEEP_TIME);
 
         // wait until tasks will be completed
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                triggerSuggestReviewNow(labelString);
-                assertTasksDone(rs);
-            }
+        tryUntil(() -> {
+            triggerSuggestReviewNow(labelString);
+            assertTasksDone(rs);
         }, TimeUnit.MINUTES.toMillis(4));
 
         // remove label from task (unused)
@@ -83,12 +77,9 @@ public class EC2FleetLabelCloudIntegrationTest extends IntegrationTest {
         freeStyleProject.setAssignedLabel(new LabelAtom("nothing"));
 
         // wait until stack will be deleted and nodes will be removed as well
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                Assert.assertEquals(Collections.emptyList(), j.jenkins.getNodes());
-                Mockito.verify(amazonCloudFormation).deleteStack(any(DeleteStackRequest.class));
-            }
+        tryUntil(() -> {
+            assertEquals(Collections.emptyList(), j.jenkins.getNodes());
+            Mockito.verify(amazonCloudFormation).deleteStack(any(DeleteStackRequest.class));
         }, TimeUnit.MINUTES.toMillis(2));
 
         cancelTasks(rs);

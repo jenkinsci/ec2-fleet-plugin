@@ -4,33 +4,28 @@ import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 import hudson.plugins.sshslaves.SSHConnector;
 import hudson.plugins.sshslaves.verifiers.NonVerifyingKeyVerificationStrategy;
-import hudson.slaves.Cloud;
 import io.jenkins.plugins.casc.ConfiguratorException;
 import io.jenkins.plugins.casc.misc.ConfiguredWithCode;
 import io.jenkins.plugins.casc.misc.JenkinsConfiguredWithCodeRule;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
+import io.jenkins.plugins.casc.misc.junit.jupiter.WithJenkinsConfiguredWithCode;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class EC2FleetCloudConfigurationAsCodeTest {
+@WithJenkinsConfiguredWithCode
+class EC2FleetCloudConfigurationAsCodeTest {
 
-    @Rule
-    public JenkinsRule jenkinsRule = new JenkinsConfiguredWithCodeRule();
-
-    @Before
-    public void before() {
+    @BeforeEach
+    void before() {
         final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
         EC2Fleets.setGet(ec2Fleet);
         when(ec2Fleet.getState(anyString(), anyString(), nullable(String.class), anyString()))
@@ -42,73 +37,74 @@ public class EC2FleetCloudConfigurationAsCodeTest {
             value = "EC2FleetCloud/name-required-configuration-as-code.yml",
             expected = ConfiguratorException.class,
             message = "name is required to configure class com.amazon.jenkins.ec2fleet.EC2FleetCloud")
-    public void configurationWithNullName_shouldFail() {
+    void configurationWithNullName_shouldFail(JenkinsConfiguredWithCodeRule jenkinsRule) {
+        // NOP
     }
 
     @Test
     @ConfiguredWithCode("EC2FleetCloud/min-configuration-as-code.yml")
-    public void shouldCreateCloudFromMinConfiguration() {
-        assertEquals(jenkinsRule.jenkins.clouds.size(), 1);
+    void shouldCreateCloudFromMinConfiguration(JenkinsConfiguredWithCodeRule jenkinsRule) {
+        assertEquals(1, jenkinsRule.jenkins.clouds.size());
         EC2FleetCloud cloud = (EC2FleetCloud) jenkinsRule.jenkins.clouds.getByName("ec2-fleet");
 
         assertEquals("ec2-fleet", cloud.name);
-        assertEquals(cloud.getRegion(), null);
-        assertEquals(cloud.getEndpoint(), null);
-        assertEquals(cloud.getFleet(), null);
-        assertEquals(cloud.getFsRoot(), null);
-        assertEquals(cloud.isPrivateIpUsed(), false);
-        assertEquals(cloud.isAlwaysReconnect(), false);
-        assertEquals(cloud.getLabelString(), null);
-        assertEquals(cloud.getIdleMinutes(), 0);
-        assertEquals(cloud.getMinSize(), 0);
-        assertEquals(cloud.getMaxSize(), 0);
-        assertEquals(cloud.getNumExecutors(), 1);
-        assertEquals(cloud.isAddNodeOnlyIfRunning(), false);
-        assertEquals(cloud.isRestrictUsage(), false);
-        assertEquals(cloud.getExecutorScaler().getClass(), EC2FleetCloud.NoScaler.class);
-        assertEquals(cloud.getInitOnlineTimeoutSec(), 180);
-        assertEquals(cloud.getInitOnlineCheckIntervalSec(), 15);
-        assertEquals(cloud.getCloudStatusIntervalSec(), 10);
-        assertEquals(cloud.isDisableTaskResubmit(), false);
-        assertEquals(cloud.isNoDelayProvision(), false);
+        assertNull(cloud.getRegion());
+        assertNull(cloud.getEndpoint());
+        assertNull(cloud.getFleet());
+        assertNull(cloud.getFsRoot());
+        assertFalse(cloud.isPrivateIpUsed());
+        assertFalse(cloud.isAlwaysReconnect());
+        assertNull(cloud.getLabelString());
+        assertEquals(0, cloud.getIdleMinutes());
+        assertEquals(0, cloud.getMinSize());
+        assertEquals(0, cloud.getMaxSize());
+        assertEquals(1, cloud.getNumExecutors());
+        assertFalse(cloud.isAddNodeOnlyIfRunning());
+        assertFalse(cloud.isRestrictUsage());
+        assertEquals(EC2FleetCloud.NoScaler.class, cloud.getExecutorScaler().getClass());
+        assertEquals(180, cloud.getInitOnlineTimeoutSec());
+        assertEquals(15, cloud.getInitOnlineCheckIntervalSec());
+        assertEquals(10, cloud.getCloudStatusIntervalSec());
+        assertFalse(cloud.isDisableTaskResubmit());
+        assertFalse(cloud.isNoDelayProvision());
     }
 
     @Test
     @ConfiguredWithCode("EC2FleetCloud/max-configuration-as-code.yml")
-    public void shouldCreateCloudFromMaxConfiguration() {
-        assertEquals(jenkinsRule.jenkins.clouds.size(), 1);
+    void shouldCreateCloudFromMaxConfiguration(JenkinsConfiguredWithCodeRule jenkinsRule) {
+        assertEquals(1, jenkinsRule.jenkins.clouds.size());
         EC2FleetCloud cloud = (EC2FleetCloud) jenkinsRule.jenkins.clouds.getByName("ec2-fleet");
 
         assertEquals("ec2-fleet", cloud.name);
-        assertEquals(cloud.getRegion(), "us-east-2");
-        assertEquals(cloud.getEndpoint(), "http://a.com");
-        assertEquals(cloud.getFleet(), "my-fleet");
-        assertEquals(cloud.getFsRoot(), "my-root");
-        assertEquals(cloud.isPrivateIpUsed(), true);
-        assertEquals(cloud.isAlwaysReconnect(), true);
-        assertEquals(cloud.getLabelString(), "myLabel");
-        assertEquals(cloud.getIdleMinutes(), 33);
-        assertEquals(cloud.getMinSize(), 15);
-        assertEquals(cloud.getMaxSize(), 90);
-        assertEquals(cloud.getNumExecutors(), 12);
-        assertEquals(cloud.isAddNodeOnlyIfRunning(), true);
-        assertEquals(cloud.isRestrictUsage(), true);
-        assertEquals(cloud.getExecutorScaler().getClass(), EC2FleetCloud.WeightedScaler.class);
-        assertEquals(cloud.getInitOnlineTimeoutSec(), 181);
-        assertEquals(cloud.getInitOnlineCheckIntervalSec(), 13);
-        assertEquals(cloud.getCloudStatusIntervalSec(), 11);
-        assertEquals(cloud.isDisableTaskResubmit(), true);
-        assertEquals(cloud.isNoDelayProvision(), true);
-        assertEquals(cloud.getAwsCredentialsId(), "xx");
+        assertEquals("us-east-2", cloud.getRegion());
+        assertEquals("http://a.com", cloud.getEndpoint());
+        assertEquals("my-fleet", cloud.getFleet());
+        assertEquals("my-root", cloud.getFsRoot());
+        assertTrue(cloud.isPrivateIpUsed());
+        assertTrue(cloud.isAlwaysReconnect());
+        assertEquals("myLabel", cloud.getLabelString());
+        assertEquals(33, cloud.getIdleMinutes());
+        assertEquals(15, cloud.getMinSize());
+        assertEquals(90, cloud.getMaxSize());
+        assertEquals(12, cloud.getNumExecutors());
+        assertTrue(cloud.isAddNodeOnlyIfRunning());
+        assertTrue(cloud.isRestrictUsage());
+        assertEquals(EC2FleetCloud.WeightedScaler.class, cloud.getExecutorScaler().getClass());
+        assertEquals(181, cloud.getInitOnlineTimeoutSec());
+        assertEquals(13, cloud.getInitOnlineCheckIntervalSec());
+        assertEquals(11, cloud.getCloudStatusIntervalSec());
+        assertTrue(cloud.isDisableTaskResubmit());
+        assertTrue(cloud.isNoDelayProvision());
+        assertEquals("xx", cloud.getAwsCredentialsId());
 
         SSHConnector sshConnector = (SSHConnector) cloud.getComputerConnector();
-        assertEquals(sshConnector.getSshHostKeyVerificationStrategy().getClass(), NonVerifyingKeyVerificationStrategy.class);
+        assertEquals(NonVerifyingKeyVerificationStrategy.class, sshConnector.getSshHostKeyVerificationStrategy().getClass());
     }
 
     @Test
     @ConfiguredWithCode("EC2FleetCloud/empty-name-configuration-as-code.yml")
-    public void configurationWithEmptyName_shouldUseDefault() {
-        assertEquals(jenkinsRule.jenkins.clouds.size(), 3);
+    void configurationWithEmptyName_shouldUseDefault(JenkinsConfiguredWithCodeRule jenkinsRule) {
+        assertEquals(3, jenkinsRule.jenkins.clouds.size());
 
         for (EC2FleetCloud cloud : jenkinsRule.jenkins.clouds.getAll(EC2FleetCloud.class)){
 

@@ -2,22 +2,25 @@ package com.amazon.jenkins.ec2fleet;
 
 import hudson.model.Queue;
 import jenkins.model.Jenkins;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
-public class EC2FleetNodeComputerTest {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class EC2FleetNodeComputerTest {
 
     private MockedStatic<Jenkins> mockedJenkins;
 
@@ -32,8 +35,8 @@ public class EC2FleetNodeComputerTest {
     @Mock
     private Queue queue;
 
-    @Before
-    public void before() {
+    @BeforeEach
+    void before() {
         mockedJenkins = Mockito.mockStatic(Jenkins.class);
         mockedJenkins.when(Jenkins::get).thenReturn(jenkins);
 
@@ -43,32 +46,32 @@ public class EC2FleetNodeComputerTest {
         when(agent.getNumExecutors()).thenReturn(1);
     }
 
-    @After
-    public void after() {
+    @AfterEach
+    void after() {
         mockedQueue.close();
         mockedJenkins.close();
     }
 
     @Test
-    public void getDisplayName_returns_node_display_name_for_default_maxTotalUses() {
+    void getDisplayName_returns_node_display_name_for_default_maxTotalUses() {
         when(agent.getDisplayName()).thenReturn("a n");
         when(agent.getUsesRemaining()).thenReturn(-1);
 
         EC2FleetNodeComputer computer = spy(new EC2FleetNodeComputer(agent));
         doReturn(agent).when(computer).getNode();
 
-        Assert.assertEquals("a n", computer.getDisplayName());
+        assertEquals("a n", computer.getDisplayName());
     }
 
     @Test
-    public void getDisplayName_returns_builds_left_for_non_default_maxTotalUses() {
+    void getDisplayName_returns_builds_left_for_non_default_maxTotalUses() {
         when(agent.getDisplayName()).thenReturn("a n");
         when(agent.getUsesRemaining()).thenReturn(1);
 
         EC2FleetNodeComputer computer = spy(new EC2FleetNodeComputer(agent));
         doReturn(agent).when(computer).getNode();
 
-        Assert.assertEquals("a n Builds left: 1 ", computer.getDisplayName());
+        assertEquals("a n Builds left: 1 ", computer.getDisplayName());
     }
 
 }

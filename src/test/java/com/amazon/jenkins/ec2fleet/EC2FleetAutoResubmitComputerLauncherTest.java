@@ -12,14 +12,16 @@ import hudson.slaves.ComputerLauncher;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.runner.RunWith;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -36,8 +38,9 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
 @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
-@RunWith(MockitoJUnitRunner.class)
-public class EC2FleetAutoResubmitComputerLauncherTest {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class EC2FleetAutoResubmitComputerLauncherTest {
 
     private MockedStatic<Jenkins> mockedJenkins;
 
@@ -63,10 +66,10 @@ public class EC2FleetAutoResubmitComputerLauncherTest {
     @Mock
     private Queue.Executable executable2;
 
-    @Mock(strictness = Mock.Strictness.LENIENT)
+    @Mock
     private Slave agent;
 
-    @Mock(strictness = Mock.Strictness.LENIENT)
+    @Mock
     private EC2FleetNodeComputer computer;
 
     @Mock
@@ -87,7 +90,7 @@ public class EC2FleetAutoResubmitComputerLauncherTest {
     @Mock
     private Queue.Task task2;
 
-    @Mock(strictness = Mock.Strictness.LENIENT)
+    @Mock
     private EC2FleetNode fleetNode;
 
     @Mock
@@ -99,8 +102,8 @@ public class EC2FleetAutoResubmitComputerLauncherTest {
     @Mock
     private WorkflowRun workflowRun;
 
-    @Before
-    public void before() {
+    @BeforeEach
+    void before() {
         executable1 = mock(Actionable.class, withSettings().extraInterfaces(Queue.Executable.class));
 
         when(computer.getDisplayName()).thenReturn("i-12");
@@ -129,14 +132,14 @@ public class EC2FleetAutoResubmitComputerLauncherTest {
         when(computer.getCloud()).thenReturn(cloud);
     }
 
-    @After
-    public void after() {
+    @AfterEach
+    void after() {
         mockedQueue.close();
         mockedJenkins.close();
     }
 
     @Test
-    public void afterDisconnect_should_do_nothing_if_still_online() {
+    void afterDisconnect_should_do_nothing_if_still_online() {
         when(computer.isOffline()).thenReturn(false);
         new EC2FleetAutoResubmitComputerLauncher(baseComputerLauncher)
                 .afterDisconnect(computer, taskListener);
@@ -144,7 +147,7 @@ public class EC2FleetAutoResubmitComputerLauncherTest {
     }
 
     @Test
-    public void afterDisconnect_should_do_nothing_if_offline_but_no_executable() {
+    void afterDisconnect_should_do_nothing_if_offline_but_no_executable() {
         when(computer.getExecutors()).thenReturn(Arrays.asList(executor1));
         when(executor1.getCurrentExecutable()).thenReturn(null);
         new EC2FleetAutoResubmitComputerLauncher(baseComputerLauncher)
@@ -153,16 +156,16 @@ public class EC2FleetAutoResubmitComputerLauncherTest {
     }
 
     @Test
-    public void taskCompleted_should_resubmit_task_if_offline_and_has_executable() {
+    void taskCompleted_should_resubmit_task_if_offline_and_has_executable() {
         when(computer.getExecutors()).thenReturn(Arrays.asList(executor1));
         new EC2FleetAutoResubmitComputerLauncher(baseComputerLauncher)
                 .afterDisconnect(computer, taskListener);
-        verify(queue).schedule2(eq(task1), anyInt(), eq(Collections.<Action>emptyList()));
+        verify(queue).schedule2(eq(task1), anyInt(), eq(Collections.emptyList()));
         verifyNoMoreInteractions(queue);
     }
 
     @Test
-    public void taskCompleted_should_not_resubmit_task_if_offline_but_disabled() {
+    void taskCompleted_should_not_resubmit_task_if_offline_but_disabled() {
         when(cloud.isDisableTaskResubmit()).thenReturn(true);
         when(computer.getExecutors()).thenReturn(Arrays.asList(executor1));
         new EC2FleetAutoResubmitComputerLauncher(baseComputerLauncher)
@@ -171,16 +174,16 @@ public class EC2FleetAutoResubmitComputerLauncherTest {
     }
 
     @Test
-    public void taskCompleted_should_resubmit_task_for_all_executors() {
+    void taskCompleted_should_resubmit_task_for_all_executors() {
         new EC2FleetAutoResubmitComputerLauncher(baseComputerLauncher)
                 .afterDisconnect(computer, taskListener);
-        verify(queue).schedule2(eq(task1), anyInt(), eq(Collections.<Action>emptyList()));
-        verify(queue).schedule2(eq(task2), anyInt(), eq(Collections.<Action>emptyList()));
+        verify(queue).schedule2(eq(task1), anyInt(), eq(Collections.emptyList()));
+        verify(queue).schedule2(eq(task2), anyInt(), eq(Collections.emptyList()));
         verifyNoMoreInteractions(queue);
     }
 
     @Test
-    public void taskCompleted_should_abort_executors_during_resubmit() {
+    void taskCompleted_should_abort_executors_during_resubmit() {
         new EC2FleetAutoResubmitComputerLauncher(baseComputerLauncher)
                 .afterDisconnect(computer, taskListener);
         verify(executor1).interrupt(Result.ABORTED, new EC2ExecutorInterruptionCause("i-12"));
@@ -188,7 +191,7 @@ public class EC2FleetAutoResubmitComputerLauncherTest {
     }
 
     @Test
-    public void taskCompleted_should_resubmit_task_with_actions() {
+    void taskCompleted_should_resubmit_task_with_actions() {
         when(computer.getExecutors()).thenReturn(Arrays.asList(executor1));
         //when(executable1.getActions()).thenReturn(Arrays.asList(action1));
         new EC2FleetAutoResubmitComputerLauncher(baseComputerLauncher)
@@ -198,7 +201,7 @@ public class EC2FleetAutoResubmitComputerLauncherTest {
     }
 
     @Test
-    public void taskCompleted_should_resubmit_task_with_failed_build_actions() {
+    void taskCompleted_should_resubmit_task_with_failed_build_actions() {
         when(subTask1.getOwnerTask()).thenReturn(workflowJob);
         when(workflowJob.getLastFailedBuild()).thenReturn(workflowRun);
         when(workflowRun.getActions(any())).thenReturn((Collections.singletonList(action1)));

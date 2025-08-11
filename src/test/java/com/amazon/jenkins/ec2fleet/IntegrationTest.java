@@ -21,13 +21,11 @@ import hudson.model.queue.QueueTaskFuture;
 import hudson.tasks.BatchFile;
 import hudson.tasks.Shell;
 import jenkins.model.Jenkins;
-import org.hamcrest.Matchers;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.jvnet.hudson.test.BuildWatcher;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.BuildWatcherExtension;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -52,6 +50,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -66,17 +67,21 @@ import static org.mockito.Mockito.when;
  * method to assert node states etc.
  */
 @SuppressWarnings("WeakerAccess")
+@WithJenkins
 public abstract class IntegrationTest {
 
     protected static final long JOB_SLEEP_TIME = 5;
 
-    @ClassRule
-    public static BuildWatcher bw = new BuildWatcher();
+    protected static final BuildWatcherExtension BW = new BuildWatcherExtension();
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+    protected JenkinsRule j;
 
-    @After
+    @BeforeEach
+    public void before(JenkinsRule rule) {
+        j = rule;
+    }
+
+    @AfterEach
     public void after() {
         // restore
         Registry.setEc2Api(new EC2Api());
@@ -94,62 +99,45 @@ public abstract class IntegrationTest {
     }
 
     protected static void assertQueueAndNodesIdle(final Node node) {
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                Assert.assertTrue(Queue.getInstance().isEmpty() && node.toComputer().isIdle());
-            }
-        });
+        tryUntil(() -> assertTrue(Queue.getInstance().isEmpty() && node.toComputer().isIdle()));
     }
 
     protected static void assertQueueIsEmpty() {
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("check if queue is empty");
-                Assert.assertTrue(Queue.getInstance().isEmpty());
-            }
+        tryUntil(() -> {
+            System.out.println("check if queue is empty");
+            assertTrue(Queue.getInstance().isEmpty());
         });
     }
 
     protected void assertAtLeastOneNode() {
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("check if non zero nodes!");
-                Assert.assertFalse(j.jenkins.getNodes().isEmpty());
-            }
+        tryUntil(() -> {
+            System.out.println("check if non zero nodes!");
+            assertFalse(j.jenkins.getNodes().isEmpty());
         });
     }
 
     protected void assertLastBuildResult(final Result... lastBuildResults) {
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                final AbstractBuild lastBuild = j.jenkins.getAllItems(Project.class).get(0).getLastBuild();
-                System.out.println("wait until " + Arrays.toString(lastBuildResults) + " current state "
-                        + (lastBuild == null ? "<none>" : lastBuild.getResult()));
-                Assert.assertNotNull(lastBuild);
-                Assert.assertTrue(
-                        lastBuild.getResult() + " should be in " + Arrays.toString(lastBuildResults),
-                        Arrays.asList(lastBuildResults).contains(lastBuild.getResult()));
-            }
+        tryUntil(() -> {
+            final AbstractBuild lastBuild = j.jenkins.getAllItems(Project.class).get(0).getLastBuild();
+            System.out.println("wait until " + Arrays.toString(lastBuildResults) + " current state "
+                    + (lastBuild == null ? "<none>" : lastBuild.getResult()));
+            assertNotNull(lastBuild);
+            assertTrue(
+                    Arrays.asList(lastBuildResults).contains(lastBuild.getResult()),
+                    lastBuild.getResult() + " should be in " + Arrays.toString(lastBuildResults));
         });
     }
 
     protected void assertNodeIsOnline(final Node node) {
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("wait when back online");
-                Assert.assertTrue(node.toComputer().isOnline());
-            }
+        tryUntil(() -> {
+            System.out.println("wait when back online");
+            assertTrue(node.toComputer().isOnline());
         });
     }
 
     protected static void assertTasksDone(List<QueueTaskFuture> rs) {
         for (final QueueTaskFuture queueTaskFuture : rs) {
-            Assert.assertTrue(queueTaskFuture.isDone());
+            assertTrue(queueTaskFuture.isDone());
         }
     }
 
@@ -200,22 +188,14 @@ public abstract class IntegrationTest {
 
     protected void waitZeroNodes() {
         System.out.println("wait until downscale happens");
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                Assert.assertThat(j.jenkins.getLabel("momo").getNodes().size(), Matchers.lessThanOrEqualTo(0));
-            }
-        }, TimeUnit.MINUTES.toMillis(3));
+        tryUntil(() -> assertThat(j.jenkins.getLabel("momo").getNodes().size(), lessThanOrEqualTo(0)), TimeUnit.MINUTES.toMillis(3));
     }
 
     protected static void waitFirstStats(final EC2FleetCloud cloud) {
         System.out.println("waiting first stats for cloud");
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                // wait first update to speed up test during schedule
-                Assert.assertNotNull(cloud.getStats());
-            }
+        tryUntil(() -> {
+            // wait first update to speed up test during schedule
+            assertNotNull(cloud.getStats());
         });
     }
 
@@ -264,7 +244,7 @@ public abstract class IntegrationTest {
         for (final QueueTaskFuture task : tasks) {
             try {
                 Object o = task.get();
-                Assert.assertEquals(((Run) o).getResult(), Result.SUCCESS);
+                assertEquals(Result.SUCCESS, ((Run) o).getResult());
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
@@ -317,36 +297,28 @@ public abstract class IntegrationTest {
         when(ec2Api.connect(anyString(), anyString(), Mockito.nullable(String.class))).thenReturn(amazonEC2);
 
         when(amazonEC2.terminateInstances(any(TerminateInstancesRequest.class)))
-                .thenAnswer(AnswerWithDelay.get(new Answer<Object>() {
-                    @Override
-                    public Object answer(InvocationOnMock invocation) throws Throwable {
-                        return TerminateInstancesResponse.builder()
-                                .build();
-                    }
-                }, delayMillis));
+                .thenAnswer(AnswerWithDelay.get((Answer<Object>) invocation -> TerminateInstancesResponse.builder()
+                        .build(), delayMillis));
 
         when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class)))
-                .then(AnswerWithDelay.get(new Answer<Object>() {
-                    @Override
-                    public Object answer(InvocationOnMock invocationOnMock) {
-                        DescribeInstancesRequest request = invocationOnMock.getArgument(0);
+                .then(AnswerWithDelay.get((Answer<Object>) invocationOnMock -> {
+                    DescribeInstancesRequest request = invocationOnMock.getArgument(0);
 
-                        System.out.println("call describeInstances(" + request.instanceIds().size() + ")");
-                        final List<Instance> instances = new ArrayList<>();
-                        for (final String instanceId : request.instanceIds()) {
-                            instances.add(Instance.builder()
-                                    .state(InstanceState.builder().name(instanceStateName)
-                                            .build())
-                                    .publicIpAddress("public-io")
-                                    .instanceId(instanceId)
-                                    .build());
-                        }
-
-                        return DescribeInstancesResponse.builder().reservations(
-                                Reservation.builder().instances(instances)
-                                .build())
-                                .build();
+                    System.out.println("call describeInstances(" + request.instanceIds().size() + ")");
+                    final List<Instance> instances = new ArrayList<>();
+                    for (final String instanceId : request.instanceIds()) {
+                        instances.add(Instance.builder()
+                                .state(InstanceState.builder().name(instanceStateName)
+                                        .build())
+                                .publicIpAddress("public-io")
+                                .instanceId(instanceId)
+                                .build());
                     }
+
+                    return DescribeInstancesResponse.builder().reservations(
+                                    Reservation.builder().instances(instances)
+                                            .build())
+                            .build();
                 }, delayMillis));
 
         final AtomicInteger targetCapacity = new AtomicInteger(0);
@@ -355,62 +327,53 @@ public abstract class IntegrationTest {
         EC2Fleets.setGet(new EC2SpotFleet());
 
         when(amazonEC2.modifySpotFleetRequest(any(ModifySpotFleetRequestRequest.class)))
-                .then(AnswerWithDelay.get(new Answer<Object>() {
-                    @Override
-                    public Object answer(InvocationOnMock invocationOnMock) {
-                        ModifySpotFleetRequestRequest argument = invocationOnMock.getArgument(0);
-                        System.out.println("modifySpotFleetRequest(targetCapacity = " + argument.targetCapacity() + ")");
-                        targetCapacity.set(argument.targetCapacity());
-                        return null;
-                    }
+                .then(AnswerWithDelay.get(invocationOnMock -> {
+                    ModifySpotFleetRequestRequest argument = invocationOnMock.getArgument(0);
+                    System.out.println("modifySpotFleetRequest(targetCapacity = " + argument.targetCapacity() + ")");
+                    targetCapacity.set(argument.targetCapacity());
+                    return null;
                 }, delayMillis));
 
         when(amazonEC2.describeSpotFleetInstances(any(DescribeSpotFleetInstancesRequest.class)))
-                .then(AnswerWithDelay.get(new Answer<Object>() {
-                    @Override
-                    public Object answer(InvocationOnMock invocationOnMock) {
-                        final List<ActiveInstance> activeInstances = new ArrayList<>();
-                        final int size = targetCapacity.get();
-                        for (int i = 0; i < size; i++) {
-                            activeInstances.add(ActiveInstance.builder().instanceId("i-" + i)
-                                    .build());
-                        }
-                        return DescribeSpotFleetInstancesResponse.builder().activeInstances(activeInstances)
-                                .build();
+                .then(AnswerWithDelay.get((Answer<Object>) invocationOnMock -> {
+                    final List<ActiveInstance> activeInstances = new ArrayList<>();
+                    final int size = targetCapacity.get();
+                    for (int i = 0; i < size; i++) {
+                        activeInstances.add(ActiveInstance.builder().instanceId("i-" + i)
+                                .build());
                     }
+                    return DescribeSpotFleetInstancesResponse.builder().activeInstances(activeInstances)
+                            .build();
                 }, delayMillis));
 
         when(amazonEC2.describeSpotFleetRequests(any(DescribeSpotFleetRequestsRequest.class)))
-                .thenAnswer(AnswerWithDelay.get(new Answer<Object>() {
-                    @Override
-                    public Object answer(InvocationOnMock invocationOnMock) {
-                        final DescribeSpotFleetRequestsRequest request = invocationOnMock.getArgument(0);
+                .thenAnswer(AnswerWithDelay.get((Answer<Object>) invocationOnMock -> {
+                    final DescribeSpotFleetRequestsRequest request = invocationOnMock.getArgument(0);
 
-                        final List<SpotFleetRequestConfig> r = new ArrayList<>();
-                        if (request.spotFleetRequestIds().size() > 0) {
-                            for (String id : request.spotFleetRequestIds()) {
-                                r.add(SpotFleetRequestConfig.builder()
-                                        .spotFleetRequestId(id)
-                                        .spotFleetRequestState("active")
-                                        .spotFleetRequestConfig(
-                                                SpotFleetRequestConfigData.builder()
-                                                        .targetCapacity(targetCapacity.get())
-                                                .build())
-                                        .build());
-                            }
-                        } else {
+                    final List<SpotFleetRequestConfig> r = new ArrayList<>();
+                    if (!request.spotFleetRequestIds().isEmpty()) {
+                        for (String id : request.spotFleetRequestIds()) {
                             r.add(SpotFleetRequestConfig.builder()
-                                    .spotFleetRequestId("some-id")
+                                    .spotFleetRequestId(id)
                                     .spotFleetRequestState("active")
                                     .spotFleetRequestConfig(
                                             SpotFleetRequestConfigData.builder()
                                                     .targetCapacity(targetCapacity.get())
-                                            .build())
+                                                    .build())
                                     .build());
                         }
-                        return DescribeSpotFleetRequestsResponse.builder().spotFleetRequestConfigs(r)
-                                .build();
+                    } else {
+                        r.add(SpotFleetRequestConfig.builder()
+                                .spotFleetRequestId("some-id")
+                                .spotFleetRequestState("active")
+                                .spotFleetRequestConfig(
+                                        SpotFleetRequestConfigData.builder()
+                                                .targetCapacity(targetCapacity.get())
+                                                .build())
+                                .build());
                     }
+                    return DescribeSpotFleetRequestsResponse.builder().spotFleetRequestConfigs(r)
+                            .build();
                 }, delayMillis));
     }
 
@@ -424,58 +387,49 @@ public abstract class IntegrationTest {
         final Object lock = new Object();
         final Map<String, CreateStackRequest> createStackRequests = new HashMap<>();
 
-        when(amazonCloudFormation.createStack(any(CreateStackRequest.class))).thenAnswer(new Answer<Object>() {
-            @Override
-            public Object answer(InvocationOnMock invocation) {
-                synchronized (lock) {
-                    CreateStackRequest request = invocation.getArgument(0);
-                    createStackRequests.put(request.stackName(), request);
-                }
-                return CreateStackResponse.builder()
-                        .build();
+        when(amazonCloudFormation.createStack(any(CreateStackRequest.class))).thenAnswer(invocation -> {
+            synchronized (lock) {
+                CreateStackRequest request = invocation.getArgument(0);
+                createStackRequests.put(request.stackName(), request);
             }
+            return CreateStackResponse.builder()
+                    .build();
         });
 
-        when(amazonCloudFormation.describeStacks(any(DescribeStacksRequest.class))).thenAnswer(new Answer<Object>() {
-            @Override
-            public Object answer(InvocationOnMock invocation) {
-                List<Stack> stackList = new java.util.ArrayList<>();
-                synchronized (lock) {
-                    for (Map.Entry<String, CreateStackRequest> entry : createStackRequests.entrySet()) {
-                        stackList.add(Stack.builder()
-                                .stackId(entry.getValue().stackName())
-                                .stackName(entry.getValue().stackName())
-                                .stackStatus(StackStatus.CREATE_COMPLETE)
-                                .tags(entry.getValue().tags())
-                                .outputs(Output.builder().outputValue(entry.getValue().stackName() + "-Id")
-                                        .build())
-                                .build()
-                        );
-                    }
+        when(amazonCloudFormation.describeStacks(any(DescribeStacksRequest.class))).thenAnswer(invocation -> {
+            List<Stack> stackList = new ArrayList<>();
+            synchronized (lock) {
+                for (Map.Entry<String, CreateStackRequest> entry : createStackRequests.entrySet()) {
+                    stackList.add(Stack.builder()
+                            .stackId(entry.getValue().stackName())
+                            .stackName(entry.getValue().stackName())
+                            .stackStatus(StackStatus.CREATE_COMPLETE)
+                            .tags(entry.getValue().tags())
+                            .outputs(Output.builder().outputValue(entry.getValue().stackName() + "-Id")
+                                    .build())
+                            .build()
+                    );
                 }
-                return DescribeStacksResponse.builder()
-                        .stacks(stackList)
-                        .build();
             }
+            return DescribeStacksResponse.builder()
+                    .stacks(stackList)
+                    .build();
         });
 
-        when(amazonCloudFormation.deleteStack(any(DeleteStackRequest.class))).thenAnswer(new Answer<Object>() {
-            @Override
-            public Object answer(InvocationOnMock invocation) {
-                synchronized (lock) {
-                    DeleteStackRequest request = invocation.getArgument(0);
-                    Iterator<String> iterator = createStackRequests.keySet().iterator();
-                    while (iterator.hasNext()) {
-                        // since we delete by stack id and create stack name we need contains
-                        if (request.stackName().contains(iterator.next())) {
-                            iterator.remove();
-                            break;
-                        }
+        when(amazonCloudFormation.deleteStack(any(DeleteStackRequest.class))).thenAnswer(invocation -> {
+            synchronized (lock) {
+                DeleteStackRequest request = invocation.getArgument(0);
+                Iterator<String> iterator = createStackRequests.keySet().iterator();
+                while (iterator.hasNext()) {
+                    // since we delete by stack id and create stack name we need contains
+                    if (request.stackName().contains(iterator.next())) {
+                        iterator.remove();
+                        break;
                     }
                 }
-                return DeleteStackResponse.builder()
-                        .build();
             }
+            return DeleteStackResponse.builder()
+                    .build();
         });
 
         return amazonCloudFormation;
@@ -489,42 +443,31 @@ public abstract class IntegrationTest {
         when(ec2Api.connect(anyString(), anyString(), Mockito.nullable(String.class))).thenReturn(amazonEC2);
 
         when(amazonEC2.describeInstances(any(DescribeInstancesRequest.class)))
-                .then(new Answer<Object>() {
-                    @Override
-                    public Object answer(InvocationOnMock invocationOnMock) {
-                        return DescribeInstancesResponse.builder().reservations(Reservation.builder()
+                .then(invocationOnMock -> DescribeInstancesResponse.builder().reservations(Reservation.builder()
                                 .build())
-                                .build();
-                    }
-                });
+                        .build());
 
         final AtomicInteger targetCapacity = new AtomicInteger(0);
 
         final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
         EC2Fleets.setGet(ec2Fleet);
 
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                ModifySpotFleetRequestRequest argument = invocation.getArgument(4);
-                targetCapacity.set(argument.targetCapacity());
-                return null;
-            }
+        doAnswer(invocation -> {
+            ModifySpotFleetRequestRequest argument = invocation.getArgument(4);
+            targetCapacity.set(argument.targetCapacity());
+            return null;
         }).when(ec2Fleet).modify(anyString(), anyString(), anyString(), anyString(), anyInt(), anyInt(), anyInt());
 
-        when(ec2Fleet.getState(anyString(), anyString(), nullable(String.class), anyString())).thenAnswer(new Answer<Object>() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                final Set<String> instanceIds = new HashSet<>();
-                final int size = targetCapacity.get();
-                for (int i = 0; i < size; i++) {
-                    instanceIds.add("i-" + i);
-                }
-
-                return new FleetStateStats("", 0,
-                        new FleetStateStats.State(true, false, "active"),
-                        instanceIds, Collections.<String, Double>emptyMap());
+        when(ec2Fleet.getState(anyString(), anyString(), nullable(String.class), anyString())).thenAnswer(invocation -> {
+            final Set<String> instanceIds = new HashSet<>();
+            final int size = targetCapacity.get();
+            for (int i = 0; i < size; i++) {
+                instanceIds.add("i-" + i);
             }
+
+            return new FleetStateStats("", 0,
+                    new FleetStateStats.State(true, false, "active"),
+                    instanceIds, Collections.emptyMap());
         });
     }
 

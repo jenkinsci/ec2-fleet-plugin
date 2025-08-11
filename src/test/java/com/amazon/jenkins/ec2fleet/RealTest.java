@@ -9,11 +9,10 @@ import hudson.plugins.sshslaves.SSHConnector;
 import hudson.plugins.sshslaves.verifiers.NonVerifyingKeyVerificationStrategy;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -37,14 +36,16 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class RealTest extends IntegrationTest {
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+class RealTest extends IntegrationTest {
 
     private static final String USER_DATA_INSTALL_JAVA8 = Base64.getEncoder().encodeToString(
             "#!/bin/bash\nyum install java-1.8.0 -y && yum remove java-1.7.0-openjdk -y && java -version"
                     .getBytes(StandardCharsets.UTF_8));
 
-    @BeforeClass
-    public static void beforeClass() {
+    @BeforeAll
+    static void beforeClass() {
         turnOffJenkinsTestTimout();
     }
 
@@ -53,17 +54,17 @@ public class RealTest extends IntegrationTest {
     private AwsCredentialsProvider awsCredentialsProvider;
     private EC2FleetCloud.ExecutorScaler noScaling;
 
-    @Before
-    public void before() throws IOException {
-        credentialLines = FileUtils.readLines(new File("credentials.txt"));
+    @BeforeEach
+    void before() throws IOException {
+        credentialLines = FileUtils.readLines(new File("credentials.txt"), StandardCharsets.UTF_8);
         privateKeyName = getPrivateKeyName(credentialLines);
         awsCredentialsProvider = getAwsCredentialsProvider(credentialLines);
         noScaling = new EC2FleetCloud.NoScaler();
     }
 
-    @Ignore("for manual run as you need to provide real AWS credentials")
+    @Disabled("for manual run as you need to provide real AWS credentials")
     @Test
-    public void givenAutoScalingGroup_shouldScaleUpExecuteTaskAndScaleDown() throws IOException {
+    void givenAutoScalingGroup_shouldScaleUpExecuteTaskAndScaleDown() throws IOException {
         final Ec2Client amazonEC2 = Ec2Client.builder().credentialsProvider(awsCredentialsProvider).build();
 
         final AutoScalingClient autoScalingClient = AutoScalingClient.builder().credentialsProvider(awsCredentialsProvider).build();
@@ -88,14 +89,9 @@ public class RealTest extends IntegrationTest {
         }
 
         System.out.println("waiting until group will be deleted");
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                Assert.assertEquals(0, autoScalingClient.describeAutoScalingGroups(DescribeAutoScalingGroupsRequest.builder()
-                        .autoScalingGroupNames(autoScalingGroupName)
-                        .build()).autoScalingGroups().size());
-            }
-        }, TimeUnit.MINUTES.toMillis(3));
+        tryUntil(() -> assertEquals(0, autoScalingClient.describeAutoScalingGroups(DescribeAutoScalingGroupsRequest.builder()
+                .autoScalingGroupNames(autoScalingGroupName)
+                .build()).autoScalingGroups().size()), TimeUnit.MINUTES.toMillis(3));
 
         autoScalingClient.createAutoScalingGroup(
                 CreateAutoScalingGroupRequest.builder()
@@ -130,21 +126,18 @@ public class RealTest extends IntegrationTest {
         waitZeroNodes();
 
         System.out.println("wait until EC2 spot fleet will be zero size");
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                final DescribeAutoScalingGroupsResponse r = autoScalingClient.describeAutoScalingGroups(
-                        DescribeAutoScalingGroupsRequest.builder().autoScalingGroupNames(autoScalingGroupName)
-                        .build());
-                Assert.assertEquals(1, r.autoScalingGroups().size());
-                Assert.assertEquals(Integer.valueOf(0), r.autoScalingGroups().get(0).desiredCapacity());
-            }
+        tryUntil(() -> {
+            final DescribeAutoScalingGroupsResponse r = autoScalingClient.describeAutoScalingGroups(
+                    DescribeAutoScalingGroupsRequest.builder().autoScalingGroupNames(autoScalingGroupName)
+                    .build());
+            assertEquals(1, r.autoScalingGroups().size());
+            assertEquals(Integer.valueOf(0), r.autoScalingGroups().get(0).desiredCapacity());
         }, TimeUnit.MINUTES.toMillis(3));
     }
 
-    @Ignore("for manual run as you need to provide real AWS credentials")
+    @Disabled("for manual run as you need to provide real AWS credentials")
     @Test
-    public void givenEc2SpotFleet_shouldScaleUpExecuteTaskAndScaleDown() throws Exception {
+    void givenEc2SpotFleet_shouldScaleUpExecuteTaskAndScaleDown() throws Exception {
         final String ec2SpotFleetRoleArn = getOrCreateEc2SpotFleetIamRoleArn(awsCredentialsProvider);
 
         final Ec2Client amazonEC2 = Ec2Client.builder().credentialsProvider(awsCredentialsProvider).build();
@@ -186,16 +179,13 @@ public class RealTest extends IntegrationTest {
         waitZeroNodes();
 
         System.out.println("wait until EC2 spot fleet will be zero size");
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                final List<SpotFleetRequestConfig> r = amazonEC2.describeSpotFleetRequests(DescribeSpotFleetRequestsRequest.builder()
-                                .spotFleetRequestIds(requestSpotFleetResult.spotFleetRequestId())
-                                .build())
-                        .spotFleetRequestConfigs();
-                Assert.assertEquals(1, r.size());
-                Assert.assertEquals(Integer.valueOf(0), r.get(0).spotFleetRequestConfig().targetCapacity());
-            }
+        tryUntil(() -> {
+            final List<SpotFleetRequestConfig> r = amazonEC2.describeSpotFleetRequests(DescribeSpotFleetRequestsRequest.builder()
+                            .spotFleetRequestIds(requestSpotFleetResult.spotFleetRequestId())
+                            .build())
+                    .spotFleetRequestConfigs();
+            assertEquals(1, r.size());
+            assertEquals(Integer.valueOf(0), r.get(0).spotFleetRequestConfig().targetCapacity());
         }, TimeUnit.MINUTES.toMillis(3));
     }
 

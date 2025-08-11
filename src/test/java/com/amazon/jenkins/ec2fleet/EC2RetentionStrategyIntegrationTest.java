@@ -5,8 +5,8 @@ import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 import hudson.model.Node;
 import hudson.model.queue.QueueTaskFuture;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import software.amazon.awssdk.services.ec2.Ec2Client;
@@ -18,20 +18,17 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.nullable;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
-public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
+class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
 
     private final EC2FleetCloud.ExecutorScaler noScaling = new EC2FleetCloud.NoScaler();
 
     private Ec2Client amazonEC2;
 
-    @Before
-    public void before() {
+    @BeforeEach
+    void before() {
         final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
         EC2Fleets.setGet(ec2Fleet);
         final EC2Api ec2Api = spy(EC2Api.class);
@@ -67,7 +64,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    public void shouldTerminateNodeMarkedForDeletion() throws Exception {
+    void shouldTerminateNodeMarkedForDeletion() throws Exception {
         final EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
                 1, 0, 0, 0, 1, false, true, "-1", false, 0, 0, 999, false, false, noScaling);
@@ -91,7 +88,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    public void shouldTerminateExcessCapacity() throws Exception {
+    void shouldTerminateExcessCapacity() throws Exception {
         final EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
                 1, 0, 0, 0, 1, false, true, "-1", false, 0, 0, 999, false, false, noScaling);
@@ -118,7 +115,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
 
         verify((amazonEC2), times(1)).terminateInstances(argument.capture());
 
-        final List<String> instanceIds = new ArrayList<String>();
+        final List<String> instanceIds = new ArrayList<>();
         instanceIds.add("i-2");
         instanceIds.add("i-1");
 
@@ -126,7 +123,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    public void shouldNotTerminateExcessCapacityWhenNodeIsBusy() throws Exception {
+    void shouldNotTerminateExcessCapacityWhenNodeIsBusy() throws Exception {
         // Keep a busy queue
         List<QueueTaskFuture> rs = enqueTask(10, 90);
         triggerSuggestReviewNow();
@@ -162,7 +159,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    public void shouldTerminateIdleNodesAfterIdleTimeout() throws Exception {
+    void shouldTerminateIdleNodesAfterIdleTimeout() throws Exception {
         final EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
                 1, 0, 2, 0, 1, false, true, "-1", false, 0, 0, 99, false, false, noScaling);
@@ -186,14 +183,14 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
 
         verify((amazonEC2), times(1)).terminateInstances(argument.capture());
 
-        final List<String> instanceIds = new ArrayList<String>();
+        final List<String> instanceIds = new ArrayList<>();
         instanceIds.add("i-2");
         instanceIds.add("i-1");
         assertTrue(argument.getAllValues().get(0).instanceIds().containsAll(instanceIds));
     }
 
     @Test
-    public void shouldNotTerminateBelowMinSize() throws Exception {
+    void shouldNotTerminateBelowMinSize() throws Exception {
         final EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
                 1, 2, 5, 0, 1, false, true, "-1", false, 0, 0, 30, false, false, noScaling);
@@ -217,7 +214,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    public void shouldNotTerminateBelowMinSpareSize() throws Exception {
+    void shouldNotTerminateBelowMinSpareSize() throws Exception {
         final EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
                 1, 0, 5, 2, 1, false, true, "-1", false, 0, 0, 30, false, false, noScaling);
@@ -241,7 +238,7 @@ public class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    public void shouldTerminateWhenMaxTotalUsesIsExhausted() throws Exception {
+    void shouldTerminateWhenMaxTotalUsesIsExhausted() throws Exception {
         final String label = "momo";
         final int numTasks = 4; // schedule a total of 4 tasks, 2 per instance
         final int maxTotalUses = 2;

@@ -4,11 +4,9 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.Result;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.slaves.ComputerConnector;
-import org.hamcrest.Matchers;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.ec2.model.InstanceStateName;
 
 import java.io.IOException;
@@ -17,27 +15,32 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-@Ignore
-public class ProvisionPerformanceTest extends IntegrationTest {
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+@Disabled
+class ProvisionPerformanceTest extends IntegrationTest {
 
     private final EC2FleetCloud.ExecutorScaler noScaling = new EC2FleetCloud.NoScaler();
 
-    @BeforeClass
-    public static void beforeClass() {
+    @BeforeAll
+    static void beforeClass() {
         System.setProperty("jenkins.test.timeout", "720");
     }
 
     @Test
-    public void spikeLoadWorkers10Tasks30() throws Exception {
+    void spikeLoadWorkers10Tasks30() throws Exception {
         test(10, 30);
     }
 
     @Test
-    public void spikeLoadWorkers20Tasks60() throws Exception {
+    void spikeLoadWorkers20Tasks60() throws Exception {
         test(20, 60);
     }
 
-    private void test(int workers, int maxTasks) throws IOException, InterruptedException {
+    private void test(int workers, int maxTasks) throws IOException {
         mockEc2FleetApiToEc2SpotFleetWithDelay(InstanceStateName.RUNNING, 500);
 
         final ComputerConnector computerConnector = new LocalComputerConnector(j);
@@ -49,12 +52,7 @@ public class ProvisionPerformanceTest extends IntegrationTest {
 
         // updated plugin requires some init time to get first update
         // so wait this event to be really correct with perf comparison as old version is not require init time
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                Assert.assertNotNull(cloud.getStats());
-            }
-        });
+        tryUntil(() -> assertNotNull(cloud.getStats()));
 
         System.out.println("start test");
         final long start = System.currentTimeMillis();
@@ -71,7 +69,7 @@ public class ProvisionPerformanceTest extends IntegrationTest {
 
         for (final QueueTaskFuture<FreeStyleBuild> task : tasks) {
             try {
-                Assert.assertEquals(task.get().getResult(), Result.SUCCESS);
+                assertEquals(Result.SUCCESS, task.get().getResult());
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
@@ -81,12 +79,9 @@ public class ProvisionPerformanceTest extends IntegrationTest {
         final long finish = System.currentTimeMillis();
 
         // wait until downscale happens
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                // defect in termination logic, that why 1
-                Assert.assertThat(j.jenkins.getLabel("momo").getNodes().size(), Matchers.lessThanOrEqualTo(1));
-            }
+        tryUntil(() -> {
+            // defect in termination logic, that why 1
+            assertThat(j.jenkins.getLabel("momo").getNodes().size(), lessThanOrEqualTo(1));
         }, TimeUnit.MINUTES.toMillis(3));
 
         final long upTime = TimeUnit.MILLISECONDS.toSeconds(finish - start);
