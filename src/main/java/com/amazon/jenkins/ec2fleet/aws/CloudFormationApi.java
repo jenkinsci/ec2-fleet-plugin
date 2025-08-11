@@ -7,6 +7,7 @@ import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClientBuilder;
 import software.amazon.awssdk.services.cloudformation.model.Capability;
@@ -37,6 +38,7 @@ public class CloudFormationApi {
                         CloudFormationClient.builder()
                                         .overrideConfiguration(clientConfiguration);
 
+        if (StringUtils.isNotBlank(regionName)) clientBuilder.region(Region.of(regionName));
         final String effectiveEndpoint = getEndpoint(regionName, endpoint);
         if (effectiveEndpoint != null) clientBuilder.endpointOverride(URI.create(effectiveEndpoint));
         clientBuilder.httpClient(AWSUtils.getApacheHttpClient(endpoint));
