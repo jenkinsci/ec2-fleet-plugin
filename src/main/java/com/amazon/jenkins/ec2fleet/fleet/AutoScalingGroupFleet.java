@@ -9,6 +9,7 @@ import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.util.ObjectUtils;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.autoscaling.AutoScalingClient;
 import software.amazon.awssdk.services.autoscaling.AutoScalingClientBuilder;
 import software.amazon.awssdk.services.autoscaling.model.*;
@@ -119,6 +120,7 @@ public class AutoScalingGroupFleet implements EC2Fleet {
                                 .overrideConfiguration(clientConfiguration) :
                         AutoScalingClient.builder()
                                 .overrideConfiguration(clientConfiguration);
+        if (regionName != null) clientBuilder.region(Region.of(regionName));
         final String effectiveEndpoint = getEndpoint(regionName, endpoint);
         if (effectiveEndpoint != null) clientBuilder.endpointOverride(URI.create(effectiveEndpoint));
         clientBuilder.httpClient(AWSUtils.getApacheHttpClient(endpoint));

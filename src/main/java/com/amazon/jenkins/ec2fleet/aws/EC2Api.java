@@ -5,6 +5,7 @@ import com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentials
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.ec2.Ec2Client;
 import software.amazon.awssdk.services.ec2.Ec2ClientBuilder;
 import software.amazon.awssdk.services.ec2.model.CreateTagsRequest;
@@ -188,6 +189,7 @@ public class EC2Api {
                         Ec2Client.builder()
                                 .overrideConfiguration(clientConfiguration);
 
+        if (regionName != null) clientBuilder.region(Region.of(regionName));
         final String effectiveEndpoint = getEndpoint(regionName, endpoint);
         if (effectiveEndpoint != null) clientBuilder.endpointOverride(URI.create(effectiveEndpoint));
         clientBuilder.httpClient(AWSUtils.getApacheHttpClient(endpoint));
