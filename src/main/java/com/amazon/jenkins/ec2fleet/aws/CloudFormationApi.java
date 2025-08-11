@@ -38,7 +38,7 @@ public class CloudFormationApi {
                         CloudFormationClient.builder()
                                         .overrideConfiguration(clientConfiguration);
 
-        if (regionName != null) clientBuilder.region(Region.of(regionName));
+        if (StringUtils.isNotBlank(regionName)) clientBuilder.region(Region.of(regionName));
         final String effectiveEndpoint = getEndpoint(regionName, endpoint);
         if (effectiveEndpoint != null) clientBuilder.endpointOverride(URI.create(effectiveEndpoint));
         clientBuilder.httpClient(AWSUtils.getApacheHttpClient(endpoint));
