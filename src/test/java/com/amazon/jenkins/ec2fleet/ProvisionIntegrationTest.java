@@ -8,11 +8,8 @@ import hudson.model.queue.QueueTaskFuture;
 import hudson.slaves.Cloud;
 import hudson.slaves.ComputerConnector;
 import hudson.slaves.ComputerLauncher;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import software.amazon.awssdk.services.ec2.Ec2Client;
 import software.amazon.awssdk.services.ec2.model.*;
@@ -25,6 +22,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -35,17 +36,17 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class ProvisionIntegrationTest extends IntegrationTest {
+class ProvisionIntegrationTest extends IntegrationTest {
 
     private final EC2FleetCloud.ExecutorScaler noScaling = new EC2FleetCloud.NoScaler();
 
-    @BeforeClass
-    public static void beforeClass() {
+    @BeforeAll
+    static void beforeClass() {
         System.setProperty("jenkins.test.timeout", "720");
     }
 
     @Test
-    public void dont_provide_any_planned_if_empty_and_reached_max_capacity() throws Exception {
+    void dont_provide_any_planned_if_empty_and_reached_max_capacity() throws Exception {
         ComputerLauncher computerLauncher = mock(ComputerLauncher.class);
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
@@ -53,7 +54,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         EC2Fleets.setGet(ec2Fleet);
         when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
                 new FleetStateStats("", 0, FleetStateStats.State.active(), Collections.emptySet(),
-                        Collections.<String, Double>emptyMap()));
+                        Collections.emptyMap()));
 
         EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
@@ -70,19 +71,19 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
         List<QueueTaskFuture> rs = enqueTask(5);
 
-        Assert.assertEquals(0, j.jenkins.getNodes().size());
+        assertEquals(0, j.jenkins.getNodes().size());
 
         triggerSuggestReviewNow("momo");
 
         Thread.sleep(TimeUnit.SECONDS.toMillis(30));
 
-        Assert.assertEquals(0, j.jenkins.getNodes().size());
+        assertEquals(0, j.jenkins.getNodes().size());
 
         cancelTasks(rs);
     }
 
     @Test
-    public void should_add_planned_if_capacity_required_but_not_described_yet() throws Exception {
+    void should_add_planned_if_capacity_required_but_not_described_yet() throws Exception {
         ComputerLauncher computerLauncher = mock(ComputerLauncher.class);
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
@@ -100,22 +101,19 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
         triggerSuggestReviewNow("momo");
 
-        Assert.assertEquals(0, j.jenkins.getNodes().size());
+        assertEquals(0, j.jenkins.getNodes().size());
 
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                Assert.assertEquals(0, j.jenkins.getNodes().size());
-                Assert.assertEquals(2, j.jenkins.getLabels().size());
-                Assert.assertEquals(1, j.jenkins.getLabelAtom("momo").nodeProvisioner.getPendingLaunches().size());
-            }
+        tryUntil(() -> {
+            assertEquals(0, j.jenkins.getNodes().size());
+            assertEquals(2, j.jenkins.getLabels().size());
+            assertEquals(1, j.jenkins.getLabelAtom("momo").nodeProvisioner.getPendingLaunches().size());
         });
 
         cancelTasks(rs);
     }
 
     @Test
-    public void should_keep_planned_node_until_node_will_not_be_online_so_jenkins_will_not_request_overprovision() throws Exception {
+    void should_keep_planned_node_until_node_will_not_be_online_so_jenkins_will_not_request_overprovision() throws Exception {
         ComputerLauncher computerLauncher = mock(ComputerLauncher.class);
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
@@ -123,7 +121,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         EC2Fleets.setGet(ec2Fleet);
         when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
                 new FleetStateStats("", 0, FleetStateStats.State.active(),
-                        Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+                        Collections.emptySet(), Collections.emptyMap()));
         EC2FleetCloud cloud = spy(new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 0, 1, true, false,
@@ -149,7 +147,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    public void should_not_keep_planned_node_if_configured_so_jenkins_will_overprovision() throws Exception {
+    void should_not_keep_planned_node_if_configured_so_jenkins_will_overprovision() throws Exception {
         ComputerLauncher computerLauncher = mock(ComputerLauncher.class);
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
@@ -157,7 +155,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         EC2Fleets.setGet(ec2Fleet);
         when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
                 new FleetStateStats("", 0, FleetStateStats.State.active(),
-                        Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+                        Collections.emptySet(), Collections.emptyMap()));
         final EC2FleetCloud cloud = spy(new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 0, 1, true, false,
@@ -169,17 +167,14 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
         enqueTask(1);
 
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                j.jenkins.getLabelAtom("momo").nodeProvisioner.suggestReviewNow();
-                verify(cloud, atLeast(2)).provision(any(Cloud.CloudState.class), anyInt());
-            }
+        tryUntil(() -> {
+            j.jenkins.getLabelAtom("momo").nodeProvisioner.suggestReviewNow();
+            verify(cloud, atLeast(2)).provision(any(Cloud.CloudState.class), anyInt());
         });
     }
 
     @Test
-    public void should_not_allow_jenkins_to_provision_if_address_not_available() throws Exception {
+    void should_not_allow_jenkins_to_provision_if_address_not_available() throws Exception {
         mockEc2FleetApiToEc2SpotFleet(InstanceStateName.RUNNING);
 
         ComputerLauncher computerLauncher = mock(ComputerLauncher.class);
@@ -193,7 +188,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
                 10, false, false, noScaling));
 
         cloud.setStats(new FleetStateStats("", 0, FleetStateStats.State.active(),
-                Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+                Collections.emptySet(), Collections.emptyMap()));
 
         j.jenkins.clouds.add(cloud);
 
@@ -237,7 +232,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
         j.jenkins.getLabelAtom("momo").nodeProvisioner.suggestReviewNow();
 
-        Assert.assertEquals(0, j.jenkins.getNodes().size());
+        assertEquals(0, j.jenkins.getNodes().size());
 
         Thread.sleep(TimeUnit.MINUTES.toMillis(2));
 
@@ -247,7 +242,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    public void should_not_convert_planned_to_node_if_state_is_not_running_and_check_state_enabled() throws Exception {
+    void should_not_convert_planned_to_node_if_state_is_not_running_and_check_state_enabled() throws Exception {
         ComputerLauncher computerLauncher = mock(ComputerLauncher.class);
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
@@ -255,7 +250,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         EC2Fleets.setGet(ec2Fleet);
         when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
                 new FleetStateStats("", 0, FleetStateStats.State.active(),
-                        Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+                        Collections.emptySet(), Collections.emptyMap()));
         EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 10, 0, 1, true, false,
@@ -269,22 +264,19 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
         triggerSuggestReviewNow("momo");
 
-        Assert.assertEquals(0, j.jenkins.getNodes().size());
+        assertEquals(0, j.jenkins.getNodes().size());
 
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                Assert.assertEquals(new HashSet<>(Arrays.asList("built-in", "momo")), labelsToNames(j.jenkins.getLabels()));
-                Assert.assertEquals(1, j.jenkins.getLabelAtom("momo").nodeProvisioner.getPendingLaunches().size());
-                Assert.assertEquals(0, j.jenkins.getNodes().size());
-            }
+        tryUntil(() -> {
+            assertEquals(new HashSet<>(Arrays.asList("built-in", "momo")), labelsToNames(j.jenkins.getLabels()));
+            assertEquals(1, j.jenkins.getLabelAtom("momo").nodeProvisioner.getPendingLaunches().size());
+            assertEquals(0, j.jenkins.getNodes().size());
         });
 
         cancelTasks(rs);
     }
 
     @Test
-    public void should_successfully_create_nodes() throws Exception {
+    void should_successfully_create_nodes() throws Exception {
         ComputerLauncher computerLauncher = mock(ComputerLauncher.class);
         ComputerConnector computerConnector = mock(ComputerConnector.class);
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
@@ -292,7 +284,7 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         EC2Fleets.setGet(ec2Fleet);
         when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
                 new FleetStateStats("", 0, FleetStateStats.State.active(),
-                        Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+                        Collections.emptySet(), Collections.emptyMap()));
         EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, computerConnector, false, false,
                 0, 0, 2, 0, 1, true, false,
@@ -306,21 +298,18 @@ public class ProvisionIntegrationTest extends IntegrationTest {
 
         triggerSuggestReviewNow("momo");
 
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                Assert.assertEquals(new HashSet<>(Arrays.asList("built-in", "momo", "i-0", "i-1")), labelsToNames(j.jenkins.getLabels()));
-                Assert.assertEquals(2, j.jenkins.getLabelAtom("momo").getNodes().size());
-                // node name should be instance name
-                Assert.assertEquals(new HashSet<>(Arrays.asList("i-0", "i-1")), nodeToNames(j.jenkins.getLabelAtom("momo").getNodes()));
-            }
+        tryUntil(() -> {
+            assertEquals(new HashSet<>(Arrays.asList("built-in", "momo", "i-0", "i-1")), labelsToNames(j.jenkins.getLabels()));
+            assertEquals(2, j.jenkins.getLabelAtom("momo").getNodes().size());
+            // node name should be instance name
+            assertEquals(new HashSet<>(Arrays.asList("i-0", "i-1")), nodeToNames(j.jenkins.getLabelAtom("momo").getNodes()));
         });
 
         cancelTasks(rs);
     }
 
     @Test
-    public void should_continue_update_after_termination() throws IOException {
+    void should_continue_update_after_termination() throws IOException {
         mockEc2FleetApiToEc2SpotFleet(InstanceStateName.RUNNING, 5);
 
         final ComputerConnector computerConnector = new LocalComputerConnector(j);
@@ -341,22 +330,16 @@ public class ProvisionIntegrationTest extends IntegrationTest {
         waitJobSuccessfulExecution(tasks);
 
         // wait until downscale happens
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("Inside " + j.jenkins.getLabel("momo").getNodes().size());
-                // defect in termination logic, that why 1
-                MatcherAssert.assertThat(j.jenkins.getLabel("momo").getNodes().size(), Matchers.lessThanOrEqualTo(1));
-            }
+        tryUntil(() -> {
+            System.out.println("Inside " + j.jenkins.getLabel("momo").getNodes().size());
+            // defect in termination logic, that why 1
+            assertThat(j.jenkins.getLabel("momo").getNodes().size(), lessThanOrEqualTo(1));
         }, TimeUnit.MINUTES.toMillis(3));
 
         final FleetStateStats oldStats = cloud.getStats();
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("stats should be updated");
-                Assert.assertNotSame(oldStats, cloud.getStats());
-            }
+        tryUntil(() -> {
+            System.out.println("stats should be updated");
+            assertNotSame(oldStats, cloud.getStats());
         });
     }
 

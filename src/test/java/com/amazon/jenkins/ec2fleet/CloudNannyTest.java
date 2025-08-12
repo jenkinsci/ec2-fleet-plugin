@@ -4,14 +4,16 @@ import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 import hudson.slaves.Cloud;
 import jenkins.model.Jenkins;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -19,15 +21,16 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
-public class CloudNannyTest {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class CloudNannyTest {
     @Mock
     private Jenkins jenkins;
 
-    @Mock(strictness = Mock.Strictness.LENIENT)
+    @Mock
     private EC2Fleet ec2Fleet;
 
     private MockedStatic<CloudNanny> mockedCloudNanny;
@@ -36,19 +39,19 @@ public class CloudNannyTest {
 
     private MockedStatic<EC2Fleets> mockedEc2Fleets;
 
-    @Mock(strictness = Mock.Strictness.LENIENT)
+    @Mock
     private EC2FleetCloud cloud1;
 
-    @Mock(strictness = Mock.Strictness.LENIENT)
+    @Mock
     private EC2FleetCloud cloud2;
 
     private Jenkins.CloudList clouds = new Jenkins.CloudList();
 
     private FleetStateStats stats1 = new FleetStateStats(
-            "f1", 1, new FleetStateStats.State(true, false, "a"), Collections.emptySet(), Collections.<String, Double>emptyMap());
+            "f1", 1, new FleetStateStats.State(true, false, "a"), Collections.emptySet(), Collections.emptyMap());
 
     private FleetStateStats stats2 = new FleetStateStats(
-            "f2", 1, new FleetStateStats.State(true, false, "a"), Collections.emptySet(), Collections.<String, Double>emptyMap());
+            "f2", 1, new FleetStateStats.State(true, false, "a"), Collections.emptySet(), Collections.emptyMap());
 
     private int recurrencePeriod = 45;
 
@@ -57,8 +60,8 @@ public class CloudNannyTest {
 
     private Map<EC2FleetCloud, AtomicInteger> recurrenceCounters = Collections.synchronizedMap(new WeakHashMap<>());
 
-    @Before
-    public void before() throws Exception {
+    @BeforeEach
+    void before() {
         mockedCloudNanny = Mockito.mockStatic(CloudNanny.class);
         mockedCloudNanny.when(CloudNanny::getClouds).thenReturn(clouds);
 
@@ -69,7 +72,7 @@ public class CloudNannyTest {
         mockedEc2Fleets.when(() -> EC2Fleets.get(anyString())).thenReturn(ec2Fleet);
         Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
-                        Collections.<String>emptySet(), Collections.<String, Double>emptyMap()));
+                        Collections.emptySet(), Collections.emptyMap()));
 
         when(cloud1.getLabelString()).thenReturn("a");
         when(cloud2.getLabelString()).thenReturn("");
@@ -86,8 +89,8 @@ public class CloudNannyTest {
         recurrenceCounters.put(cloud2, recurrenceCounter2);
     }
 
-    @After
-    public void after() {
+    @AfterEach
+    void after() {
         mockedEc2Fleets.close();
         mockedJenkins.close();
         mockedCloudNanny.close();
@@ -116,12 +119,12 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void shouldDoNothingIfNoCloudsAndWidgets() {
+    void shouldDoNothingIfNoCloudsAndWidgets() {
         getMockCloudNannyInstance().doRun();
     }
 
     @Test
-    public void shouldUpdateCloudAndDoNothingIfNoWidgets() {
+    void shouldUpdateCloudAndDoNothingIfNoWidgets() {
         clouds.add(cloud1);
         clouds.add(cloud2);
 
@@ -129,7 +132,7 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void shouldIgnoreNonEC2FleetClouds() {
+    void shouldIgnoreNonEC2FleetClouds() {
         clouds.add(cloud1);
 
         Cloud nonEc2FleetCloud = mock(Cloud.class);
@@ -142,7 +145,7 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void shouldUpdateCloudCollectAll() {
+    void shouldUpdateCloudCollectAll() {
         clouds.add(cloud1);
         clouds.add(cloud2);
 
@@ -153,7 +156,7 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void shouldIgnoreExceptionsFromUpdateForOneofCloudAndUpdateOther() {
+    void shouldIgnoreExceptionsFromUpdateForOneofCloudAndUpdateOther() {
         clouds.add(cloud1);
         clouds.add(cloud2);
 
@@ -166,7 +169,7 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void resetCloudInterval() {
+    void resetCloudInterval() {
         clouds.add(cloud1);
         clouds.add(cloud2);
         CloudNanny cloudNanny = getMockCloudNannyInstance();
@@ -184,7 +187,7 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void skipCloudIntervalExecution() {
+    void skipCloudIntervalExecution() {
         clouds.add(cloud1);
         clouds.add(cloud2);
         CloudNanny cloudNanny = getMockCloudNannyInstance();
@@ -202,7 +205,7 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void updateOnlyOneCloud() {
+    void updateOnlyOneCloud() {
         clouds.add(cloud1);
         clouds.add(cloud2);
         CloudNanny cloudNanny = getMockCloudNannyInstance();
@@ -222,7 +225,7 @@ public class CloudNannyTest {
     }
 
     @Test
-    public void doRun_updatesCloudsWithScaler_whenScalerIsNull() {
+    void doRun_updatesCloudsWithScaler_whenScalerIsNull() {
         when(cloud1.isScaleExecutorsByWeight()).thenReturn(true);
         when(cloud2.isScaleExecutorsByWeight()).thenReturn(false);
 

@@ -1,18 +1,17 @@
 package com.amazon.jenkins.ec2fleet.aws;
 
 import com.amazon.jenkins.ec2fleet.aws.RegionInfo;
-
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.regions.Region;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class RegionInfoTest {
+class RegionInfoTest {
 
     @Test
-    public void verifyRegionInfoDescriptionIsSameAsSDK() {
+    void verifyRegionInfoDescriptionIsSameAsSDK() {
         // Get regions from SDK
         final List<Region> regions = Region.regions();
 

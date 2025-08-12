@@ -4,13 +4,13 @@ import hudson.model.Label;
 import hudson.model.LoadStatistics;
 import hudson.slaves.Cloud;
 import hudson.slaves.NodeProvisioner;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import java.util.ArrayList;
@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -30,8 +31,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
-@RunWith(MockitoJUnitRunner.class)
-public class NoDelayProvisionStrategyTest {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class NoDelayProvisionStrategyTest {
 
     @Mock
     private NodeProvisioner.StrategyState state;
@@ -46,15 +48,15 @@ public class NoDelayProvisionStrategyTest {
 
     private List<Cloud> clouds = new ArrayList<>();
 
-    @Before
-    public void before() {
+    @BeforeEach
+    void before() {
         strategy = spy(new NoDelayProvisionStrategy());
         doReturn(clouds).when(strategy).getClouds();
         when(state.getSnapshot()).thenReturn(snapshot);
     }
 
     @Test
-    public void givenNoRequiredCapacity_shouldDoNotScale() {
+    void givenNoRequiredCapacity_shouldDoNotScale() {
         final EC2FleetCloud ec2FleetCloud = mock(EC2FleetCloud.class);
         clouds.add(ec2FleetCloud);
 
@@ -64,13 +66,13 @@ public class NoDelayProvisionStrategyTest {
     }
 
     @Test
-    public void givenAvailableSameAsRequiredCapacity_shouldDoNotScale() {
+    void givenAvailableSameAsRequiredCapacity_shouldDoNotScale() {
         final EC2FleetCloud ec2FleetCloud = mock(EC2FleetCloud.class);
         clouds.add(ec2FleetCloud);
         when(snapshot.getQueueLength()).thenReturn(10);
         when(snapshot.getAvailableExecutors()).thenReturn(10);
 
-        Assert.assertEquals(
+        assertEquals(
                 NodeProvisioner.StrategyDecision.PROVISIONING_COMPLETED,
                 strategy.apply(state));
 
@@ -78,26 +80,26 @@ public class NoDelayProvisionStrategyTest {
     }
 
     @Test
-    public void givenNoEC2Cloud_shouldDoNotScale() {
+    void givenNoEC2Cloud_shouldDoNotScale() {
         when(snapshot.getQueueLength()).thenReturn(10);
 
-        Assert.assertEquals(
+        assertEquals(
                 NodeProvisioner.StrategyDecision.CONSULT_REMAINING_STRATEGIES,
                 strategy.apply(state));
     }
 
     @Test
-    public void givenNonEC2Cloud_shouldDoNotScale() {
+    void givenNonEC2Cloud_shouldDoNotScale() {
         when(snapshot.getQueueLength()).thenReturn(10);
         clouds.add(mock(Cloud.class));
 
-        Assert.assertEquals(
+        assertEquals(
                 NodeProvisioner.StrategyDecision.CONSULT_REMAINING_STRATEGIES,
                 strategy.apply(state));
     }
 
     @Test
-    public void givenEC2CloudWithDisabledNoDelay_shouldDoNotScale() {
+    void givenEC2CloudWithDisabledNoDelay_shouldDoNotScale() {
         when(snapshot.getQueueLength()).thenReturn(10);
         when(state.getLabel()).thenReturn(label);
 
@@ -106,14 +108,14 @@ public class NoDelayProvisionStrategyTest {
         when(ec2FleetCloud.canProvision(any(Cloud.CloudState.class))).thenReturn(true);
         when(ec2FleetCloud.isNoDelayProvision()).thenReturn(false);
 
-        Assert.assertEquals(
+        assertEquals(
                 NodeProvisioner.StrategyDecision.CONSULT_REMAINING_STRATEGIES,
                 strategy.apply(state));
         verify(ec2FleetCloud, never()).provision(any(Cloud.CloudState.class), anyInt());
     }
 
     @Test
-    public void givenEC2CloudWhichCannotProvision_shouldDoNotScale() {
+    void givenEC2CloudWhichCannotProvision_shouldDoNotScale() {
         when(snapshot.getQueueLength()).thenReturn(10);
         when(state.getLabel()).thenReturn(label);
 
@@ -121,14 +123,14 @@ public class NoDelayProvisionStrategyTest {
         clouds.add(ec2FleetCloud);
         when(ec2FleetCloud.canProvision(any(Cloud.CloudState.class))).thenReturn(false);
 
-        Assert.assertEquals(
+        assertEquals(
                 NodeProvisioner.StrategyDecision.CONSULT_REMAINING_STRATEGIES,
                 strategy.apply(state));
         verify(ec2FleetCloud, never()).provision(any(Cloud.CloudState.class), anyInt());
     }
 
     @Test
-    public void givenEC2CloudsWithEnabledNoDelayAndWithout_shouldDoScalingForOne() {
+    void givenEC2CloudsWithEnabledNoDelayAndWithout_shouldDoScalingForOne() {
         when(snapshot.getQueueLength()).thenReturn(10);
         when(state.getLabel()).thenReturn(label);
         when(state.getAdditionalPlannedCapacity()).thenReturn(0);
@@ -142,19 +144,19 @@ public class NoDelayProvisionStrategyTest {
         when(ec2FleetCloud1.isNoDelayProvision()).thenReturn(true);
         when(ec2FleetCloud2.isNoDelayProvision()).thenReturn(false);
 
-        Assert.assertEquals(
+        assertEquals(
                 NodeProvisioner.StrategyDecision.CONSULT_REMAINING_STRATEGIES,
                 strategy.apply(state));
 
         ArgumentCaptor<Cloud.CloudState> cloudStateArgCaptor = ArgumentCaptor.forClass(Cloud.CloudState.class);
         verify(ec2FleetCloud1, times(1)).provision(cloudStateArgCaptor.capture(), eq(10));
-        Assert.assertEquals(label, cloudStateArgCaptor.getValue().getLabel());
-        Assert.assertEquals(0, cloudStateArgCaptor.getValue().getAdditionalPlannedCapacity());
+        assertEquals(label, cloudStateArgCaptor.getValue().getLabel());
+        assertEquals(0, cloudStateArgCaptor.getValue().getAdditionalPlannedCapacity());
         verify(ec2FleetCloud2, never()).provision(any(Cloud.CloudState.class), anyInt());
     }
 
     @Test
-    public void givenEC2CloudsWhenOneCanCoverCapacity_shouldDoScalingForFirstOnly() {
+    void givenEC2CloudsWhenOneCanCoverCapacity_shouldDoScalingForFirstOnly() {
         when(snapshot.getQueueLength()).thenReturn(2);
         when(state.getLabel()).thenReturn(label);
 
@@ -171,7 +173,7 @@ public class NoDelayProvisionStrategyTest {
                 new NodeProvisioner.PlannedNode("", new CompletableFuture<>(), 1)
         ));
 
-        Assert.assertEquals(
+        assertEquals(
                 NodeProvisioner.StrategyDecision.PROVISIONING_COMPLETED,
                 strategy.apply(state));
         verify(ec2FleetCloud1, times(1)).provision(any(Cloud.CloudState.class), eq(2));
@@ -179,7 +181,7 @@ public class NoDelayProvisionStrategyTest {
     }
 
     @Test
-    public void givenEC2Clouds_shouldDoScalingAndReduceForNextOne() {
+    void givenEC2Clouds_shouldDoScalingAndReduceForNextOne() {
         when(snapshot.getQueueLength()).thenReturn(5);
         when(state.getLabel()).thenReturn(label);
 
@@ -196,7 +198,7 @@ public class NoDelayProvisionStrategyTest {
                 new NodeProvisioner.PlannedNode("", new CompletableFuture<>(), 1)
         ));
 
-        Assert.assertEquals(
+        assertEquals(
                 NodeProvisioner.StrategyDecision.CONSULT_REMAINING_STRATEGIES,
                 strategy.apply(state));
         verify(ec2FleetCloud1, times(1)).provision(any(Cloud.CloudState.class), eq(5));
@@ -204,7 +206,7 @@ public class NoDelayProvisionStrategyTest {
     }
 
     @Test
-    public void givenEC2Clouds_shouldReduceAsAmountOfExecutors() {
+    void givenEC2Clouds_shouldReduceAsAmountOfExecutors() {
         when(snapshot.getQueueLength()).thenReturn(2);
         when(state.getLabel()).thenReturn(label);
 
@@ -217,12 +219,12 @@ public class NoDelayProvisionStrategyTest {
         // then
         final NodeProvisioner.StrategyDecision decision = strategy.apply(state);
         // when
-        Assert.assertEquals(NodeProvisioner.StrategyDecision.PROVISIONING_COMPLETED, decision);
+        assertEquals(NodeProvisioner.StrategyDecision.PROVISIONING_COMPLETED, decision);
         verify(ec2FleetCloud1, times(1)).provision(any(Cloud.CloudState.class), eq(2));
     }
 
     @Test
-    public void givenPlannedCapacity_shouldComputeExcessWorkloadCorrectly() {
+    void givenPlannedCapacity_shouldComputeExcessWorkloadCorrectly() {
         when(snapshot.getQueueLength()).thenReturn(6);
         when(snapshot.getAvailableExecutors()).thenReturn(0);
         when(state.getPlannedCapacitySnapshot()).thenReturn(3);
@@ -244,7 +246,7 @@ public class NoDelayProvisionStrategyTest {
 
         final NodeProvisioner.StrategyDecision decision = strategy.apply(state);
 
-        Assert.assertEquals(NodeProvisioner.StrategyDecision.PROVISIONING_COMPLETED, decision);
+        assertEquals(NodeProvisioner.StrategyDecision.PROVISIONING_COMPLETED, decision);
         verify(ec2FleetCloud1, times(1)).provision(any(Cloud.CloudState.class), eq(3));
         verify(ec2FleetCloud2, times(1)).provision(any(Cloud.CloudState.class), eq(1));
     }

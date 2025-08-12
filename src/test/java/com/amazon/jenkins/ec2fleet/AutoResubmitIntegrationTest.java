@@ -16,9 +16,8 @@ import hudson.model.queue.QueueTaskFuture;
 import hudson.slaves.OfflineCause;
 import hudson.tasks.BatchFile;
 import hudson.tasks.Shell;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import software.amazon.awssdk.services.ec2.Ec2Client;
 import software.amazon.awssdk.services.ec2.model.*;
@@ -27,21 +26,21 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 @SuppressWarnings({"deprecation"})
-public class AutoResubmitIntegrationTest extends IntegrationTest {
+class AutoResubmitIntegrationTest extends IntegrationTest {
 
     private EC2FleetCloud.ExecutorScaler noScaling;
 
-    @Before
-    public void before() {
+    @BeforeEach
+    void before() {
         EC2Fleet ec2Fleet = mock(EC2Fleet.class);
 
         EC2Fleets.setGet(ec2Fleet);
@@ -51,7 +50,7 @@ public class AutoResubmitIntegrationTest extends IntegrationTest {
 
         when(ec2Fleet.getState(anyString(), anyString(), nullable(String.class), anyString())).thenReturn(
                 new FleetStateStats("", 1, FleetStateStats.State.active(), Collections.singleton("i-1"),
-                        Collections.<String, Double>emptyMap()));
+                        Collections.emptyMap()));
 
         Ec2Client amazonEC2 = mock(Ec2Client.class);
         when(ec2Api.connect(anyString(), anyString(), Mockito.nullable(String.class))).thenReturn(amazonEC2);
@@ -75,7 +74,7 @@ public class AutoResubmitIntegrationTest extends IntegrationTest {
     }
 
     @Test
-    public void should_successfully_resubmit_freestyle_task() throws Exception {
+    void should_successfully_resubmit_freestyle_task() throws Exception {
         EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
                 0, 0, 10, 0, 1, false, true,
@@ -103,15 +102,15 @@ public class AutoResubmitIntegrationTest extends IntegrationTest {
         assertNodeIsOnline(node);
         assertQueueAndNodesIdle(node);
 
-        Assert.assertEquals(1, j.jenkins.getProjects().size());
-        Assert.assertEquals(Result.SUCCESS, j.jenkins.getProjects().get(0).getLastBuild().getResult());
-        Assert.assertEquals(2, j.jenkins.getProjects().get(0).getBuilds().size());
+        assertEquals(1, j.jenkins.getProjects().size());
+        assertEquals(Result.SUCCESS, j.jenkins.getProjects().get(0).getLastBuild().getResult());
+        assertEquals(2, j.jenkins.getProjects().get(0).getBuilds().size());
 
         cancelTasks(rs);
     }
 
     @Test
-    public void should_successfully_resubmit_parametrized_task() throws Exception {
+    void should_successfully_resubmit_parametrized_task() throws Exception {
         EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
                 0, 0, 10, 0, 1, false, true,
@@ -159,15 +158,15 @@ public class AutoResubmitIntegrationTest extends IntegrationTest {
         assertNodeIsOnline(node);
         assertQueueAndNodesIdle(node);
 
-        Assert.assertEquals(1, j.jenkins.getProjects().size());
-        Assert.assertEquals(Result.SUCCESS, j.jenkins.getProjects().get(0).getLastBuild().getResult());
-        Assert.assertEquals(2, j.jenkins.getProjects().get(0).getBuilds().size());
+        assertEquals(1, j.jenkins.getProjects().size());
+        assertEquals(Result.SUCCESS, j.jenkins.getProjects().get(0).getLastBuild().getResult());
+        assertEquals(2, j.jenkins.getProjects().get(0).getBuilds().size());
 
         cancelTasks(rs);
     }
 
     @Test
-    public void should_not_resubmit_if_disabled() throws Exception {
+    void should_not_resubmit_if_disabled() throws Exception {
         EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
                 0, 0, 10, 0, 1, false, true,
@@ -192,9 +191,9 @@ public class AutoResubmitIntegrationTest extends IntegrationTest {
         assertNodeIsOnline(node);
         assertQueueAndNodesIdle(node);
 
-        Assert.assertEquals(1, j.jenkins.getProjects().size());
-        Assert.assertEquals(Result.FAILURE, j.jenkins.getProjects().get(0).getLastBuild().getResult());
-        Assert.assertEquals(1, j.jenkins.getProjects().get(0).getBuilds().size());
+        assertEquals(1, j.jenkins.getProjects().size());
+        assertEquals(Result.FAILURE, j.jenkins.getProjects().get(0).getLastBuild().getResult());
+        assertEquals(1, j.jenkins.getProjects().get(0).getBuilds().size());
 
         cancelTasks(rs);
     }

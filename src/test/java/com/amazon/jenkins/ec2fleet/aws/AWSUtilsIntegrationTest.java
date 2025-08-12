@@ -1,26 +1,31 @@
 package com.amazon.jenkins.ec2fleet.aws;
 
 import hudson.ProxyConfiguration;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
 
 import java.net.URI;
 
-public class AWSUtilsIntegrationTest {
+@WithJenkins
+class AWSUtilsIntegrationTest {
 
     private static final int PROXY_PORT = 8888;
     private static final String PROXY_HOST = "localhost";
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+    private JenkinsRule j;
+
+    @BeforeEach
+    void before(JenkinsRule rule) {
+        j = rule;
+    }
 
     @Test
-    public void getHttpClient_when_no_proxy_returns_configuration_without_proxy() {
+    void getHttpClient_when_no_proxy_returns_configuration_without_proxy() {
         j.jenkins.proxy = null;
         software.amazon.awssdk.http.apache.ProxyConfiguration.Builder builderSpy =
             Mockito.spy(software.amazon.awssdk.http.apache.ProxyConfiguration.builder());
@@ -34,7 +39,7 @@ public class AWSUtilsIntegrationTest {
     }
 
     @Test
-    public void getHttpClient_when_proxy_returns_configuration_with_proxy() {
+    void getHttpClient_when_proxy_returns_configuration_with_proxy() {
         j.jenkins.proxy = new ProxyConfiguration(PROXY_HOST, PROXY_PORT);
         URI expectedUri = URI.create("http://" + PROXY_HOST + ":" + PROXY_PORT);
         software.amazon.awssdk.http.apache.ProxyConfiguration.Builder builderSpy =
@@ -49,7 +54,7 @@ public class AWSUtilsIntegrationTest {
     }
 
     @Test
-    public void getHttpClient_when_proxy_with_credentials_returns_configuration_with_proxy() {
+    void getHttpClient_when_proxy_with_credentials_returns_configuration_with_proxy() {
         j.jenkins.proxy = new ProxyConfiguration(PROXY_HOST, PROXY_PORT, "a", "b");
         URI expectedUri = URI.create("http://" + PROXY_HOST + ":" + PROXY_PORT);
         software.amazon.awssdk.http.apache.ProxyConfiguration.Builder builderSpy =
@@ -64,7 +69,7 @@ public class AWSUtilsIntegrationTest {
     }
 
     @Test
-    public void getHttpClient_when_endpoint_is_invalid_url_use_it_as_is() {
+    void getHttpClient_when_endpoint_is_invalid_url_use_it_as_is() {
         j.jenkins.proxy = new ProxyConfiguration(PROXY_HOST, PROXY_PORT);
         URI expectedUri = URI.create("http://" + PROXY_HOST + ":" + PROXY_PORT);
         software.amazon.awssdk.http.apache.ProxyConfiguration.Builder builderSpy =
@@ -79,7 +84,7 @@ public class AWSUtilsIntegrationTest {
     }
 
     @Test
-    public void getHttpClient_when_no_proxy_does_not_call_builder_methods() {
+    void getHttpClient_when_no_proxy_does_not_call_builder_methods() {
         j.jenkins.proxy = null;
         software.amazon.awssdk.http.apache.ProxyConfiguration.Builder builderSpy =
             Mockito.spy(software.amazon.awssdk.http.apache.ProxyConfiguration.builder());
@@ -93,7 +98,7 @@ public class AWSUtilsIntegrationTest {
     }
 
     @Test
-    public void getHttpClient_when_proxy_calls_builder_methods_without_credentials() {
+    void getHttpClient_when_proxy_calls_builder_methods_without_credentials() {
         j.jenkins.proxy = new ProxyConfiguration(PROXY_HOST, PROXY_PORT);
         URI expectedUri = URI.create("http://" + PROXY_HOST + ":" + PROXY_PORT);
         software.amazon.awssdk.http.apache.ProxyConfiguration.Builder builderSpy =
@@ -108,7 +113,7 @@ public class AWSUtilsIntegrationTest {
     }
 
     @Test
-    public void getHttpClient_when_proxy_with_credentials_calls_builder_methods() {
+    void getHttpClient_when_proxy_with_credentials_calls_builder_methods() {
         j.jenkins.proxy = new ProxyConfiguration(PROXY_HOST, PROXY_PORT, "a", "b");
         URI expectedUri = URI.create("http://" + PROXY_HOST + ":" + PROXY_PORT);
         software.amazon.awssdk.http.apache.ProxyConfiguration.Builder builderSpy =
@@ -123,7 +128,7 @@ public class AWSUtilsIntegrationTest {
     }
 
     @Test
-    public void getHttpClient_when_endpoint_is_invalid_url_calls_builder_methods() {
+    void getHttpClient_when_endpoint_is_invalid_url_calls_builder_methods() {
         j.jenkins.proxy = new ProxyConfiguration(PROXY_HOST, PROXY_PORT);
         URI expectedUri = URI.create("http://" + PROXY_HOST + ":" + PROXY_PORT);
         software.amazon.awssdk.http.apache.ProxyConfiguration.Builder builderSpy =

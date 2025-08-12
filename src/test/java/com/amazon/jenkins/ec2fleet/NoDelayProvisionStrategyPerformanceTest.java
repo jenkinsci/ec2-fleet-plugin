@@ -1,14 +1,12 @@
 package com.amazon.jenkins.ec2fleet;
 
-import hudson.model.FreeStyleBuild;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.slaves.ComputerConnector;
 import hudson.slaves.NodeProvisioner;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.ec2.model.InstanceStateName;
 
 import java.io.IOException;
@@ -18,30 +16,32 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 /**
  * https://support.cloudbees.com/hc/en-us/articles/115000060512-New-Shared-Agents-Clouds-are-not-being-provisioned-for-my-jobs-in-the-queue-when-I-have-agents-that-are-suspended
  * <p>
  * Run example:
  * https://docs.google.com/spreadsheets/d/e/2PACX-1vSuPWeDJD8xAbvHpyJPigAIMYJyL0YvljjAatutNqaFqUQofTx2PxY-sfqZgfsWqRxMGl2elJErbH5n/pubchart?oid=983520837&format=interactive
  */
-@Ignore
-public class NoDelayProvisionStrategyPerformanceTest extends IntegrationTest {
+@Disabled
+class NoDelayProvisionStrategyPerformanceTest extends IntegrationTest {
     private final EC2FleetCloud.ExecutorScaler noScaling = new EC2FleetCloud.NoScaler();
 
-    @BeforeClass
-    public static void beforeClass() {
+    @BeforeAll
+    static void beforeClass() {
         turnOffJenkinsTestTimout();
         // set default MARGIN for Jenkins
         System.setProperty(NodeProvisioner.class.getName() + ".MARGIN", Integer.toString(10));
     }
 
     @Test
-    public void noDelayProvisionStrategy() throws Exception {
+    void noDelayProvisionStrategy() throws Exception {
         test(true);
     }
 
     @Test
-    public void defaultProvisionStrategy() throws Exception {
+    void defaultProvisionStrategy() throws Exception {
         test(false);
     }
 
@@ -64,12 +64,7 @@ public class NoDelayProvisionStrategyPerformanceTest extends IntegrationTest {
         System.out.println("waiting cloud start");
         // updated plugin requires some init time to get first update
         // so wait this event to be really correct with perf comparison as old version is not require init time
-        tryUntil(new Runnable() {
-            @Override
-            public void run() {
-                Assert.assertNotNull(cloud.getStats());
-            }
-        });
+        tryUntil(() -> assertNotNull(cloud.getStats()));
 
         // warm up jenkins queue, as it takes some time when jenkins run first task and start scale in/out
         // so let's run one task and wait it finish
@@ -78,25 +73,21 @@ public class NoDelayProvisionStrategyPerformanceTest extends IntegrationTest {
         waitTasksFinish(warmUpTasks);
 
         final List<ImmutableTriple<Long, Integer, Integer>> metrics = new ArrayList<>();
-        final Thread monitor = new Thread(new Runnable() {
+        final Thread monitor = new Thread(() -> {
+            while (!Thread.interrupted()) {
+                final int queueSize = j.jenkins.getQueue().countBuildableItems()  // tasks to build
+                        + j.jenkins.getQueue().getPendingItems().size() // tasks to start
+                        + j.jenkins.getLabelAtom(label).getBusyExecutors(); // tasks in progress
+                final int executors = j.jenkins.getLabelAtom(label).getTotalExecutors();
+                final ImmutableTriple<Long, Integer, Integer> data = new ImmutableTriple<>(
+                        System.currentTimeMillis(), queueSize, executors);
+                metrics.add(data);
+                System.out.println(new Date(data.left) + " " + data.middle + " " + data.right);
 
-            @Override
-            public void run() {
-                while (!Thread.interrupted()) {
-                    final int queueSize = j.jenkins.getQueue().countBuildableItems()  // tasks to build
-                            + j.jenkins.getQueue().getPendingItems().size() // tasks to start
-                            + j.jenkins.getLabelAtom(label).getBusyExecutors(); // tasks in progress
-                    final int executors = j.jenkins.getLabelAtom(label).getTotalExecutors();
-                    final ImmutableTriple<Long, Integer, Integer> data = new ImmutableTriple<>(
-                            System.currentTimeMillis(), queueSize, executors);
-                    metrics.add(data);
-                    System.out.println(new Date(data.left) + " " + data.middle + " " + data.right);
-
-                    try {
-                        Thread.sleep(TimeUnit.SECONDS.toMillis(5));
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException("stopped");
-                    }
+                try {
+                    Thread.sleep(TimeUnit.SECONDS.toMillis(5));
+                } catch (InterruptedException e) {
+                    throw new RuntimeException("stopped");
                 }
             }
         });
