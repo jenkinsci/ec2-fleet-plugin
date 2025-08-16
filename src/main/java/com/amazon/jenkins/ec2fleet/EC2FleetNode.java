@@ -92,6 +92,12 @@ public class EC2FleetNode extends Slave implements EphemeralNode {
         return (DescriptorImpl) super.getDescriptor();
     }
 
+    @Override
+    protected Object readResolve() {
+        super.readResolve();
+        return this;
+    }
+
     @Extension
     public static final class DescriptorImpl extends SlaveDescriptor {
 
