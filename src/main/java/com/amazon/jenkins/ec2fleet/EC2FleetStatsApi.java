@@ -27,10 +27,10 @@ public class EC2FleetStatsApi implements RootAction {
 
     @Override
     public String getUrlName() {
-        return "api/ec2-fleets/json";
+        return "ec2-fleet";
     }
 
-    public void doIndex(HttpServletRequest req, HttpServletResponse rsp) throws IOException, ServletException {
+    public void doStats(HttpServletRequest req, HttpServletResponse rsp) throws IOException, ServletException {
         List<Map<String, Object>> statsList = new ArrayList<>();
         for (Cloud cloud : Jenkins.get().clouds) {
             if (cloud instanceof EC2FleetCloud) {
