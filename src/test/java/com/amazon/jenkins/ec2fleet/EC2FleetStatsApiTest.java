@@ -5,9 +5,9 @@ import com.amazon.jenkins.ec2fleet.FleetStateStats;
 import hudson.slaves.Cloud;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.Rule;
 import org.mockito.Mockito;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.JenkinsRuleExtension;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -18,10 +18,9 @@ import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(JenkinsRuleExtension.class)
 public class EC2FleetStatsApiTest {
 
-    @JenkinsRule
+    @Rule
     public JenkinsRule jenkinsRule = new JenkinsRule();
 
     @Test
