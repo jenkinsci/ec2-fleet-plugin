@@ -1,4 +1,3 @@
-java
 package com.amazon.jenkins.ec2fleet;
 
 import com.amazon.jenkins.ec2fleet.FleetStateStats;
