@@ -1,3 +1,5 @@
+package com.amazon.jenkins.ec2fleet;
+
 import com.amazon.jenkins.ec2fleet.EC2FleetCloud;
 import com.amazon.jenkins.ec2fleet.FleetStateStats;
 import hudson.slaves.Cloud;
