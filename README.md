@@ -248,35 +248,12 @@ Plugin usage statistics per Jenkins version can be found [here](https://stats.je
 
 ## Releasing
 
-https://jenkins.io/doc/developer/publishing/releasing/
-
-```bash
-mvn release:prepare release:perform
-```
+https://www.jenkins.io/doc/developer/publishing/releasing-cd/
 
 ### Jenkins 2 can't connect by SSH 
 
 https://issues.jenkins-ci.org/browse/JENKINS-53954
 
-### Install Java 8 on EC2 instance 
-
-Regular script:
-
-```bash
-sudo yum install java-1.8.0 -y
-sudo yum remove java-1.7.0-openjdk -y
-java -version 
-```
-
-User Data Script:
-
-*Note* ```sudo``` is not required, ```-y``` suppresses confirmation.
-Don't forget to encode with Base64
-
-```bash
-#!/bin/bash
-yum install java-1.8.0 -y && yum remove java-1.7.0-openjdk -y && java -version
-```
 
 # Contributing
  
