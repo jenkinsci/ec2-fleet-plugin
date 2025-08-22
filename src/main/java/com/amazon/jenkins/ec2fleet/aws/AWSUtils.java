@@ -13,6 +13,9 @@ import software.amazon.awssdk.core.retry.RetryPolicy;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
 
 import java.net.*;
+import java.util.List;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public final class AWSUtils {
 
@@ -69,6 +72,11 @@ public final class AWSUtils {
                 if (proxyConfig.getUserName() != null) {
                     sdkProxyBuilder.username(proxyConfig.getUserName());
                     sdkProxyBuilder.password(proxyConfig.getSecretPassword().getPlainText());
+                }
+                List<Pattern> patterns = proxyConfig.getNoProxyHostPatterns();
+                if (patterns != null && !patterns.isEmpty()) {
+                    sdkProxyBuilder.nonProxyHosts(
+                            patterns.stream().map(Pattern::pattern).collect(Collectors.toSet()));
                 }
                 return (ApacheHttpClient) ApacheHttpClient.builder().proxyConfiguration(sdkProxyBuilder.build()).build();
             }
