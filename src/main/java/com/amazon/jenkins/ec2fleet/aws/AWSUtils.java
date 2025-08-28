@@ -4,6 +4,7 @@ import com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentials
 import hudson.ProxyConfiguration;
 import jenkins.model.Jenkins;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
@@ -81,10 +82,8 @@ public final class AWSUtils {
      */
     public static AwsCredentialsProvider toSdkV2CredentialsProvider(AmazonWebServicesCredentials credentials) {
         if (credentials == null) return null;
-        String accessKey = credentials.resolveCredentials().accessKeyId();
-        String secretKey = credentials.resolveCredentials().secretAccessKey();
-        AwsBasicCredentials awsCreds = AwsBasicCredentials.create(accessKey, secretKey);
-        return StaticCredentialsProvider.create(awsCreds);
+        AwsCredentials creds = credentials.resolveCredentials();
+        return StaticCredentialsProvider.create(creds);
     }
 
     private AWSUtils() {
