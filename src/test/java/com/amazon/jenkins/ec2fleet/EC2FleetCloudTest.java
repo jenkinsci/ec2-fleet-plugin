@@ -2612,12 +2612,157 @@ class EC2FleetCloudTest {
     private void mockNodeCreatingPart() {
         when(jenkins.getNodesObject()).thenReturn(mock(Nodes.class));
 
-        ExtensionList labelFinder = mock(ExtensionList.class);
+        ExtensionList<LabelFinder> labelFinder = mock(ExtensionList.class);
         when(labelFinder.iterator()).thenReturn(Collections.emptyIterator());
         mockedLabelFinder.when(LabelFinder::all).thenReturn(labelFinder);
 
         // mocking part of node creation process Jenkins.get().getLabelAtom(l)
         when(jenkins.getLabelAtom(anyString())).thenReturn(new LabelAtom("mock-label"));
+    }
+
+    @Test
+    void update_shouldSkipModificationWhenFleetStateIsModifying() {
+        // given
+        when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
+
+        // Mock fleet state as 'modifying' to simulate instance refresh in progress
+        Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString(), eq(true)))
+                .thenReturn(new FleetStateStats("fleetId", 5, FleetStateStats.State.modifying("Instance refresh in progress"),
+                        Collections.emptySet(), Collections.emptyMap()));
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
+                "", "fleetId", "", null, null, false,
+                false, 0, 0, 10, 0, 1, true,
+                false, "-1", false, 0,
+                0, 10, false, false, noScaling, true, false); // pauseDuringInstanceRefresh = true
+
+        // Schedule an instance to be added
+        Collection<NodeProvisioner.PlannedNode> plannedNodes = fleetCloud.provision(new Cloud.CloudState(null, 0), 1);
+        assertEquals(1, plannedNodes.size());
+        assertEquals(1, fleetCloud.getToAdd());
+
+        // when
+        FleetStateStats stats = fleetCloud.update();
+
+        // then
+        assertEquals(5, stats.getNumDesired());
+        assertEquals(0, stats.getNumActive());
+        assertEquals("fleetId", stats.getFleetId());
+        assertTrue(stats.getState().isModifying());
+        
+        // Verify that toAdd counter is not reset when fleet is modifying
+        assertEquals(1, fleetCloud.getToAdd());
+        
+        Mockito.verify(ec2Fleet, never()).modify(anyString(),anyString(),anyString(),anyString(),anyInt(),anyInt(),anyInt());
+    }
+
+    @Test
+    void update_shouldNotSkipModificationWhenPauseDuringInstanceRefreshDisabled() {
+        // given
+        when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
+
+        // Mock fleet state as 'active' when pauseDuringInstanceRefresh is disabled
+        Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString(), eq(false)))
+                .thenReturn(new FleetStateStats("fleetId", 5, FleetStateStats.State.active(),
+                        Collections.emptySet(), Collections.emptyMap()));
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
+                "", "fleetId", "", null, null, false,
+                false, 0, 0, 10, 0, 1, true,
+                false, "-1", false, 0,
+                0, 10, false, false, noScaling, false, false); // pauseDuringInstanceRefresh = false
+
+        // Schedule an instance to be added
+        Collection<NodeProvisioner.PlannedNode> plannedNodes = fleetCloud.provision(new Cloud.CloudState(null, 0), 1);
+        assertEquals(1, plannedNodes.size());
+        assertEquals(1, fleetCloud.getToAdd());
+
+        // when
+        FleetStateStats stats = fleetCloud.update();
+
+        // then
+        assertEquals(6, stats.getNumDesired()); // 5 existing + 1 to add
+        assertEquals(0, stats.getNumActive());
+        assertEquals("fleetId", stats.getFleetId());
+        assertFalse(stats.getState().isModifying());
+        
+        // Verify that toAdd counter is reset when modification proceeds
+        assertEquals(0, fleetCloud.getToAdd());
+    }
+
+    @Test
+    void update_shouldPreserveExistingNodeLabelsWhenConfigured() throws IOException {
+        // given
+        when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
+
+        Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString(), eq(false)))
+                .thenReturn(new FleetStateStats("fleetId", 1, FleetStateStats.State.active(),
+                        Collections.singleton("i-1"), Collections.emptyMap()));
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
+                "", "fleetId", "", null, null, false,
+                false, 0, 0, 10, 0, 1, true,
+                false, "-1", false, 0,
+                0, 10, false, false, noScaling, false, true); // preserveNodeLabels = true
+
+        // Mock existing node with custom labels
+        EC2FleetNode existingNode = mock(EC2FleetNode.class);
+        when(existingNode.getLabelString()).thenReturn("custom-label existing-label");
+        when(jenkins.getNode("i-1")).thenReturn(existingNode);
+
+        // when
+        FleetStateStats stats = fleetCloud.update();
+
+        // then
+        assertEquals(1, stats.getNumDesired());
+        
+        // Verify that preserveNodeLabels is correctly configured
+        assertTrue(fleetCloud.isPreserveNodeLabels());
+        
+        // Verify that setLabelString was NOT called (labels preserved)
+        Mockito.verify(existingNode, never()).setLabelString(anyString());
+    }
+
+    @Test
+    void isPauseDuringInstanceRefresh_shouldReturnCorrectValue() {
+        // Test when pauseDuringInstanceRefresh is true
+        EC2FleetCloud fleetCloudPauseEnabled = new EC2FleetCloud("TestCloud", "credId", null, "region",
+                "", "fleetId", "", null, null, false,
+                false, 0, 0, 10, 0, 1, true,
+                false, "-1", false, 0,
+                0, 10, false, false, noScaling, true, false);
+        
+        assertTrue(fleetCloudPauseEnabled.isPauseDuringInstanceRefresh());
+
+        // Test when pauseDuringInstanceRefresh is false (default)
+        EC2FleetCloud fleetCloudPauseDisabled = new EC2FleetCloud("TestCloud", "credId", null, "region",
+                "", "fleetId", "", null, null, false,
+                false, 0, 0, 10, 0, 1, true,
+                false, "-1", false, 0,
+                0, 10, false, false, noScaling, false, false);
+        
+        assertFalse(fleetCloudPauseDisabled.isPauseDuringInstanceRefresh());
+    }
+
+    @Test
+    void isPreserveNodeLabels_shouldReturnCorrectValue() {
+        // Test when preserveNodeLabels is true
+        EC2FleetCloud fleetCloudPreserveEnabled = new EC2FleetCloud("TestCloud", "credId", null, "region",
+                "", "fleetId", "", null, null, false,
+                false, 0, 0, 10, 0, 1, true,
+                false, "-1", false, 0,
+                0, 10, false, false, noScaling, false, true);
+        
+        assertTrue(fleetCloudPreserveEnabled.isPreserveNodeLabels());
+
+        // Test when preserveNodeLabels is false (default)
+        EC2FleetCloud fleetCloudPreserveDisabled = new EC2FleetCloud("TestCloud", "credId", null, "region",
+                "", "fleetId", "", null, null, false,
+                false, 0, 0, 10, 0, 1, true,
+                false, "-1", false, 0,
+                0, 10, false, false, noScaling, false, false);
+        
+        assertFalse(fleetCloudPreserveDisabled.isPreserveNodeLabels());
     }
 
 }
