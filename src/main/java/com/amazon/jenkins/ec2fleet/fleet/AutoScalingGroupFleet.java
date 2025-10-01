@@ -64,6 +64,13 @@ public class AutoScalingGroupFleet implements EC2Fleet {
     @Override
     public FleetStateStats getState(
             final String awsCredentialsId, final String regionName, final String endpoint, final String id) {
+        return getState(awsCredentialsId, regionName, endpoint, id, false, false);
+    }
+
+    @Override
+    public FleetStateStats getState(
+            final String awsCredentialsId, final String regionName, final String endpoint, final String id,
+            final boolean pauseDuringInstanceRefresh, final boolean preserveNodeLabels) {
         final AutoScalingClient client = createClient(awsCredentialsId, regionName, endpoint);
         final DescribeAutoScalingGroupsResponse result = client.describeAutoScalingGroups(
                 DescribeAutoScalingGroupsRequest.builder()
@@ -76,6 +83,17 @@ public class AutoScalingGroupFleet implements EC2Fleet {
         }
 
         final AutoScalingGroup group = result.autoScalingGroups().get(0);
+
+        // Check for Instance Refresh if pauseDuringInstanceRefresh is enabled
+        FleetStateStats.State fleetState;
+        if (pauseDuringInstanceRefresh && hasActiveInstanceRefresh(client, id)) {
+            // Set state to modifying when Instance Refresh is in progress
+            fleetState = FleetStateStats.State.modifying("Instance Refresh in progress");
+            LOGGER.info(String.format("AutoScaling Group %s has active Instance Refresh - pausing modifications", id));
+        } else {
+            // Use normal status logic
+            fleetState = FleetStateStats.State.active(StringUtils.defaultIfEmpty(group.status(), "active"));
+        }
 
         final Set<String> instanceIds = new HashSet<>(group.instances().size());
         for (final Instance instance : group.instances()) {
@@ -91,11 +109,28 @@ public class AutoScalingGroupFleet implements EC2Fleet {
                                 override -> Double.parseDouble(override.weightedCapacity()))))
                 .orElse(Collections.emptyMap());
 
-        return new FleetStateStats(
-                id, group.desiredCapacity(),
-                // status could be null which is active
-                FleetStateStats.State.active(StringUtils.defaultIfEmpty(group.status(), "active")),
-                instanceIds, instanceWeights);
+        return new FleetStateStats(id, group.desiredCapacity(), fleetState, instanceIds, instanceWeights);
+    }
+
+    /**
+     * Check if there are any active Instance Refresh operations for the AutoScaling Group
+     */
+    private boolean hasActiveInstanceRefresh(final AutoScalingClient client, final String autoScalingGroupName) {
+        try {
+            final DescribeInstanceRefreshesResponse response = client.describeInstanceRefreshes(
+                    DescribeInstanceRefreshesRequest.builder()
+                            .autoScalingGroupName(autoScalingGroupName)
+                            .build());
+            
+            return response.instanceRefreshes().stream()
+                    .anyMatch(refresh -> 
+                            InstanceRefreshStatus.PENDING.equals(refresh.status()) ||
+                            InstanceRefreshStatus.IN_PROGRESS.equals(refresh.status()));
+        } catch (Exception e) {
+            LOGGER.warning(String.format("Failed to check Instance Refresh status for ASG %s: %s", 
+                    autoScalingGroupName, e.getMessage()));
+            return false; // Default to allowing modifications if we can't check
+        }
     }
 
     @Override
