@@ -31,11 +31,10 @@ public interface EC2Fleet {
     /**
      * Get fleet state with configuration options
      * @param pauseDuringInstanceRefresh whether to pause during instance refresh operations
-     * @param preserveNodeLabels whether to preserve node labels
      */
     default FleetStateStats getState(
             final String awsCredentialsId, final String regionName, final String endpoint,
-            final String id, final boolean pauseDuringInstanceRefresh, final boolean preserveNodeLabels) {
+            final String id, final boolean pauseDuringInstanceRefreshs) {
         return getState(awsCredentialsId, regionName, endpoint, id);
     }
 

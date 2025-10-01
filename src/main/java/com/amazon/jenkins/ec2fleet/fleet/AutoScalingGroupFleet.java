@@ -64,13 +64,13 @@ public class AutoScalingGroupFleet implements EC2Fleet {
     @Override
     public FleetStateStats getState(
             final String awsCredentialsId, final String regionName, final String endpoint, final String id) {
-        return getState(awsCredentialsId, regionName, endpoint, id, false, false);
+        return getState(awsCredentialsId, regionName, endpoint, id, false);
     }
 
     @Override
     public FleetStateStats getState(
             final String awsCredentialsId, final String regionName, final String endpoint, final String id,
-            final boolean pauseDuringInstanceRefresh, final boolean preserveNodeLabels) {
+            final boolean pauseDuringInstanceRefresh) {
         final AutoScalingClient client = createClient(awsCredentialsId, regionName, endpoint);
         final DescribeAutoScalingGroupsResponse result = client.describeAutoScalingGroups(
                 DescribeAutoScalingGroupsRequest.builder()

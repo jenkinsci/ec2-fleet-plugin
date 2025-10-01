@@ -236,7 +236,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         if (fleet != null) {
             this.stats = EC2Fleets.get(fleet).getState(
                     getAwsCredentialsId(), region, endpoint, getFleet(), 
-                    isPauseDuringInstanceRefresh(), isPreserveNodeLabels());
+                    isPauseDuringInstanceRefresh());
         }
     }
 
@@ -508,7 +508,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         // We should always work with the snapshot since data could be modified in another thread
         FleetStateStats currentState = EC2Fleets.get(fleet).getState(
                 getAwsCredentialsId(), region, endpoint, getFleet(), 
-                isPauseDuringInstanceRefresh(), isPreserveNodeLabels());
+                isPauseDuringInstanceRefresh());
 
         // Some Fleet implementations (e.g. EC2SpotFleet) reflect their state only at the end of modification
         if (currentState.getState().isModifying()) {

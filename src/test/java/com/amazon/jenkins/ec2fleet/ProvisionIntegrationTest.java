@@ -35,6 +35,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.eq;
 
 class ProvisionIntegrationTest extends IntegrationTest {
 
@@ -52,7 +53,7 @@ class ProvisionIntegrationTest extends IntegrationTest {
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
         final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
         EC2Fleets.setGet(ec2Fleet);
-        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
+        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString(), eq(false))).thenReturn(
                 new FleetStateStats("", 0, FleetStateStats.State.active(), Collections.emptySet(),
                         Collections.emptyMap()));
 
@@ -119,7 +120,7 @@ class ProvisionIntegrationTest extends IntegrationTest {
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
         final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
         EC2Fleets.setGet(ec2Fleet);
-        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
+        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString(), eq(false))).thenReturn(
                 new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.emptySet(), Collections.emptyMap()));
         EC2FleetCloud cloud = spy(new EC2FleetCloud("TestCloud", "credId", null, "region",
@@ -153,7 +154,7 @@ class ProvisionIntegrationTest extends IntegrationTest {
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
         final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
         EC2Fleets.setGet(ec2Fleet);
-        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
+        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString(), eq(false))).thenReturn(
                 new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.emptySet(), Collections.emptyMap()));
         final EC2FleetCloud cloud = spy(new EC2FleetCloud("TestCloud", "credId", null, "region",
@@ -248,7 +249,7 @@ class ProvisionIntegrationTest extends IntegrationTest {
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
         final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
         EC2Fleets.setGet(ec2Fleet);
-        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
+        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString(), eq(false))).thenReturn(
                 new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.emptySet(), Collections.emptyMap()));
         EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
@@ -282,7 +283,7 @@ class ProvisionIntegrationTest extends IntegrationTest {
         when(computerConnector.launch(anyString(), any(TaskListener.class))).thenReturn(computerLauncher);
         final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
         EC2Fleets.setGet(ec2Fleet);
-        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(
+        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString(), eq(false))).thenReturn(
                 new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.emptySet(), Collections.emptyMap()));
         EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
