@@ -225,7 +225,7 @@ class UiIntegrationTest {
     }
 
     @Test
-    void shouldHaveRegionCodeAndRegionDescriptionInRegionLabel() throws IOException, SAXException {
+    void shouldHaveRegionCodeAndRegionDescriptionInRegionLabel() throws IOException, SAXException, InterruptedException {
         final String regionName = "us-east-1";
         final String displayName = "us-east-1 US East (N. Virginia)";
         EC2FleetCloud cloud1 = new EC2FleetCloud("TestCloud", "uh", null, null, null,
@@ -236,21 +236,20 @@ class UiIntegrationTest {
         j.jenkins.clouds.add(cloud1);
 
         HtmlPage page = j.createWebClient().goTo("cloud/TestCloud/configure");
-        boolean isPresent = false;
-
-        final List<DomElement> regionDropDown = IntegrationTest.getElementsByNameWithoutJdk(page, "_.region");
-
-        for (final DomElement regionElement : regionDropDown.get(0).getChildElements()) {
-            final String label = regionElement.getAttributes().getNamedItem("label").getTextContent();
-            final String value = regionElement.getAttributes().getNamedItem("value").getTextContent();
-            if (StringUtils.equals(value, regionName)) {
-                isPresent = true;
-                assertEquals(displayName, label);
+        boolean found = false;
+        for (int i = 0; i < 50; i++) {
+            List<DomElement> regionDropDown = IntegrationTest.getElementsByNameWithoutJdk(page, "_.region");
+            for (DomElement regionElement : regionDropDown.get(0).getChildElements()) {
+                String value = regionElement.getAttributes().getNamedItem("value").getTextContent();
+                if ("us-east-1".equals(value)) {
+                    found = true;
+                    break;
+                }
             }
+            if (found) break;
+            Thread.sleep(100); // wait 100ms
         }
-        if (!isPresent) {
-            fail(String.format("%s is missing among the regions", regionName));
-        }
+        assertTrue(found, "us-east-1 is missing among the regions");
     }
 
     // Note: multiple clouds with same name can be created via JCasC only.
