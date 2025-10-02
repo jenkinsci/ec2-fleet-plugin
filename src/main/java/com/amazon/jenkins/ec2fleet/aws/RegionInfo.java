@@ -44,21 +44,22 @@ public enum RegionInfo {
     US_ISOB_EAST_1("us-isob-east-1", "US ISOB East (Ohio)"),
     US_ISO_WEST_1("us-iso-west-1", "US ISO WEST"),
     IL_CENTRAL_1("il-central-1", "Israel (Tel Aviv)"),
-    AWS_CN_GLOBAL("aws-cn-global", "AWS China global region"),
+    AWS_CN_GLOBAL("aws-cn-global", "aws-cn global region"),
     US_ISOF_SOUTH_1("us-isof-south-1", "US ISOF SOUTH"),
     AP_EAST_2("ap-east-2", "Asia Pacific (Taipei)"),
     AP_SOUTHEAST_5("ap-southeast-5", "Asia Pacific (Malaysia)"),
     AP_SOUTHEAST_7("ap-southeast-7", "Asia Pacific (Thailand)"),
-    AWS_ISO_E_GLOBAL("aws-iso-e-global", "AWS ISOE (Europe) global region"),
+    AWS_ISO_E_GLOBAL("aws-iso-e-global", "aws-iso-e global region"),
     MX_CENTRAL_1("mx-central-1", "Mexico (Central)"),
     EUSC_DE_EAST_1("eusc-de-east-1", "EU (Germany)"),
     EU_ISOE_WEST_1("eu-isoe-west-1", "EU ISOE West"),
-    AWS_GLOBAL("aws-global", "AWS Standard global region"),
-    AWS_ISO_GLOBAL("aws-iso-global", "AWS ISO (US) global region"),
-    AWS_ISO_B_GLOBAL("aws-iso-b-global", "AWS ISOB (US) global region"),
-    AWS_ISO_F_GLOBAL("aws-iso-f-global", "AWS ISOF global region"),
-    AWS_US_GOV_GLOBAL("aws-us-gov-global", "AWS GovCloud (US) global region"),
-    US_ISOF_EAST_1("us-isof-east-1", "US ISOF EAST");
+    AWS_GLOBAL("aws-global", "aws global region"),
+    AWS_ISO_GLOBAL("aws-iso-global", "aws-iso global region"),
+    AWS_ISO_B_GLOBAL("aws-iso-b-global", "aws-iso-b global region"),
+    AWS_ISO_F_GLOBAL("aws-iso-f-global", "aws-iso-f global region"),
+    AWS_US_GOV_GLOBAL("aws-us-gov-global", "aws-us-gov global region"),
+    US_ISOF_EAST_1("us-isof-east-1", "US ISOF EAST"),
+    AP_SOUTHEAST_6("ap-southeast-6", "Asia Pacific (New Zealand)");
 
     private final String name;
     private final String description;
