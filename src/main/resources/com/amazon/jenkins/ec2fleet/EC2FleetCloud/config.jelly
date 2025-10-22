@@ -130,7 +130,8 @@
       <f:checkbox />
     </f:entry>
 
-    <f:description>Pause AutoScaling Group modifications during Instance Refresh operations to prevent conflicts</f:description>
+    <f:description>Pause AutoScaling Group modifications during Instance Refresh operations to prevent conflicts. 
+    <strong>Warning:</strong> This feature makes additional DescribeInstanceRefreshes API calls on every cloud status update interval, which may contribute to AWS AutoScaling service rate limits, especially with multiple clouds configured.</f:description>
     <f:entry title="${%Pause During Instance Refresh}" field="pauseDuringInstanceRefresh">
       <f:checkbox />
     </f:entry>
