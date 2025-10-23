@@ -48,7 +48,11 @@ class AutoResubmitIntegrationTest extends IntegrationTest {
         EC2Api ec2Api = spy(EC2Api.class);
         Registry.setEc2Api(ec2Api);
 
+        // Mock both 4-parameter and 5-parameter getState methods
         when(ec2Fleet.getState(anyString(), anyString(), nullable(String.class), anyString())).thenReturn(
+                new FleetStateStats("", 1, FleetStateStats.State.active(), Collections.singleton("i-1"),
+                        Collections.emptyMap()));
+        when(ec2Fleet.getState(anyString(), anyString(), nullable(String.class), anyString(), Mockito.anyBoolean())).thenReturn(
                 new FleetStateStats("", 1, FleetStateStats.State.active(), Collections.singleton("i-1"),
                         Collections.emptyMap()));
 

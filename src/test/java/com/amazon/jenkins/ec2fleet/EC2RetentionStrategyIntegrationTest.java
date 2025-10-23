@@ -35,7 +35,10 @@ class EC2RetentionStrategyIntegrationTest extends IntegrationTest {
         Registry.setEc2Api(ec2Api);
         amazonEC2 = mock(Ec2Client.class);
 
+        // Mock both 4-parameter and 5-parameter getState methods
         when(ec2Fleet.getState(anyString(), anyString(), nullable(String.class), anyString()))
+                .thenReturn(new FleetStateStats("", 2, FleetStateStats.State.active(), new HashSet<>(Arrays.asList("i-1", "i-2")), Collections.emptyMap()));
+        when(ec2Fleet.getState(anyString(), anyString(), nullable(String.class), anyString(), Mockito.anyBoolean()))
                 .thenReturn(new FleetStateStats("", 2, FleetStateStats.State.active(), new HashSet<>(Arrays.asList("i-1", "i-2")), Collections.emptyMap()));
         when(ec2Api.connect(anyString(), anyString(), Mockito.nullable(String.class))).thenReturn(amazonEC2);
 

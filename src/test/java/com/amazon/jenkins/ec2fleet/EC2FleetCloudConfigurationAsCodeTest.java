@@ -28,7 +28,10 @@ class EC2FleetCloudConfigurationAsCodeTest {
     void before() {
         final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
         EC2Fleets.setGet(ec2Fleet);
+        // Mock both 4-parameter and 5-parameter getState methods
         when(ec2Fleet.getState(anyString(), anyString(), nullable(String.class), anyString()))
+                .thenReturn(new FleetStateStats("", 2, FleetStateStats.State.active(), new HashSet<>(Arrays.asList("i-1", "i-2")), Collections.emptyMap()));
+        when(ec2Fleet.getState(anyString(), anyString(), nullable(String.class), anyString(), Mockito.anyBoolean()))
                 .thenReturn(new FleetStateStats("", 2, FleetStateStats.State.active(), new HashSet<>(Arrays.asList("i-1", "i-2")), Collections.emptyMap()));
     }
 
