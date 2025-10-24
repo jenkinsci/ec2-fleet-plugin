@@ -203,7 +203,7 @@ class EC2FleetAutoResubmitComputerLauncherTest {
     @Test
     void taskCompleted_should_resubmit_task_with_build_actions() {
         when(subTask1.getOwnerTask()).thenReturn(workflowJob);
-        when(workflowJob.getLastBuild()).thenReturn(workflowRun);
+        when(workflowJob.getLastUnsuccessfulBuild()).thenReturn(workflowRun);
         when(workflowRun.getActions(any())).thenReturn((Collections.singletonList(action1)));
         when(computer.getExecutors()).thenReturn(Arrays.asList(executor1));
         new EC2FleetAutoResubmitComputerLauncher(baseComputerLauncher)
