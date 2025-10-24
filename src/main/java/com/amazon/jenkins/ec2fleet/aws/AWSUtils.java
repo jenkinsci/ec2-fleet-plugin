@@ -64,7 +64,7 @@ public final class AWSUtils {
             Proxy proxy = proxyConfig.createProxy(host);
             if (!proxy.equals(Proxy.NO_PROXY) && proxy.address() instanceof InetSocketAddress) {
                 InetSocketAddress address = (InetSocketAddress) proxy.address();
-                String proxyHost = address.getHostName();
+                String proxyHost = address.getHostString();
                 int proxyPort = address.getPort();
                 String proxyScheme = "http"; // Jenkins ProxyConfiguration does not expose scheme, default to http
                 URI proxyUri = URI.create(proxyScheme + "://" + proxyHost + ":" + proxyPort);
