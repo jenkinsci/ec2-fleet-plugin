@@ -41,6 +41,21 @@ import static org.mockito.Mockito.withSettings;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class EC2FleetAutoResubmitComputerLauncherTest {
+    @Test
+    void taskCompleted_should_resubmit_task_with_current_workflowrun_executable() {
+        // Setup: the current executable is a WorkflowRun, and the task is a WorkflowJob
+        when(executor1.getCurrentExecutable()).thenReturn(workflowRun);
+        when(workflowRun.getParent()).thenReturn(workflowJob);
+        when(workflowJob.getOwnerTask()).thenReturn(workflowJob);
+        when(workflowRun.getActions(any())).thenReturn(Collections.singletonList(action1));
+        when(computer.getExecutors()).thenReturn(Arrays.asList(executor1));
+
+        new EC2FleetAutoResubmitComputerLauncher(baseComputerLauncher)
+                .afterDisconnect(computer, taskListener);
+
+        verify(queue).schedule2(eq(workflowJob), anyInt(), eq(Arrays.asList(action1)));
+        verify(workflowRun, times(1)).getActions(any());
+    }
 
     private MockedStatic<Jenkins> mockedJenkins;
 
@@ -202,8 +217,8 @@ class EC2FleetAutoResubmitComputerLauncherTest {
 
     @Test
     void taskCompleted_should_resubmit_task_with_build_actions() {
-        when(subTask1.getOwnerTask()).thenReturn(workflowJob);
-        when(workflowJob.getLastUnsuccessfulBuild()).thenReturn(workflowRun);
+    when(subTask1.getOwnerTask()).thenReturn(workflowJob);
+    when(workflowJob.getLastBuild()).thenReturn(workflowRun);
         when(workflowRun.getActions(any())).thenReturn((Collections.singletonList(action1)));
         when(computer.getExecutors()).thenReturn(Arrays.asList(executor1));
         new EC2FleetAutoResubmitComputerLauncher(baseComputerLauncher)
