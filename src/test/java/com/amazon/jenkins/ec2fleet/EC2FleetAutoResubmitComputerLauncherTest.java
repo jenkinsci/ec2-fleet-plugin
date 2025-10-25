@@ -193,7 +193,7 @@ class EC2FleetAutoResubmitComputerLauncherTest {
     @Test
     void taskCompleted_should_resubmit_task_with_actions() {
         when(computer.getExecutors()).thenReturn(Arrays.asList(executor1));
-        //when(executable1.getActions()).thenReturn(Arrays.asList(action1));
+        // when(executable1.getActions()).thenReturn(Arrays.asList(action1));
         new EC2FleetAutoResubmitComputerLauncher(baseComputerLauncher)
                 .afterDisconnect(computer, taskListener);
         verify(queue).schedule2(eq(task1), anyInt(), eq(/* Arrays.asList(action1) */ Collections.emptyList()));
@@ -201,13 +201,13 @@ class EC2FleetAutoResubmitComputerLauncherTest {
     }
 
     @Test
-    void taskCompleted_should_resubmit_task_with_failed_build_actions() {
+    void taskCompleted_should_resubmit_task_with_build_actions() {
         when(subTask1.getOwnerTask()).thenReturn(workflowJob);
-        when(workflowJob.getLastFailedBuild()).thenReturn(workflowRun);
+        when(workflowJob.getLastUnsuccessfulBuild()).thenReturn(workflowRun);
         when(workflowRun.getActions(any())).thenReturn((Collections.singletonList(action1)));
         when(computer.getExecutors()).thenReturn(Arrays.asList(executor1));
         new EC2FleetAutoResubmitComputerLauncher(baseComputerLauncher)
-            .afterDisconnect(computer, taskListener);
+                .afterDisconnect(computer, taskListener);
         verify(queue).schedule2(eq(workflowJob), anyInt(), eq(Arrays.asList(action1)));
         verify(workflowRun, times(1)).getActions(any());
     }
