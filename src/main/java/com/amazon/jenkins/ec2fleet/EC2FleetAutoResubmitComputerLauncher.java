@@ -102,8 +102,17 @@ public class EC2FleetAutoResubmitComputerLauncher extends DelegatingComputerLaun
 
                     final List<Action> actions = new ArrayList<>();
                     if (task instanceof WorkflowJob) {
-                        final WorkflowRun lastUnsuccessfulBuild = ((WorkflowJob) task).getLastUnsuccessfulBuild();
-                        actions.addAll(lastUnsuccessfulBuild.getActions(ParametersAction.class));
+                        // Try to get the current running build first (which would be from the executable)
+                        WorkflowRun currentBuild = null;
+                        if (executable instanceof WorkflowRun) {
+                            currentBuild = (WorkflowRun) executable;
+                        } else {
+                            // Fallback to getting the last build (most recent)
+                            currentBuild = ((WorkflowJob) task).getLastBuild();
+                        }
+                        if (currentBuild != null) {
+                            actions.addAll(currentBuild.getActions(ParametersAction.class));
+                        }
                     }
                     if (executable instanceof Actionable) {
                         actions.addAll(((Actionable) executable).getAllActions());
