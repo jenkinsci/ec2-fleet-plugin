@@ -458,7 +458,20 @@ public abstract class IntegrationTest {
             return null;
         }).when(ec2Fleet).modify(anyString(), anyString(), anyString(), anyString(), anyInt(), anyInt(), anyInt());
 
+        // Mock both the 4-parameter and 5-parameter getState methods for backward compatibility
         when(ec2Fleet.getState(anyString(), anyString(), nullable(String.class), anyString())).thenAnswer(invocation -> {
+            final Set<String> instanceIds = new HashSet<>();
+            final int size = targetCapacity.get();
+            for (int i = 0; i < size; i++) {
+                instanceIds.add("i-" + i);
+            }
+
+            return new FleetStateStats("", 0,
+                    new FleetStateStats.State(true, false, "active"),
+                    instanceIds, Collections.emptyMap());
+        });
+
+        when(ec2Fleet.getState(anyString(), anyString(), nullable(String.class), anyString(), Mockito.anyBoolean())).thenAnswer(invocation -> {
             final Set<String> instanceIds = new HashSet<>();
             final int size = targetCapacity.get();
             for (int i = 0; i < size; i++) {

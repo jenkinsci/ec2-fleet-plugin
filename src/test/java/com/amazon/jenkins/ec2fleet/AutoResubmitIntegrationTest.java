@@ -48,7 +48,11 @@ class AutoResubmitIntegrationTest extends IntegrationTest {
         EC2Api ec2Api = spy(EC2Api.class);
         Registry.setEc2Api(ec2Api);
 
+        // Mock both 4-parameter and 5-parameter getState methods
         when(ec2Fleet.getState(anyString(), anyString(), nullable(String.class), anyString())).thenReturn(
+                new FleetStateStats("", 1, FleetStateStats.State.active(), Collections.singleton("i-1"),
+                        Collections.emptyMap()));
+        when(ec2Fleet.getState(anyString(), anyString(), nullable(String.class), anyString(), Mockito.anyBoolean())).thenReturn(
                 new FleetStateStats("", 1, FleetStateStats.State.active(), Collections.singleton("i-1"),
                         Collections.emptyMap()));
 
@@ -79,7 +83,7 @@ class AutoResubmitIntegrationTest extends IntegrationTest {
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
                 0, 0, 10, 0, 1, false, true,
                 "-1", false, 0, 0,
-                10, false, false, noScaling);
+                10, false, false, noScaling, false, false);
         j.jenkins.clouds.add(cloud);
 
         List<QueueTaskFuture> rs = enqueTask(1);
@@ -115,7 +119,7 @@ class AutoResubmitIntegrationTest extends IntegrationTest {
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
                 0, 0, 10, 0, 1, false, true,
                 "-1", false, 0, 0,
-                10, false, false, noScaling);
+                10, false, false, noScaling, false, false);
         j.jenkins.clouds.add(cloud);
 
         List<QueueTaskFuture> rs = new ArrayList<>();
@@ -170,7 +174,7 @@ class AutoResubmitIntegrationTest extends IntegrationTest {
         EC2FleetCloud cloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
                 null, "fId", "momo", null, new LocalComputerConnector(j), false, false,
                 0, 0, 10, 0, 1, false, true,
-                "-1", true, 0, 0, 10, false, false, noScaling);
+                "-1", true, 0, 0, 10, false, false, noScaling, false, false);
         j.jenkins.clouds.add(cloud);
 
         List<QueueTaskFuture> rs = enqueTask(1);
