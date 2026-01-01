@@ -11,7 +11,7 @@ jobs:
       # 15+5 day stale policy for PRs
       # * Except PRs marked as "stalebot-ignore"
       - name: Stale PRs policy
-        uses: actions/stale@v10.1.0
+        uses: actions/stale@v10.1.1
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           exempt-pr-labels: "stalebot-ignore"
@@ -31,7 +31,7 @@ jobs:
       # 30+5 day stale policy for open issues
       # * Except Issues marked as "stalebot-ignore"
       - name: Stale Issues policy
-        uses: actions/stale@v10.1.0
+        uses: actions/stale@v10.1.1
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           exempt-issue-labels: "stalebot-ignore"
