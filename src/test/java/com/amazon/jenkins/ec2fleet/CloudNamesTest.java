@@ -25,7 +25,7 @@ class CloudNamesTest {
             "test-label", null, null, false, false,
             0, 0, 0, 0, 0, true, false,
             "-1", false, 0, 0,
-            10, false, false, noScaling));
+            10, false, false, noScaling, false, false));
 
     assertTrue(CloudNames.isUnique("TestCloud"));
   }
@@ -36,7 +36,7 @@ class CloudNamesTest {
             "test-label", null, null, false, false,
             0, 0, 0, 0, 0, true, false,
             "-1", false, 0, 0,
-            10, false, false, noScaling));
+            10, false, false, noScaling, false, false));
 
     assertFalse(CloudNames.isUnique("SomeDefaultName"));
   }
@@ -47,13 +47,13 @@ class CloudNamesTest {
         "test-label", null, null, false, false,
         0, 0, 0, 0, 0, true, false,
         "-1", false, 0, 0,
-        10, false, false, noScaling));
+        10, false, false, noScaling, false, false));
 
     j.jenkins.clouds.add(new EC2FleetCloud("TestCloud2", null, null, null, null, null,
         "test-label", null, null, false, false,
         0, 0, 0, 0, 0, true, false,
         "-1", false, 0, 0,
-        10, false, false, noScaling));
+        10, false, false, noScaling, false, false));
 
     assertFalse(CloudNames.isDuplicated("TestCloud"));
   }
@@ -64,13 +64,13 @@ class CloudNamesTest {
         "test-label", null, null, false, false,
         0, 0, 0, 0, 0, true, false,
         "-1", false, 0, 0,
-        10, false, false, noScaling));
+        10, false, false, noScaling, false, false));
 
     j.jenkins.clouds.add(new EC2FleetCloud("TestCloud", null, null, null, null, null,
         "test-label", null, null, false, false,
         0, 0, 0, 0, 0, true, false,
         "-1", false, 0, 0,
-        10, false, false, noScaling));
+        10, false, false, noScaling, false, false));
 
     assertTrue(CloudNames.isDuplicated("TestCloud"));
   }
@@ -86,7 +86,7 @@ class CloudNamesTest {
             "test-label", null, null, false, false,
             0, 0, 0, 0, 0, true, false,
             "-1", false, 0, 0,
-            10, false, false, noScaling));
+            10, false, false, noScaling, false, false));
 
     assertEquals("UniqueCloud", CloudNames.generateUnique("UniqueCloud"));
   }
@@ -97,13 +97,13 @@ class CloudNamesTest {
             "test-label", null, null, false, false,
             0, 0, 0, 0, 0, true, false,
             "-1", false, 0, 0,
-            10, false, false, noScaling));
+            10, false, false, noScaling, false, false));
 
     j.jenkins.clouds.add(new EC2FleetCloud("UniqueCloud-1", null, null, null, null, null,
             "test-label", null, null, false, false,
             0, 0, 0, 0, 0, true, false,
             "-1", false, 0, 0,
-            10, false, false, noScaling));
+            10, false, false, noScaling, false, false));
 
     String actual = CloudNames.generateUnique("UniqueCloud");
       assertEquals(actual.length(), ("UniqueCloud".length() + CloudNames.SUFFIX_LENGTH + 1));
@@ -116,7 +116,7 @@ class CloudNamesTest {
             "test-label", null, null, false, false,
             0, 0, 0, 0, 0, true, false,
             "-1", false, 0, 0,
-            10, false, false, noScaling);
+            10, false, false, noScaling, false, false);
 
     EC2FleetLabelCloud fleetLabelCloud = new EC2FleetLabelCloud("", null, null,
             null, null, new LocalComputerConnector(j), false, false,
@@ -136,7 +136,7 @@ class CloudNamesTest {
             "test-label", null, null, false, false,
             0, 0, 0, 0, 0, true, false,
             "-1", false, 0, 0,
-            10, false, false, noScaling);
+            10, false, false, noScaling, false, false);
 
     EC2FleetLabelCloud fleetLabelCloud = new EC2FleetLabelCloud("UniqueLabelCloud", null, null,
             null, null, new LocalComputerConnector(j), false, false,

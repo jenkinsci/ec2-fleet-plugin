@@ -58,7 +58,7 @@ class NoDelayProvisionStrategyPerformanceTest extends IntegrationTest {
                 null, "fId", label, null, computerConnector, false, false,
                 1, 0, maxWorkers, 0, 1, true, false,
                 false, 0, 0,
-                15, noDelay, noScaling);
+                15, noDelay, noScaling, false, false);
         j.jenkins.clouds.add(cloud);
 
         System.out.println("waiting cloud start");

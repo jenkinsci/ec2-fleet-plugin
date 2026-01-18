@@ -95,7 +95,8 @@ public class CloudNanny extends PeriodicWork {
                 String.valueOf(oldCloud.getMaxTotalUses()), oldCloud.isDisableTaskResubmit(),
                 oldCloud.getInitOnlineTimeoutSec(), oldCloud.getInitOnlineCheckIntervalSec(),
                 oldCloud.getCloudStatusIntervalSec(), oldCloud.isNoDelayProvision(),
-                oldCloud.isScaleExecutorsByWeight(), scaler);
+                oldCloud.isScaleExecutorsByWeight(), scaler, oldCloud.isPauseDuringInstanceRefresh(),
+                oldCloud.isPreserveNodeLabels());
     }
 
     private AtomicInteger getRecurrenceCounter(EC2FleetCloud fleetCloud) {

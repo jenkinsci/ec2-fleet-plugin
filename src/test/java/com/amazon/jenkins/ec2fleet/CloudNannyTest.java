@@ -70,7 +70,7 @@ class CloudNannyTest {
 
         mockedEc2Fleets = Mockito.mockStatic(EC2Fleets.class);
         mockedEc2Fleets.when(() -> EC2Fleets.get(anyString())).thenReturn(ec2Fleet);
-        Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
+        Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString(), eq(false)))
                 .thenReturn(new FleetStateStats("", 0, FleetStateStats.State.active(),
                         Collections.emptySet(), Collections.emptyMap()));
 

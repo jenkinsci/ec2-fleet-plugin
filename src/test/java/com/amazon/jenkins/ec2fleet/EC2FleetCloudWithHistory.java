@@ -18,11 +18,11 @@ public class EC2FleetCloudWithHistory extends EC2FleetCloud {
             boolean privateIpUsed, boolean alwaysReconnect, Integer idleMinutes, Integer minSize, Integer maxSize, Integer minSpareSize,
             Integer numExecutors, boolean addNodeOnlyIfRunning, boolean restrictUsage, boolean disableTaskResubmit,
             Integer initOnlineTimeoutSec, Integer initOnlineCheckIntervalSec, Integer cloudStatusIntervalSec,
-            boolean immediatelyProvision, ExecutorScaler executorScaler) {
+            boolean immediatelyProvision, ExecutorScaler executorScaler, boolean pauseDuringInstanceRefresh, boolean preserveNodeLabels) {
         super(name, awsCredentialsId, credentialsId, region, endpoint, fleet, labelString, fsRoot,
                 computerConnector, privateIpUsed, alwaysReconnect, idleMinutes, minSize, maxSize, minSpareSize, numExecutors,
                 addNodeOnlyIfRunning, restrictUsage, "-1", disableTaskResubmit, initOnlineTimeoutSec,
-                initOnlineCheckIntervalSec, cloudStatusIntervalSec, immediatelyProvision, false, executorScaler);
+                initOnlineCheckIntervalSec, cloudStatusIntervalSec, immediatelyProvision, false, executorScaler,pauseDuringInstanceRefresh, preserveNodeLabels);
     }
 
     @Override
