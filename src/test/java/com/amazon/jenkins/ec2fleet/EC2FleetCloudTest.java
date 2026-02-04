@@ -2155,7 +2155,7 @@ class EC2FleetCloudTest {
     }
 
     @Test
-    void update_shouldTerminateInstancesInAutoScalingGroup() throws IllegalAccessException, NoSuchFieldException {
+    void update_shouldRemoveScaleInProtectionInAutoScalingGroup() throws IllegalAccessException, NoSuchFieldException {
         // Arrange
         final AutoScalingGroupFleet autoScalingGroupFleet = mock(AutoScalingGroupFleet.class);
         when(EC2Fleets.get(anyString())).thenReturn(autoScalingGroupFleet);
@@ -2180,8 +2180,9 @@ class EC2FleetCloudTest {
         // Act
         fleetCloud.update();
 
-        // Assert
-        verify(autoScalingGroupFleet).terminateInstances(anyString(), any(), any(), eq(Collections.singleton("i-0")));
+        // Assert - verify removeScaleInProtection is called instead of terminateInstances
+        // for ASGs, the ASG will terminate the instance when desired capacity is reduced
+        verify(autoScalingGroupFleet).removeScaleInProtection(anyString(), any(), any(), eq("fleetId"), eq(Collections.singleton("i-0")));
     }
 
     @Test

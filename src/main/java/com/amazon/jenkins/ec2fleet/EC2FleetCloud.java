@@ -615,14 +615,18 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                 }
             });
             if(EC2Fleets.get(fleet).isAutoScalingGroup()){
-                fine("Terminating instances in AutoScalingGroup: %s", currentInstanceIdsToTerminate.keySet());
-                ((AutoScalingGroupFleet) EC2Fleets.get(fleet)).terminateInstances(awsCredentialsId, region, endpoint, currentInstanceIdsToTerminate.keySet());
+                // For ASGs, we remove scale-in protection from instances and let the ASG terminate them
+                // naturally when the desired capacity is reduced (which happened in the modify() call above).
+                fine("Removing scale-in protection from instances in AutoScalingGroup: %s", currentInstanceIdsToTerminate.keySet());
+                ((AutoScalingGroupFleet) EC2Fleets.get(fleet)).removeScaleInProtection(
+                        awsCredentialsId, region, endpoint, fleet, currentInstanceIdsToTerminate.keySet());
+                info("Removed scale-in protection from instances (ASG will terminate them): %s", currentInstanceIdsToTerminate);
             }
             else {
                 fine("Terminating instances: %s", currentInstanceIdsToTerminate.keySet());
                 Registry.getEc2Api().terminateInstances(ec2, currentInstanceIdsToTerminate.keySet());
+                info("Terminated instances: %s", currentInstanceIdsToTerminate);
             }
-            info("Terminated instances: %s", currentInstanceIdsToTerminate);
         }
 
         fine("Fleet instances: %s", updatedState.getInstances());

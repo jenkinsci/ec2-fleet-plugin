@@ -127,23 +127,54 @@ public class AutoScalingGroupFleet implements EC2Fleet {
         return clientBuilder.build();
     }
 
-    public void terminateInstances(final String awsCredentialsId, final String regionName, final String endpoint, final Collection<String> instanceIds) {
+    /**
+     * Removes scale-in protection from the specified instances, allowing the ASG to terminate them
+     * when the desired capacity is reduced (which happens via the modify() call before this method is invoked).
+     *
+     * This approach lets the ASG handle instance termination naturally rather than the plugin
+     * explicitly calling terminateInstanceInAutoScalingGroup().
+     */
+    public void removeScaleInProtection(final String awsCredentialsId, final String regionName,
+                                         final String endpoint, final String autoScalingGroupName,
+                                         final Collection<String> instanceIds) {
+        if (instanceIds == null || instanceIds.isEmpty()) {
+            return;
+        }
+
         final AutoScalingClient client = createClient(awsCredentialsId, regionName, endpoint);
 
-        for(String instanceId : instanceIds) {
-            if (StringUtils.isBlank(instanceId)) {
-                throw new IllegalArgumentException("Instance ID cannot be null or empty");
-            }
-            try{
-                // Attempt to terminate the instance in the Auto Scaling group first
-                client.terminateInstanceInAutoScalingGroup(TerminateInstanceInAutoScalingGroupRequest.builder()
-                        .instanceId(instanceId)
-                        .shouldDecrementDesiredCapacity(false)
-                        .build());
-            } catch (Exception e) {
-                LOGGER.warning(String.format("Failed to terminate instance %s in Auto Scaling group: %s", instanceId, e.getMessage()));
-            }
+        // Filter out blank instance IDs
+        final List<String> validInstanceIds = instanceIds.stream()
+                .filter(StringUtils::isNotBlank)
+                .collect(Collectors.toList());
+
+        if (validInstanceIds.isEmpty()) {
+            return;
         }
+
+        try {
+            // Remove scale-in protection from all instances in a single API call
+            client.setInstanceProtection(SetInstanceProtectionRequest.builder()
+                    .autoScalingGroupName(autoScalingGroupName)
+                    .instanceIds(validInstanceIds)
+                    .protectedFromScaleIn(false)
+                    .build());
+            LOGGER.info(String.format("Removed scale-in protection from instances: %s", validInstanceIds));
+        } catch (Exception e) {
+            LOGGER.warning(String.format("Failed to remove scale-in protection from instances %s: %s",
+                    validInstanceIds, e.getMessage()));
+        }
+    }
+
+    /**
+     * @deprecated Use {@link #removeScaleInProtection(String, String, String, String, Collection)} instead.
+     * This method is kept for backwards compatibility but now delegates to removeScaleInProtection.
+     */
+    @Deprecated
+    public void terminateInstances(final String awsCredentialsId, final String regionName,
+                                   final String endpoint, final Collection<String> instanceIds) {
+        LOGGER.warning("terminateInstances() is deprecated. The ASG name is required to remove scale-in protection. " +
+                "This call will be ignored. Please update to use removeScaleInProtection().");
     }
 
     // TODO: merge with EC2Api#getEndpoint

@@ -325,4 +325,86 @@ class AutoScalingGroupFleetTest {
             assertEquals(expectedWeights, result.getInstanceTypeWeights());
         }
     }
+
+    @Test
+    void removeScaleInProtectionShouldCallSetInstanceProtectionWithCorrectParameters() {
+        mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
+        try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
+            AutoScalingClientBuilder builderMock = Mockito.mock(AutoScalingClientBuilder.class, Mockito.RETURNS_SELF);
+            AutoScalingClient clientMock = Mockito.mock(AutoScalingClient.class);
+            mockedStatic.when(AutoScalingClient::builder).thenReturn(builderMock);
+            when(builderMock.build()).thenReturn(clientMock);
+
+            final List<String> instanceIds = Arrays.asList("i-123", "i-456");
+
+            new AutoScalingGroupFleet().removeScaleInProtection(CREDS_ID, REGION, ENDPOINT, ASG_NAME, instanceIds);
+
+            final SetInstanceProtectionRequest expectedRequest = SetInstanceProtectionRequest.builder()
+                    .autoScalingGroupName(ASG_NAME)
+                    .instanceIds(instanceIds)
+                    .protectedFromScaleIn(false)
+                    .build();
+            verify(clientMock, times(1)).setInstanceProtection(expectedRequest);
+        }
+    }
+
+    @Test
+    void removeScaleInProtectionShouldSkipEmptyInstanceIds() {
+        mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
+        try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
+            AutoScalingClientBuilder builderMock = Mockito.mock(AutoScalingClientBuilder.class, Mockito.RETURNS_SELF);
+            AutoScalingClient clientMock = Mockito.mock(AutoScalingClient.class);
+            mockedStatic.when(AutoScalingClient::builder).thenReturn(builderMock);
+            when(builderMock.build()).thenReturn(clientMock);
+
+            // Should not call setInstanceProtection when list is empty
+            new AutoScalingGroupFleet().removeScaleInProtection(CREDS_ID, REGION, ENDPOINT, ASG_NAME, Collections.emptyList());
+            verify(clientMock, never()).setInstanceProtection(any(SetInstanceProtectionRequest.class));
+
+            // Should not call setInstanceProtection when list is null
+            new AutoScalingGroupFleet().removeScaleInProtection(CREDS_ID, REGION, ENDPOINT, ASG_NAME, null);
+            verify(clientMock, never()).setInstanceProtection(any(SetInstanceProtectionRequest.class));
+        }
+    }
+
+    @Test
+    void removeScaleInProtectionShouldFilterOutBlankInstanceIds() {
+        mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
+        try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
+            AutoScalingClientBuilder builderMock = Mockito.mock(AutoScalingClientBuilder.class, Mockito.RETURNS_SELF);
+            AutoScalingClient clientMock = Mockito.mock(AutoScalingClient.class);
+            mockedStatic.when(AutoScalingClient::builder).thenReturn(builderMock);
+            when(builderMock.build()).thenReturn(clientMock);
+
+            // List with blank entries should filter them out
+            final List<String> instanceIds = Arrays.asList("i-123", "", "i-456", "  ", null);
+
+            new AutoScalingGroupFleet().removeScaleInProtection(CREDS_ID, REGION, ENDPOINT, ASG_NAME, instanceIds);
+
+            final SetInstanceProtectionRequest expectedRequest = SetInstanceProtectionRequest.builder()
+                    .autoScalingGroupName(ASG_NAME)
+                    .instanceIds(Arrays.asList("i-123", "i-456"))
+                    .protectedFromScaleIn(false)
+                    .build();
+            verify(clientMock, times(1)).setInstanceProtection(expectedRequest);
+        }
+    }
+
+    @Test
+    void removeScaleInProtectionShouldHandleExceptionGracefully() {
+        mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
+        try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
+            AutoScalingClientBuilder builderMock = Mockito.mock(AutoScalingClientBuilder.class, Mockito.RETURNS_SELF);
+            AutoScalingClient clientMock = Mockito.mock(AutoScalingClient.class);
+            mockedStatic.when(AutoScalingClient::builder).thenReturn(builderMock);
+            when(builderMock.build()).thenReturn(clientMock);
+
+            when(clientMock.setInstanceProtection(any(SetInstanceProtectionRequest.class)))
+                    .thenThrow(new RuntimeException("AWS error"));
+
+            // Should not throw exception, just log warning
+            assertDoesNotThrow(() -> new AutoScalingGroupFleet().removeScaleInProtection(
+                    CREDS_ID, REGION, ENDPOINT, ASG_NAME, Arrays.asList("i-123")));
+        }
+    }
 }
