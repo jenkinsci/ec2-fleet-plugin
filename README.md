@@ -129,7 +129,8 @@ Add an inline policy to the IAM user or EC2 instance role to allow it to use EC2
       "Action": [
         "autoscaling:DescribeAutoScalingGroups",
         "autoscaling:UpdateAutoScalingGroup",
-        "autoscaling:SetInstanceProtection"
+        "autoscaling:SetInstanceProtection",
+        "autoscaling:TerminateInstanceInAutoScalingGroup"
       ],
       "Resource": "*"
     },

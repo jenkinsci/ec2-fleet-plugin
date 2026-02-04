@@ -407,4 +407,55 @@ class AutoScalingGroupFleetTest {
                     CREDS_ID, REGION, ENDPOINT, ASG_NAME, Arrays.asList("i-123")));
         }
     }
+
+    @Test
+    void terminateInstancesShouldRemoveProtectionThenTerminate() {
+        mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
+        try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
+            AutoScalingClientBuilder builderMock = Mockito.mock(AutoScalingClientBuilder.class, Mockito.RETURNS_SELF);
+            AutoScalingClient clientMock = Mockito.mock(AutoScalingClient.class);
+            mockedStatic.when(AutoScalingClient::builder).thenReturn(builderMock);
+            when(builderMock.build()).thenReturn(clientMock);
+
+            final List<String> instanceIds = Arrays.asList("i-123");
+
+            new AutoScalingGroupFleet().terminateInstances(CREDS_ID, REGION, ENDPOINT, ASG_NAME, instanceIds);
+
+            // Verify scale-in protection is removed first
+            final SetInstanceProtectionRequest expectedProtectionRequest = SetInstanceProtectionRequest.builder()
+                    .autoScalingGroupName(ASG_NAME)
+                    .instanceIds("i-123")
+                    .protectedFromScaleIn(false)
+                    .build();
+            verify(clientMock, times(1)).setInstanceProtection(expectedProtectionRequest);
+
+            // Verify instance is terminated
+            final TerminateInstanceInAutoScalingGroupRequest expectedTerminateRequest = TerminateInstanceInAutoScalingGroupRequest.builder()
+                    .instanceId("i-123")
+                    .shouldDecrementDesiredCapacity(false)
+                    .build();
+            verify(clientMock, times(1)).terminateInstanceInAutoScalingGroup(expectedTerminateRequest);
+        }
+    }
+
+    @Test
+    void terminateInstancesShouldSkipEmptyOrNullInstanceIds() {
+        mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
+        try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
+            AutoScalingClientBuilder builderMock = Mockito.mock(AutoScalingClientBuilder.class, Mockito.RETURNS_SELF);
+            AutoScalingClient clientMock = Mockito.mock(AutoScalingClient.class);
+            mockedStatic.when(AutoScalingClient::builder).thenReturn(builderMock);
+            when(builderMock.build()).thenReturn(clientMock);
+
+            // Should not call any API when list is empty
+            new AutoScalingGroupFleet().terminateInstances(CREDS_ID, REGION, ENDPOINT, ASG_NAME, Collections.emptyList());
+            verify(clientMock, never()).setInstanceProtection(any(SetInstanceProtectionRequest.class));
+            verify(clientMock, never()).terminateInstanceInAutoScalingGroup(any(TerminateInstanceInAutoScalingGroupRequest.class));
+
+            // Should not call any API when list is null
+            new AutoScalingGroupFleet().terminateInstances(CREDS_ID, REGION, ENDPOINT, ASG_NAME, null);
+            verify(clientMock, never()).setInstanceProtection(any(SetInstanceProtectionRequest.class));
+            verify(clientMock, never()).terminateInstanceInAutoScalingGroup(any(TerminateInstanceInAutoScalingGroupRequest.class));
+        }
+    }
 }
