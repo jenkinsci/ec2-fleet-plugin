@@ -139,6 +139,16 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     private final boolean noDelayProvision;
 
     /**
+     * Pause AutoScaling Group modifications during Instance Refresh operations
+     */
+    private final boolean pauseDuringInstanceRefresh;
+
+    /**
+     * Preserve node labels and prevent modification after initial application
+     */
+    private final boolean preserveNodeLabels;
+
+    /**
      * {@link EC2FleetCloud#update()} updating this field, this is one thread
      * related to {@link CloudNanny}. At the same time {@link EC2RetentionStrategy}
      * call {@link EC2FleetCloud#scheduleToTerminate(String, boolean, EC2AgentTerminationReason)} to terminate instance when it is free
@@ -187,7 +197,9 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                          final Integer cloudStatusIntervalSec,
                          final boolean noDelayProvision,
                          final boolean scaleExecutorsByWeight,
-                         final ExecutorScaler executorScaler) {
+                         final ExecutorScaler executorScaler,
+                         final boolean pauseDuringInstanceRefresh,
+                         final boolean preserveNodeLabels) {
         super(StringUtils.isNotBlank(name) ? name : CloudNames.generateUnique(BASE_DEFAULT_FLEET_CLOUD_ID));
         init();
         this.credentialsId = credentialsId;
@@ -219,9 +231,12 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         this.scaleExecutorsByWeight = scaleExecutorsByWeight;
         this.executorScaler = executorScaler == null ? new NoScaler().withNumExecutors(this.numExecutors) :
                                                        executorScaler.withNumExecutors(this.numExecutors);
+        this.pauseDuringInstanceRefresh = pauseDuringInstanceRefresh;
+        this.preserveNodeLabels = preserveNodeLabels;
         if (fleet != null) {
             this.stats = EC2Fleets.get(fleet).getState(
-                    getAwsCredentialsId(), region, endpoint, getFleet());
+                    getAwsCredentialsId(), region, endpoint, getFleet(), 
+                    isPauseDuringInstanceRefresh());
         }
     }
 
@@ -324,6 +339,14 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
     public boolean isScaleExecutorsByWeight() {
         return scaleExecutorsByWeight;
+    }
+
+    public boolean isPauseDuringInstanceRefresh() {
+        return pauseDuringInstanceRefresh;
+    }
+
+    public boolean isPreserveNodeLabels() {
+        return preserveNodeLabels;
     }
 
     public ExecutorScaler getExecutorScaler() {
@@ -484,7 +507,8 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         // Make a snapshot of current cloud state to work with.
         // We should always work with the snapshot since data could be modified in another thread
         FleetStateStats currentState = EC2Fleets.get(fleet).getState(
-                getAwsCredentialsId(), region, endpoint, getFleet());
+                getAwsCredentialsId(), region, endpoint, getFleet(), 
+                isPauseDuringInstanceRefresh());
 
         // Some Fleet implementations (e.g. EC2SpotFleet) reflect their state only at the end of modification
         if (currentState.getState().isModifying()) {
@@ -675,22 +699,26 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             removeNode(instance);
         }
 
-        // Update the label for all Jenkins nodes in the fleet instance cache
-        for (final String instanceId : jenkinsInstances) {
-            final Node node = jenkins.getNode(instanceId);
-            if (node == null) {
-                info("Skipping label update, the Jenkins node for instance '%s' was null", instanceId);
-                continue;
-            }
+        // Update the label for all Jenkins nodes in the fleet instance cache (if not preserving labels)
+        if (!isPreserveNodeLabels()) {
+            for (final String instanceId : jenkinsInstances) {
+                final Node node = jenkins.getNode(instanceId);
+                if (node == null) {
+                    info("Skipping label update, the Jenkins node for instance '%s' was null", instanceId);
+                    continue;
+                }
 
-            if (!labelString.equals(node.getLabelString())) {
-                try {
-                    info("Updating label on node '%s' to \"%s\".", instanceId, labelString);
-                    node.setLabelString(labelString);
-                } catch (final Exception ex) {
-                    warning(ex, "Failed to set label on node '%s': ", instanceId, ex.toString());
+                if (!labelString.equals(node.getLabelString())) {
+                    try {
+                        info("Updating label on node '%s' to \"%s\".", instanceId, labelString);
+                        node.setLabelString(labelString);
+                    } catch (final Exception ex) {
+                        warning(ex, "Failed to set label on node '%s': ", instanceId, ex.toString());
+                    }
                 }
             }
+        } else {
+            fine("Node labels are preserved as originally set and not modified (preserveNodeLabels=true)");
         }
 
         // If we have new instances - create nodes for them!
