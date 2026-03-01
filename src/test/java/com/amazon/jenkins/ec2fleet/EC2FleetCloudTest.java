@@ -2155,7 +2155,7 @@ class EC2FleetCloudTest {
     }
 
     @Test
-    void update_shouldTerminateInstancesInAutoScalingGroup() throws IllegalAccessException, NoSuchFieldException {
+    void update_shouldRemoveScaleInProtectionInAutoScalingGroupForScaleDown() throws IllegalAccessException, NoSuchFieldException {
         // Arrange
         final AutoScalingGroupFleet autoScalingGroupFleet = mock(AutoScalingGroupFleet.class);
         when(EC2Fleets.get(anyString())).thenReturn(autoScalingGroupFleet);
@@ -2169,7 +2169,39 @@ class EC2FleetCloudTest {
                 null, "fleetId", null, null, mock(ComputerConnector.class), false, false,
                 0, 0, 10, 0, 1, false, false, null, false, null, null, null, false, false, null);
 
-        // Set up instanceIdsToTerminate
+        // Set up instanceIdsToTerminate with IDLE_FOR_TOO_LONG (scale-down reason)
+        HashMap<String, EC2AgentTerminationReason> toTerminate = new HashMap<>();
+        toTerminate.put("i-0", EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
+        fleetCloud.setStats(stats);
+        Field field = EC2FleetCloud.class.getDeclaredField("instanceIdsToTerminate");
+        field.setAccessible(true);
+        field.set(fleetCloud, toTerminate);
+
+        // Act
+        fleetCloud.update();
+
+        // Assert - verify removeScaleInProtection is called for scale-down reasons
+        // ASG will terminate the instance when desired capacity is reduced
+        verify(autoScalingGroupFleet).removeScaleInProtection(anyString(), any(), any(), eq("fleetId"), eq(Collections.singleton("i-0")));
+        verify(autoScalingGroupFleet, never()).terminateInstances(anyString(), any(), any(), anyString(), any());
+    }
+
+    @Test
+    void update_shouldTerminateInstancesInAutoScalingGroupForMaxTotalUsesExhausted() throws IllegalAccessException, NoSuchFieldException {
+        // Arrange
+        final AutoScalingGroupFleet autoScalingGroupFleet = mock(AutoScalingGroupFleet.class);
+        when(EC2Fleets.get(anyString())).thenReturn(autoScalingGroupFleet);
+        when(autoScalingGroupFleet.isAutoScalingGroup()).thenReturn(true);
+
+        final FleetStateStats stats = new FleetStateStats("fleetId", 1, FleetStateStats.State.active(),
+                Collections.singleton("i-0"), Collections.emptyMap());
+        when(autoScalingGroupFleet.getState(anyString(), any(), any(), anyString())).thenReturn(stats);
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
+                null, "fleetId", null, null, mock(ComputerConnector.class), false, false,
+                0, 0, 10, 0, 1, false, false, null, false, null, null, null, false, false, null);
+
+        // Set up instanceIdsToTerminate with MAX_TOTAL_USES_EXHAUSTED
         HashMap<String, EC2AgentTerminationReason> toTerminate = new HashMap<>();
         toTerminate.put("i-0", EC2AgentTerminationReason.MAX_TOTAL_USES_EXHAUSTED);
         fleetCloud.setStats(stats);
@@ -2180,8 +2212,10 @@ class EC2FleetCloudTest {
         // Act
         fleetCloud.update();
 
-        // Assert
-        verify(autoScalingGroupFleet).terminateInstances(anyString(), any(), any(), eq(Collections.singleton("i-0")));
+        // Assert - verify terminateInstances is called for MAX_TOTAL_USES_EXHAUSTED
+        // Instance should be terminated directly so ASG replaces it
+        verify(autoScalingGroupFleet).terminateInstances(anyString(), any(), any(), eq("fleetId"), eq(Collections.singleton("i-0")));
+        verify(autoScalingGroupFleet, never()).removeScaleInProtection(anyString(), any(), any(), anyString(), any());
     }
 
     @Test
