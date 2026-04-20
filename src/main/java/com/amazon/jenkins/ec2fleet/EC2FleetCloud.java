@@ -543,11 +543,8 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         final Jenkins j = Jenkins.get();
         final Map<String, EC2AgentTerminationReason> filteredInstanceIdsToTerminate = instanceIdsToTerminate.entrySet()
                 .stream()
-                .filter(e -> {
-                    final Computer c = j.getComputer(e.getKey());
-                    return c == null || c.isIdle();
-                })
-                .collect(Collectors.toMap(Map.Entry::getKey,Map.Entry::getValue));
+                .filter(e -> isSafeToTerminate(j.getComputer(e.getKey())))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         final Set<String> filteredOutNonIdleIds = Sets.difference(instanceIdsToTerminate.keySet(), filteredInstanceIdsToTerminate.keySet());
         if (filteredOutNonIdleIds.size() > 0) {
@@ -555,6 +552,22 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         }
 
         return filteredInstanceIdsToTerminate;
+    }
+
+    /**
+     * Returns whether the given {@link Computer} is safe to terminate, i.e. not running any builds and
+     * not available for the queue to dispatch new work to. A null computer is treated as safe, since
+     * the node is already gone from Jenkins.
+     * <p>
+     * Callers scheduling a termination are expected to first mark the computer as not accepting tasks
+     * (see {@link EC2RetentionStrategy} and {@link EC2FleetNodeComputer#doDoDelete()}), so that the
+     * queue cannot bind new work to it between the check here and the call to terminate on EC2.
+     */
+    private static boolean isSafeToTerminate(final Computer c) {
+        if (c == null) return true;
+        if (c.countBusy() > 0) return false;
+        if (c.isAcceptingTasks()) return false;
+        return c.isIdle();
     }
 
     public boolean removePlannedNodeScheduledFutures(final int numToRemove) {
@@ -579,6 +592,34 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         final Jenkins jenkins = Jenkins.get();
         final Ec2Client ec2 = Registry.getEc2Api().connect(getAwsCredentialsId(), region, endpoint);
 
+        if (currentInstanceIdsToTerminate.size() > 0) {
+            // Re-verify each candidate atomically with removeNode under Queue.withLock; drop any that became busy (issue#436).
+            // AWS terminateInstances stays outside the lock — after removeNode the dispatcher can't assign tasks to the node.
+            // Must run before targetCapacity is computed so dropped entries don't shrink the fleet.
+            Queue.withLock(new Runnable() {
+                @Override
+                public void run() {
+                    final Iterator<Map.Entry<String, EC2AgentTerminationReason>> it = currentInstanceIdsToTerminate.entrySet().iterator();
+                    while (it.hasNext()) {
+                        final Map.Entry<String, EC2AgentTerminationReason> entry = it.next();
+                        final String instanceId = entry.getKey();
+                        if (!isSafeToTerminate(jenkins.getComputer(instanceId))) {
+                            it.remove();
+                            continue;
+                        }
+                        final Node node = jenkins.getNode(instanceId);
+                        if (node != null) {
+                            try {
+                                jenkins.removeNode(node);
+                            } catch (IOException e) {
+                                warning("Failed to remove node '%s' from Jenkins before termination.", instanceId);
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
         // Ensure target capacity is not negative (covers capacity updates from outside the plugin)
         final int targetCapacity = Math.max(minSize,
                 Math.min(maxSize, currentState.getNumDesired() - currentInstanceIdsToTerminate.size() + currentToAdd));
@@ -595,30 +636,10 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         final FleetStateStats updatedState = new FleetStateStats(currentState, targetCapacity);
 
         if (currentInstanceIdsToTerminate.size() > 0) {
-            // internally removeNode lock on queue to correctly update node list
-            // we do big block for all removal to avoid delay on lock waiting
-            // for each node
-            Queue.withLock(new Runnable() {
-                @Override
-                public void run() {
-                    info("Removing Jenkins nodes before terminating corresponding EC2 instances");
-                    for (final String instanceId : currentInstanceIdsToTerminate.keySet()) {
-                        final Node node = jenkins.getNode(instanceId);
-                        if (node != null) {
-                            try {
-                                jenkins.removeNode(node);
-                            } catch (IOException e) {
-                                warning("Failed to remove node '%s' from Jenkins before termination.", instanceId);
-                            }
-                        }
-                    }
-                }
-            });
-            if(EC2Fleets.get(fleet).isAutoScalingGroup()){
+            if (EC2Fleets.get(fleet).isAutoScalingGroup()) {
                 fine("Terminating instances in AutoScalingGroup: %s", currentInstanceIdsToTerminate.keySet());
                 ((AutoScalingGroupFleet) EC2Fleets.get(fleet)).terminateInstances(awsCredentialsId, region, endpoint, currentInstanceIdsToTerminate.keySet());
-            }
-            else {
+            } else {
                 fine("Terminating instances: %s", currentInstanceIdsToTerminate.keySet());
                 Registry.getEc2Api().terminateInstances(ec2, currentInstanceIdsToTerminate.keySet());
             }

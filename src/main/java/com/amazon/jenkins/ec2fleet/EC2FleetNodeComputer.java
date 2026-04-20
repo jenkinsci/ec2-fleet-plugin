@@ -77,6 +77,9 @@ public class EC2FleetNodeComputer extends SlaveComputer {
             final String instanceId = node.getInstanceId();
             final AbstractEC2FleetCloud cloud = node.getCloud();
             if (cloud != null && StringUtils.isNotBlank(instanceId)) {
+                // Suspend the computer before scheduling so the queue cannot dispatch new work to it
+                // between now and when the cloud's next update cycle terminates the instance on EC2.
+                setAcceptingTasks(false);
                 cloud.scheduleToTerminate(instanceId, false, EC2AgentTerminationReason.AGENT_DELETED);
                 // Persist a flag here as the cloud objects can be re-created on user-initiated changes, hence, losing track of instance ids scheduled to terminate.
                 this.isMarkedForDeletion = true;
