@@ -1317,6 +1317,112 @@ class EC2FleetCloudTest {
         assertEquals(new HashSet<>(Arrays.asList("i-2")), fleetCloud.getInstanceIdsToTerminate().keySet());
     }
 
+    // issue#436: accepting-tasks computer must not be terminated, even if isIdle() is true.
+    @Test
+    void update_shouldNotTerminate_whenComputerIsAcceptingTasks() {
+        // given
+        when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(new HashMap<String, Instance>() {{
+                put("i-1", Instance.builder().publicIpAddress("p-ip").instanceId("i-1").build());
+        }});
+        Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(new FleetStateStats("fleetId", 1, FleetStateStats.State.active(),
+                        Collections.singleton("i-1"), Collections.emptyMap()));
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
+                "", "fleetId", "", null, Mockito.mock(ComputerConnector.class), false,
+                false, 0, 0, 2, 0, 1, false,
+                false, "-1", false,
+                0, 0, 10, false, false, noScaling);
+
+        final EC2FleetNodeComputer acceptingComputer = mock(EC2FleetNodeComputer.class);
+        when(acceptingComputer.isIdle()).thenReturn(true);
+        when(acceptingComputer.countBusy()).thenReturn(0);
+        when(acceptingComputer.isAcceptingTasks()).thenReturn(true);
+        when(jenkins.getComputer("i-1")).thenReturn(acceptingComputer);
+
+        fleetCloud.scheduleToTerminate("i-1", false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
+
+        // when
+        fleetCloud.update();
+
+        // then - no AWS terminate fired; instance stays in the map for next cycle
+        verify(ec2Api, never()).terminateInstances(any(Ec2Client.class), any(Set.class));
+        assertEquals(Collections.singleton("i-1"), fleetCloud.getInstanceIdsToTerminate().keySet());
+    }
+
+    // issue#436: defense-in-depth against a partial mock where isIdle() disagrees with countBusy().
+    @Test
+    void update_shouldNotTerminate_whenCountBusyGreaterThanZero() {
+        // given
+        when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(new HashMap<String, Instance>() {{
+                put("i-1", Instance.builder().publicIpAddress("p-ip").instanceId("i-1").build());
+        }});
+        Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(new FleetStateStats("fleetId", 1, FleetStateStats.State.active(),
+                        Collections.singleton("i-1"), Collections.emptyMap()));
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
+                "", "fleetId", "", null, Mockito.mock(ComputerConnector.class), false,
+                false, 0, 0, 2, 0, 1, false,
+                false, "-1", false,
+                0, 0, 10, false, false, noScaling);
+
+        final EC2FleetNodeComputer busyByCount = mock(EC2FleetNodeComputer.class);
+        when(busyByCount.isIdle()).thenReturn(true);
+        when(busyByCount.countBusy()).thenReturn(1);
+        when(busyByCount.isAcceptingTasks()).thenReturn(false);
+        when(jenkins.getComputer("i-1")).thenReturn(busyByCount);
+
+        fleetCloud.scheduleToTerminate("i-1", false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
+
+        // when
+        fleetCloud.update();
+
+        // then
+        verify(ec2Api, never()).terminateInstances(any(Ec2Client.class), any(Set.class));
+        assertEquals(Collections.singleton("i-1"), fleetCloud.getInstanceIdsToTerminate().keySet());
+    }
+
+    // issue#436: idle at first-pass filter, busy by the under-lock re-verify — must be dropped, not terminated.
+    @Test
+    void update_shouldDropInstance_whenBecomesBusyUnderLock() {
+        // given
+        when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(new HashMap<String, Instance>() {{
+                put("i-1", Instance.builder().publicIpAddress("p-ip").instanceId("i-1").build());
+        }});
+        Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(new FleetStateStats("fleetId", 1, FleetStateStats.State.active(),
+                        Collections.singleton("i-1"), Collections.emptyMap()));
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
+                "", "fleetId", "", null, Mockito.mock(ComputerConnector.class), false,
+                false, 0, 0, 2, 0, 1, false,
+                false, "-1", false,
+                0, 0, 10, false, false, noScaling);
+
+        final EC2FleetNodeComputer racingComputer = mock(EC2FleetNodeComputer.class);
+        when(racingComputer.isIdle()).thenReturn(true);
+        when(racingComputer.isAcceptingTasks()).thenReturn(false);
+        // Idle at first-pass filter, then a task lands before the under-lock re-verify.
+        when(racingComputer.countBusy()).thenReturn(0).thenReturn(1);
+        when(jenkins.getComputer("i-1")).thenReturn(racingComputer);
+
+        fleetCloud.scheduleToTerminate("i-1", false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
+
+        // when
+        fleetCloud.update();
+
+        // then - dropped by the under-lock re-verify
+        verify(ec2Api, never()).terminateInstances(any(Ec2Client.class), any(Set.class));
+        assertEquals(Collections.singleton("i-1"), fleetCloud.getInstanceIdsToTerminate().keySet());
+        // target capacity must be computed from the post-drop size; with nothing terminated and numDesired==1,
+        // modify() should not be called (or if called, not below numDesired).
+        verify(ec2Fleet, never()).modify(anyString(), anyString(), anyString(), eq("fleetId"), eq(0), anyInt(), anyInt());
+    }
+
     @Test
     void update_shouldUpdateStateWithMinSpare() throws IOException {
         // given
@@ -2177,6 +2283,9 @@ class EC2FleetCloudTest {
         field.setAccessible(true);
         field.set(fleetCloud, toTerminate);
 
+        // Under-lock re-verify requires a safely-terminable Computer
+        when(jenkins.getComputer("i-0")).thenReturn(idleComputer);
+
         // Act
         fleetCloud.update();
 
@@ -2209,6 +2318,9 @@ class EC2FleetCloudTest {
         Field field = EC2FleetCloud.class.getDeclaredField("instanceIdsToTerminate");
         field.setAccessible(true);
         field.set(fleetCloud, toTerminate);
+
+        // Under-lock re-verify requires a safely-terminable Computer
+        when(jenkins.getComputer("i-0")).thenReturn(idleComputer);
 
         // Act
         fleetCloud.update();
