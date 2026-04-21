@@ -97,8 +97,8 @@
       <artifactId>aws-credentials</artifactId>
       <exclusions>
         <exclusion>
-          <groupId>org.jenkins-ci.plugins.aws-java-sdk</groupId>
-          <artifactId>aws-java-sdk-ec2</artifactId>
+          <groupId>io.jenkins.plugins</groupId>
+          <artifactId>jaxb</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
