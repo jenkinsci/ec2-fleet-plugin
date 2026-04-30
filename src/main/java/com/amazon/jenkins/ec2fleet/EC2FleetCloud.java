@@ -5,6 +5,8 @@ import com.amazon.jenkins.ec2fleet.aws.RegionHelper;
 import com.amazon.jenkins.ec2fleet.fleet.AutoScalingGroupFleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
+import org.kohsuke.stapler.*;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 import software.amazon.awssdk.services.ec2.Ec2Client;
 import software.amazon.awssdk.services.ec2.model.*;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
@@ -23,10 +25,6 @@ import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest2;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -1047,11 +1045,49 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             }
         }
 
+        /**
+         * Validates that the endpoint is a valid AWS endpoint.
+         * Supports regular AWS endpoints (amazonaws.com) and Chinese AWS endpoints (amazonaws.com.cn).
+         *
+         * @param endpoint the endpoint URL or hostname to validate
+         * @return true if the endpoint is a valid AWS endpoint, false otherwise
+         */
+        private boolean isValidAwsEndpoint(final String endpoint) {
+            try {
+                // Extract hostname from URL if endpoint is in URL format
+                String hostname = endpoint;
+                if (endpoint.contains("://")) {
+                    hostname = endpoint.split("://")[1].split("/")[0].split(":")[0];
+                } else {
+                    hostname = endpoint.split(":")[0];
+                }
+
+                // Valid AWS endpoint patterns: amazonaws.com or amazonaws.com.cn (China regions)
+                return hostname.endsWith("amazonaws.com") || hostname.endsWith("amazonaws.com.cn");
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "Error validating endpoint: " + endpoint, e);
+                return false;
+            }
+        }
+
+        @RequirePOST
         public FormValidation doTestConnection(
+                @AncestorInPath final Item item,
                 @QueryParameter final String awsCredentialsId,
                 @QueryParameter final String region,
                 @QueryParameter final String endpoint,
                 @QueryParameter final String fleet) {
+            if (item == null) {
+                Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+            } else {
+                item.checkPermission(Item.CONFIGURE);
+            }
+            if (endpoint != null && !endpoint.isEmpty()) {
+                // Validate endpoint is a known AWS endpoint
+                if (!isValidAwsEndpoint(endpoint)) {
+                    return FormValidation.error("Endpoint must be a valid AWS endpoint URL (e.g., amazonaws.com or amazonaws.com.cn for China regions)");
+                }
+            }
             // Check if any missing AWS Permissions
             final AwsPermissionChecker awsPermissionChecker = new AwsPermissionChecker(awsCredentialsId, region, endpoint);
             final List<String> missingPermissions = awsPermissionChecker.getMissingPermissions(fleet);

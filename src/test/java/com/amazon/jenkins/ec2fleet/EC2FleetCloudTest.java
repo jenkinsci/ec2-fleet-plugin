@@ -15,6 +15,7 @@ import software.amazon.awssdk.services.ec2.model.*;
 import software.amazon.awssdk.services.ec2.Ec2Client;
 import hudson.ExtensionList;
 import hudson.model.Computer;
+import hudson.model.Item;
 import hudson.model.Label;
 import hudson.model.LabelFinder;
 import hudson.model.Node;
@@ -2406,7 +2407,7 @@ class EC2FleetCloudTest {
     @Test
     void descriptorImpl_doTestConnection_NoMissingPermissions() {
         try (MockedConstruction<AwsPermissionChecker> mockedAwsPermissionChecker = Mockito.mockConstruction(AwsPermissionChecker.class, (awsPermissionChecker, context) -> when(awsPermissionChecker.getMissingPermissions(null)).thenReturn(new ArrayList<>()))) {
-            final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doTestConnection("credentials", null, null, null);
+            final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doTestConnection(mock(Item.class), "credentials", null, null, null);
 
             assertTrue(formValidation.getMessage().contains("Success"));
         }
@@ -2415,7 +2416,7 @@ class EC2FleetCloudTest {
     @Test
     void descriptorImpl_doTestConnection_missingDescribeInstancePermission() {
         try (MockedConstruction<AwsPermissionChecker> mockedAwsPermissionChecker = Mockito.mockConstruction(AwsPermissionChecker.class, (awsPermissionChecker, context) -> when(awsPermissionChecker.getMissingPermissions(null)).thenReturn(Collections.singletonList(AwsPermissionChecker.FleetAPI.DescribeInstances.name())))) {
-            final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doTestConnection("credentials", null, null, null);
+            final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doTestConnection(mock(Item.class), "credentials", null, null, null);
 
             assertThat(formValidation.getMessage(), containsString(AwsPermissionChecker.FleetAPI.DescribeInstances.name()));
         }
@@ -2430,7 +2431,7 @@ class EC2FleetCloudTest {
 
             when(awsPermissionChecker.getMissingPermissions(null)).thenReturn(missingPermissions);
         })) {
-            final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doTestConnection("credentials", null, null, null);
+            final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl().doTestConnection(mock(Item.class), "credentials", null, null, null);
 
             assertThat(formValidation.getMessage(), containsString(AwsPermissionChecker.FleetAPI.DescribeInstances.name()));
             assertThat(formValidation.getMessage(), containsString(AwsPermissionChecker.FleetAPI.CreateTags.name()));
