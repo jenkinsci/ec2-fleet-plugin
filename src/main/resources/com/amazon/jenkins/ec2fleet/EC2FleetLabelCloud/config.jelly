@@ -43,7 +43,7 @@
         <f:select/>
     </f:entry>
 
-    <f:validateButton title="${%Test Connection}" progress="${%Testing...}" method="testConnection" with="awsCredentialsId,region,fleet" />
+    <f:validateButton title="${%Test Connection}" progress="${%Testing...}" method="testConnection" with="awsCredentialsId,region,endpoint,fleet" />
 
     <f:entry title="${%Launcher}" field="launcher">
       <f:dropdownDescriptorSelector field="computerConnector" descriptors="${descriptor.getComputerConnectorDescriptors()}"/>
