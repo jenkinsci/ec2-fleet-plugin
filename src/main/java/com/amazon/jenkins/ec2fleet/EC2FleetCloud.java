@@ -1037,14 +1037,17 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         }
 
         public ListBoxModel doFillAwsCredentialsIdItems() {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             return AWSCredentialsHelper.doFillCredentialsIdItems(Jenkins.get());
         }
 
         public ListBoxModel doFillRegionItems(@QueryParameter final String awsCredentialsId) {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             return RegionHelper.getRegionsListBoxModel(awsCredentialsId);
         }
 
         public FormValidation doCheckMaxTotalUses(@QueryParameter String value) {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             try {
                 int val = Integer.parseInt(value);
                 if (val >= -1) return FormValidation.ok();
@@ -1054,6 +1057,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         }
 
         public FormValidation doCheckName(@QueryParameter final String name, @QueryParameter final String isNewCloud) {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             try {
                 Jenkins.checkGoodName(name);
             } catch (Failure e) {
@@ -1083,6 +1087,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                 @QueryParameter final String endpoint,
                 @QueryParameter final String awsCredentialsId,
                 @QueryParameter final String fleet) {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             final ListBoxModel model = new ListBoxModel();
             model.add(0, new Option("- please select -", "", true));
             if (StringUtils.isNotBlank(endpoint) && !AwsEndpointValidator.isValidAwsEndpoint(endpoint)) {
@@ -1108,10 +1113,12 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         }
 
         public Boolean isExistingCloudNameDuplicated(@QueryParameter final String name) {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             return CloudNames.isDuplicated(name);
         }
 
         public FormValidation doCheckFleet(@QueryParameter final String fleet) {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             if (StringUtils.isEmpty(fleet)) {
                 return FormValidation.error("Please select a valid EC2 Fleet");
             } else {

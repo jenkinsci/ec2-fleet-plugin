@@ -845,10 +845,12 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
         }
 
         public ListBoxModel doFillAwsCredentialsIdItems() {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             return AWSCredentialsHelper.doFillCredentialsIdItems(Jenkins.get());
         }
 
         public ListBoxModel doFillRegionItems(@QueryParameter final String awsCredentialsId) {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             return RegionHelper.getRegionsListBoxModel(awsCredentialsId);
         }
 
@@ -856,6 +858,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
                 @QueryParameter final String awsCredentialsId,
                 @QueryParameter final String region,
                 @QueryParameter final String endpoint) {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             final ListBoxModel model = new ListBoxModel();
             if (StringUtils.isNotBlank(endpoint) && !AwsEndpointValidator.isValidAwsEndpoint(endpoint)) {
                 return model;
@@ -913,6 +916,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
         }
 
         public FormValidation doCheckName(@QueryParameter final String name, @QueryParameter final String isNewCloud) {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             try {
                 Jenkins.checkGoodName(name);
             } catch (Failure e) {
@@ -941,6 +945,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
         }
 
         public Boolean isExistingCloudNameDuplicated(@QueryParameter final String name) {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             return CloudNames.isDuplicated(name);
         }
 
