@@ -3935,7 +3935,7 @@ class EC2FleetCloudTest {
                 (awsPermissionChecker, context) ->
                         when(awsPermissionChecker.getMissingPermissions(null)).thenReturn(new ArrayList<>()))) {
             final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl()
-                    .doTestConnection(mock(Item.class), "credentials", null, null, null);
+                    .doTestConnection("credentials", null, null, null);
 
             assertTrue(formValidation.getMessage().contains("Success"));
         }
@@ -3949,7 +3949,7 @@ class EC2FleetCloudTest {
                         .thenReturn(
                                 Collections.singletonList(AwsPermissionChecker.FleetAPI.DescribeInstances.name())))) {
             final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl()
-                    .doTestConnection(mock(Item.class), "credentials", null, null, null);
+                    .doTestConnection("credentials", null, null, null);
 
             assertThat(
                     formValidation.getMessage(),
@@ -3968,7 +3968,7 @@ class EC2FleetCloudTest {
                     when(awsPermissionChecker.getMissingPermissions(null)).thenReturn(missingPermissions);
                 })) {
             final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl()
-                    .doTestConnection(mock(Item.class), "credentials", null, null, null);
+                    .doTestConnection("credentials", null, null, null);
 
             assertThat(
                     formValidation.getMessage(),
@@ -3982,7 +3982,7 @@ class EC2FleetCloudTest {
         try (MockedConstruction<AwsPermissionChecker> mockedAwsPermissionChecker =
                 Mockito.mockConstruction(AwsPermissionChecker.class)) {
             final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl()
-                    .doTestConnection(mock(Item.class), "credentials", null, "https://evilamazonaws.com", null);
+                    .doTestConnection("credentials", null, "https://evilamazonaws.com", null);
 
             assertEquals(Kind.ERROR, formValidation.kind);
             assertThat(formValidation.getMessage(), containsString("valid AWS endpoint URL"));
@@ -4006,8 +4006,7 @@ class EC2FleetCloudTest {
                 (awsPermissionChecker, context) ->
                         when(awsPermissionChecker.getMissingPermissions(null)).thenReturn(new ArrayList<>()))) {
             final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl()
-                    .doTestConnection(
-                            mock(Item.class), "credentials", null, "HTTPS://EC2.CN-NORTH-1.AMAZONAWS.COM.CN", null);
+                    .doTestConnection("credentials", null, "HTTPS://EC2.CN-NORTH-1.AMAZONAWS.COM.CN", null);
 
             assertEquals(Kind.OK, formValidation.kind);
             assertThat(formValidation.getMessage(), containsString("Success"));

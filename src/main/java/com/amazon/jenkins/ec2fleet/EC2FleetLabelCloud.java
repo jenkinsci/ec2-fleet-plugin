@@ -44,7 +44,6 @@ import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest2;
@@ -881,17 +880,12 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
 
         @RequirePOST
         public FormValidation doTestConnection(
-                @AncestorInPath final Item item,
                 @QueryParameter final String awsCredentialsId,
                 @QueryParameter final String region,
                 @QueryParameter final String endpoint,
                 @QueryParameter final String fleet) {
             final String normalizedEndpoint = StringUtils.trimToNull(endpoint);
-            if (item == null) {
-                Jenkins.get().checkPermission(Jenkins.ADMINISTER);
-            } else {
-                item.checkPermission(Item.CONFIGURE);
-            }
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             if (normalizedEndpoint != null) {
                 // Validate endpoint is a known AWS endpoint
                 if (!AwsEndpointValidator.isValidAwsEndpoint(normalizedEndpoint)) {

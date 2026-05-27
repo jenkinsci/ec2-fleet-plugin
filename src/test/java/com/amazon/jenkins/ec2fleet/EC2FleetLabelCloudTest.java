@@ -2,12 +2,10 @@ package com.amazon.jenkins.ec2fleet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.amazon.jenkins.ec2fleet.aws.AwsPermissionChecker;
 import com.amazon.jenkins.ec2fleet.aws.EC2Api;
-import hudson.model.Item;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.util.ArrayList;
@@ -30,13 +28,12 @@ class EC2FleetLabelCloudTest {
 
     @Test
     void descriptorImpl_doTestConnection_allowsAwsEndpoint() {
-        final Item item = mock(Item.class);
         try (MockedConstruction<AwsPermissionChecker> mockedAwsPermissionChecker = Mockito.mockConstruction(
                 AwsPermissionChecker.class,
                 (awsPermissionChecker, context) ->
                         when(awsPermissionChecker.getMissingPermissions(null)).thenReturn(new ArrayList<>()))) {
             final FormValidation formValidation = new EC2FleetLabelCloud.DescriptorImpl()
-                    .doTestConnection(item, "credentials", null, "https://ec2.us-east-1.amazonaws.com", null);
+                    .doTestConnection("credentials", null, "https://ec2.us-east-1.amazonaws.com", null);
 
             assertEquals(FormValidation.Kind.OK, formValidation.kind);
             assertTrue(formValidation.getMessage().contains("Success"));
@@ -45,13 +42,12 @@ class EC2FleetLabelCloudTest {
 
     @Test
     void descriptorImpl_doTestConnection_allowsChinaAwsEndpoint() {
-        final Item item = mock(Item.class);
         try (MockedConstruction<AwsPermissionChecker> mockedAwsPermissionChecker = Mockito.mockConstruction(
                 AwsPermissionChecker.class,
                 (awsPermissionChecker, context) ->
                         when(awsPermissionChecker.getMissingPermissions(null)).thenReturn(new ArrayList<>()))) {
             final FormValidation formValidation = new EC2FleetLabelCloud.DescriptorImpl()
-                    .doTestConnection(item, "credentials", null, "https://ec2.cn-north-1.amazonaws.com.cn", null);
+                    .doTestConnection("credentials", null, "https://ec2.cn-north-1.amazonaws.com.cn", null);
 
             assertEquals(FormValidation.Kind.OK, formValidation.kind);
             assertTrue(formValidation.getMessage().contains("Success"));
@@ -60,13 +56,12 @@ class EC2FleetLabelCloudTest {
 
     @Test
     void descriptorImpl_doTestConnection_allowsMixedCaseAwsEndpoint() {
-        final Item item = mock(Item.class);
         try (MockedConstruction<AwsPermissionChecker> mockedAwsPermissionChecker = Mockito.mockConstruction(
                 AwsPermissionChecker.class,
                 (awsPermissionChecker, context) ->
                         when(awsPermissionChecker.getMissingPermissions(null)).thenReturn(new ArrayList<>()))) {
             final FormValidation formValidation = new EC2FleetLabelCloud.DescriptorImpl()
-                    .doTestConnection(item, "credentials", null, " HTTPS://EC2.US-EAST-1.AMAZONAWS.COM ", null);
+                    .doTestConnection("credentials", null, " HTTPS://EC2.US-EAST-1.AMAZONAWS.COM ", null);
 
             assertEquals(FormValidation.Kind.OK, formValidation.kind);
             assertTrue(formValidation.getMessage().contains("Success"));
@@ -75,11 +70,10 @@ class EC2FleetLabelCloudTest {
 
     @Test
     void descriptorImpl_doTestConnection_rejectsLookalikeEndpoint() {
-        final Item item = mock(Item.class);
         try (MockedConstruction<AwsPermissionChecker> mockedAwsPermissionChecker =
                 Mockito.mockConstruction(AwsPermissionChecker.class)) {
             final FormValidation formValidation = new EC2FleetLabelCloud.DescriptorImpl()
-                    .doTestConnection(item, "credentials", null, "https://evilamazonaws.com", null);
+                    .doTestConnection("credentials", null, "https://evilamazonaws.com", null);
 
             assertEquals(FormValidation.Kind.ERROR, formValidation.kind);
             assertTrue(formValidation.getMessage().contains("valid AWS endpoint URL"));

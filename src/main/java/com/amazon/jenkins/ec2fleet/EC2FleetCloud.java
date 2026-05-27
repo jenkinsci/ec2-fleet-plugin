@@ -1121,17 +1121,12 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
         @RequirePOST
         public FormValidation doTestConnection(
-                @AncestorInPath final Item item,
                 @QueryParameter final String awsCredentialsId,
                 @QueryParameter final String region,
                 @QueryParameter final String endpoint,
                 @QueryParameter final String fleet) {
             final String normalizedEndpoint = StringUtils.trimToNull(endpoint);
-            if (item == null) {
-                Jenkins.get().checkPermission(Jenkins.ADMINISTER);
-            } else {
-                item.checkPermission(Item.CONFIGURE);
-            }
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             if (normalizedEndpoint != null) {
                 // Validate endpoint is a known AWS endpoint
                 if (!AwsEndpointValidator.isValidAwsEndpoint(normalizedEndpoint)) {
