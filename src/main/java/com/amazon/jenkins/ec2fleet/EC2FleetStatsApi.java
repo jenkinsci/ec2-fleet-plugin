@@ -31,7 +31,6 @@ public class EC2FleetStatsApi implements RootAction {
     }
 
     public void doStats(HttpServletRequest req, HttpServletResponse rsp) throws IOException, ServletException {
-        Jenkins.get().checkPermission(Jenkins.READ);
         List<Map<String, Object>> statsList = new ArrayList<>();
         for (Cloud cloud : Jenkins.get().clouds) {
             if (cloud instanceof EC2FleetCloud) {
