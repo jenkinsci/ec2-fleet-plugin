@@ -27,7 +27,6 @@ import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 import com.amazon.jenkins.ec2fleet.fleet.EC2SpotFleet;
 import hudson.ExtensionList;
 import hudson.model.Computer;
-import hudson.model.Item;
 import hudson.model.Label;
 import hudson.model.LabelFinder;
 import hudson.model.Node;
@@ -3934,8 +3933,8 @@ class EC2FleetCloudTest {
                 AwsPermissionChecker.class,
                 (awsPermissionChecker, context) ->
                         when(awsPermissionChecker.getMissingPermissions(null)).thenReturn(new ArrayList<>()))) {
-            final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl()
-                    .doTestConnection("credentials", null, null, null);
+            final FormValidation formValidation =
+                    new EC2FleetCloud.DescriptorImpl().doTestConnection("credentials", null, null, null);
 
             assertTrue(formValidation.getMessage().contains("Success"));
         }
@@ -3948,8 +3947,8 @@ class EC2FleetCloudTest {
                 (awsPermissionChecker, context) -> when(awsPermissionChecker.getMissingPermissions(null))
                         .thenReturn(
                                 Collections.singletonList(AwsPermissionChecker.FleetAPI.DescribeInstances.name())))) {
-            final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl()
-                    .doTestConnection("credentials", null, null, null);
+            final FormValidation formValidation =
+                    new EC2FleetCloud.DescriptorImpl().doTestConnection("credentials", null, null, null);
 
             assertThat(
                     formValidation.getMessage(),
@@ -3967,8 +3966,8 @@ class EC2FleetCloudTest {
 
                     when(awsPermissionChecker.getMissingPermissions(null)).thenReturn(missingPermissions);
                 })) {
-            final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl()
-                    .doTestConnection("credentials", null, null, null);
+            final FormValidation formValidation =
+                    new EC2FleetCloud.DescriptorImpl().doTestConnection("credentials", null, null, null);
 
             assertThat(
                     formValidation.getMessage(),
@@ -4000,6 +3999,15 @@ class EC2FleetCloudTest {
     }
 
     @Test
+    void descriptorImpl_doFillFleetItems_invalidRegion_returnsDefaultOnly() {
+        final ListBoxModel r =
+                new EC2FleetCloud.DescriptorImpl().doFillFleetItems(false, "us-east-1.amazonaws.com", null, null, null);
+
+        assertEquals(1, r.size());
+        assertEquals("", r.get(0).value);
+    }
+
+    @Test
     void descriptorImpl_doTestConnection_allowsMixedCaseChinaEndpoint() {
         try (MockedConstruction<AwsPermissionChecker> mockedAwsPermissionChecker = Mockito.mockConstruction(
                 AwsPermissionChecker.class,
@@ -4010,6 +4018,19 @@ class EC2FleetCloudTest {
 
             assertEquals(Kind.OK, formValidation.kind);
             assertThat(formValidation.getMessage(), containsString("Success"));
+        }
+    }
+
+    @Test
+    void descriptorImpl_doTestConnection_rejectsInvalidRegion() {
+        try (MockedConstruction<AwsPermissionChecker> mockedAwsPermissionChecker =
+                Mockito.mockConstruction(AwsPermissionChecker.class)) {
+            final FormValidation formValidation = new EC2FleetCloud.DescriptorImpl()
+                    .doTestConnection("credentials", "us-east-1.amazonaws.com", null, null);
+
+            assertEquals(Kind.ERROR, formValidation.kind);
+            assertThat(formValidation.getMessage(), containsString("valid AWS region name"));
+            assertEquals(0, mockedAwsPermissionChecker.constructed().size());
         }
     }
 

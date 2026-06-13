@@ -1,6 +1,7 @@
 package com.amazon.jenkins.ec2fleet;
 
 import com.amazon.jenkins.ec2fleet.aws.AwsPermissionChecker;
+import com.amazon.jenkins.ec2fleet.aws.AwsRegionValidator;
 import com.amazon.jenkins.ec2fleet.aws.RegionHelper;
 import com.amazon.jenkins.ec2fleet.fleet.AutoScalingGroupFleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
@@ -1090,17 +1091,22 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             final ListBoxModel model = new ListBoxModel();
             model.add(0, new Option("- please select -", "", true));
+            final String normalizedRegion = AwsRegionValidator.normalizeRegionName(region);
+            if (normalizedRegion != null && !AwsRegionValidator.isValidRegionName(normalizedRegion)) {
+                return model;
+            }
+            final String effectiveRegion = normalizedRegion != null ? normalizedRegion : region;
             if (StringUtils.isNotBlank(endpoint) && !AwsEndpointValidator.isValidAwsEndpoint(endpoint)) {
                 return model;
             }
             try {
                 for (final EC2Fleet EC2Fleet : EC2Fleets.all()) {
-                    EC2Fleet.describe(awsCredentialsId, region, endpoint, model, fleet, showAllFleets);
+                    EC2Fleet.describe(awsCredentialsId, effectiveRegion, endpoint, model, fleet, showAllFleets);
                 }
             } catch (final Exception ex) {
                 LOGGER.log(
                         Level.WARNING,
-                        String.format("Cannot describe fleets in '%s' or by endpoint '%s'", region, endpoint),
+                        String.format("Cannot describe fleets in '%s' or by endpoint '%s'", effectiveRegion, endpoint),
                         ex);
                 return model;
             }
@@ -1132,8 +1138,12 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                 @QueryParameter final String region,
                 @QueryParameter final String endpoint,
                 @QueryParameter final String fleet) {
+            final String normalizedRegion = AwsRegionValidator.normalizeRegionName(region);
             final String normalizedEndpoint = StringUtils.trimToNull(endpoint);
             Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+            if (normalizedRegion != null && !AwsRegionValidator.isValidRegionName(normalizedRegion)) {
+                return FormValidation.error("Region must be a valid AWS region name");
+            }
             if (normalizedEndpoint != null) {
                 // Validate endpoint is a known AWS endpoint
                 if (!AwsEndpointValidator.isValidAwsEndpoint(normalizedEndpoint)) {
@@ -1143,7 +1153,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             }
             // Check if any missing AWS Permissions
             final AwsPermissionChecker awsPermissionChecker =
-                    new AwsPermissionChecker(awsCredentialsId, region, normalizedEndpoint);
+                    new AwsPermissionChecker(awsCredentialsId, normalizedRegion, normalizedEndpoint);
             final List<String> missingPermissions = awsPermissionChecker.getMissingPermissions(fleet);
             // TODO: DryRun does not work as expected for TerminateInstances and does not exists for
             // UpdateAutoScalingGroup or ModifySpotFleetRequest

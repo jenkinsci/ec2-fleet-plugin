@@ -91,4 +91,28 @@ class EC2FleetLabelCloudTest {
             assertEquals(0, model.size());
         }
     }
+
+    @Test
+    void descriptorImpl_doFillEc2KeyPairNameItems_invalidRegion_doesNotConnect() {
+        try (MockedConstruction<EC2Api> mockedEc2Api = Mockito.mockConstruction(EC2Api.class)) {
+            final ListBoxModel model = new EC2FleetLabelCloud.DescriptorImpl()
+                    .doFillEc2KeyPairNameItems("credentials", "us-east-1.amazonaws.com", null);
+
+            assertEquals(0, mockedEc2Api.constructed().size());
+            assertEquals(0, model.size());
+        }
+    }
+
+    @Test
+    void descriptorImpl_doTestConnection_rejectsInvalidRegion() {
+        try (MockedConstruction<AwsPermissionChecker> mockedAwsPermissionChecker =
+                Mockito.mockConstruction(AwsPermissionChecker.class)) {
+            final FormValidation formValidation = new EC2FleetLabelCloud.DescriptorImpl()
+                    .doTestConnection("credentials", "us-east-1.amazonaws.com", null, null);
+
+            assertEquals(FormValidation.Kind.ERROR, formValidation.kind);
+            assertTrue(formValidation.getMessage().contains("valid AWS region name"));
+            assertEquals(0, mockedAwsPermissionChecker.constructed().size());
+        }
+    }
 }
