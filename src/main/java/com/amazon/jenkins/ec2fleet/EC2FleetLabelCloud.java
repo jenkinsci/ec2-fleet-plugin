@@ -855,6 +855,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
             return RegionHelper.getRegionsListBoxModel(awsCredentialsId);
         }
 
+        @RequirePOST
         public ListBoxModel doFillEc2KeyPairNameItems(
                 @QueryParameter final String awsCredentialsId,
                 @QueryParameter final String region,

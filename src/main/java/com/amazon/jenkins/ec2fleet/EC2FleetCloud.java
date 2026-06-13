@@ -1082,6 +1082,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             return FormValidation.ok();
         }
 
+        @RequirePOST
         public ListBoxModel doFillFleetItems(
                 @QueryParameter final boolean showAllFleets,
                 @QueryParameter final String region,
