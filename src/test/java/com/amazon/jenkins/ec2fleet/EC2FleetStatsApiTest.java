@@ -2,14 +2,15 @@ package com.amazon.jenkins.ec2fleet;
 
 import com.amazon.jenkins.ec2fleet.FleetStateStats;
 import com.amazon.jenkins.ec2fleet.EC2FleetCloud;
+import hudson.security.FullControlOnceLoggedInAuthorizationStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.htmlunit.FailingHttpStatusCodeException;
+import org.htmlunit.Page;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.Mockito;
 
-import java.io.InputStream;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,6 +26,11 @@ class EC2FleetStatsApiTest {
     @BeforeEach
     void before(JenkinsRule rule) {
         j = rule;
+        j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
+        final FullControlOnceLoggedInAuthorizationStrategy authorizationStrategy =
+                new FullControlOnceLoggedInAuthorizationStrategy();
+        authorizationStrategy.setAllowAnonymousRead(false);
+        j.jenkins.setAuthorizationStrategy(authorizationStrategy);
     }
 
     @Test
@@ -40,13 +46,22 @@ class EC2FleetStatsApiTest {
 
         j.jenkins.clouds.add(cloud);
 
-        String url = j.getURL() + "ec2-fleet/stats";
-        try (InputStream is = new URL(url).openStream()) {
-            String json = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-            assertTrue(json.contains("\"fleet\":\"fleet-1\""));
-            assertTrue(json.contains("\"state\":\"active\""));
-            assertTrue(json.contains("\"label\":\"label-1\""));
-            assertTrue(json.contains("\"numActive\":2"));
-        }
+        final JenkinsRule.WebClient webClient = j.createWebClient();
+        webClient.withBasicCredentials("admin");
+        final Page page = webClient.goTo("ec2-fleet/stats", "application/json");
+        final String json = page.getWebResponse().getContentAsString(StandardCharsets.UTF_8);
+        assertTrue(json.contains("\"fleet\":\"fleet-1\""));
+        assertTrue(json.contains("\"state\":\"active\""));
+        assertTrue(json.contains("\"label\":\"label-1\""));
+        assertTrue(json.contains("\"numActive\":2"));
+    }
+
+    @Test
+    void testFleetStatsApiEndpointRejectsAnonymous() {
+        final JenkinsRule.WebClient webClient = j.createWebClient();
+
+        final FailingHttpStatusCodeException exception =
+                assertThrows(FailingHttpStatusCodeException.class, () -> webClient.goTo("ec2-fleet/stats"));
+        assertEquals(403, exception.getStatusCode());
     }
 }

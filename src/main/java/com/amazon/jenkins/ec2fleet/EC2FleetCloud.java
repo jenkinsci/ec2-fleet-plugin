@@ -1,12 +1,11 @@
 package com.amazon.jenkins.ec2fleet;
 
 import com.amazon.jenkins.ec2fleet.aws.AwsPermissionChecker;
+import com.amazon.jenkins.ec2fleet.aws.AwsRegionValidator;
 import com.amazon.jenkins.ec2fleet.aws.RegionHelper;
 import com.amazon.jenkins.ec2fleet.fleet.AutoScalingGroupFleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
-import software.amazon.awssdk.services.ec2.Ec2Client;
-import software.amazon.awssdk.services.ec2.model.*;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
 import com.google.common.collect.Sets;
 import hudson.Extension;
@@ -19,18 +18,7 @@ import hudson.slaves.NodeProvisioner;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.ListBoxModel.Option;
-import jenkins.model.Jenkins;
-import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest2;
-
-import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -39,9 +27,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -52,6 +40,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
+import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.*;
+import org.kohsuke.stapler.interceptor.RequirePOST;
+import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.*;
 
 /**
  * The {@link EC2FleetCloud} contains the main configuration values used while creating Jenkins nodes.
@@ -109,6 +106,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
      * In fact fleet ID, not name or anything else
      */
     private final String fleet;
+
     private final String fsRoot;
     private final ComputerConnector computerConnector;
     private final boolean privateIpUsed;
@@ -162,32 +160,33 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     private transient AtomicInteger plannedNodeCounter = new AtomicInteger(1);
 
     @DataBoundConstructor
-    public EC2FleetCloud(@Nonnull final String name,
-                         final String awsCredentialsId,
-                         final @Deprecated String credentialsId,
-                         final String region,
-                         final String endpoint,
-                         final String fleet,
-                         final String labelString,
-                         final String fsRoot,
-                         final ComputerConnector computerConnector,
-                         final boolean privateIpUsed,
-                         final boolean alwaysReconnect,
-                         final Integer idleMinutes,
-                         final int minSize,
-                         final int maxSize,
-                         final int minSpareSize,
-                         final int numExecutors,
-                         final boolean addNodeOnlyIfRunning,
-                         final boolean restrictUsage,
-                         final String maxTotalUses,
-                         final boolean disableTaskResubmit,
-                         final Integer initOnlineTimeoutSec,
-                         final Integer initOnlineCheckIntervalSec,
-                         final Integer cloudStatusIntervalSec,
-                         final boolean noDelayProvision,
-                         final boolean scaleExecutorsByWeight,
-                         final ExecutorScaler executorScaler) {
+    public EC2FleetCloud(
+            @Nonnull final String name,
+            final String awsCredentialsId,
+            final @Deprecated String credentialsId,
+            final String region,
+            final String endpoint,
+            final String fleet,
+            final String labelString,
+            final String fsRoot,
+            final ComputerConnector computerConnector,
+            final boolean privateIpUsed,
+            final boolean alwaysReconnect,
+            final Integer idleMinutes,
+            final int minSize,
+            final int maxSize,
+            final int minSpareSize,
+            final int numExecutors,
+            final boolean addNodeOnlyIfRunning,
+            final boolean restrictUsage,
+            final String maxTotalUses,
+            final boolean disableTaskResubmit,
+            final Integer initOnlineTimeoutSec,
+            final Integer initOnlineCheckIntervalSec,
+            final Integer cloudStatusIntervalSec,
+            final boolean noDelayProvision,
+            final boolean scaleExecutorsByWeight,
+            final ExecutorScaler executorScaler) {
         super(StringUtils.isNotBlank(name) ? name : CloudNames.generateUnique(BASE_DEFAULT_FLEET_CLOUD_ID));
         init();
         this.credentialsId = credentialsId;
@@ -217,11 +216,11 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         this.cloudStatusIntervalSec = cloudStatusIntervalSec;
         this.noDelayProvision = noDelayProvision;
         this.scaleExecutorsByWeight = scaleExecutorsByWeight;
-        this.executorScaler = executorScaler == null ? new NoScaler().withNumExecutors(this.numExecutors) :
-                                                       executorScaler.withNumExecutors(this.numExecutors);
+        this.executorScaler = executorScaler == null
+                ? new NoScaler().withNumExecutors(this.numExecutors)
+                : executorScaler.withNumExecutors(this.numExecutors);
         if (fleet != null) {
-            this.stats = EC2Fleets.get(fleet).getState(
-                    getAwsCredentialsId(), region, endpoint, getFleet());
+            this.stats = EC2Fleets.get(fleet).getState(getAwsCredentialsId(), region, endpoint, getFleet());
         }
     }
 
@@ -344,7 +343,9 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     }
 
     // Visible for testing
-    synchronized ArrayList<ScheduledFuture<?>> getPlannedNodeScheduledFutures() { return plannedNodeScheduledFutures; }
+    synchronized ArrayList<ScheduledFuture<?>> getPlannedNodeScheduledFutures() {
+        return plannedNodeScheduledFutures;
+    }
 
     // Visible for testing
     synchronized void setPlannedNodeScheduledFutures(final ArrayList<ScheduledFuture<?>> futures) {
@@ -371,19 +372,22 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         this.stats = stats;
     }
 
-    // make maxTotalUses inaccessible from cloud for safety. Use {@link FleetNode#maxTotalUses} and {@link FleetNode#usesRemaining} instead.
+    // make maxTotalUses inaccessible from cloud for safety. Use {@link FleetNode#maxTotalUses} and {@link
+    // FleetNode#usesRemaining} instead.
     public boolean hasUnlimitedUsesForNodes() {
         return maxTotalUses == -1;
     }
 
     @Override
     public synchronized boolean hasExcessCapacity() {
-        if(stats == null) {
+        if (stats == null) {
             // Let plugin sync up with current state of fleet
             return false;
         }
-        if(stats.getNumDesired() - instanceIdsToTerminate.size() > maxSize) {
-            info("Fleet has excess capacity of %s more than the max allowed: %s", stats.getNumDesired() - instanceIdsToTerminate.size(), maxSize);
+        if (stats.getNumDesired() - instanceIdsToTerminate.size() > maxSize) {
+            info(
+                    "Fleet has excess capacity of %s more than the max allowed: %s",
+                    stats.getNumDesired() - instanceIdsToTerminate.size(), maxSize);
             return true;
         }
         return false;
@@ -397,7 +401,8 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     }
 
     @Override
-    public synchronized Collection<NodeProvisioner.PlannedNode> provision(@Nonnull final Cloud.CloudState cloudState, final int excessWorkload) {
+    public synchronized Collection<NodeProvisioner.PlannedNode> provision(
+            @Nonnull final Cloud.CloudState cloudState, final int excessWorkload) {
         Jenkins jenkinsInstance = Jenkins.get();
         if (jenkinsInstance.isQuietingDown()) {
             LOGGER.log(Level.FINE, "Not provisioning nodes, Jenkins instance is quieting down");
@@ -422,7 +427,9 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         }
 
         if (!stats.getState().isActive()) {
-            info("Fleet is in a non-active state '%s'. Skipping provision", stats.getState().getDetailed());
+            info(
+                    "Fleet is in a non-active state '%s'. Skipping provision",
+                    stats.getState().getDetailed());
             return Collections.emptyList();
         }
 
@@ -448,7 +455,9 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         for (int f = 0; f < toProvision; ++f) {
             final CompletableFuture<Node> completableFuture = new CompletableFuture<>();
             final NodeProvisioner.PlannedNode plannedNode = new NodeProvisioner.PlannedNode(
-                    String.format("FleetNode-%s-%d", getDisplayName(), getNextPlannedNodeCounter()), completableFuture, this.numExecutors);
+                    String.format("FleetNode-%s-%d", getDisplayName(), getNextPlannedNodeCounter()),
+                    completableFuture,
+                    this.numExecutors);
 
             resultList.add(plannedNode);
             plannedNodesCache.add(plannedNode);
@@ -458,16 +467,18 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             // is updated or removed before it can scale. After scaling, EC2FleetOnlineChecker will cancel the future
             // if something happens to the Fleet.
             // TODO: refactor to consolidate logic with EC2FleetOnlineChecker
-            final ScheduledFuture<?> scheduledFuture = EXECUTOR.schedule(() -> {
-                if (completableFuture.isDone()) {
-                    return;
-                }
-                info("Scaling timeout reached, removing node from Jenkins's plannedCapacitySnapshot");
-                // with complete(null) Jenkins will remove future from plannedCapacity without making a fuss
-                completableFuture.complete(null);
-                return;
-                },
-                getScheduledFutureTimeoutSec(), TimeUnit.SECONDS);
+            final ScheduledFuture<?> scheduledFuture = EXECUTOR.schedule(
+                    () -> {
+                        if (completableFuture.isDone()) {
+                            return;
+                        }
+                        info("Scaling timeout reached, removing node from Jenkins's plannedCapacitySnapshot");
+                        // with complete(null) Jenkins will remove future from plannedCapacity without making a fuss
+                        completableFuture.complete(null);
+                        return;
+                    },
+                    getScheduledFutureTimeoutSec(),
+                    TimeUnit.SECONDS);
             plannedNodeScheduledFutures.add(scheduledFuture);
         }
         return resultList;
@@ -483,8 +494,8 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
         // Make a snapshot of current cloud state to work with.
         // We should always work with the snapshot since data could be modified in another thread
-        FleetStateStats currentState = EC2Fleets.get(fleet).getState(
-                getAwsCredentialsId(), region, endpoint, getFleet());
+        FleetStateStats currentState =
+                EC2Fleets.get(fleet).getState(getAwsCredentialsId(), region, endpoint, getFleet());
 
         // Some Fleet implementations (e.g. EC2SpotFleet) reflect their state only at the end of modification
         if (currentState.getState().isModifying()) {
@@ -496,18 +507,23 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         final int currentToAdd;
         final Map<String, EC2AgentTerminationReason> currentInstanceIdsToTerminate;
         synchronized (this) {
-            if(minSpareSize > 0) {
-                // Check spare instances by considering FleetStateStats#getNumDesired so we account for newer instances which are in progress
-                final int currentSpareInstanceCount = getCurrentSpareInstanceCount(currentState, currentState.getNumDesired());
+            if (minSpareSize > 0) {
+                // Check spare instances by considering FleetStateStats#getNumDesired so we account for newer instances
+                // which are in progress
+                final int currentSpareInstanceCount =
+                        getCurrentSpareInstanceCount(currentState, currentState.getNumDesired());
                 final int additionalSpareInstancesRequired = minSpareSize - currentSpareInstanceCount;
-                fine("currentSpareInstanceCount: %s additionalSpareInstancesRequired: %s", currentSpareInstanceCount, additionalSpareInstancesRequired);
+                fine(
+                        "currentSpareInstanceCount: %s additionalSpareInstancesRequired: %s",
+                        currentSpareInstanceCount, additionalSpareInstancesRequired);
                 if (additionalSpareInstancesRequired > 0) {
                     toAdd = toAdd + additionalSpareInstancesRequired;
                 }
             }
             currentToAdd = toAdd;
 
-            // for computers currently busy doing work, wait until next update cycle to terminate corresponding instances (issue#363).
+            // for computers currently busy doing work, wait until next update cycle to terminate corresponding
+            // instances (issue#363).
             currentInstanceIdsToTerminate = filterOutBusyNodes();
         }
 
@@ -524,11 +540,13 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             removePlannedNodeScheduledFutures(currentToAdd);
 
             // since data could be changed between two sync blocks we need to recalculate target capacity
-            final int updatedTargetCapacity = Math.max(0,
-                    stats.getNumDesired() - instanceIdsToTerminate.size() + toAdd);
+            final int updatedTargetCapacity =
+                    Math.max(0, stats.getNumDesired() - instanceIdsToTerminate.size() + toAdd);
             // limit planned pool according to real target capacity
             while (plannedNodesCache.size() > updatedTargetCapacity) {
-                info("Planned number of nodes '%s' is greater than the targetCapacity '%s'. Canceling a node", plannedNodesCache.size(), updatedTargetCapacity);
+                info(
+                        "Planned number of nodes '%s' is greater than the targetCapacity '%s'. Canceling a node",
+                        plannedNodesCache.size(), updatedTargetCapacity);
                 final Iterator<NodeProvisioner.PlannedNode> iterator = plannedNodesCache.iterator();
                 final NodeProvisioner.PlannedNode plannedNodeToCancel = iterator.next();
                 iterator.remove();
@@ -541,14 +559,17 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
     private Map<String, EC2AgentTerminationReason> filterOutBusyNodes() {
         final Jenkins j = Jenkins.get();
-        final Map<String, EC2AgentTerminationReason> filteredInstanceIdsToTerminate = instanceIdsToTerminate.entrySet()
-                .stream()
-                .filter(e -> isSafeToTerminate(j.getComputer(e.getKey())))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        final Map<String, EC2AgentTerminationReason> filteredInstanceIdsToTerminate =
+                instanceIdsToTerminate.entrySet().stream()
+                        .filter(e -> isSafeToTerminate(j.getComputer(e.getKey())))
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-        final Set<String> filteredOutNonIdleIds = Sets.difference(instanceIdsToTerminate.keySet(), filteredInstanceIdsToTerminate.keySet());
+        final Set<String> filteredOutNonIdleIds =
+                Sets.difference(instanceIdsToTerminate.keySet(), filteredInstanceIdsToTerminate.keySet());
         if (filteredOutNonIdleIds.size() > 0) {
-            info("Skipping termination of the following instances until the next update cycle, as they are still busy doing some work: %s.", filteredOutNonIdleIds);
+            info(
+                    "Skipping termination of the following instances until the next update cycle, as they are still busy doing some work: %s.",
+                    filteredOutNonIdleIds);
         }
 
         return filteredInstanceIdsToTerminate;
@@ -576,7 +597,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         }
         Iterator<ScheduledFuture<?>> iterator = plannedNodeScheduledFutures.iterator();
         for (int i = 0; i < numToRemove; i++) {
-            if(!iterator.hasNext()){
+            if (!iterator.hasNext()) {
                 fine("Expected a scheduled future to exist but no more are present");
                 return false;
             }
@@ -588,18 +609,23 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     }
 
     private FleetStateStats updateByState(
-            final int currentToAdd, final Map<String, EC2AgentTerminationReason> currentInstanceIdsToTerminate, final FleetStateStats currentState) {
+            final int currentToAdd,
+            final Map<String, EC2AgentTerminationReason> currentInstanceIdsToTerminate,
+            final FleetStateStats currentState) {
         final Jenkins jenkins = Jenkins.get();
         final Ec2Client ec2 = Registry.getEc2Api().connect(getAwsCredentialsId(), region, endpoint);
 
         if (currentInstanceIdsToTerminate.size() > 0) {
-            // Re-verify each candidate atomically with removeNode under Queue.withLock; drop any that became busy (issue#436).
-            // AWS terminateInstances stays outside the lock — after removeNode the dispatcher can't assign tasks to the node.
+            // Re-verify each candidate atomically with removeNode under Queue.withLock; drop any that became busy
+            // (issue#436).
+            // AWS terminateInstances stays outside the lock — after removeNode the dispatcher can't assign tasks to the
+            // node.
             // Must run before targetCapacity is computed so dropped entries don't shrink the fleet.
             Queue.withLock(new Runnable() {
                 @Override
                 public void run() {
-                    final Iterator<Map.Entry<String, EC2AgentTerminationReason>> it = currentInstanceIdsToTerminate.entrySet().iterator();
+                    final Iterator<Map.Entry<String, EC2AgentTerminationReason>> it =
+                            currentInstanceIdsToTerminate.entrySet().iterator();
                     while (it.hasNext()) {
                         final Map.Entry<String, EC2AgentTerminationReason> entry = it.next();
                         final String instanceId = entry.getKey();
@@ -621,15 +647,21 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         }
 
         // Ensure target capacity is not negative (covers capacity updates from outside the plugin)
-        final int targetCapacity = Math.max(minSize,
+        final int targetCapacity = Math.max(
+                minSize,
                 Math.min(maxSize, currentState.getNumDesired() - currentInstanceIdsToTerminate.size() + currentToAdd));
 
-        // Modify target capacity when an instance is removed or added, even if the value of target capacity doesn't change.
-        // For example, if we remove an instance and add an instance the net change is 0, but we still make the API call.
-        // This lets us update the fleet settings with NoTermination policy, which lets us terminate instances on our own
-        if (currentToAdd > 0 || currentInstanceIdsToTerminate.size() > 0 || targetCapacity != currentState.getNumDesired()) {
-            EC2Fleets.get(fleet).modify(
-                    getAwsCredentialsId(), region, endpoint, fleet, targetCapacity, minSize, maxSize);
+        // Modify target capacity when an instance is removed or added, even if the value of target capacity doesn't
+        // change.
+        // For example, if we remove an instance and add an instance the net change is 0, but we still make the API
+        // call.
+        // This lets us update the fleet settings with NoTermination policy, which lets us terminate instances on our
+        // own
+        if (currentToAdd > 0
+                || currentInstanceIdsToTerminate.size() > 0
+                || targetCapacity != currentState.getNumDesired()) {
+            EC2Fleets.get(fleet)
+                    .modify(getAwsCredentialsId(), region, endpoint, fleet, targetCapacity, minSize, maxSize);
             info("Set target capacity to '%s'", targetCapacity);
         }
 
@@ -638,7 +670,8 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         if (currentInstanceIdsToTerminate.size() > 0) {
             if (EC2Fleets.get(fleet).isAutoScalingGroup()) {
                 fine("Terminating instances in AutoScalingGroup: %s", currentInstanceIdsToTerminate.keySet());
-                ((AutoScalingGroupFleet) EC2Fleets.get(fleet)).terminateInstances(awsCredentialsId, region, endpoint, currentInstanceIdsToTerminate.keySet());
+                ((AutoScalingGroupFleet) EC2Fleets.get(fleet))
+                        .terminateInstances(awsCredentialsId, region, endpoint, currentInstanceIdsToTerminate.keySet());
             } else {
                 fine("Terminating instances: %s", currentInstanceIdsToTerminate.keySet());
                 Registry.getEc2Api().terminateInstances(ec2, currentInstanceIdsToTerminate.keySet());
@@ -661,7 +694,10 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
         final Set<String> jenkinsInstances = new HashSet<>();
         for (final Node node : jenkins.getNodes()) {
-            if (node instanceof EC2FleetNode && ((EC2FleetCloud)((EC2FleetNode) node).getCloud()).getFleet().equals(fleet)) {
+            if (node instanceof EC2FleetNode
+                    && ((EC2FleetCloud) ((EC2FleetNode) node).getCloud())
+                            .getFleet()
+                            .equals(fleet)) {
                 jenkinsInstances.add(node.getNodeName());
             }
         }
@@ -670,7 +706,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         // contains Jenkins nodes that were once fleet instances but are no longer in the fleet
         final Set<String> jenkinsNodesWithoutInstance = new HashSet<>(jenkinsInstances);
         jenkinsNodesWithoutInstance.removeAll(fleetInstances);
-        if(!jenkinsNodesWithoutInstance.isEmpty()) {
+        if (!jenkinsNodesWithoutInstance.isEmpty()) {
             fine("Jenkins nodes without instance(s): %s", jenkinsNodesWithoutInstance);
         }
         // terminatedFleetInstances contains fleet instances that are terminated, stopped, stopping, or shutting down
@@ -678,13 +714,13 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
         // terminated are any current which cannot be described
         terminatedFleetInstances.removeAll(described.keySet());
-        if(!terminatedFleetInstances.isEmpty()) {
+        if (!terminatedFleetInstances.isEmpty()) {
             fine("Terminated Fleet instance(s): %s", terminatedFleetInstances);
         }
         // newFleetInstances contains running fleet instances that are not already Jenkins nodes
         final Map<String, Instance> newFleetInstances = new HashMap<>(described);
         for (final String instanceId : jenkinsInstances) newFleetInstances.remove(instanceId);
-        if(!newFleetInstances.isEmpty()) {
+        if (!newFleetInstances.isEmpty()) {
             fine("New instance(s) not yet registered as nodes in Jenkins: %s ", newFleetInstances.keySet());
         }
         // update caches
@@ -719,8 +755,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             // We tag new instances to help users to identify instances launched from plugin managed fleets.
             // If it fails we are fine to skip this call
             try {
-                Registry.getEc2Api().tagInstances(ec2, newFleetInstances.keySet(),
-                        EC2_INSTANCE_CLOUD_NAME_TAG, name);
+                Registry.getEc2Api().tagInstances(ec2, newFleetInstances.keySet(), EC2_INSTANCE_CLOUD_NAME_TAG, name);
             } catch (final Exception e) {
                 warning(e, "Failed to tag new instances: %s", newFleetInstances.keySet());
             }
@@ -762,24 +797,29 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
      * @param reason reason for termination
      * @return <code>true</code> if node scheduled for termination, otherwise <code>false</code>
      */
-    public synchronized boolean scheduleToTerminate(final String instanceId, final boolean ignoreMinConstraints,
-                                                    final EC2AgentTerminationReason reason) {
+    public synchronized boolean scheduleToTerminate(
+            final String instanceId, final boolean ignoreMinConstraints, final EC2AgentTerminationReason reason) {
         if (stats == null) {
             info("First update not done, skipping termination scheduling for '%s'", instanceId);
             return false;
         }
         // We can't remove instances beyond minSize or minSpareSize unless ignoreMinConstraints true
-        if(!ignoreMinConstraints) {
+        if (!ignoreMinConstraints) {
             if (minSize > 0 && stats.getNumActive() - instanceIdsToTerminate.size() <= minSize) {
-                info("Not scheduling instance '%s' for termination because we need a minimum of %s instance(s) running", instanceId, minSize);
+                info(
+                        "Not scheduling instance '%s' for termination because we need a minimum of %s instance(s) running",
+                        instanceId, minSize);
                 fine("cloud: %s, instanceIdsToTerminate: %s", this, instanceIdsToTerminate);
                 return false;
             }
             if (minSpareSize > 0) {
-                // Check spare instances by considering FleetStateStats#getNumActive as we want to consider only running instances
+                // Check spare instances by considering FleetStateStats#getNumActive as we want to consider only running
+                // instances
                 final int currentSpareInstanceCount = getCurrentSpareInstanceCount(stats, stats.getNumActive());
                 if (currentSpareInstanceCount - instanceIdsToTerminate.size() <= minSpareSize) {
-                    info("Not scheduling instance '%s' for termination because we need a minimum of %s spare instance(s) running", instanceId, minSpareSize);
+                    info(
+                            "Not scheduling instance '%s' for termination because we need a minimum of %s spare instance(s) running",
+                            instanceId, minSpareSize);
                     return false;
                 }
             }
@@ -825,10 +865,13 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         final Node n = jenkins.getNode(instanceId);
         if (n != null) {
             try {
-                info("Fleet '%s' no longer has the instance '%s'. Removing instance from Jenkins", getLabelString(), instanceId);
+                info(
+                        "Fleet '%s' no longer has the instance '%s'. Removing instance from Jenkins",
+                        getLabelString(), instanceId);
                 jenkins.removeNode(n);
             } catch (final Exception ex) {
-                throw new IllegalStateException(String.format("Error removing instance '%s' from Jenkins", instanceId), ex);
+                throw new IllegalStateException(
+                        String.format("Error removing instance '%s' from Jenkins", instanceId), ex);
             }
         }
     }
@@ -843,7 +886,10 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         final String instanceId = instance.instanceId();
 
         // instance state check enabled and not running, skip adding
-        if (addNodeOnlyIfRunning && InstanceStateName.RUNNING != InstanceStateName.fromValue(String.valueOf(instance.state().name()))) {
+        if (addNodeOnlyIfRunning
+                && InstanceStateName.RUNNING
+                        != InstanceStateName.fromValue(
+                                String.valueOf(instance.state().name()))) {
             return;
         }
 
@@ -851,8 +897,10 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         // Check if we have the address to use. Nodes don't get it immediately.
         if (address == null) {
             if (!privateIpUsed) {
-                info("Instance '%s' public IP address not assigned. Either it could take some time or" +
-                        " the Spot Request is not configured to assign public IPs", instance.instanceId());
+                info(
+                        "Instance '%s' public IP address not assigned. Either it could take some time or"
+                                + " the Spot Request is not configured to assign public IPs",
+                        instance.instanceId());
             }
             return; // wait more time, probably IP address not yet assigned
         }
@@ -867,12 +915,20 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
         int effectiveNumExecutors = this.executorScaler.scale(instance.instanceType(), stats, ec2);
 
-        final EC2FleetAutoResubmitComputerLauncher computerLauncher = new EC2FleetAutoResubmitComputerLauncher(
-                computerConnector.launch(address, TaskListener.NULL));
+        final EC2FleetAutoResubmitComputerLauncher computerLauncher =
+                new EC2FleetAutoResubmitComputerLauncher(computerConnector.launch(address, TaskListener.NULL));
         final Node.Mode nodeMode = restrictUsage ? Node.Mode.EXCLUSIVE : Node.Mode.NORMAL;
-        final EC2FleetNode node = new EC2FleetNode(instanceId, "Fleet agent for " + instanceId,
-                effectiveFsRoot, effectiveNumExecutors, nodeMode, labelString, new ArrayList<NodeProperty<?>>(),
-                this.name, computerLauncher, maxTotalUses);
+        final EC2FleetNode node = new EC2FleetNode(
+                instanceId,
+                "Fleet agent for " + instanceId,
+                effectiveFsRoot,
+                effectiveNumExecutors,
+                nodeMode,
+                labelString,
+                new ArrayList<NodeProperty<?>>(),
+                this.name,
+                computerLauncher,
+                maxTotalUses);
 
         // Initialize our retention strategy
         node.setRetentionStrategy(new EC2RetentionStrategy());
@@ -888,21 +944,24 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             future = new CompletableFuture<>();
         } else {
             // handle the standard case where this node came from one of our scale up events
-            final NodeProvisioner.PlannedNode plannedNode = plannedNodesCache.iterator().next();
+            final NodeProvisioner.PlannedNode plannedNode =
+                    plannedNodesCache.iterator().next();
             plannedNodesCache.remove(plannedNode);
             future = ((CompletableFuture<Node>) plannedNode.future);
         }
 
         // Use getters for timeout and interval as they provide a default value
         // when a user installs a new plugin version and doesn't recreate the cloud
-        EC2FleetOnlineChecker.start(node, future,
+        EC2FleetOnlineChecker.start(
+                node,
+                future,
                 TimeUnit.SECONDS.toMillis(getInitOnlineTimeoutSec()),
                 TimeUnit.SECONDS.toMillis(getInitOnlineCheckIntervalSec()));
     }
 
     private int getCurrentSpareInstanceCount(final FleetStateStats currentState, final int countOfInstances) {
         final int currentSpareInstanceCount = 0;
-        if(minSpareSize > 0) {
+        if (minSpareSize > 0) {
             final Jenkins jenkins = Jenkins.get();
             int currentBusyInstances = 0;
             for (final Computer computer : jenkins.getComputers()) {
@@ -913,7 +972,9 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                     }
 
                     // Do not count computer if it is not a part of the given fleet
-                    if (!Objects.equals(((EC2FleetCloud)((EC2FleetNodeComputer) computer).getCloud()).getFleet(), currentState.getFleetId())) {
+                    if (!Objects.equals(
+                            ((EC2FleetCloud) ((EC2FleetNodeComputer) computer).getCloud()).getFleet(),
+                            currentState.getFleetId())) {
                         continue;
                     }
                     currentBusyInstances++;
@@ -954,7 +1015,8 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     }
 
     @Extension
-    @SuppressWarnings("unused") @Symbol("eC2Fleet")
+    @SuppressWarnings("unused")
+    @Symbol("eC2Fleet")
     public static class DescriptorImpl extends Descriptor<Cloud> {
 
         public DescriptorImpl() {
@@ -976,24 +1038,27 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         }
 
         public ListBoxModel doFillAwsCredentialsIdItems() {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             return AWSCredentialsHelper.doFillCredentialsIdItems(Jenkins.get());
         }
 
         public ListBoxModel doFillRegionItems(@QueryParameter final String awsCredentialsId) {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             return RegionHelper.getRegionsListBoxModel(awsCredentialsId);
         }
 
         public FormValidation doCheckMaxTotalUses(@QueryParameter String value) {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             try {
                 int val = Integer.parseInt(value);
-                if (val >= -1)
-                    return FormValidation.ok();
+                if (val >= -1) return FormValidation.ok();
             } catch (NumberFormatException nfe) {
             }
             return FormValidation.error("Maximum Total Uses must be greater or equal to -1");
         }
 
         public FormValidation doCheckName(@QueryParameter final String name, @QueryParameter final String isNewCloud) {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             try {
                 Jenkins.checkGoodName(name);
             } catch (Failure e) {
@@ -1002,31 +1067,48 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
             // check if name is unique
             if (Boolean.valueOf(isNewCloud) && !CloudNames.isUnique(name)) {
-                return FormValidation.error("Please choose a unique name. Existing clouds: " + Jenkins.get().clouds.stream().map(c -> c.name).collect(Collectors.joining(",")));
-            }
-            else if (!Boolean.valueOf(isNewCloud) && CloudNames.isDuplicated(name)) {
+                return FormValidation.error("Please choose a unique name. Existing clouds: "
+                        + Jenkins.get().clouds.stream().map(c -> c.name).collect(Collectors.joining(",")));
+            } else if (!Boolean.valueOf(isNewCloud) && CloudNames.isDuplicated(name)) {
                 Set<String> uniqueNames = new HashSet<>();
-                Jenkins.get().clouds.forEach(cloud -> {uniqueNames.add(cloud.name);});
-                return FormValidation.error("This cloud name is not unique. Please choose a unique name and click save. Existing clouds: " + uniqueNames);
+                Jenkins.get().clouds.forEach(cloud -> {
+                    uniqueNames.add(cloud.name);
+                });
+                return FormValidation.error(
+                        "This cloud name is not unique. Please choose a unique name and click save. Existing clouds: "
+                                + uniqueNames);
             }
 
             return FormValidation.ok();
         }
 
-        public ListBoxModel doFillFleetItems(@QueryParameter final boolean showAllFleets,
-                                             @QueryParameter final String region,
-                                             @QueryParameter final String endpoint,
-                                             @QueryParameter final String awsCredentialsId,
-                                             @QueryParameter final String fleet) {
+        @RequirePOST
+        public ListBoxModel doFillFleetItems(
+                @QueryParameter final boolean showAllFleets,
+                @QueryParameter final String region,
+                @QueryParameter final String endpoint,
+                @QueryParameter final String awsCredentialsId,
+                @QueryParameter final String fleet) {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             final ListBoxModel model = new ListBoxModel();
             model.add(0, new Option("- please select -", "", true));
+            final String normalizedRegion = AwsRegionValidator.normalizeRegionName(region);
+            if (normalizedRegion != null && !AwsRegionValidator.isValidRegionName(normalizedRegion)) {
+                return model;
+            }
+            final String effectiveRegion = normalizedRegion != null ? normalizedRegion : region;
+            if (StringUtils.isNotBlank(endpoint) && !AwsEndpointValidator.isValidAwsEndpoint(endpoint)) {
+                return model;
+            }
             try {
                 for (final EC2Fleet EC2Fleet : EC2Fleets.all()) {
-                    EC2Fleet.describe(
-                            awsCredentialsId, region, endpoint, model, fleet, showAllFleets);
+                    EC2Fleet.describe(awsCredentialsId, effectiveRegion, endpoint, model, fleet, showAllFleets);
                 }
             } catch (final Exception ex) {
-                LOGGER.log(Level.WARNING, String.format("Cannot describe fleets in '%s' or by endpoint '%s'", region, endpoint), ex);
+                LOGGER.log(
+                        Level.WARNING,
+                        String.format("Cannot describe fleets in '%s' or by endpoint '%s'", effectiveRegion, endpoint),
+                        ex);
                 return model;
             }
 
@@ -1037,9 +1119,13 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             return CloudNames.generateUnique(BASE_DEFAULT_FLEET_CLOUD_ID);
         }
 
-        public Boolean isExistingCloudNameDuplicated(@QueryParameter final String name) { return CloudNames.isDuplicated(name); }
+        public Boolean isExistingCloudNameDuplicated(@QueryParameter final String name) {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+            return CloudNames.isDuplicated(name);
+        }
 
         public FormValidation doCheckFleet(@QueryParameter final String fleet) {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             if (StringUtils.isEmpty(fleet)) {
                 return FormValidation.error("Please select a valid EC2 Fleet");
             } else {
@@ -1047,23 +1133,41 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             }
         }
 
+        @RequirePOST
         public FormValidation doTestConnection(
                 @QueryParameter final String awsCredentialsId,
                 @QueryParameter final String region,
                 @QueryParameter final String endpoint,
                 @QueryParameter final String fleet) {
+            final String normalizedRegion = AwsRegionValidator.normalizeRegionName(region);
+            final String normalizedEndpoint = StringUtils.trimToNull(endpoint);
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+            if (normalizedRegion != null && !AwsRegionValidator.isValidRegionName(normalizedRegion)) {
+                return FormValidation.error("Region must be a valid AWS region name");
+            }
+            if (normalizedEndpoint != null) {
+                // Validate endpoint is a known AWS endpoint
+                if (!AwsEndpointValidator.isValidAwsEndpoint(normalizedEndpoint)) {
+                    return FormValidation.error(
+                            "Endpoint must be a valid AWS endpoint URL (e.g., amazonaws.com or amazonaws.com.cn for China regions)");
+                }
+            }
             // Check if any missing AWS Permissions
-            final AwsPermissionChecker awsPermissionChecker = new AwsPermissionChecker(awsCredentialsId, region, endpoint);
+            final AwsPermissionChecker awsPermissionChecker =
+                    new AwsPermissionChecker(awsCredentialsId, normalizedRegion, normalizedEndpoint);
             final List<String> missingPermissions = awsPermissionChecker.getMissingPermissions(fleet);
-            // TODO: DryRun does not work as expected for TerminateInstances and does not exists for UpdateAutoScalingGroup or ModifySpotFleetRequest
-            final String disclaimer = String.format("Skipping validation for following permissions: %s, %s, %s",
+            // TODO: DryRun does not work as expected for TerminateInstances and does not exists for
+            // UpdateAutoScalingGroup or ModifySpotFleetRequest
+            final String disclaimer = String.format(
+                    "Skipping validation for following permissions: %s, %s, %s",
                     AwsPermissionChecker.FleetAPI.TerminateInstances,
                     AwsPermissionChecker.FleetAPI.UpdateAutoScalingGroup,
                     AwsPermissionChecker.FleetAPI.ModifySpotFleetRequest);
-            if(missingPermissions.isEmpty()) {
+            if (missingPermissions.isEmpty()) {
                 return FormValidation.ok(String.format("Success! %s", disclaimer));
             }
-            final String errorMessage = String.format("Following AWS permissions are missing: %s ", String.join(", ", missingPermissions));
+            final String errorMessage =
+                    String.format("Following AWS permissions are missing: %s ", String.join(", ", missingPermissions));
             LOGGER.log(Level.WARNING, String.format("[TestConnection] %s", errorMessage));
             return FormValidation.error(String.format("%s %n %s", errorMessage, disclaimer));
         }
@@ -1076,11 +1180,12 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         }
     }
 
-    public static abstract class ExecutorScaler extends AbstractDescribableImpl<ExecutorScaler> implements ExtensionPoint {
+    public abstract static class ExecutorScaler extends AbstractDescribableImpl<ExecutorScaler>
+            implements ExtensionPoint {
 
         protected int numExecutors = 1;
 
-        protected ExecutorScaler(){}
+        protected ExecutorScaler() {}
 
         public abstract int scale(InstanceType instanceType, FleetStateStats stats, Ec2Client ec2);
 
@@ -1093,7 +1198,9 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             this.numExecutors = numExecutors;
         }
 
-        public ExecutorScaleDescriptor getDescriptor() { return (ExecutorScaleDescriptor) super.getDescriptor();}
+        public ExecutorScaleDescriptor getDescriptor() {
+            return (ExecutorScaleDescriptor) super.getDescriptor();
+        }
     }
 
     public static class ExecutorScaleDescriptor extends Descriptor<ExecutorScaler> {}
@@ -1104,12 +1211,16 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         public NoScaler() {}
 
         @Override
-        public int scale(InstanceType instanceType, FleetStateStats stats, Ec2Client ec2) { return numExecutors; }
+        public int scale(InstanceType instanceType, FleetStateStats stats, Ec2Client ec2) {
+            return numExecutors;
+        }
 
         @Extension
         public static class DescriptorImpl extends ExecutorScaleDescriptor {
             @Override
-            public String getDisplayName() { return "No scaling"; }
+            public String getDisplayName() {
+                return "No scaling";
+            }
         }
     }
 
@@ -1117,9 +1228,10 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
         @DataBoundConstructor
         public WeightedScaler() {}
+
         @Override
         public int scale(InstanceType instanceType, FleetStateStats stats, Ec2Client ec2) {
-            if(stats == null) {
+            if (stats == null) {
                 return numExecutors;
             }
 
@@ -1133,7 +1245,9 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         @Extension
         public static class DescriptorImpl extends ExecutorScaleDescriptor {
             @Override
-            public String getDisplayName() { return "Scale by weight";}
+            public String getDisplayName() {
+                return "Scale by weight";
+            }
         }
     }
 
@@ -1148,10 +1262,14 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         }
 
         @DataBoundSetter
-        public void setvCpuPerExecutor(int value) { this.vCpuPerExecutor = value; }
+        public void setvCpuPerExecutor(int value) {
+            this.vCpuPerExecutor = value;
+        }
 
         @DataBoundSetter
-        public void setMemoryGiBPerExecutor(int value) { this.memoryGiBPerExecutor = value; }
+        public void setMemoryGiBPerExecutor(int value) {
+            this.memoryGiBPerExecutor = value;
+        }
 
         public int getvCpuPerExecutor() {
             return vCpuPerExecutor;
@@ -1163,21 +1281,21 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
         @Override
         public int scale(final InstanceType instanceType, final FleetStateStats stats, final Ec2Client ec2) {
-            if(this.vCpuPerExecutor == 0 && this.memoryGiBPerExecutor == 0) {
+            if (this.vCpuPerExecutor == 0 && this.memoryGiBPerExecutor == 0) {
                 return numExecutors;
             }
 
             int vCPUNumExecutors = Integer.MAX_VALUE;
             int memoryNumExecutors = Integer.MAX_VALUE;
             InstanceTypeInfo instanceTypeInfo = getInstanceTypeInfo(ec2, instanceType);
-            if(this.vCpuPerExecutor != 0) {
+            if (this.vCpuPerExecutor != 0) {
                 int instanceVCPUs = instanceTypeInfo.vCpuInfo().defaultVCpus();
-                vCPUNumExecutors = Math.max(instanceVCPUs/this.vCpuPerExecutor, 1);
+                vCPUNumExecutors = Math.max(instanceVCPUs / this.vCpuPerExecutor, 1);
             }
 
-            if(this.memoryGiBPerExecutor != 0) {
-                long instanceMemory = instanceTypeInfo.memoryInfo().sizeInMiB()/1024;
-                memoryNumExecutors = Math.max(Math.round((float) instanceMemory /this.memoryGiBPerExecutor), 1);
+            if (this.memoryGiBPerExecutor != 0) {
+                long instanceMemory = instanceTypeInfo.memoryInfo().sizeInMiB() / 1024;
+                memoryNumExecutors = Math.max(Math.round((float) instanceMemory / this.memoryGiBPerExecutor), 1);
             }
             return Math.min(vCPUNumExecutors, memoryNumExecutors);
         }
@@ -1185,11 +1303,14 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         @Extension
         public static class DescriptorImpl extends ExecutorScaleDescriptor {
             @Override
-            public String getDisplayName() { return "Scale by node hardware";}
+            public String getDisplayName() {
+                return "Scale by node hardware";
+            }
         }
 
         private InstanceTypeInfo getInstanceTypeInfo(final Ec2Client ec2, final InstanceType instanceType) {
-            DescribeInstanceTypesRequest request = DescribeInstanceTypesRequest.builder().instanceTypes(instanceType)
+            DescribeInstanceTypesRequest request = DescribeInstanceTypesRequest.builder()
+                    .instanceTypes(instanceType)
                     .build();
             DescribeInstanceTypesResponse result = ec2.describeInstanceTypes(request);
             return result.instanceTypes().get(0);

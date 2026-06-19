@@ -3,6 +3,7 @@ package com.amazon.jenkins.ec2fleet;
 import hudson.slaves.SlaveComputer;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.HttpResponse;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -69,6 +70,7 @@ public class EC2FleetNodeComputer extends SlaveComputer {
      *
      * @return HttpResponse
      */
+    @RequirePOST
     @Override
     public HttpResponse doDoDelete() throws IOException {
         checkPermission(DELETE);
