@@ -82,7 +82,8 @@ class AutoResubmitIntegrationTest extends IntegrationTest {
                 10, false, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
-        List<QueueTaskFuture> rs = enqueTask(1);
+        // Use a longer-running task to ensure disconnect happens during execution.
+        List<QueueTaskFuture> rs = enqueTask(1, 30);
         triggerSuggestReviewNow();
 
         assertAtLeastOneNode();
@@ -173,7 +174,8 @@ class AutoResubmitIntegrationTest extends IntegrationTest {
                 "-1", true, 0, 0, 10, false, false, noScaling);
         j.jenkins.clouds.add(cloud);
 
-        List<QueueTaskFuture> rs = enqueTask(1);
+        // Use a longer-running task to ensure disconnect happens during execution.
+        List<QueueTaskFuture> rs = enqueTask(1, 30);
         triggerSuggestReviewNow();
 
         assertAtLeastOneNode();
