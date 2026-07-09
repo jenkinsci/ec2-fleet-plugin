@@ -4,6 +4,7 @@ import com.amazon.jenkins.ec2fleet.aws.EC2Api;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 
+import org.htmlunit.FailingHttpStatusCodeException;
 import org.htmlunit.html.DomElement;
 import org.htmlunit.html.HtmlAnchor;
 import org.htmlunit.html.HtmlForm;
@@ -146,9 +147,9 @@ class UiIntegrationTest {
                 10, false, false, noScaling);
         j.jenkins.clouds.add(cloud2);
 
-        HtmlPage page = j.createWebClient().goTo("configureClouds");
+        HtmlPage page = goToCloudsConfigurationPage();
 
-        List<DomElement> elementsByName = IntegrationTest.getElementsByNameWithoutJdk(page, "name");
+        List<DomElement> elementsByName = getCloudNameElements(page);
         assertEquals(2, elementsByName.size());
         assertEquals("a", ((HtmlInput) elementsByName.get(0)).getValueAttribute());
         assertEquals("b", ((HtmlInput) elementsByName.get(1)).getValueAttribute());
@@ -170,9 +171,9 @@ class UiIntegrationTest {
                 10, false, false, noScaling);
         j.jenkins.clouds.add(cloud2);
 
-        HtmlPage page = j.createWebClient().goTo("configureClouds");
+        HtmlPage page = goToCloudsConfigurationPage();
 
-        List<DomElement> elementsByName = IntegrationTest.getElementsByNameWithoutJdk(page, "name");
+        List<DomElement> elementsByName = getCloudNameElements(page);
         assertEquals(2, elementsByName.size());
         assertEquals("TestCloud1", ((HtmlInput) elementsByName.get(0)).getValueAttribute());
         assertEquals("TestCloud2", ((HtmlInput) elementsByName.get(1)).getValueAttribute());
@@ -321,9 +322,9 @@ class UiIntegrationTest {
             "-1", false, 0, 0,
             10, false, false, noScaling));
 
-        HtmlPage page = j.createWebClient().goTo("configureClouds");
+        HtmlPage page = goToCloudsConfigurationPage();
 
-        List<DomElement> elementsByName = IntegrationTest.getElementsByNameWithoutJdk(page, "name");
+        List<DomElement> elementsByName = getCloudNameElements(page);
         assertEquals(2, elementsByName.size());
         assertEquals("test-cloud", ((HtmlInput) elementsByName.get(0)).getValueAttribute());
         assertEquals("test-cloud", ((HtmlInput) elementsByName.get(1)).getValueAttribute());
@@ -334,5 +335,29 @@ class UiIntegrationTest {
             List<HtmlAnchor> configureLinks = row.getByXPath(".//a[contains(@href, '/configure')]");
             assertEquals(1, configureLinks.size());
         }
+    }
+
+    private List<DomElement> getCloudNameElements(final HtmlPage page) throws SAXException {
+        final List<DomElement> cloudNameElements = IntegrationTest.getElementsByNameWithoutJdk(page, "name");
+        if (!cloudNameElements.isEmpty()) {
+            return cloudNameElements;
+        }
+        return IntegrationTest.getElementsByNameWithoutJdk(page, "_.name");
+    }
+
+    private HtmlPage goToCloudsConfigurationPage() throws IOException, SAXException {
+        final JenkinsRule.WebClient webClient = j.createWebClient();
+        final List<String> candidates = Arrays.asList("configureClouds", "manage/configureClouds", "manage/cloud", "cloud", "configure");
+        for (final String candidate : candidates) {
+            try {
+                final HtmlPage page = webClient.goTo(candidate);
+                if (getCloudNameElements(page).size() >= 2) {
+                    return page;
+                }
+            } catch (FailingHttpStatusCodeException ignored) {
+                // Try next candidate URL because Jenkins core route names vary between versions.
+            }
+        }
+        return webClient.goTo("configure");
     }
 }

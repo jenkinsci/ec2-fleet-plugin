@@ -26,6 +26,7 @@ import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 import com.amazon.jenkins.ec2fleet.fleet.EC2SpotFleet;
 import hudson.ExtensionList;
+import hudson.PluginManager;
 import hudson.model.Computer;
 import hudson.model.Label;
 import hudson.model.LabelFinder;
@@ -92,6 +93,9 @@ class EC2FleetCloudTest {
 
     @Mock
     private Jenkins jenkins;
+
+    @Mock
+    private PluginManager pluginManager;
 
     @Mock
     private EC2Fleet ec2Fleet;
@@ -194,6 +198,7 @@ class EC2FleetCloudTest {
         mockedEc2Fleets.when(() -> EC2Fleets.get(anyString())).thenReturn(ec2Fleet);
         mockedJenkins = Mockito.mockStatic(Jenkins.class);
         mockedJenkins.when(Jenkins::get).thenReturn(jenkins);
+        Mockito.when(jenkins.getPluginManager()).thenReturn(pluginManager);
 
         Mockito.when(idleComputer.isIdle()).thenReturn(true);
         Mockito.when(busyComputer.isIdle()).thenReturn(false);
