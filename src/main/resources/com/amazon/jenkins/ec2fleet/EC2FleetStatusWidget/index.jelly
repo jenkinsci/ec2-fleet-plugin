@@ -1,16 +1,32 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
-    <l:pane width="3" title="EC2 Fleet Status">
-        <tr>
-            <td colspan="3" align="center" style="padding: 3px 0px;">
-                <j:forEach var = "fleet" items = "${it.statusList}">
-                    <li style="font-weight: bold;">${fleet.id}</li>
-                    <div>State: ${fleet.state},
-                        label: "${fleet.label}", nodes: ${fleet.numActive}, target: ${fleet.numDesired}
-                    </div>
-                    <br/>
-                </j:forEach>
-            </td>
-        </tr>
-    </l:pane>
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout">
+  <l:pane
+      width="1"
+      title="EC2 Fleet Status"
+      id="ec2-fleet-status-widget">
+    <j:if test="${empty(it.statusList)}">
+      <tr>
+        <td>
+          <l:notice title="No fleets found" icon="symbol-cloud" />
+        </td>
+      </tr>
+    </j:if>
+    <j:if test="${!empty(it.statusList)}">
+      <tr>
+        <td class="jenkins-!-padding-left-2">
+          <j:forEach var="fleet" items="${it.statusList}">
+            <div class="jenkins-!-margin-bottom-2">
+              <div>
+                <strong>${fleet.id}</strong>
+                <span class="jenkins-!-text-color-secondary"> · State: ${fleet.state}</span>
+              </div>
+              <div class="jenkins-!-text-color-secondary">
+                Label: ${fleet.label} · Active: ${fleet.numActive} · Target: ${fleet.numDesired}
+              </div>
+            </div>
+          </j:forEach>
+        </td>
+      </tr>
+    </j:if>
+  </l:pane>
 </j:jelly>
