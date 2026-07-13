@@ -18,10 +18,10 @@
             <div class="jenkins-!-margin-bottom-2">
               <div>
                 <strong>${fleet.id}</strong>
-                <span class="jenkins-!-text-color-secondary"> · State: ${fleet.state}</span>
+                <span class="jenkins-!-text-color-secondary"> · State: ${fleet.state} · Active: ${fleet.numActive} · Desired: ${fleet.numDesired}</span>
               </div>
               <div class="jenkins-!-text-color-secondary">
-                Label: ${fleet.label} · Active: ${fleet.numActive} · Target: ${fleet.numDesired}
+                Label(s): ${fleet.label}
               </div>
             </div>
           </j:forEach>
