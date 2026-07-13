@@ -1,6 +1,6 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout">
-    <j:if test="${!empty(it.configuredEnvironmentVariables)}">
+    <j:if test="${it.configuredEnvironmentVariablesVisible}">
         <div class="jenkins-!-margin-bottom-3">
             <h2>${%configuredEnvironmentVariables}</h2>
             <table class="jenkins-table jenkins-table--small jenkins-table--auto-width">

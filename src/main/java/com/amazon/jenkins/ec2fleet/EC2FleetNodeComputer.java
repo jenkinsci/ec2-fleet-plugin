@@ -52,6 +52,10 @@ public class EC2FleetNodeComputer extends SlaveComputer {
 
     @Nonnull
     public Map<String, String> getConfiguredEnvironmentVariables() {
+        if (!hasPermission(CONFIGURE)) {
+            return Collections.emptyMap();
+        }
+
         final EC2FleetNode node = getNode();
         if (node == null) {
             return Collections.emptyMap();
@@ -68,6 +72,10 @@ public class EC2FleetNodeComputer extends SlaveComputer {
             return Collections.emptyMap();
         }
         return new LinkedHashMap<>(envVars);
+    }
+
+    public boolean isConfiguredEnvironmentVariablesVisible() {
+        return hasPermission(CONFIGURE) && !getConfiguredEnvironmentVariables().isEmpty();
     }
 
     /**

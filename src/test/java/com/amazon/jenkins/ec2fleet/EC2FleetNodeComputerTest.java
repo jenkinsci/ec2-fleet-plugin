@@ -90,6 +90,7 @@ class EC2FleetNodeComputerTest {
 
         EC2FleetNodeComputer computer = spy(new EC2FleetNodeComputer(agent));
         doReturn(agent).when(computer).getNode();
+        doReturn(true).when(computer).hasPermission(EC2FleetNodeComputer.CONFIGURE);
 
         assertEquals(2, computer.getConfiguredEnvironmentVariables().size());
         assertEquals("1", computer.getConfiguredEnvironmentVariables().get("A"));
@@ -105,8 +106,57 @@ class EC2FleetNodeComputerTest {
 
         EC2FleetNodeComputer computer = spy(new EC2FleetNodeComputer(agent));
         doReturn(agent).when(computer).getNode();
+        doReturn(true).when(computer).hasPermission(EC2FleetNodeComputer.CONFIGURE);
 
         assertTrue(computer.getConfiguredEnvironmentVariables().isEmpty());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void getConfiguredEnvironmentVariables_returns_empty_without_configure_permission() {
+        final DescribableList properties = new DescribableList(agent);
+        final EnvironmentVariablesNodeProperty envProperty = new EnvironmentVariablesNodeProperty();
+        envProperty.getEnvVars().put("SECRET", "value");
+        properties.add(envProperty);
+        when(agent.getNodeProperties()).thenReturn(properties);
+
+        EC2FleetNodeComputer computer = spy(new EC2FleetNodeComputer(agent));
+        doReturn(agent).when(computer).getNode();
+        doReturn(false).when(computer).hasPermission(EC2FleetNodeComputer.CONFIGURE);
+
+        assertTrue(computer.getConfiguredEnvironmentVariables().isEmpty());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void isConfiguredEnvironmentVariablesVisible_returns_false_without_configure_permission() {
+        final DescribableList properties = new DescribableList(agent);
+        final EnvironmentVariablesNodeProperty envProperty = new EnvironmentVariablesNodeProperty();
+        envProperty.getEnvVars().put("SECRET", "value");
+        properties.add(envProperty);
+        when(agent.getNodeProperties()).thenReturn(properties);
+
+        EC2FleetNodeComputer computer = spy(new EC2FleetNodeComputer(agent));
+        doReturn(agent).when(computer).getNode();
+        doReturn(false).when(computer).hasPermission(EC2FleetNodeComputer.CONFIGURE);
+
+        assertTrue(!computer.isConfiguredEnvironmentVariablesVisible());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void isConfiguredEnvironmentVariablesVisible_returns_true_with_configure_permission_and_values() {
+        final DescribableList properties = new DescribableList(agent);
+        final EnvironmentVariablesNodeProperty envProperty = new EnvironmentVariablesNodeProperty();
+        envProperty.getEnvVars().put("A", "1");
+        properties.add(envProperty);
+        when(agent.getNodeProperties()).thenReturn(properties);
+
+        EC2FleetNodeComputer computer = spy(new EC2FleetNodeComputer(agent));
+        doReturn(agent).when(computer).getNode();
+        doReturn(true).when(computer).hasPermission(EC2FleetNodeComputer.CONFIGURE);
+
+        assertTrue(computer.isConfiguredEnvironmentVariablesVisible());
     }
 
 }
