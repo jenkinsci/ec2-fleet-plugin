@@ -1,5 +1,7 @@
 package com.amazon.jenkins.ec2fleet;
 
+import hudson.EnvVars;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.SlaveComputer;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.HttpResponse;
@@ -9,6 +11,9 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.ThreadSafe;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -43,6 +48,26 @@ public class EC2FleetNodeComputer extends SlaveComputer {
     public AbstractEC2FleetCloud getCloud() {
         final EC2FleetNode node = getNode();
         return node == null ? null : node.getCloud();
+    }
+
+    @Nonnull
+    public Map<String, String> getConfiguredEnvironmentVariables() {
+        final EC2FleetNode node = getNode();
+        if (node == null) {
+            return Collections.emptyMap();
+        }
+
+        final EnvironmentVariablesNodeProperty environmentVariablesNodeProperty =
+                node.getNodeProperties().get(EnvironmentVariablesNodeProperty.class);
+        if (environmentVariablesNodeProperty == null) {
+            return Collections.emptyMap();
+        }
+
+        final EnvVars envVars = environmentVariablesNodeProperty.getEnvVars();
+        if (envVars == null || envVars.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return new LinkedHashMap<>(envVars);
     }
 
     /**

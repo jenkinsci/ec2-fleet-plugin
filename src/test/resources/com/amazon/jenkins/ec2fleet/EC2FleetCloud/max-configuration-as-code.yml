@@ -26,4 +26,9 @@ jenkins:
         cloudStatusIntervalSec: 11
         disableTaskResubmit: true
         noDelayProvision: true
+        environmentVariables:
+          - name: JAVA_TOOL_OPTIONS
+            value: "-Dfile.encoding=UTF-8"
+          - name: FLEET_ID
+            value: "my-fleet"
         executorScaler: weightedScaler
