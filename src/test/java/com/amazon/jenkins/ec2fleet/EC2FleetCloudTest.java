@@ -2297,6 +2297,76 @@ class EC2FleetCloudTest {
                 fleetCloud.getInstanceIdsToTerminate().keySet());
     }
 
+    // A computer that momentarily fails to resolve (null) while its Node still exists must NOT be
+    // terminated -- only a genuine orphan (no Node AND no Computer) is safe to reap. Guards against a busy
+    // agent being swept into a scale-in during a (re)connection/resync window when getComputer() is null.
+    @Test
+    void update_shouldNotTerminate_whenComputerNullButNodeStillExists() {
+        // given
+        when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class)))
+                .thenReturn(new HashMap<String, Instance>() {
+                    {
+                        put(
+                                "i-1",
+                                Instance.builder()
+                                        .publicIpAddress("p-ip")
+                                        .instanceId("i-1")
+                                        .build());
+                    }
+                });
+        Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(new FleetStateStats(
+                        "fleetId",
+                        1,
+                        FleetStateStats.State.active(),
+                        Collections.singleton("i-1"),
+                        Collections.emptyMap()));
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud(
+                "TestCloud",
+                "credId",
+                null,
+                "region",
+                "",
+                "fleetId",
+                "",
+                null,
+                Mockito.mock(ComputerConnector.class),
+                false,
+                false,
+                0,
+                0,
+                2,
+                0,
+                1,
+                false,
+                false,
+                "-1",
+                false,
+                0,
+                0,
+                10,
+                false,
+                false,
+                noScaling);
+
+        // Computer momentarily unresolved (null), but the Node still exists (e.g. mid-reconnect / resync).
+        when(jenkins.getComputer("i-1")).thenReturn(null);
+        when(jenkins.getNode("i-1")).thenReturn(Mockito.mock(hudson.model.Node.class));
+
+        fleetCloud.scheduleToTerminate("i-1", false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
+
+        // when
+        fleetCloud.update();
+
+        // then - not terminated; kept for a future cycle once the computer resolves
+        verify(ec2Api, never()).terminateInstances(any(Ec2Client.class), any(Set.class));
+        assertEquals(
+                Collections.singleton("i-1"),
+                fleetCloud.getInstanceIdsToTerminate().keySet());
+    }
+
     // issue#436: defense-in-depth against a partial mock where isIdle() disagrees with countBusy().
     @Test
     void update_shouldNotTerminate_whenCountBusyGreaterThanZero() {

@@ -561,7 +561,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         final Jenkins j = Jenkins.get();
         final Map<String, EC2AgentTerminationReason> filteredInstanceIdsToTerminate =
                 instanceIdsToTerminate.entrySet().stream()
-                        .filter(e -> isSafeToTerminate(j.getComputer(e.getKey())))
+                        .filter(e -> isSafeToTerminate(j, e.getKey()))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         final Set<String> filteredOutNonIdleIds =
@@ -576,16 +576,29 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     }
 
     /**
-     * Returns whether the given {@link Computer} is safe to terminate, i.e. not running any builds and
-     * not available for the queue to dispatch new work to. A null computer is treated as safe, since
-     * the node is already gone from Jenkins.
+     * Returns whether the instance backing {@code instanceId} is safe to terminate, i.e. it is not
+     * running any builds and is not available for the queue to dispatch new work to.
+     * <p>
+     * When the {@link Computer} cannot be resolved, the outcome depends on whether a {@link Node}
+     * still exists: if neither the node nor the computer is present the instance is a genuine orphan
+     * (already gone from Jenkins) and is safe to terminate; but if the node still exists while the
+     * computer is only momentarily unresolved (e.g. during (re)connection or a fleet resync),
+     * termination is deferred so that an agent which may be running a build is never swept into a
+     * scale-in. Previously a {@code null} computer was unconditionally treated as safe, which allowed
+     * a busy agent to be terminated whenever its computer briefly failed to resolve.
      * <p>
      * Callers scheduling a termination are expected to first mark the computer as not accepting tasks
      * (see {@link EC2RetentionStrategy} and {@link EC2FleetNodeComputer#doDoDelete()}), so that the
      * queue cannot bind new work to it between the check here and the call to terminate on EC2.
      */
-    private static boolean isSafeToTerminate(final Computer c) {
-        if (c == null) return true;
+    private static boolean isSafeToTerminate(final Jenkins j, final String instanceId) {
+        final Computer c = j.getComputer(instanceId);
+        if (c == null) {
+            // No computer: only a genuine orphan (no Node either) is safe to reap. A node that still
+            // exists without a resolved computer is transient -> defer rather than risk terminating a
+            // busy agent whose computer momentarily failed to resolve.
+            return j.getNode(instanceId) == null;
+        }
         if (c.countBusy() > 0) return false;
         if (c.isAcceptingTasks()) return false;
         return c.isIdle();
@@ -629,7 +642,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                     while (it.hasNext()) {
                         final Map.Entry<String, EC2AgentTerminationReason> entry = it.next();
                         final String instanceId = entry.getKey();
-                        if (!isSafeToTerminate(jenkins.getComputer(instanceId))) {
+                        if (!isSafeToTerminate(jenkins, instanceId)) {
                             it.remove();
                             continue;
                         }
