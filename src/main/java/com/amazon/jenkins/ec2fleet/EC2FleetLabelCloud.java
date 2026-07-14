@@ -19,7 +19,6 @@ import hudson.model.Queue;
 import hudson.model.TaskListener;
 import hudson.slaves.Cloud;
 import hudson.slaves.ComputerConnector;
-import hudson.slaves.NodeProperty;
 import hudson.slaves.NodeProvisioner;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
@@ -46,6 +45,7 @@ import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.interceptor.RequirePOST;
@@ -104,6 +104,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
      * @see NoDelayProvisionStrategy
      */
     private final boolean noDelayProvision;
+    private List<CloudEnvironmentVariable> environmentVariables = Collections.emptyList();
 
     private transient Map<String, State> states;
 
@@ -167,6 +168,15 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
 
     public boolean isDisableTaskResubmit() {
         return disableTaskResubmit;
+    }
+
+    public List<CloudEnvironmentVariable> getEnvironmentVariables() {
+        return environmentVariables;
+    }
+
+    @DataBoundSetter
+    public void setEnvironmentVariables(final List<CloudEnvironmentVariable> environmentVariables) {
+        this.environmentVariables = NodeEnvironmentVariables.normalize(environmentVariables);
     }
 
     public int getInitOnlineTimeoutSec() {
@@ -524,6 +534,17 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
             //                    }
             //                }
             //            }
+            for (final String instanceId : jenkinsInstances) {
+                final Node node = jenkins.getNode(instanceId);
+                if (node == null) {
+                    continue;
+                }
+                try {
+                    NodeEnvironmentVariables.reconcile(node, environmentVariables);
+                } catch (final Exception ex) {
+                    warning(ex, "Failed to set environment variables on node '%s': ", instanceId, ex.toString());
+                }
+            }
 
             // If we have new instances - create nodes for them!
             if (newFleetInstances.size() > 0) {
@@ -599,6 +620,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
     }
 
     private Object readResolve() {
+        environmentVariables = NodeEnvironmentVariables.normalize(environmentVariables);
         init();
         return this;
     }
@@ -655,7 +677,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
                 effectiveNumExecutors,
                 nodeMode,
                 labelString,
-                new ArrayList<NodeProperty<?>>(),
+                NodeEnvironmentVariables.toNodeProperties(environmentVariables),
                 this.name,
                 computerLauncher,
                 -1);

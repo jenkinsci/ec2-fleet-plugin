@@ -16,7 +16,9 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -228,6 +230,11 @@ class CloudNannyTest {
     void doRun_updatesCloudsWithScaler_whenScalerIsNull() {
         when(cloud1.isScaleExecutorsByWeight()).thenReturn(true);
         when(cloud2.isScaleExecutorsByWeight()).thenReturn(false);
+        when(cloud1.getEnvironmentVariables())
+                .thenReturn(Collections.singletonList(new CloudEnvironmentVariable("A", "1")));
+        when(cloud2.getEnvironmentVariables()).thenReturn(Arrays.asList(
+                new CloudEnvironmentVariable("B", "2"),
+                new CloudEnvironmentVariable("C", "3")));
 
         clouds.add(cloud1);
         clouds.add(cloud2);
@@ -240,5 +247,15 @@ class CloudNannyTest {
 
         assertEquals(EC2FleetCloud.WeightedScaler.class, cloud1.getExecutorScaler().getClass());
         assertEquals(EC2FleetCloud.NoScaler.class, cloud2.getExecutorScaler().getClass());
+        List<CloudEnvironmentVariable> envVars1 = cloud1.getEnvironmentVariables();
+        List<CloudEnvironmentVariable> envVars2 = cloud2.getEnvironmentVariables();
+        assertEquals(1, envVars1.size());
+        assertEquals("A", envVars1.get(0).getName());
+        assertEquals("1", envVars1.get(0).getValue());
+        assertEquals(2, envVars2.size());
+        assertEquals("B", envVars2.get(0).getName());
+        assertEquals("2", envVars2.get(0).getValue());
+        assertEquals("C", envVars2.get(1).getName());
+        assertEquals("3", envVars2.get(1).getValue());
     }
 }

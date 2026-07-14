@@ -13,7 +13,6 @@ import hudson.ExtensionPoint;
 import hudson.model.*;
 import hudson.slaves.Cloud;
 import hudson.slaves.ComputerConnector;
-import hudson.slaves.NodeProperty;
 import hudson.slaves.NodeProvisioner;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
@@ -135,6 +134,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
      * @see NoDelayProvisionStrategy
      */
     private final boolean noDelayProvision;
+    private List<CloudEnvironmentVariable> environmentVariables = Collections.emptyList();
 
     /**
      * {@link EC2FleetCloud#update()} updating this field, this is one thread
@@ -242,6 +242,15 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
     public boolean isDisableTaskResubmit() {
         return disableTaskResubmit;
+    }
+
+    public List<CloudEnvironmentVariable> getEnvironmentVariables() {
+        return environmentVariables;
+    }
+
+    @DataBoundSetter
+    public void setEnvironmentVariables(final List<CloudEnvironmentVariable> environmentVariables) {
+        this.environmentVariables = NodeEnvironmentVariables.normalize(environmentVariables);
     }
 
     public int getInitOnlineTimeoutSec() {
@@ -748,6 +757,11 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                     warning(ex, "Failed to set label on node '%s': ", instanceId, ex.toString());
                 }
             }
+            try {
+                NodeEnvironmentVariables.reconcile(node, environmentVariables);
+            } catch (final Exception ex) {
+                warning(ex, "Failed to set environment variables on node '%s': ", instanceId, ex.toString());
+            }
         }
 
         // If we have new instances - create nodes for them!
@@ -849,6 +863,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     }
 
     private Object readResolve() {
+        environmentVariables = NodeEnvironmentVariables.normalize(environmentVariables);
         init();
         return this;
     }
@@ -925,7 +940,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                 effectiveNumExecutors,
                 nodeMode,
                 labelString,
-                new ArrayList<NodeProperty<?>>(),
+                NodeEnvironmentVariables.toNodeProperties(environmentVariables),
                 this.name,
                 computerLauncher,
                 maxTotalUses);

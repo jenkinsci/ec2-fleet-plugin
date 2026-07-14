@@ -67,6 +67,7 @@ class EC2FleetCloudConfigurationAsCodeTest {
         assertEquals(10, cloud.getCloudStatusIntervalSec());
         assertFalse(cloud.isDisableTaskResubmit());
         assertFalse(cloud.isNoDelayProvision());
+        assertTrue(cloud.getEnvironmentVariables().isEmpty());
     }
 
     @Test
@@ -96,6 +97,11 @@ class EC2FleetCloudConfigurationAsCodeTest {
         assertTrue(cloud.isDisableTaskResubmit());
         assertTrue(cloud.isNoDelayProvision());
         assertEquals("xx", cloud.getAwsCredentialsId());
+        assertEquals(2, cloud.getEnvironmentVariables().size());
+        assertEquals("JAVA_TOOL_OPTIONS", cloud.getEnvironmentVariables().get(0).getName());
+        assertEquals("-Dfile.encoding=UTF-8", cloud.getEnvironmentVariables().get(0).getValue());
+        assertEquals("FLEET_ID", cloud.getEnvironmentVariables().get(1).getName());
+        assertEquals("my-fleet", cloud.getEnvironmentVariables().get(1).getValue());
 
         SSHConnector sshConnector = (SSHConnector) cloud.getComputerConnector();
         assertEquals(NonVerifyingKeyVerificationStrategy.class, sshConnector.getSshHostKeyVerificationStrategy().getClass());
