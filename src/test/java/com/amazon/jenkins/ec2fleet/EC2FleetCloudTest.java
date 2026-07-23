@@ -2160,6 +2160,7 @@ class EC2FleetCloudTest {
         final AutoScalingGroupFleet autoScalingGroupFleet = mock(AutoScalingGroupFleet.class);
         when(EC2Fleets.get(anyString())).thenReturn(autoScalingGroupFleet);
         when(autoScalingGroupFleet.isAutoScalingGroup()).thenReturn(true);
+        when(autoScalingGroupFleet.hasWarmPoolWithInstanceReuse(anyString(), any(), any(), anyString())).thenReturn(true);
 
         final FleetStateStats stats = new FleetStateStats("fleetId", 1, FleetStateStats.State.active(),
                 Collections.singleton("i-0"), Collections.emptyMap());
@@ -2181,9 +2182,43 @@ class EC2FleetCloudTest {
         fleetCloud.update();
 
         // Assert - verify removeScaleInProtection is called for scale-down reasons
-        // ASG will terminate the instance when desired capacity is reduced
+        // when a warm pool with instance reuse is configured; ASG will move the instance
+        // to the warm pool when desired capacity is reduced
         verify(autoScalingGroupFleet).removeScaleInProtection(anyString(), any(), any(), eq("fleetId"), eq(Collections.singleton("i-0")));
         verify(autoScalingGroupFleet, never()).terminateInstances(anyString(), any(), any(), anyString(), any());
+    }
+
+    @Test
+    void update_shouldTerminateInstancesInAutoScalingGroupForScaleDownWithoutWarmPool() throws IllegalAccessException, NoSuchFieldException {
+        // Arrange
+        final AutoScalingGroupFleet autoScalingGroupFleet = mock(AutoScalingGroupFleet.class);
+        when(EC2Fleets.get(anyString())).thenReturn(autoScalingGroupFleet);
+        when(autoScalingGroupFleet.isAutoScalingGroup()).thenReturn(true);
+        when(autoScalingGroupFleet.hasWarmPoolWithInstanceReuse(anyString(), any(), any(), anyString())).thenReturn(false);
+
+        final FleetStateStats stats = new FleetStateStats("fleetId", 1, FleetStateStats.State.active(),
+                Collections.singleton("i-0"), Collections.emptyMap());
+        when(autoScalingGroupFleet.getState(anyString(), any(), any(), anyString())).thenReturn(stats);
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud("TestCloud", "credId", null, "region",
+                null, "fleetId", null, null, mock(ComputerConnector.class), false, false,
+                0, 0, 10, 0, 1, false, false, null, false, null, null, null, false, false, null);
+
+        // Set up instanceIdsToTerminate with IDLE_FOR_TOO_LONG (scale-down reason)
+        HashMap<String, EC2AgentTerminationReason> toTerminate = new HashMap<>();
+        toTerminate.put("i-0", EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
+        fleetCloud.setStats(stats);
+        Field field = EC2FleetCloud.class.getDeclaredField("instanceIdsToTerminate");
+        field.setAccessible(true);
+        field.set(fleetCloud, toTerminate);
+
+        // Act
+        fleetCloud.update();
+
+        // Assert - without a warm pool with instance reuse, scale-down falls back to
+        // terminating the instance directly (pre-warm-pool behavior)
+        verify(autoScalingGroupFleet).terminateInstances(anyString(), any(), any(), eq("fleetId"), eq(Collections.singleton("i-0")));
+        verify(autoScalingGroupFleet, never()).removeScaleInProtection(anyString(), any(), any(), anyString(), any());
     }
 
     @Test

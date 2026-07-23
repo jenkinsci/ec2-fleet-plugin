@@ -128,6 +128,7 @@ Add an inline policy to the IAM user or EC2 instance role to allow it to use EC2
       "Effect": "Allow",
       "Action": [
         "autoscaling:DescribeAutoScalingGroups",
+        "autoscaling:DescribeWarmPool",
         "autoscaling:UpdateAutoScalingGroup",
         "autoscaling:SetInstanceProtection",
         "autoscaling:TerminateInstanceInAutoScalingGroup"

@@ -128,6 +128,36 @@ public class AutoScalingGroupFleet implements EC2Fleet {
     }
 
     /**
+     * Checks whether this Auto Scaling Group has a warm pool configured with an instance reuse
+     * policy that reuses instances on scale-in (i.e. {@code ReuseOnScaleIn=true}).
+     *
+     * Only in that case is it safe to remove scale-in protection and let the ASG take the instance
+     * naturally, since the instance will be moved to the warm pool rather than terminated outright.
+     * Otherwise the plugin falls back to explicitly terminating the instance via
+     * {@link #terminateInstances(String, String, String, String, Collection)}, matching the
+     * pre-warm-pool behavior (AWS recommends calling terminateInstanceInAutoScalingGroup directly
+     * to avoid scaling lag in high volume environments).
+     */
+    public boolean hasWarmPoolWithInstanceReuse(final String awsCredentialsId, final String regionName,
+                                                 final String endpoint, final String autoScalingGroupName) {
+        final AutoScalingClient client = createClient(awsCredentialsId, regionName, endpoint);
+        try {
+            final DescribeWarmPoolResponse response = client.describeWarmPool(DescribeWarmPoolRequest.builder()
+                    .autoScalingGroupName(autoScalingGroupName)
+                    .build());
+            final WarmPoolConfiguration warmPoolConfiguration = response.warmPoolConfiguration();
+            return warmPoolConfiguration != null
+                    && warmPoolConfiguration.instanceReusePolicy() != null
+                    && Boolean.TRUE.equals(warmPoolConfiguration.instanceReusePolicy().reuseOnScaleIn());
+        } catch (Exception e) {
+            LOGGER.warning(String.format(
+                    "Failed to describe warm pool for Auto Scaling group %s, assuming no warm pool: %s",
+                    autoScalingGroupName, e.getMessage()));
+            return false;
+        }
+    }
+
+    /**
      * Removes scale-in protection from the specified instances, allowing the ASG to terminate them
      * when the desired capacity is reduced (which happens via the modify() call before this method is invoked).
      *

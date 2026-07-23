@@ -615,14 +615,22 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                 }
             });
             if(EC2Fleets.get(fleet).isAutoScalingGroup()){
+                final AutoScalingGroupFleet asgFleet = (AutoScalingGroupFleet) EC2Fleets.get(fleet);
+                // Only reuse the ASG's natural scale-in (remove protection, let ASG move instance to
+                // warm pool) when a warm pool with an instance reuse policy is actually configured.
+                // Otherwise keep the pre-warm-pool behavior of terminating instances directly.
+                final boolean hasWarmPoolWithInstanceReuse =
+                        asgFleet.hasWarmPoolWithInstanceReuse(awsCredentialsId, region, endpoint, fleet);
+
                 // For ASGs, separate instances by termination reason:
                 // - MAX_TOTAL_USES_EXHAUSTED: terminate directly so ASG replaces them (desired capacity unchanged)
-                // - Other reasons (scale-down): remove scale-in protection and let ASG terminate naturally
+                // - Other reasons (scale-down): remove scale-in protection and let ASG terminate naturally,
+                //   but only when a warm pool with instance reuse is configured
                 final Set<String> instancesToTerminateDirectly = new HashSet<>();
                 final Set<String> instancesToRemoveProtection = new HashSet<>();
 
                 for (Map.Entry<String, EC2AgentTerminationReason> entry : currentInstanceIdsToTerminate.entrySet()) {
-                    if (entry.getValue() == EC2AgentTerminationReason.MAX_TOTAL_USES_EXHAUSTED) {
+                    if (entry.getValue() == EC2AgentTerminationReason.MAX_TOTAL_USES_EXHAUSTED || !hasWarmPoolWithInstanceReuse) {
                         instancesToTerminateDirectly.add(entry.getKey());
                     } else {
                         instancesToRemoveProtection.add(entry.getKey());
@@ -632,7 +640,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                 if (!instancesToTerminateDirectly.isEmpty()) {
                     // Terminate instances that reached maxTotalUses - ASG will replace them
                     fine("Terminating instances in AutoScalingGroup (maxTotalUses exhausted): %s", instancesToTerminateDirectly);
-                    ((AutoScalingGroupFleet) EC2Fleets.get(fleet)).terminateInstances(
+                    asgFleet.terminateInstances(
                             awsCredentialsId, region, endpoint, fleet, instancesToTerminateDirectly);
                     info("Terminated instances (maxTotalUses exhausted, ASG will replace): %s", instancesToTerminateDirectly);
                 }
@@ -640,7 +648,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                 if (!instancesToRemoveProtection.isEmpty()) {
                     // For scale-down, remove protection and let ASG terminate naturally
                     fine("Removing scale-in protection from instances in AutoScalingGroup: %s", instancesToRemoveProtection);
-                    ((AutoScalingGroupFleet) EC2Fleets.get(fleet)).removeScaleInProtection(
+                    asgFleet.removeScaleInProtection(
                             awsCredentialsId, region, endpoint, fleet, instancesToRemoveProtection);
                     info("Removed scale-in protection from instances (ASG will terminate them): %s", instancesToRemoveProtection);
                 }

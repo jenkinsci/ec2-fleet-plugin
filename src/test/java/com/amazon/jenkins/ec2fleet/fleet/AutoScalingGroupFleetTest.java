@@ -458,4 +458,74 @@ class AutoScalingGroupFleetTest {
             verify(clientMock, never()).terminateInstanceInAutoScalingGroup(any(TerminateInstanceInAutoScalingGroupRequest.class));
         }
     }
+
+    @Test
+    void hasWarmPoolWithInstanceReuseShouldReturnTrueWhenReuseOnScaleInEnabled() {
+        mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
+        try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
+            AutoScalingClientBuilder builderMock = Mockito.mock(AutoScalingClientBuilder.class, Mockito.RETURNS_SELF);
+            AutoScalingClient clientMock = Mockito.mock(AutoScalingClient.class);
+            mockedStatic.when(AutoScalingClient::builder).thenReturn(builderMock);
+            when(builderMock.build()).thenReturn(clientMock);
+
+            final WarmPoolConfiguration warmPoolConfiguration = WarmPoolConfiguration.builder()
+                    .instanceReusePolicy(InstanceReusePolicy.builder().reuseOnScaleIn(true).build())
+                    .build();
+            when(clientMock.describeWarmPool(DescribeWarmPoolRequest.builder().autoScalingGroupName(ASG_NAME).build()))
+                    .thenReturn(DescribeWarmPoolResponse.builder().warmPoolConfiguration(warmPoolConfiguration).build());
+
+            assertTrue(new AutoScalingGroupFleet().hasWarmPoolWithInstanceReuse(CREDS_ID, REGION, ENDPOINT, ASG_NAME));
+        }
+    }
+
+    @Test
+    void hasWarmPoolWithInstanceReuseShouldReturnFalseWhenReuseOnScaleInDisabled() {
+        mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
+        try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
+            AutoScalingClientBuilder builderMock = Mockito.mock(AutoScalingClientBuilder.class, Mockito.RETURNS_SELF);
+            AutoScalingClient clientMock = Mockito.mock(AutoScalingClient.class);
+            mockedStatic.when(AutoScalingClient::builder).thenReturn(builderMock);
+            when(builderMock.build()).thenReturn(clientMock);
+
+            final WarmPoolConfiguration warmPoolConfiguration = WarmPoolConfiguration.builder()
+                    .instanceReusePolicy(InstanceReusePolicy.builder().reuseOnScaleIn(false).build())
+                    .build();
+            when(clientMock.describeWarmPool(any(DescribeWarmPoolRequest.class)))
+                    .thenReturn(DescribeWarmPoolResponse.builder().warmPoolConfiguration(warmPoolConfiguration).build());
+
+            assertFalse(new AutoScalingGroupFleet().hasWarmPoolWithInstanceReuse(CREDS_ID, REGION, ENDPOINT, ASG_NAME));
+        }
+    }
+
+    @Test
+    void hasWarmPoolWithInstanceReuseShouldReturnFalseWhenNoWarmPoolConfigured() {
+        mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
+        try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
+            AutoScalingClientBuilder builderMock = Mockito.mock(AutoScalingClientBuilder.class, Mockito.RETURNS_SELF);
+            AutoScalingClient clientMock = Mockito.mock(AutoScalingClient.class);
+            mockedStatic.when(AutoScalingClient::builder).thenReturn(builderMock);
+            when(builderMock.build()).thenReturn(clientMock);
+
+            when(clientMock.describeWarmPool(any(DescribeWarmPoolRequest.class)))
+                    .thenReturn(DescribeWarmPoolResponse.builder().build());
+
+            assertFalse(new AutoScalingGroupFleet().hasWarmPoolWithInstanceReuse(CREDS_ID, REGION, ENDPOINT, ASG_NAME));
+        }
+    }
+
+    @Test
+    void hasWarmPoolWithInstanceReuseShouldReturnFalseOnException() {
+        mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
+        try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
+            AutoScalingClientBuilder builderMock = Mockito.mock(AutoScalingClientBuilder.class, Mockito.RETURNS_SELF);
+            AutoScalingClient clientMock = Mockito.mock(AutoScalingClient.class);
+            mockedStatic.when(AutoScalingClient::builder).thenReturn(builderMock);
+            when(builderMock.build()).thenReturn(clientMock);
+
+            when(clientMock.describeWarmPool(any(DescribeWarmPoolRequest.class)))
+                    .thenThrow(new RuntimeException("AWS error"));
+
+            assertFalse(new AutoScalingGroupFleet().hasWarmPoolWithInstanceReuse(CREDS_ID, REGION, ENDPOINT, ASG_NAME));
+        }
+    }
 }
