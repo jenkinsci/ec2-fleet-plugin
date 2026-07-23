@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.amazon.jenkins.ec2fleet.EC2AgentTerminationReason;
 import com.amazon.jenkins.ec2fleet.FleetStateStats;
 import com.amazon.jenkins.ec2fleet.aws.AWSUtils;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
@@ -323,6 +324,194 @@ class AutoScalingGroupFleetTest {
             assertEquals(FleetStateStats.State.active(), result.getState());
             assertEquals(1, result.getInstances().size());
             assertEquals(expectedWeights, result.getInstanceTypeWeights());
+        }
+    }
+
+    private AutoScalingClient mockClient(MockedStatic<AutoScalingClient> mockedStatic) {
+        AutoScalingClientBuilder builderMock = Mockito.mock(AutoScalingClientBuilder.class, Mockito.RETURNS_SELF);
+        AutoScalingClient clientMock = Mockito.mock(AutoScalingClient.class);
+        mockedStatic.when(AutoScalingClient::builder).thenReturn(builderMock);
+        when(builderMock.build()).thenReturn(clientMock);
+        return clientMock;
+    }
+
+    private void stubWarmPoolReuse(AutoScalingClient clientMock, boolean reuseOnScaleIn) {
+        final WarmPoolConfiguration warmPoolConfiguration = WarmPoolConfiguration.builder()
+                .instanceReusePolicy(InstanceReusePolicy.builder().reuseOnScaleIn(reuseOnScaleIn).build())
+                .build();
+        when(clientMock.describeWarmPool(any(DescribeWarmPoolRequest.class)))
+                .thenReturn(DescribeWarmPoolResponse.builder().warmPoolConfiguration(warmPoolConfiguration).build());
+    }
+
+    private Map<String, EC2AgentTerminationReason> reasons(String instanceId, EC2AgentTerminationReason reason) {
+        final Map<String, EC2AgentTerminationReason> map = new LinkedHashMap<>();
+        map.put(instanceId, reason);
+        return map;
+    }
+
+    @Test
+    void hasWarmPoolWithInstanceReuse_reuseOnScaleInEnabled_returnsTrue() {
+        mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
+        try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
+            final AutoScalingClient clientMock = mockClient(mockedStatic);
+            stubWarmPoolReuse(clientMock, true);
+
+            assertTrue(new AutoScalingGroupFleet().hasWarmPoolWithInstanceReuse(CREDS_ID, REGION, ENDPOINT, ASG_NAME));
+        }
+    }
+
+    @Test
+    void hasWarmPoolWithInstanceReuse_reuseOnScaleInDisabled_returnsFalse() {
+        mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
+        try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
+            final AutoScalingClient clientMock = mockClient(mockedStatic);
+            stubWarmPoolReuse(clientMock, false);
+
+            assertFalse(new AutoScalingGroupFleet().hasWarmPoolWithInstanceReuse(CREDS_ID, REGION, ENDPOINT, ASG_NAME));
+        }
+    }
+
+    @Test
+    void hasWarmPoolWithInstanceReuse_noWarmPool_returnsFalse() {
+        mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
+        try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
+            final AutoScalingClient clientMock = mockClient(mockedStatic);
+            when(clientMock.describeWarmPool(any(DescribeWarmPoolRequest.class)))
+                    .thenReturn(DescribeWarmPoolResponse.builder().build());
+
+            assertFalse(new AutoScalingGroupFleet().hasWarmPoolWithInstanceReuse(CREDS_ID, REGION, ENDPOINT, ASG_NAME));
+        }
+    }
+
+    @Test
+    void hasWarmPoolWithInstanceReuse_lookupFails_returnsFalse() {
+        mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
+        try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
+            final AutoScalingClient clientMock = mockClient(mockedStatic);
+            when(clientMock.describeWarmPool(any(DescribeWarmPoolRequest.class)))
+                    .thenThrow(new RuntimeException("AWS error"));
+
+            assertFalse(new AutoScalingGroupFleet().hasWarmPoolWithInstanceReuse(CREDS_ID, REGION, ENDPOINT, ASG_NAME));
+        }
+    }
+
+    @Test
+    void terminateInstances_terminatesEachDirectly() {
+        mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
+        try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
+            final AutoScalingClient clientMock = mockClient(mockedStatic);
+
+            new AutoScalingGroupFleet().terminateInstances(CREDS_ID, REGION, ENDPOINT, Arrays.asList("i-123", "i-456"));
+
+            // Direct termination, no scale-in protection changes and no warm pool lookup.
+            verify(clientMock, times(1)).terminateInstanceInAutoScalingGroup(TerminateInstanceInAutoScalingGroupRequest.builder()
+                    .instanceId("i-123").shouldDecrementDesiredCapacity(false).build());
+            verify(clientMock, times(1)).terminateInstanceInAutoScalingGroup(TerminateInstanceInAutoScalingGroupRequest.builder()
+                    .instanceId("i-456").shouldDecrementDesiredCapacity(false).build());
+            verify(clientMock, never()).setInstanceProtection(any(SetInstanceProtectionRequest.class));
+            verify(clientMock, never()).describeWarmPool(any(DescribeWarmPoolRequest.class));
+        }
+    }
+
+    @Test
+    void terminateInstances_blankId_throws() {
+        mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
+        try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
+            mockClient(mockedStatic);
+
+            assertThrows(IllegalArgumentException.class, () ->
+                    new AutoScalingGroupFleet().terminateInstances(CREDS_ID, REGION, ENDPOINT, Collections.singletonList("  ")));
+        }
+    }
+
+    @Test
+    void scaleDownWithWarmPool_scaleDownReason_removesProtectionOnly() {
+        mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
+        try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
+            final AutoScalingClient clientMock = mockClient(mockedStatic);
+
+            new AutoScalingGroupFleet().scaleDownWithWarmPool(CREDS_ID, REGION, ENDPOINT, ASG_NAME,
+                    reasons("i-123", EC2AgentTerminationReason.IDLE_FOR_TOO_LONG));
+
+            // Instance is handed back to the ASG (protection removed) and NOT terminated directly.
+            verify(clientMock, times(1)).setInstanceProtection(SetInstanceProtectionRequest.builder()
+                    .autoScalingGroupName(ASG_NAME)
+                    .instanceIds(Collections.singletonList("i-123"))
+                    .protectedFromScaleIn(false)
+                    .build());
+            verify(clientMock, never()).terminateInstanceInAutoScalingGroup(any(TerminateInstanceInAutoScalingGroupRequest.class));
+        }
+    }
+
+    @Test
+    void scaleDownWithWarmPool_maxTotalUses_terminatesDirectly() {
+        mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
+        try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
+            final AutoScalingClient clientMock = mockClient(mockedStatic);
+
+            new AutoScalingGroupFleet().scaleDownWithWarmPool(CREDS_ID, REGION, ENDPOINT, ASG_NAME,
+                    reasons("i-123", EC2AgentTerminationReason.MAX_TOTAL_USES_EXHAUSTED));
+
+            // A worn-out instance must never be reused: terminate directly, don't remove protection.
+            verify(clientMock, times(1)).terminateInstanceInAutoScalingGroup(TerminateInstanceInAutoScalingGroupRequest.builder()
+                    .instanceId("i-123")
+                    .shouldDecrementDesiredCapacity(false)
+                    .build());
+            verify(clientMock, never()).setInstanceProtection(any(SetInstanceProtectionRequest.class));
+        }
+    }
+
+    @Test
+    void scaleDownWithWarmPool_mixedReasons_splitsProtectionAndTermination() {
+        mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
+        try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
+            final AutoScalingClient clientMock = mockClient(mockedStatic);
+
+            final Map<String, EC2AgentTerminationReason> instances = new LinkedHashMap<>();
+            instances.put("i-scale", EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
+            instances.put("i-worn", EC2AgentTerminationReason.MAX_TOTAL_USES_EXHAUSTED);
+
+            new AutoScalingGroupFleet().scaleDownWithWarmPool(CREDS_ID, REGION, ENDPOINT, ASG_NAME, instances);
+
+            verify(clientMock, times(1)).setInstanceProtection(SetInstanceProtectionRequest.builder()
+                    .autoScalingGroupName(ASG_NAME)
+                    .instanceIds(Collections.singletonList("i-scale"))
+                    .protectedFromScaleIn(false)
+                    .build());
+            verify(clientMock, times(1)).terminateInstanceInAutoScalingGroup(TerminateInstanceInAutoScalingGroupRequest.builder()
+                    .instanceId("i-worn")
+                    .shouldDecrementDesiredCapacity(false)
+                    .build());
+        }
+    }
+
+    @Test
+    void scaleDownWithWarmPool_skipsBlankIds() {
+        mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
+        try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
+            final AutoScalingClient clientMock = mockClient(mockedStatic);
+
+            final Map<String, EC2AgentTerminationReason> instances = new LinkedHashMap<>();
+            instances.put("  ", EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
+
+            new AutoScalingGroupFleet().scaleDownWithWarmPool(CREDS_ID, REGION, ENDPOINT, ASG_NAME, instances);
+
+            verify(clientMock, never()).setInstanceProtection(any(SetInstanceProtectionRequest.class));
+            verify(clientMock, never()).terminateInstanceInAutoScalingGroup(any(TerminateInstanceInAutoScalingGroupRequest.class));
+        }
+    }
+
+    @Test
+    void scaleDownWithWarmPool_skipsEmptyOrNull() {
+        mockedAWSCredentialsHelper.when(() -> AWSCredentialsHelper.getCredentials(CREDS_ID, jenkins)).thenReturn(amazonWebServicesCredentials);
+        try (MockedStatic<AutoScalingClient> mockedStatic = mockStatic(AutoScalingClient.class)) {
+            final AutoScalingClient clientMock = mockClient(mockedStatic);
+
+            new AutoScalingGroupFleet().scaleDownWithWarmPool(CREDS_ID, REGION, ENDPOINT, ASG_NAME, Collections.emptyMap());
+            new AutoScalingGroupFleet().scaleDownWithWarmPool(CREDS_ID, REGION, ENDPOINT, ASG_NAME, null);
+
+            verify(clientMock, never()).setInstanceProtection(any(SetInstanceProtectionRequest.class));
+            verify(clientMock, never()).terminateInstanceInAutoScalingGroup(any(TerminateInstanceInAutoScalingGroupRequest.class));
         }
     }
 }

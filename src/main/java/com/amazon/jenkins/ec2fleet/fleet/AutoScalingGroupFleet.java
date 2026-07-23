@@ -1,5 +1,6 @@
 package com.amazon.jenkins.ec2fleet.fleet;
 
+import com.amazon.jenkins.ec2fleet.EC2AgentTerminationReason;
 import com.amazon.jenkins.ec2fleet.FleetStateStats;
 import com.amazon.jenkins.ec2fleet.aws.AWSUtils;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
@@ -143,6 +144,88 @@ public class AutoScalingGroupFleet implements EC2Fleet {
             } catch (Exception e) {
                 LOGGER.warning(String.format("Failed to terminate instance %s in Auto Scaling group: %s", instanceId, e.getMessage()));
             }
+        }
+    }
+
+    /**
+     * Returns {@code true} when this Auto Scaling Group has a warm pool configured with an instance
+     * reuse policy that reuses instances on scale-in ({@code ReuseOnScaleIn=true}).
+     *
+     * <p>Only in that case is it safe to scale the ASG down by removing scale-in protection and
+     * letting the ASG take the instance, since it is moved to the warm pool for reuse rather than
+     * terminated outright. Any failure to look up the warm pool is treated as "no warm pool" so the
+     * caller falls back to the pre-warm-pool behavior of terminating instances directly.
+     */
+    public boolean hasWarmPoolWithInstanceReuse(final String awsCredentialsId, final String regionName,
+                                                 final String endpoint, final String autoScalingGroupName) {
+        final AutoScalingClient client = createClient(awsCredentialsId, regionName, endpoint);
+        try {
+            final WarmPoolConfiguration warmPool = client.describeWarmPool(DescribeWarmPoolRequest.builder()
+                    .autoScalingGroupName(autoScalingGroupName)
+                    .build()).warmPoolConfiguration();
+            return warmPool != null
+                    && warmPool.instanceReusePolicy() != null
+                    && Boolean.TRUE.equals(warmPool.instanceReusePolicy().reuseOnScaleIn());
+        } catch (Exception e) {
+            LOGGER.warning(String.format(
+                    "Failed to describe warm pool for Auto Scaling group %s, assuming no warm pool: %s",
+                    autoScalingGroupName, e.getMessage()));
+            return false;
+        }
+    }
+
+    /**
+     * Scales the Auto Scaling Group down when it has a warm pool with instance reuse.
+     *
+     * <p>Scale-down instances are handed back to the ASG by removing their scale-in protection, so
+     * the ASG moves them to the warm pool for reuse (faster, cache-warm builds) instead of
+     * terminating them. Instances that must not be reused (e.g. {@code MAX_TOTAL_USES_EXHAUSTED}) are
+     * terminated directly via {@link #terminateInstances(String, String, String, Collection)} so the
+     * ASG replaces them with a fresh instance.
+     *
+     * <p>Should only be called when {@link #hasWarmPoolWithInstanceReuse(String, String, String, String)}
+     * returned {@code true}; otherwise use {@link #terminateInstances(String, String, String, Collection)}.
+     */
+    public void scaleDownWithWarmPool(final String awsCredentialsId, final String regionName, final String endpoint,
+                                      final String autoScalingGroupName,
+                                      final Map<String, EC2AgentTerminationReason> instances) {
+        if (instances == null || instances.isEmpty()) {
+            return;
+        }
+
+        final List<String> instancesForWarmPool = new ArrayList<>();
+        final List<String> instancesToTerminate = new ArrayList<>();
+        for (final Map.Entry<String, EC2AgentTerminationReason> entry : instances.entrySet()) {
+            if (StringUtils.isBlank(entry.getKey())) {
+                continue;
+            }
+            if (entry.getValue() == EC2AgentTerminationReason.MAX_TOTAL_USES_EXHAUSTED) {
+                instancesToTerminate.add(entry.getKey());
+            } else {
+                instancesForWarmPool.add(entry.getKey());
+            }
+        }
+
+        // Scale-down: drop protection in one call and let the ASG move the instances to the warm pool.
+        if (!instancesForWarmPool.isEmpty()) {
+            final AutoScalingClient client = createClient(awsCredentialsId, regionName, endpoint);
+            try {
+                client.setInstanceProtection(SetInstanceProtectionRequest.builder()
+                        .autoScalingGroupName(autoScalingGroupName)
+                        .instanceIds(instancesForWarmPool)
+                        .protectedFromScaleIn(false)
+                        .build());
+                LOGGER.info(String.format("Removed scale-in protection so ASG %s can move instances to warm pool: %s",
+                        autoScalingGroupName, instancesForWarmPool));
+            } catch (Exception e) {
+                LOGGER.warning(String.format("Failed to remove scale-in protection from instances %s: %s",
+                        instancesForWarmPool, e.getMessage()));
+            }
+        }
+
+        // Worn-out instances must never be reused: terminate them so the ASG replaces them.
+        if (!instancesToTerminate.isEmpty()) {
+            terminateInstances(awsCredentialsId, regionName, endpoint, instancesToTerminate);
         }
     }
 

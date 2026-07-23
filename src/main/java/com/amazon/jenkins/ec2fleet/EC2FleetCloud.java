@@ -678,9 +678,16 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
         if (currentInstanceIdsToTerminate.size() > 0) {
             if (EC2Fleets.get(fleet).isAutoScalingGroup()) {
-                fine("Terminating instances in AutoScalingGroup: %s", currentInstanceIdsToTerminate.keySet());
-                ((AutoScalingGroupFleet) EC2Fleets.get(fleet))
-                        .terminateInstances(awsCredentialsId, region, endpoint, currentInstanceIdsToTerminate.keySet());
+                final AutoScalingGroupFleet asgFleet = (AutoScalingGroupFleet) EC2Fleets.get(fleet);
+                if (asgFleet.hasWarmPoolWithInstanceReuse(awsCredentialsId, region, endpoint, fleet)) {
+                    // Warm pool with instance reuse: hand instances back to the ASG so it can reuse them.
+                    fine("Scaling down AutoScalingGroup with warm pool: %s", currentInstanceIdsToTerminate.keySet());
+                    asgFleet.scaleDownWithWarmPool(awsCredentialsId, region, endpoint, fleet, currentInstanceIdsToTerminate);
+                } else {
+                    // No warm pool: terminate instances directly so the ASG replaces them.
+                    fine("Terminating instances in AutoScalingGroup: %s", currentInstanceIdsToTerminate.keySet());
+                    asgFleet.terminateInstances(awsCredentialsId, region, endpoint, currentInstanceIdsToTerminate.keySet());
+                }
             } else {
                 fine("Terminating instances: %s", currentInstanceIdsToTerminate.keySet());
                 Registry.getEc2Api().terminateInstances(ec2, currentInstanceIdsToTerminate.keySet());

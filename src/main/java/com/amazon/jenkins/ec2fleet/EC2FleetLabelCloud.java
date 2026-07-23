@@ -5,6 +5,8 @@ import com.amazon.jenkins.ec2fleet.aws.AwsRegionValidator;
 import com.amazon.jenkins.ec2fleet.aws.CloudFormationApi;
 import com.amazon.jenkins.ec2fleet.aws.EC2Api;
 import com.amazon.jenkins.ec2fleet.aws.RegionHelper;
+import com.amazon.jenkins.ec2fleet.fleet.AutoScalingGroupFleet;
+import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 import com.amazon.jenkins.ec2fleet.fleet.EC2SpotFleet;
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
@@ -464,6 +466,26 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
             });
             info("Delete terminating nodes from Jenkins %s", instanceIdsToRemove);
 
+            // Instances that belong to an ASG with a warm pool are handed back to their ASG for reuse
+            // and removed from instanceIdsToRemove, so they are excluded from the direct EC2 termination
+            // below. Everything else is terminated as before.
+            final Map<String, Boolean> warmPoolByFleetId = new HashMap<>();
+            for (final State state : states.values()) {
+                if (state.instanceIdsToTerminate.isEmpty()) {
+                    continue;
+                }
+                final EC2Fleet fleet = EC2Fleets.get(state.fleetId);
+                // Look up the warm pool at most once per fleet.
+                if (!warmPoolByFleetId.computeIfAbsent(state.fleetId, id -> useWarmPool(fleet, id))) {
+                    continue;
+                }
+                fine("Scaling down AutoScalingGroup %s with warm pool: %s",
+                        state.fleetId, state.instanceIdsToTerminate.keySet());
+                ((AutoScalingGroupFleet) fleet).scaleDownWithWarmPool(
+                        getAwsCredentialsId(), region, endpoint, state.fleetId, state.instanceIdsToTerminate);
+                instanceIdsToRemove.keySet().removeAll(state.instanceIdsToTerminate.keySet());
+            }
+
             Registry.getEc2Api().terminateInstances(ec2, instanceIdsToRemove.keySet());
             info("Instances %s were terminated with result", instanceIdsToRemove);
         }
@@ -573,6 +595,17 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
                 });
             }
         }
+    }
+
+    /**
+     * Returns {@code true} when the fleet is an Auto Scaling Group configured with a warm pool that
+     * reuses instances on scale-in. Only then are instances handed back to the ASG for reuse instead
+     * of being terminated directly.
+     */
+    private boolean useWarmPool(final EC2Fleet fleet, final String fleetId) {
+        return fleet.isAutoScalingGroup()
+                && ((AutoScalingGroupFleet) fleet).hasWarmPoolWithInstanceReuse(
+                        getAwsCredentialsId(), region, endpoint, fleetId);
     }
 
     @Override
