@@ -86,7 +86,7 @@ public class CloudNanny extends PeriodicWork {
     }
 
     private EC2FleetCloud createCloudWithScaler(EC2FleetCloud oldCloud, EC2FleetCloud.ExecutorScaler scaler) {
-        return  new EC2FleetCloud(oldCloud.getDisplayName(), oldCloud.getAwsCredentialsId(),
+        EC2FleetCloud cloud = new EC2FleetCloud(oldCloud.getDisplayName(), oldCloud.getAwsCredentialsId(),
                 oldCloud.getAwsCredentialsId(), oldCloud.getRegion(), oldCloud.getEndpoint(), oldCloud.getFleet(),
                 oldCloud.getLabelString(), oldCloud.getFsRoot(), oldCloud.getComputerConnector(),
                 oldCloud.isPrivateIpUsed(), oldCloud.isAlwaysReconnect(), oldCloud.getIdleMinutes(),
@@ -96,6 +96,8 @@ public class CloudNanny extends PeriodicWork {
                 oldCloud.getInitOnlineTimeoutSec(), oldCloud.getInitOnlineCheckIntervalSec(),
                 oldCloud.getCloudStatusIntervalSec(), oldCloud.isNoDelayProvision(),
                 oldCloud.isScaleExecutorsByWeight(), scaler);
+        cloud.setEnvironmentVariables(oldCloud.getEnvironmentVariables());
+        return cloud;
     }
 
     private AtomicInteger getRecurrenceCounter(EC2FleetCloud fleetCloud) {

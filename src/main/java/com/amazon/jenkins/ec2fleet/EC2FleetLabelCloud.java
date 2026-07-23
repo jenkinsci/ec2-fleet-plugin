@@ -1,6 +1,7 @@
 package com.amazon.jenkins.ec2fleet;
 
 import com.amazon.jenkins.ec2fleet.aws.AwsPermissionChecker;
+import com.amazon.jenkins.ec2fleet.aws.AwsRegionValidator;
 import com.amazon.jenkins.ec2fleet.aws.CloudFormationApi;
 import com.amazon.jenkins.ec2fleet.aws.EC2Api;
 import com.amazon.jenkins.ec2fleet.aws.RegionHelper;
@@ -20,25 +21,9 @@ import hudson.model.Queue;
 import hudson.model.TaskListener;
 import hudson.slaves.Cloud;
 import hudson.slaves.ComputerConnector;
-import hudson.slaves.NodeProperty;
 import hudson.slaves.NodeProvisioner;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import jenkins.model.Jenkins;
-import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest2;
-import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
-import software.amazon.awssdk.services.cloudformation.model.StackStatus;
-import software.amazon.awssdk.services.ec2.Ec2Client;
-import software.amazon.awssdk.services.ec2.model.Instance;
-import software.amazon.awssdk.services.ec2.model.InstanceStateName;
-import software.amazon.awssdk.services.ec2.model.KeyPairInfo;
-
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -56,6 +41,22 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
+import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.interceptor.RequirePOST;
+import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
+import software.amazon.awssdk.services.cloudformation.model.StackStatus;
+import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.Instance;
+import software.amazon.awssdk.services.ec2.model.InstanceStateName;
+import software.amazon.awssdk.services.ec2.model.KeyPairInfo;
 
 /**
  * @see CloudNanny
@@ -73,7 +74,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
     private static final int DEFAULT_INIT_ONLINE_TIMEOUT_SEC = 3 * 60;
     private static final int DEFAULT_INIT_ONLINE_CHECK_INTERVAL_SEC = 15;
 
-//    private static final String NEW_EC2_KEY_PAIR_VALUE = "- New Key Pair -";
+    //    private static final String NEW_EC2_KEY_PAIR_VALUE = "- New Key Pair -";
 
     private static final SimpleFormatter sf = new SimpleFormatter();
     private static final Logger LOGGER = Logger.getLogger(EC2FleetLabelCloud.class.getName());
@@ -105,29 +106,31 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
      * @see NoDelayProvisionStrategy
      */
     private final boolean noDelayProvision;
+    private List<CloudEnvironmentVariable> environmentVariables = Collections.emptyList();
 
     private transient Map<String, State> states;
 
     @DataBoundConstructor
-    public EC2FleetLabelCloud(final String name,
-                              final String awsCredentialsId,
-                              final String region,
-                              final String endpoint,
-                              final String fsRoot,
-                              final ComputerConnector computerConnector,
-                              final boolean privateIpUsed,
-                              final boolean alwaysReconnect,
-                              final Integer idleMinutes,
-                              final int minSize,
-                              final int maxSize,
-                              final int numExecutors,
-                              final boolean restrictUsage,
-                              final boolean disableTaskResubmit,
-                              final Integer initOnlineTimeoutSec,
-                              final Integer initOnlineCheckIntervalSec,
-                              final Integer cloudStatusIntervalSec,
-                              final boolean noDelayProvision,
-                              final String ec2KeyPairName) {
+    public EC2FleetLabelCloud(
+            final String name,
+            final String awsCredentialsId,
+            final String region,
+            final String endpoint,
+            final String fsRoot,
+            final ComputerConnector computerConnector,
+            final boolean privateIpUsed,
+            final boolean alwaysReconnect,
+            final Integer idleMinutes,
+            final int minSize,
+            final int maxSize,
+            final int numExecutors,
+            final boolean restrictUsage,
+            final boolean disableTaskResubmit,
+            final Integer initOnlineTimeoutSec,
+            final Integer initOnlineCheckIntervalSec,
+            final Integer cloudStatusIntervalSec,
+            final boolean noDelayProvision,
+            final String ec2KeyPairName) {
         super(StringUtils.isNotBlank(name) ? name : CloudNames.generateUnique(BASE_DEFAULT_FLEET_CLOUD_ID));
         init();
         this.awsCredentialsId = awsCredentialsId;
@@ -167,6 +170,15 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
 
     public boolean isDisableTaskResubmit() {
         return disableTaskResubmit;
+    }
+
+    public List<CloudEnvironmentVariable> getEnvironmentVariables() {
+        return environmentVariables;
+    }
+
+    @DataBoundSetter
+    public void setEnvironmentVariables(final List<CloudEnvironmentVariable> environmentVariables) {
+        this.environmentVariables = NodeEnvironmentVariables.normalize(environmentVariables);
     }
 
     public int getInitOnlineTimeoutSec() {
@@ -235,33 +247,34 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
         return Boolean.FALSE;
     }
 
-//    @VisibleForTesting
-//    synchronized Set<NodeProvisioner.PlannedNode> getPlannedNodesCache() {
-//        return plannedNodesCache;
-//    }
+    //    @VisibleForTesting
+    //    synchronized Set<NodeProvisioner.PlannedNode> getPlannedNodesCache() {
+    //        return plannedNodesCache;
+    //    }
 
-//    @VisibleForTesting
-//    synchronized Set<String> getInstanceIdsToTerminate() {
-//        return instanceIdsToTerminate;
-//    }
+    //    @VisibleForTesting
+    //    synchronized Set<String> getInstanceIdsToTerminate() {
+    //        return instanceIdsToTerminate;
+    //    }
 
-//    @VisibleForTesting
-//    synchronized int getToAdd() {
-//        return toAdd;
-//    }
+    //    @VisibleForTesting
+    //    synchronized int getToAdd() {
+    //        return toAdd;
+    //    }
 
-//    @VisibleForTesting
-//    synchronized FleetStateStats getStats() {
-//        return stats;
-//    }
+    //    @VisibleForTesting
+    //    synchronized FleetStateStats getStats() {
+    //        return stats;
+    //    }
 
-//    @VisibleForTesting
-//    synchronized void setStats(final FleetStateStats stats) {
-//        this.stats = stats;
-//    }
+    //    @VisibleForTesting
+    //    synchronized void setStats(final FleetStateStats stats) {
+    //        this.stats = stats;
+    //    }
 
     @Override
-    public synchronized Collection<NodeProvisioner.PlannedNode> provision(@Nonnull final Cloud.CloudState cloudState, int excessWorkload) {
+    public synchronized Collection<NodeProvisioner.PlannedNode> provision(
+            @Nonnull final Cloud.CloudState cloudState, int excessWorkload) {
         Jenkins jenkinsInstance = Jenkins.get();
         if (jenkinsInstance.isQuietingDown()) {
             LOGGER.log(Level.FINE, "Not provisioning nodes, Jenkins instance is quieting down");
@@ -364,14 +377,14 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
 
         final Set<String> fleetIds = new HashSet<>();
         for (State state : states.values()) fleetIds.add(state.fleetId);
-        final Map<String, FleetStateStats> currentStats = new EC2SpotFleet().getStateBatch(
-                getAwsCredentialsId(), region, endpoint, fleetIds);
+        final Map<String, FleetStateStats> currentStats =
+                new EC2SpotFleet().getStateBatch(getAwsCredentialsId(), region, endpoint, fleetIds);
         for (State state : currentStates.values()) {
             // todo what if we don't find this fleet in map
             state.stats = currentStats.get(state.fleetId);
 
-            state.targetCapacity = Math.max(0,
-                    state.stats.getNumDesired() - state.instanceIdsToTerminate.size() + state.toAdd);
+            state.targetCapacity =
+                    Math.max(0, state.stats.getNumDesired() - state.instanceIdsToTerminate.size() + state.toAdd);
             state.stats = new FleetStateStats(state.stats, state.targetCapacity);
         }
 
@@ -382,7 +395,9 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
                 final State state = states.get(entry.getKey());
 
                 state.stats = entry.getValue().stats;
-                state.instanceIdsToTerminate.keySet().removeAll(entry.getValue().instanceIdsToTerminate.keySet());
+                state.instanceIdsToTerminate
+                        .keySet()
+                        .removeAll(entry.getValue().instanceIdsToTerminate.keySet());
                 // toAdd only grow outside of this method, so we can subtract
                 state.toAdd = state.toAdd - entry.getValue().toAdd;
                 // remove released planned nodes
@@ -409,8 +424,15 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
                 // todo fix negative value
                 // we do update any time even real capacity was not update like remove one add one to
                 // update fleet settings with NoTermination so we can terminate instances on our own
-                EC2Fleets.get(state.fleetId).modify(
-                        getAwsCredentialsId(), region, endpoint, state.fleetId, state.targetCapacity, minSize, maxSize);
+                EC2Fleets.get(state.fleetId)
+                        .modify(
+                                getAwsCredentialsId(),
+                                region,
+                                endpoint,
+                                state.fleetId,
+                                state.targetCapacity,
+                                minSize,
+                                maxSize);
                 info("Update fleet target capacity to %s", state.targetCapacity);
             }
         }
@@ -434,7 +456,9 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
                             try {
                                 jenkins.removeNode(node);
                             } catch (IOException e) {
-                                warning("unable to remove node %s from Jenkins, skip, just terminate EC2 instance", instanceId);
+                                warning(
+                                        "unable to remove node %s from Jenkins, skip, just terminate EC2 instance",
+                                        instanceId);
                             }
                         }
                     }
@@ -530,7 +554,8 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
             jenkinsNodesWithInstance.removeAll(fleetInstances);
             info("jenkins nodes without instance %s", jenkinsNodesWithInstance);
 
-            // terminatedFleetInstances contains fleet instances that are terminated, stopped, stopping, or shutting down
+            // terminatedFleetInstances contains fleet instances that are terminated, stopped, stopping, or shutting
+            // down
             final Set<String> terminatedFleetInstances = new HashSet<>(fleetInstances);
             // terminated are any current which cannot be described
             terminatedFleetInstances.removeAll(described.keySet());
@@ -547,32 +572,44 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
             jenkinsNodesToRemove.addAll(jenkinsNodesWithInstance);
             // Remove dying fleet instances from Jenkins
             for (final String instance : jenkinsNodesToRemove) {
-//                info("Fleet (" + getLabelString() + ") no longer has the instance " + instance + ", removing from Jenkins.");
+                //                info("Fleet (" + getLabelString() + ") no longer has the instance " + instance + ",
+                // removing from Jenkins.");
                 JenkinsUtils.removeNode(instance);
             }
 
             // Update the label for all Jenkins nodes in the fleet instance cache
-//            for (final String instanceId : jenkinsInstances) {
-//                final Node node = jenkins.getNode(instanceId);
-//                if (node == null) continue;
-//
-//                if (!labelString.equals(node.getLabelString())) {
-//                    try {
-//                        info("Updating label on node %s to \"%s\".", instanceId, labelString);
-//                        node.setLabelString(labelString);
-//                    } catch (final Exception ex) {
-//                        warning(ex, "Unable to set label on node %s", instanceId);
-//                    }
-//                }
-//            }
+            //            for (final String instanceId : jenkinsInstances) {
+            //                final Node node = jenkins.getNode(instanceId);
+            //                if (node == null) continue;
+            //
+            //                if (!labelString.equals(node.getLabelString())) {
+            //                    try {
+            //                        info("Updating label on node %s to \"%s\".", instanceId, labelString);
+            //                        node.setLabelString(labelString);
+            //                    } catch (final Exception ex) {
+            //                        warning(ex, "Unable to set label on node %s", instanceId);
+            //                    }
+            //                }
+            //            }
+            for (final String instanceId : jenkinsInstances) {
+                final Node node = jenkins.getNode(instanceId);
+                if (node == null) {
+                    continue;
+                }
+                try {
+                    NodeEnvironmentVariables.reconcile(node, environmentVariables);
+                } catch (final Exception ex) {
+                    warning(ex, "Failed to set environment variables on node '%s': ", instanceId, ex.toString());
+                }
+            }
 
             // If we have new instances - create nodes for them!
             if (newFleetInstances.size() > 0) {
                 // we tag new instances to help users to identify instances launched from plugin managed fleets
                 // if failed we are fine to skip this call
                 try {
-                    Registry.getEc2Api().tagInstances(ec2, newFleetInstances.keySet(),
-                            EC2_INSTANCE_CLOUD_NAME_TAG, name);
+                    Registry.getEc2Api()
+                            .tagInstances(ec2, newFleetInstances.keySet(), EC2_INSTANCE_CLOUD_NAME_TAG, name);
                 } catch (final Exception e) {
                     warning(e, "failed to tag new instances %s, skip", newFleetInstances.keySet());
                 }
@@ -596,8 +633,10 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
     }
 
     @Override
-    public synchronized boolean scheduleToTerminate(final String instanceId, final boolean ignoreMinConstraints,
-                                                    final EC2AgentTerminationReason terminationReason) {
+    public synchronized boolean scheduleToTerminate(
+            final String instanceId,
+            final boolean ignoreMinConstraints,
+            final EC2AgentTerminationReason terminationReason) {
         info("Attempting to terminate instance: %s", instanceId);
 
         final Node node = Jenkins.get().getNode(instanceId);
@@ -612,11 +651,14 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
         // We can't remove instances beyond minSize unless ignoreMinConstraints is true
         final EC2FleetLabelParameters parameters = new EC2FleetLabelParameters(node.getLabelString());
         final int minSize = parameters.getIntOrDefault("minSize", this.minSize);
-        if (!ignoreMinConstraints && (minSize > 0 && state.stats.getNumDesired() - state.instanceIdsToTerminate.size() <= minSize)) {
+        if (!ignoreMinConstraints
+                && (minSize > 0 && state.stats.getNumDesired() - state.instanceIdsToTerminate.size() <= minSize)) {
             info("Not terminating %s because we need a minimum of %s instances running.", instanceId, minSize);
             return false;
         }
-        info("Scheduling instance '%s' for termination on cloud %s because of reason: %s", instanceId, this, terminationReason);
+        info(
+                "Scheduling instance '%s' for termination on cloud %s because of reason: %s",
+                instanceId, this, terminationReason);
         state.instanceIdsToTerminate.put(instanceId, terminationReason);
         return true;
     }
@@ -627,13 +669,15 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
         final Label label = cloudState.getLabel();
         for (String labelString : states.keySet()) {
             final boolean r = label == null || Label.parse(labelString).containsAll(label.listAtoms());
-            fine("CanProvision called on fleet: \"" + labelString + "\" wanting: \"" + (label == null ? "(unspecified)" : label.getName()) + "\". Returning " + r + ".");
+            fine("CanProvision called on fleet: \"" + labelString + "\" wanting: \""
+                    + (label == null ? "(unspecified)" : label.getName()) + "\". Returning " + r + ".");
             if (r) return true;
         }
         return false;
     }
 
     private Object readResolve() {
+        environmentVariables = NodeEnvironmentVariables.normalize(environmentVariables);
         init();
         return this;
     }
@@ -642,20 +686,21 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
         states = new HashMap<>();
     }
 
-    private void addNewAgent(
-            final Ec2Client ec2, final Instance instance, final String labelString, final State state) throws Exception {
+    private void addNewAgent(final Ec2Client ec2, final Instance instance, final String labelString, final State state)
+            throws Exception {
         final String instanceId = instance.instanceId();
 
         // instance state check enabled and not running, skip adding
-        if (InstanceStateName.RUNNING != instance.state().name())
-            return;
+        if (InstanceStateName.RUNNING != instance.state().name()) return;
 
         final String address = privateIpUsed ? instance.privateIpAddress() : instance.publicIpAddress();
         // Check if we have the address to use. Nodes don't get it immediately.
         if (address == null) {
             if (!privateIpUsed) {
-                info("%s instance public IP address not assigned, it could take some time or" +
-                        " Spot Request is not configured to assign public IPs", instance.instanceId());
+                info(
+                        "%s instance public IP address not assigned, it could take some time or"
+                                + " Spot Request is not configured to assign public IPs",
+                        instance.instanceId());
             }
             return; // wait more time, probably IP address not yet assigned
         }
@@ -668,7 +713,8 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
             effectiveFsRoot = fsRoot;
         }
 
-        final Double instanceTypeWeight = state.stats.getInstanceTypeWeights().get(String.valueOf(instance.instanceType()));
+        final Double instanceTypeWeight =
+                state.stats.getInstanceTypeWeights().get(String.valueOf(instance.instanceType()));
         final int effectiveNumExecutors;
         // todo add scaleExecutorsByWeight
         if (instanceTypeWeight != null) {
@@ -677,13 +723,21 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
             effectiveNumExecutors = numExecutors;
         }
 
-        final EC2FleetAutoResubmitComputerLauncher computerLauncher = new EC2FleetAutoResubmitComputerLauncher(
-                computerConnector.launch(address, TaskListener.NULL));
+        final EC2FleetAutoResubmitComputerLauncher computerLauncher =
+                new EC2FleetAutoResubmitComputerLauncher(computerConnector.launch(address, TaskListener.NULL));
         final Node.Mode nodeMode = restrictUsage ? Node.Mode.EXCLUSIVE : Node.Mode.NORMAL;
-        //TODO: Add maxTotalUses to EC2FleetLabelCloud similar to EC2FleetCloud
-        final EC2FleetNode node = new EC2FleetNode(instanceId, "Fleet agent for " + instanceId,
-                effectiveFsRoot, effectiveNumExecutors, nodeMode, labelString, new ArrayList<NodeProperty<?>>(),
-                this.name, computerLauncher, -1);
+        // TODO: Add maxTotalUses to EC2FleetLabelCloud similar to EC2FleetCloud
+        final EC2FleetNode node = new EC2FleetNode(
+                instanceId,
+                "Fleet agent for " + instanceId,
+                effectiveFsRoot,
+                effectiveNumExecutors,
+                nodeMode,
+                labelString,
+                NodeEnvironmentVariables.toNodeProperties(environmentVariables),
+                this.name,
+                computerLauncher,
+                -1);
 
         // Initialize our retention strategy
         node.setRetentionStrategy(new EC2RetentionStrategy());
@@ -706,7 +760,9 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
 
         // use getters for timeout and interval as they provide default value
         // when user just install new version and didn't recreate fleet
-        EC2FleetOnlineChecker.start(node, future,
+        EC2FleetOnlineChecker.start(
+                node,
+                future,
                 TimeUnit.SECONDS.toMillis(getInitOnlineTimeoutSec()),
                 TimeUnit.SECONDS.toMillis(getInitOnlineCheckIntervalSec()));
     }
@@ -741,14 +797,14 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
     }
 
     public void updateStacks() {
-//        if (NEW_EC2_KEY_PAIR_VALUE.equals(ec2KeyPairName)) {
-//            // need to create key first
-//            final AmazonEC2 amazonEC2 = Registry.getEc2Api().connect(awsCredentialsId, region, endpoint);
-//            final CreateKeyPairResult result = amazonEC2.createKeyPair(new CreateKeyPairRequest().withKeyName(
-//                    "ec2-fleet-plugin-" + new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss").format(new Date())));
-//            Jenkins.getActiveInstance().cre
-//            ec2KeyPairName = result.getKeyPair().getKeyName();
-//        }
+        //        if (NEW_EC2_KEY_PAIR_VALUE.equals(ec2KeyPairName)) {
+        //            // need to create key first
+        //            final AmazonEC2 amazonEC2 = Registry.getEc2Api().connect(awsCredentialsId, region, endpoint);
+        //            final CreateKeyPairResult result = amazonEC2.createKeyPair(new CreateKeyPairRequest().withKeyName(
+        //                    "ec2-fleet-plugin-" + new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss").format(new Date())));
+        //            Jenkins.getActiveInstance().cre
+        //            ec2KeyPairName = result.getKeyPair().getKeyName();
+        //        }
 
         final Jenkins jenkins = Jenkins.get();
         final CloudFormationApi cloudFormationApi = Registry.getCloudFormationApi();
@@ -806,8 +862,10 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
                                 try {
                                     jenkins.removeNode(node);
                                 } catch (IOException e) {
-                                    warning("unable delete node %s from Jenkins, skip, " +
-                                            "actual instance will be terminated by stack", instanceId);
+                                    warning(
+                                            "unable delete node %s from Jenkins, skip, "
+                                                    + "actual instance will be terminated by stack",
+                                            instanceId);
                                 }
                             }
                         }
@@ -815,8 +873,8 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
                 });
                 info("Delete nodes from deleted stack from Jenkins %s", instanceIdsToRemove);
             } else {
-                LOGGER.info("unused stack " + stack.stackId + " for label " + label
-                        + " is status " + stack.stackStatus + ", skip to delete");
+                LOGGER.info("unused stack " + stack.stackId + " for label " + label + " is status " + stack.stackStatus
+                        + ", skip to delete");
             }
         }
 
@@ -848,7 +906,8 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
     }
 
     @Extension
-    @SuppressWarnings("unused") @Symbol("eC2FleetLabel")
+    @SuppressWarnings("unused")
+    @Symbol("eC2FleetLabel")
     public static class DescriptorImpl extends Descriptor<Cloud> {
 
         public DescriptorImpl() {
@@ -866,54 +925,87 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
         }
 
         public ListBoxModel doFillAwsCredentialsIdItems() {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             return AWSCredentialsHelper.doFillCredentialsIdItems(Jenkins.get());
         }
 
         public ListBoxModel doFillRegionItems(@QueryParameter final String awsCredentialsId) {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             return RegionHelper.getRegionsListBoxModel(awsCredentialsId);
         }
 
+        @RequirePOST
         public ListBoxModel doFillEc2KeyPairNameItems(
                 @QueryParameter final String awsCredentialsId,
                 @QueryParameter final String region,
                 @QueryParameter final String endpoint) {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             final ListBoxModel model = new ListBoxModel();
+            final String normalizedRegion = AwsRegionValidator.normalizeRegionName(region);
+            if (normalizedRegion != null && !AwsRegionValidator.isValidRegionName(normalizedRegion)) {
+                return model;
+            }
+            if (StringUtils.isNotBlank(endpoint) && !AwsEndpointValidator.isValidAwsEndpoint(endpoint)) {
+                return model;
+            }
 
             try {
-                final Ec2Client amazonEC2 = new EC2Api().connect(awsCredentialsId, region, endpoint);
+                final Ec2Client amazonEC2 = new EC2Api().connect(awsCredentialsId, normalizedRegion, endpoint);
                 final List<KeyPairInfo> keyPairs = amazonEC2.describeKeyPairs().keyPairs();
                 for (final KeyPairInfo keyPair : keyPairs) {
                     model.add(new ListBoxModel.Option(keyPair.keyName(), keyPair.keyName()));
                 }
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, String.format(
-                        "Cannot describe key pairs credentials %s region %s endpoint %s",
-                        awsCredentialsId, region, endpoint), e);
+                LOGGER.log(
+                        Level.WARNING,
+                        String.format(
+                                "Cannot describe key pairs credentials %s region %s endpoint %s",
+                                awsCredentialsId, normalizedRegion, endpoint),
+                        e);
             }
             return model;
         }
 
+        @RequirePOST
         public FormValidation doTestConnection(
                 @QueryParameter final String awsCredentialsId,
                 @QueryParameter final String region,
                 @QueryParameter final String endpoint,
                 @QueryParameter final String fleet) {
+            final String normalizedRegion = AwsRegionValidator.normalizeRegionName(region);
+            final String normalizedEndpoint = StringUtils.trimToNull(endpoint);
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+            if (normalizedRegion != null && !AwsRegionValidator.isValidRegionName(normalizedRegion)) {
+                return FormValidation.error("Region must be a valid AWS region name");
+            }
+            if (normalizedEndpoint != null) {
+                // Validate endpoint is a known AWS endpoint
+                if (!AwsEndpointValidator.isValidAwsEndpoint(normalizedEndpoint)) {
+                    return FormValidation.error(
+                            "Endpoint must be a valid AWS endpoint URL (e.g., amazonaws.com or amazonaws.com.cn for China regions)");
+                }
+            }
             // Check if any missing AWS Permissions
-            final AwsPermissionChecker awsPermissionChecker = new AwsPermissionChecker(awsCredentialsId, region, endpoint);
+            final AwsPermissionChecker awsPermissionChecker =
+                    new AwsPermissionChecker(awsCredentialsId, normalizedRegion, normalizedEndpoint);
             final List<String> missingPermissions = awsPermissionChecker.getMissingPermissions(fleet);
-            // TODO: DryRun does not work as expected for TerminateInstances and does not exists for UpdateAutoScalingGroup
-            final String disclaimer = String.format("Skipping validation for following permissions: %s, %s",
+            // TODO: DryRun does not work as expected for TerminateInstances and does not exists for
+            // UpdateAutoScalingGroup
+            final String disclaimer = String.format(
+                    "Skipping validation for following permissions: %s, %s",
                     AwsPermissionChecker.FleetAPI.TerminateInstances,
                     AwsPermissionChecker.FleetAPI.UpdateAutoScalingGroup);
-            if(missingPermissions.isEmpty()) {
+            if (missingPermissions.isEmpty()) {
                 return FormValidation.ok(String.format("Success! %s", disclaimer));
             }
-            final String errorMessage = String.format("Following AWS permissions are missing: %s ", String.join(", ", missingPermissions));
+            final String errorMessage =
+                    String.format("Following AWS permissions are missing: %s ", String.join(", ", missingPermissions));
             LOGGER.log(Level.WARNING, String.format("[TestConnection] %s", errorMessage));
             return FormValidation.error(String.format("%s %n %s", errorMessage, disclaimer));
         }
 
         public FormValidation doCheckName(@QueryParameter final String name, @QueryParameter final String isNewCloud) {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             try {
                 Jenkins.checkGoodName(name);
             } catch (Failure e) {
@@ -922,12 +1014,16 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
 
             // check if name is unique
             if (Boolean.valueOf(isNewCloud) && !CloudNames.isUnique(name)) {
-                return FormValidation.error("Please choose a unique name. Existing clouds: " + Jenkins.get().clouds.stream().map(c -> c.name).collect(Collectors.joining(",")));
-            }
-            else if (!Boolean.valueOf(isNewCloud) && CloudNames.isDuplicated(name)) {
+                return FormValidation.error("Please choose a unique name. Existing clouds: "
+                        + Jenkins.get().clouds.stream().map(c -> c.name).collect(Collectors.joining(",")));
+            } else if (!Boolean.valueOf(isNewCloud) && CloudNames.isDuplicated(name)) {
                 Set<String> uniqueNames = new HashSet<>();
-                Jenkins.get().clouds.forEach(cloud -> {uniqueNames.add(cloud.name);});
-                return FormValidation.error("This cloud name is not unique. Please choose a unique name and click save. Existing clouds: " + uniqueNames);
+                Jenkins.get().clouds.forEach(cloud -> {
+                    uniqueNames.add(cloud.name);
+                });
+                return FormValidation.error(
+                        "This cloud name is not unique. Please choose a unique name and click save. Existing clouds: "
+                                + uniqueNames);
             }
 
             return FormValidation.ok();
@@ -937,7 +1033,10 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
             return CloudNames.generateUnique(BASE_DEFAULT_FLEET_CLOUD_ID);
         }
 
-        public Boolean isExistingCloudNameDuplicated(@QueryParameter final String name) { return CloudNames.isDuplicated(name); }
+        public Boolean isExistingCloudNameDuplicated(@QueryParameter final String name) {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+            return CloudNames.isDuplicated(name);
+        }
 
         @Override
         public boolean configure(final StaplerRequest2 req, final JSONObject formData) throws FormException {

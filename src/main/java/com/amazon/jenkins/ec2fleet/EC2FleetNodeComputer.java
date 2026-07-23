@@ -1,13 +1,19 @@
 package com.amazon.jenkins.ec2fleet;
 
+import hudson.EnvVars;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.SlaveComputer;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.HttpResponse;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.ThreadSafe;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -44,6 +50,34 @@ public class EC2FleetNodeComputer extends SlaveComputer {
         return node == null ? null : node.getCloud();
     }
 
+    @Nonnull
+    public Map<String, String> getConfiguredEnvironmentVariables() {
+        if (!hasPermission(CONFIGURE)) {
+            return Collections.emptyMap();
+        }
+
+        final EC2FleetNode node = getNode();
+        if (node == null) {
+            return Collections.emptyMap();
+        }
+
+        final EnvironmentVariablesNodeProperty environmentVariablesNodeProperty =
+                node.getNodeProperties().get(EnvironmentVariablesNodeProperty.class);
+        if (environmentVariablesNodeProperty == null) {
+            return Collections.emptyMap();
+        }
+
+        final EnvVars envVars = environmentVariablesNodeProperty.getEnvVars();
+        if (envVars == null || envVars.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return new LinkedHashMap<>(envVars);
+    }
+
+    public boolean isConfiguredEnvironmentVariablesVisible() {
+        return hasPermission(CONFIGURE) && !getConfiguredEnvironmentVariables().isEmpty();
+    }
+
     /**
      * Return label which will represent executor in "Build Executor Status"
      * section of Jenkins UI.
@@ -69,6 +103,7 @@ public class EC2FleetNodeComputer extends SlaveComputer {
      *
      * @return HttpResponse
      */
+    @RequirePOST
     @Override
     public HttpResponse doDoDelete() throws IOException {
         checkPermission(DELETE);
@@ -77,6 +112,9 @@ public class EC2FleetNodeComputer extends SlaveComputer {
             final String instanceId = node.getInstanceId();
             final AbstractEC2FleetCloud cloud = node.getCloud();
             if (cloud != null && StringUtils.isNotBlank(instanceId)) {
+                // Suspend the computer before scheduling so the queue cannot dispatch new work to it
+                // between now and when the cloud's next update cycle terminates the instance on EC2.
+                setAcceptingTasks(false);
                 cloud.scheduleToTerminate(instanceId, false, EC2AgentTerminationReason.AGENT_DELETED);
                 // Persist a flag here as the cloud objects can be re-created on user-initiated changes, hence, losing track of instance ids scheduled to terminate.
                 this.isMarkedForDeletion = true;

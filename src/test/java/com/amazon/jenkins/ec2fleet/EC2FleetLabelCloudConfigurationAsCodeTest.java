@@ -64,6 +64,7 @@ class EC2FleetLabelCloudConfigurationAsCodeTest {
         assertFalse(cloud.isDisableTaskResubmit());
         assertFalse(cloud.isNoDelayProvision());
         assertNull(cloud.getEc2KeyPairName());
+        assertTrue(cloud.getEnvironmentVariables().isEmpty());
     }
 
     @Test
@@ -90,6 +91,11 @@ class EC2FleetLabelCloudConfigurationAsCodeTest {
         assertFalse(cloud.isNoDelayProvision());
         assertEquals("xx", cloud.getAwsCredentialsId());
         assertEquals("keyPairName", cloud.getEc2KeyPairName());
+        assertEquals(2, cloud.getEnvironmentVariables().size());
+        assertEquals("JAVA_TOOL_OPTIONS", cloud.getEnvironmentVariables().get(0).getName());
+        assertEquals("-Dsun.jnu.encoding=UTF-8", cloud.getEnvironmentVariables().get(0).getValue());
+        assertEquals("CLOUD_KIND", cloud.getEnvironmentVariables().get(1).getName());
+        assertEquals("label", cloud.getEnvironmentVariables().get(1).getValue());
 
         SSHConnector sshConnector = (SSHConnector) cloud.getComputerConnector();
         assertEquals(NonVerifyingKeyVerificationStrategy.class, sshConnector.getSshHostKeyVerificationStrategy().getClass());

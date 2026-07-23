@@ -43,7 +43,7 @@
         <f:select/>
     </f:entry>
 
-    <f:validateButton title="${%Test Connection}" progress="${%Testing...}" method="testConnection" with="awsCredentialsId,region,fleet" />
+    <f:validateButton title="${%Test Connection}" progress="${%Testing...}" method="testConnection" with="awsCredentialsId,region,endpoint,fleet" />
 
     <f:entry title="${%Launcher}" field="launcher">
       <f:dropdownDescriptorSelector field="computerConnector" descriptors="${descriptor.getComputerConnectorDescriptors()}"/>
@@ -63,6 +63,10 @@
     </f:description>
     <f:entry title="${%Restrict Usage}" field="restrictUsage">
       <f:checkbox />
+    </f:entry>
+
+    <f:entry title="${%environmentVariables}">
+        <f:repeatableProperty field="environmentVariables" />
     </f:entry>
 
     <f:description>Default is /tmp/jenkins-&lt;random ID&gt;</f:description>

@@ -1,0 +1,24 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout">
+    <j:if test="${it.configuredEnvironmentVariablesVisible}">
+        <div class="jenkins-!-margin-bottom-3">
+            <h2>${%configuredEnvironmentVariables}</h2>
+            <table class="jenkins-table jenkins-table--small jenkins-table--auto-width">
+                <thead>
+                    <tr>
+                        <th>${%environmentVariableName}</th>
+                        <th>${%environmentVariableValue}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <j:forEach var="entry" items="${it.configuredEnvironmentVariables.entrySet()}">
+                        <tr>
+                            <td>${entry.key}</td>
+                            <td>${entry.value}</td>
+                        </tr>
+                    </j:forEach>
+                </tbody>
+            </table>
+        </div>
+    </j:if>
+</j:jelly>

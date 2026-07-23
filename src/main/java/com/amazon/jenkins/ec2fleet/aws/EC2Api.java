@@ -2,6 +2,20 @@ package com.amazon.jenkins.ec2fleet.aws;
 
 import com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsHelper;
 import com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentials;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
@@ -18,21 +32,6 @@ import software.amazon.awssdk.services.ec2.model.Reservation;
 import software.amazon.awssdk.services.ec2.model.Tag;
 import software.amazon.awssdk.services.ec2.model.TerminateInstancesRequest;
 
-import javax.annotation.Nullable;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 @SuppressWarnings("WeakerAccess")
 public class EC2Api {
 
@@ -42,8 +41,7 @@ public class EC2Api {
             InstanceStateName.TERMINATED.toString(),
             InstanceStateName.STOPPED.toString(),
             InstanceStateName.STOPPING.toString(),
-            InstanceStateName.SHUTTING_DOWN.toString()
-    )));
+            InstanceStateName.SHUTTING_DOWN.toString())));
 
     private static final int BATCH_SIZE = 900;
 
@@ -65,7 +63,8 @@ public class EC2Api {
         return describeInstances(ec2, instanceIds, BATCH_SIZE);
     }
 
-    public Map<String, Instance> describeInstances(final Ec2Client ec2, final Set<String> instanceIds, final int batchSize) {
+    public Map<String, Instance> describeInstances(
+            final Ec2Client ec2, final Set<String> instanceIds, final int batchSize) {
         final Map<String, Instance> described = new HashMap<>();
         // don't do actual call if no data
         if (instanceIds.isEmpty()) return described;
@@ -93,8 +92,8 @@ public class EC2Api {
         // retry to get status and all time remove from request all non found instances if any
         while (!copy.isEmpty()) {
             try {
-                DescribeInstancesRequest request = DescribeInstancesRequest.builder().instanceIds(copy)
-                        .build();
+                DescribeInstancesRequest request =
+                        DescribeInstancesRequest.builder().instanceIds(copy).build();
 
                 DescribeInstancesResponse result;
                 do {
@@ -104,7 +103,8 @@ public class EC2Api {
                     for (final Reservation r : result.reservations()) {
                         for (final Instance instance : r.instances()) {
                             // if instance not in terminated state, add it to described
-                            if (!TERMINATED_STATES.contains(instance.state().name().toString())) {
+                            if (!TERMINATED_STATES.contains(
+                                    instance.state().name().toString())) {
                                 described.put(instance.instanceId(), instance);
                             }
                         }
@@ -117,7 +117,8 @@ public class EC2Api {
                 // if we cannot find instance, that's fine assume them as terminated
                 // remove from request and try again
                 if (exception.awsErrorDetails().errorCode().equals(NOT_FOUND_ERROR_CODE)) {
-                    final List<String> notFoundInstanceIds = parseInstanceIdsFromNotFoundException(exception.getMessage());
+                    final List<String> notFoundInstanceIds =
+                            parseInstanceIdsFromNotFoundException(exception.getMessage());
                     if (notFoundInstanceIds.isEmpty()) {
                         // looks like we cannot parse correctly, rethrow
                         throw exception;
@@ -141,9 +142,8 @@ public class EC2Api {
         // Retry if termination failed due to NOT_FOUND_ERROR_CODE
         while (!temp.isEmpty()) {
             try {
-                TerminateInstancesRequest request = TerminateInstancesRequest.builder()
-                        .instanceIds(temp)
-                        .build();
+                TerminateInstancesRequest request =
+                        TerminateInstancesRequest.builder().instanceIds(temp).build();
                 ec2.terminateInstances(request);
                 // clear after successful termination
                 temp.clear();
@@ -151,14 +151,16 @@ public class EC2Api {
                 // if we cannot find instance, that's fine assume them as terminated
                 // remove from request and try again
                 if (exception.awsErrorDetails().errorCode().equals(NOT_FOUND_ERROR_CODE)) {
-                    final List<String> notFoundInstanceIds = parseInstanceIdsFromNotFoundException(exception.getMessage());
+                    final List<String> notFoundInstanceIds =
+                            parseInstanceIdsFromNotFoundException(exception.getMessage());
                     if (notFoundInstanceIds.isEmpty()) {
                         // looks like we cannot parse correctly, rethrow
                         throw exception;
                     }
                     temp.removeAll(notFoundInstanceIds);
                 } else {
-                    LOGGER.warning(String.format("Failed terminating EC2 instanceId(s): %s with following exception: %s",
+                    LOGGER.warning(String.format(
+                            "Failed terminating EC2 instanceId(s): %s with following exception: %s",
                             StringUtils.join(instanceIds, ","), exception.getMessage()));
                     throw exception;
                 }
@@ -172,25 +174,25 @@ public class EC2Api {
         final CreateTagsRequest request = CreateTagsRequest.builder()
                 .resources(instanceIds)
                 // if you don't need value EC2 API requires empty string
-                .tags(Collections.singletonList(Tag.builder().key(key).value(value == null ? "" : value)
-                        .build()))
+                .tags(Collections.singletonList(
+                        Tag.builder().key(key).value(value == null ? "" : value).build()))
                 .build();
         ec2.createTags(request);
     }
 
     public Ec2Client connect(final String awsCredentialsId, final String regionName, final String endpoint) {
         final ClientOverrideConfiguration clientConfiguration = AWSUtils.getClientConfiguration();
-        final AmazonWebServicesCredentials credentials = AWSCredentialsHelper.getCredentials(awsCredentialsId, Jenkins.get());
-        Ec2ClientBuilder clientBuilder =
-                credentials != null ?
-                        Ec2Client.builder()
-                                .credentialsProvider(AWSUtils.toSdkV2CredentialsProvider(credentials))
-                                .overrideConfiguration(clientConfiguration) :
-                        Ec2Client.builder()
-                                .overrideConfiguration(clientConfiguration);
+        final AmazonWebServicesCredentials credentials =
+                AWSCredentialsHelper.getCredentials(awsCredentialsId, Jenkins.get());
+        Ec2ClientBuilder clientBuilder = credentials != null
+                ? Ec2Client.builder()
+                        .credentialsProvider(AWSUtils.toSdkV2CredentialsProvider(credentials))
+                        .overrideConfiguration(clientConfiguration)
+                : Ec2Client.builder().overrideConfiguration(clientConfiguration);
 
-        if (StringUtils.isNotBlank(regionName)) clientBuilder.region(Region.of(regionName));
-        final String effectiveEndpoint = getEndpoint(regionName, endpoint);
+        final String normalizedRegion = normalizeAndValidateRegionName(regionName);
+        if (normalizedRegion != null) clientBuilder.region(Region.of(normalizedRegion));
+        final String effectiveEndpoint = getEndpoint(normalizedRegion, endpoint);
         if (effectiveEndpoint != null) clientBuilder.endpointOverride(URI.create(effectiveEndpoint));
         clientBuilder.httpClient(AWSUtils.getApacheHttpClient(endpoint));
         return clientBuilder.build();
@@ -214,11 +216,26 @@ public class EC2Api {
     public String getEndpoint(@Nullable final String regionName, @Nullable final String endpoint) {
         if (StringUtils.isNotEmpty(endpoint)) {
             return endpoint;
-        } else if (StringUtils.isNotEmpty(regionName)) {
-            final String domain = regionName.startsWith("cn-") ? "amazonaws.com.cn" : "amazonaws.com";
-            return "https://ec2." + regionName + "." + domain;
+        }
+
+        final String normalizedRegion = normalizeAndValidateRegionName(regionName);
+        if (normalizedRegion != null) {
+            final String domain = normalizedRegion.startsWith("cn-") ? "amazonaws.com.cn" : "amazonaws.com";
+            return "https://ec2." + normalizedRegion + "." + domain;
         } else {
             return null;
         }
+    }
+
+    @Nullable
+    private static String normalizeAndValidateRegionName(@Nullable final String regionName) {
+        final String normalizedRegion = AwsRegionValidator.normalizeRegionName(regionName);
+        if (normalizedRegion == null) {
+            return null;
+        }
+        if (!AwsRegionValidator.isValidRegionName(normalizedRegion)) {
+            throw new IllegalArgumentException("Region must be a valid AWS region name");
+        }
+        return normalizedRegion;
     }
 }

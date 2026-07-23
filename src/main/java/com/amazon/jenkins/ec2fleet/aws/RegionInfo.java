@@ -51,7 +51,7 @@ public enum RegionInfo {
     AP_SOUTHEAST_7("ap-southeast-7", "Asia Pacific (Thailand)"),
     AWS_ISO_E_GLOBAL("aws-iso-e-global", "aws-iso-e global region"),
     MX_CENTRAL_1("mx-central-1", "Mexico (Central)"),
-    EUSC_DE_EAST_1("eusc-de-east-1", "EU (Germany)"),
+    EUSC_DE_EAST_1("eusc-de-east-1", "AWS European Sovereign Cloud (Germany)"),
     EU_ISOE_WEST_1("eu-isoe-west-1", "EU ISOE West"),
     AWS_GLOBAL("aws-global", "aws global region"),
     AWS_ISO_GLOBAL("aws-iso-global", "aws-iso global region"),

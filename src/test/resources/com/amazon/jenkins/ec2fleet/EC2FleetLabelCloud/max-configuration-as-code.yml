@@ -23,4 +23,9 @@ jenkins:
         cloudStatusIntervalSec: 11
         disableTaskResubmit: true
         noDelayProvision: false
+        environmentVariables:
+          - name: JAVA_TOOL_OPTIONS
+            value: "-Dsun.jnu.encoding=UTF-8"
+          - name: CLOUD_KIND
+            value: "label"
         ec2KeyPairName: "keyPairName"
