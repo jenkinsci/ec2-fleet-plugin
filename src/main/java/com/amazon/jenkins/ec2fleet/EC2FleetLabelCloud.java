@@ -466,7 +466,8 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
             });
             info("Delete terminating nodes from Jenkins %s", instanceIdsToRemove);
 
-            // Group instances by fleet and handle ASGs differently
+            // ASGs decide between reusing instances (warm pool) and terminating them; other fleets
+            // are terminated directly via the EC2 API.
             final Set<String> ec2InstancesToTerminate = new HashSet<>();
             for (State state : states.values()) {
                 if (state.instanceIdsToTerminate.isEmpty()) {
@@ -474,52 +475,16 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
                 }
                 final EC2Fleet fleet = EC2Fleets.get(state.fleetId);
                 if (fleet.isAutoScalingGroup()) {
-                    final AutoScalingGroupFleet asgFleet = (AutoScalingGroupFleet) fleet;
-                    // Only reuse the ASG's natural scale-in (remove protection, let ASG move instance to
-                    // warm pool) when a warm pool with an instance reuse policy is actually configured.
-                    // Otherwise keep the pre-warm-pool behavior of terminating instances directly.
-                    final boolean hasWarmPoolWithInstanceReuse = asgFleet.hasWarmPoolWithInstanceReuse(
-                            getAwsCredentialsId(), region, endpoint, state.fleetId);
-
-                    // For ASGs, separate instances by termination reason:
-                    // - MAX_TOTAL_USES_EXHAUSTED: terminate directly so ASG replaces them
-                    // - Other reasons (scale-down): remove scale-in protection and let ASG terminate naturally,
-                    //   but only when a warm pool with instance reuse is configured
-                    final Set<String> instancesToTerminateDirectly = new HashSet<>();
-                    final Set<String> instancesToRemoveProtection = new HashSet<>();
-
-                    for (Map.Entry<String, EC2AgentTerminationReason> entry : state.instanceIdsToTerminate.entrySet()) {
-                        if (entry.getValue() == EC2AgentTerminationReason.MAX_TOTAL_USES_EXHAUSTED || !hasWarmPoolWithInstanceReuse) {
-                            instancesToTerminateDirectly.add(entry.getKey());
-                        } else {
-                            instancesToRemoveProtection.add(entry.getKey());
-                        }
-                    }
-
-                    if (!instancesToTerminateDirectly.isEmpty()) {
-                        fine("Terminating instances in AutoScalingGroup %s (maxTotalUses exhausted): %s",
-                                state.fleetId, instancesToTerminateDirectly);
-                        asgFleet.terminateInstances(
-                                getAwsCredentialsId(), region, endpoint, state.fleetId, instancesToTerminateDirectly);
-                        info("Terminated instances (maxTotalUses exhausted, ASG will replace): %s", instancesToTerminateDirectly);
-                    }
-
-                    if (!instancesToRemoveProtection.isEmpty()) {
-                        fine("Removing scale-in protection from instances in AutoScalingGroup %s: %s",
-                                state.fleetId, instancesToRemoveProtection);
-                        asgFleet.removeScaleInProtection(
-                                getAwsCredentialsId(), region, endpoint, state.fleetId, instancesToRemoveProtection);
-                        info("Removed scale-in protection from instances (ASG will terminate them): %s", instancesToRemoveProtection);
-                    }
+                    fine("Terminating instances in AutoScalingGroup %s: %s",
+                            state.fleetId, state.instanceIdsToTerminate.keySet());
+                    ((AutoScalingGroupFleet) fleet).terminateInstances(
+                            getAwsCredentialsId(), region, endpoint, state.fleetId, state.instanceIdsToTerminate);
                 } else {
-                    // For non-ASG fleets, collect instances to terminate via EC2 API
                     ec2InstancesToTerminate.addAll(state.instanceIdsToTerminate.keySet());
                 }
             }
 
-            // Terminate non-ASG instances via EC2 API
             if (!ec2InstancesToTerminate.isEmpty()) {
-                fine("Terminating instances via EC2 API: %s", ec2InstancesToTerminate);
                 Registry.getEc2Api().terminateInstances(ec2, ec2InstancesToTerminate);
                 info("Instances %s were terminated", ec2InstancesToTerminate);
             }
