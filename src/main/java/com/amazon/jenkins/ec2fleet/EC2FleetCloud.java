@@ -556,14 +556,40 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                 info(
                         "Planned number of nodes '%s' is greater than the targetCapacity '%s'. Canceling a node",
                         plannedNodesCache.size(), updatedTargetCapacity);
-                final Iterator<NodeProvisioner.PlannedNode> iterator = plannedNodesCache.iterator();
-                final NodeProvisioner.PlannedNode plannedNodeToCancel = iterator.next();
-                iterator.remove();
-                // cancel to let jenkins know that the node is not valid anymore
-                plannedNodeToCancel.future.cancel(true);
+                cancelOnePlannedNode();
+            }
+
+            // Planned nodes must correspond to desired instances that are not yet registered as Jenkins
+            // nodes. If an instance is reclaimed before it registers, or a scale-down races a scale-up, the
+            // fleet settles with every desired instance already registered while a planned node is still
+            // cached: its scheduled timeout was already cancelled by removePlannedNodeScheduledFutures after
+            // scaling, and EC2FleetOnlineChecker never started because the instance never appeared. Such a
+            // node would stay in Jenkins' planned capacity forever and suppress all future provisioning for
+            // the label (issue #425).
+            int registeredFleetNodes = 0;
+            for (final Node node : Jenkins.get().getNodes()) {
+                if (node instanceof EC2FleetNode && name.equals(((EC2FleetNode) node).getCloudName())) {
+                    registeredFleetNodes++;
+                }
+            }
+            final int unregisteredInstances = Math.max(0, stats.getNumDesired() - registeredFleetNodes + toAdd);
+            while (plannedNodesCache.size() > unregisteredInstances) {
+                info(
+                        "Planned number of nodes '%s' is greater than the number of desired instances not yet"
+                                + " registered as Jenkins nodes '%s'. Canceling a stranded planned node",
+                        plannedNodesCache.size(), unregisteredInstances);
+                cancelOnePlannedNode();
             }
             return stats;
         }
+    }
+
+    private void cancelOnePlannedNode() {
+        final Iterator<NodeProvisioner.PlannedNode> iterator = plannedNodesCache.iterator();
+        final NodeProvisioner.PlannedNode plannedNodeToCancel = iterator.next();
+        iterator.remove();
+        // cancel to let jenkins know that the node is not valid anymore
+        plannedNodeToCancel.future.cancel(true);
     }
 
     private Map<String, EC2AgentTerminationReason> filterOutBusyNodes() {
