@@ -1,7 +1,7 @@
 package com.amazon.jenkins.ec2fleet;
 
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import java.util.Collections;
 import java.util.HashSet;

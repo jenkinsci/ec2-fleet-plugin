@@ -3,7 +3,7 @@ package com.amazon.jenkins.ec2fleet;
 import hudson.EnvVars;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.SlaveComputer;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
