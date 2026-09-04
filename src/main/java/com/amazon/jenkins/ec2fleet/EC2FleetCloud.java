@@ -679,6 +679,14 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         if (currentInstanceIdsToTerminate.size() > 0) {
             if (EC2Fleets.get(fleet).isAutoScalingGroup()) {
                 final AutoScalingGroupFleet asgFleet = (AutoScalingGroupFleet) EC2Fleets.get(fleet);
+                final Iterator<Map.Entry<String, EC2AgentTerminationReason>> iterator =
+                        currentInstanceIdsToTerminate.entrySet().iterator();
+                while (iterator.hasNext()) {
+                    final Map.Entry<String, EC2AgentTerminationReason> entry = iterator.next();
+                    if (!isSafeToTerminate(jenkins.getComputer(entry.getKey()))) {
+                        iterator.remove();
+                    }
+                }
                 if (asgFleet.hasWarmPoolWithInstanceReuse(awsCredentialsId, region, endpoint, fleet)) {
                     // Warm pool with instance reuse: hand instances back to the ASG so it can reuse them.
                     fine("Scaling down AutoScalingGroup with warm pool: %s", currentInstanceIdsToTerminate.keySet());

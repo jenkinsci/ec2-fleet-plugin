@@ -1419,6 +1419,58 @@ class EC2FleetCloudTest {
     }
 
     @Test
+    void update_shouldSkipBusyInstanceAtTerminationTime() {
+        when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
+
+        final EC2FleetNodeComputer computer = mock(EC2FleetNodeComputer.class);
+        when(computer.countBusy()).thenReturn(1);
+        when(computer.isAcceptingTasks()).thenReturn(false);
+        when(computer.isIdle()).thenReturn(false);
+
+        Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(new FleetStateStats(
+                        "fleetId", 1, FleetStateStats.State.active(), Collections.singleton("i-1"), Collections.emptyMap()));
+
+        final EC2FleetCloud fleetCloud = new EC2FleetCloud(
+                "TestCloud",
+                "credId",
+                null,
+                "region",
+                "",
+                "fleetId",
+                "",
+                null,
+                Mockito.mock(ComputerConnector.class),
+                false,
+                false,
+                0,
+                0,
+                10,
+                0,
+                1,
+                false,
+                false,
+                "-1",
+                false,
+                0,
+                0,
+                10,
+                false,
+                false,
+                noScaling);
+
+        fleetCloud.setStats(new FleetStateStats(
+                "fleetId", 1, FleetStateStats.State.active(), Collections.singleton("i-1"), Collections.emptyMap()));
+        fleetCloud.scheduleToTerminate("i-1", false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
+
+        when(jenkins.getComputer("i-1")).thenReturn(computer);
+
+        fleetCloud.update();
+
+        verify(ec2Api, never()).terminateInstances(eq(amazonEC2), any(Set.class));
+    }
+
+    @Test
     void update_shouldAddNodeIfAnyNewDescribed() throws IOException {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
