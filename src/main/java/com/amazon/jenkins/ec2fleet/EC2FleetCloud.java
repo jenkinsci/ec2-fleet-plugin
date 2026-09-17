@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -489,6 +490,17 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                     getScheduledFutureTimeoutSec(),
                     TimeUnit.SECONDS);
             plannedNodeScheduledFutures.add(scheduledFuture);
+
+            // a cancelled planned node (see cancelOnePlannedNode) leaves its timeout with nothing to guard, and the
+            // list has no mapping back to the planned node, so drop the timeout from here where both are known
+            completableFuture.whenComplete((node, error) -> {
+                if (error instanceof CancellationException) {
+                    scheduledFuture.cancel(false);
+                    synchronized (this) {
+                        plannedNodeScheduledFutures.remove(scheduledFuture);
+                    }
+                }
+            });
         }
         return resultList;
     }
