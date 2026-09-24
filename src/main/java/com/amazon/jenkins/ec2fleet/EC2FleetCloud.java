@@ -786,12 +786,16 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             Queue.withLock(new Runnable() {
                 @Override
                 public void run() {
-                    try {
-                        for (final Instance instance : newFleetInstances.values()) {
+                    for (final Instance instance : newFleetInstances.values()) {
+                        try {
                             addNewAgent(ec2, instance, updatedState);
+                        } catch (final Exception ex) {
+                            warning(
+                                    ex,
+                                    "Unable to add new agent for instance '%s': %s",
+                                    instance.instanceId(),
+                                    ex);
                         }
-                    } catch (final Exception ex) {
-                        warning(ex, "Unable to set label on node");
                     }
                 }
             });
@@ -935,7 +939,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             effectiveFsRoot = fsRoot;
         }
 
-        int effectiveNumExecutors = this.executorScaler.scale(instance.instanceType(), stats, ec2);
+        int effectiveNumExecutors = this.executorScaler.scale(instance.instanceTypeAsString(), stats, ec2);
 
         final EC2FleetAutoResubmitComputerLauncher computerLauncher =
                 new EC2FleetAutoResubmitComputerLauncher(computerConnector.launch(address, TaskListener.NULL));
@@ -1209,7 +1213,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
         protected ExecutorScaler() {}
 
-        public abstract int scale(InstanceType instanceType, FleetStateStats stats, Ec2Client ec2);
+        public abstract int scale(String instanceType, FleetStateStats stats, Ec2Client ec2);
 
         public ExecutorScaler withNumExecutors(int numExecutors) {
             setNumExecutors(numExecutors);
@@ -1233,7 +1237,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         public NoScaler() {}
 
         @Override
-        public int scale(InstanceType instanceType, FleetStateStats stats, Ec2Client ec2) {
+        public int scale(String instanceType, FleetStateStats stats, Ec2Client ec2) {
             return numExecutors;
         }
 
@@ -1252,12 +1256,12 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         public WeightedScaler() {}
 
         @Override
-        public int scale(InstanceType instanceType, FleetStateStats stats, Ec2Client ec2) {
+        public int scale(String instanceType, FleetStateStats stats, Ec2Client ec2) {
             if (stats == null) {
                 return numExecutors;
             }
 
-            final Double instanceTypeWeight = stats.getInstanceTypeWeights().get(instanceType.toString());
+            final Double instanceTypeWeight = stats.getInstanceTypeWeights().get(instanceType);
             if (instanceTypeWeight == null) {
                 return numExecutors;
             }
@@ -1302,14 +1306,25 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
         }
 
         @Override
-        public int scale(final InstanceType instanceType, final FleetStateStats stats, final Ec2Client ec2) {
+        public int scale(final String instanceType, final FleetStateStats stats, final Ec2Client ec2) {
             if (this.vCpuPerExecutor == 0 && this.memoryGiBPerExecutor == 0) {
                 return numExecutors;
             }
 
             int vCPUNumExecutors = Integer.MAX_VALUE;
             int memoryNumExecutors = Integer.MAX_VALUE;
-            InstanceTypeInfo instanceTypeInfo = getInstanceTypeInfo(ec2, instanceType);
+            InstanceTypeInfo instanceTypeInfo;
+            try {
+                instanceTypeInfo = getInstanceTypeInfo(ec2, instanceType);
+            } catch (final Exception ex) {
+                LOGGER.log(
+                        Level.WARNING,
+                        String.format(
+                                "Unable to describe instance type '%s', falling back to configured numExecutors (%s)",
+                                instanceType, numExecutors),
+                        ex);
+                return numExecutors;
+            }
             if (this.vCpuPerExecutor != 0) {
                 int instanceVCPUs = instanceTypeInfo.vCpuInfo().defaultVCpus();
                 vCPUNumExecutors = Math.max(instanceVCPUs / this.vCpuPerExecutor, 1);
@@ -1330,9 +1345,9 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
             }
         }
 
-        private InstanceTypeInfo getInstanceTypeInfo(final Ec2Client ec2, final InstanceType instanceType) {
+        private InstanceTypeInfo getInstanceTypeInfo(final Ec2Client ec2, final String instanceType) {
             DescribeInstanceTypesRequest request = DescribeInstanceTypesRequest.builder()
-                    .instanceTypes(instanceType)
+                    .instanceTypesWithStrings(instanceType)
                     .build();
             DescribeInstanceTypesResponse result = ec2.describeInstanceTypes(request);
             return result.instanceTypes().get(0);
