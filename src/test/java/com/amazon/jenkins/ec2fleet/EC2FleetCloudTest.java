@@ -67,6 +67,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.ec2.Ec2Client;
 import software.amazon.awssdk.services.ec2.model.*;
 
@@ -1553,6 +1554,72 @@ class EC2FleetCloudTest {
                         "TestCloud");
         Node actualFleetNode = nodeCaptor.getValue();
         assertEquals(Node.Mode.NORMAL, actualFleetNode.getMode());
+    }
+
+    @Test
+    void update_whenAddNewAgentFailsForOneInstance_shouldStillAddRemainingInstances() throws IOException {
+        // given
+        when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
+
+        final Instance instance1 =
+                Instance.builder().publicIpAddress("p-ip").instanceId("i-0").build();
+        final Instance instance2 =
+                Instance.builder().publicIpAddress("p-ip").instanceId("i-1").build();
+        final HashMap<String, Instance> instanceIdMap = new HashMap<>();
+        instanceIdMap.put("i-0", instance1);
+        instanceIdMap.put("i-1", instance2);
+
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(instanceIdMap);
+
+        Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(new FleetStateStats(
+                        "fleetId",
+                        0,
+                        FleetStateStats.State.active(),
+                        new HashSet<>(Arrays.asList("i-0", "i-1")),
+                        Collections.emptyMap()));
+
+        mockNodeCreatingPart();
+
+        // simulate a failure adding node "i-0" to Jenkins, unrelated to node "i-1"
+        doThrow(new RuntimeException("boom"))
+                .when(jenkins)
+                .addNode(argThat(n -> n != null && "i-0".equals(n.getNodeName())));
+        doNothing().when(jenkins).addNode(argThat(n -> n != null && "i-1".equals(n.getNodeName())));
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud(
+                "TestCloud",
+                "credId",
+                null,
+                "region",
+                "",
+                "fleetId",
+                "",
+                null,
+                Mockito.mock(ComputerConnector.class),
+                false,
+                false,
+                0,
+                0,
+                2,
+                0,
+                1,
+                false,
+                false,
+                "-1",
+                false,
+                0,
+                0,
+                10,
+                false,
+                false,
+                noScaling);
+
+        // when
+        fleetCloud.update();
+
+        // then - the failure adding "i-0" doesn't prevent "i-1" from being added
+        verify(jenkins).addNode(argThat(n -> n != null && "i-1".equals(n.getNodeName())));
     }
 
     @Test
@@ -3210,6 +3277,77 @@ class EC2FleetCloudTest {
         // then
         Node actualFleetNode = nodeCaptor.getValue();
         assertEquals(2, actualFleetNode.getNumExecutors());
+    }
+
+    @Test
+    void update_whenDescribeInstanceTypesFails_shouldFallbackToNumExecutorsAndStillAddNode() throws IOException {
+        when(amazonEC2.describeInstanceTypes(any(DescribeInstanceTypesRequest.class)))
+                .thenThrow(SdkException.create("throttled", null));
+
+        when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
+
+        final Instance instance = Instance.builder()
+                .publicIpAddress("p-ip")
+                .instanceId("i-0")
+                .instanceType(InstanceType.T3_A_MEDIUM)
+                .state(InstanceState.builder().name(InstanceStateName.RUNNING).build())
+                .build();
+
+        final HashMap<String, Instance> instanceIdMap = new HashMap<>();
+        instanceIdMap.put("i-0", instance);
+
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(instanceIdMap);
+
+        Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(new FleetStateStats(
+                        "fleetId",
+                        0,
+                        FleetStateStats.State.active(),
+                        Collections.singleton("i-0"),
+                        Collections.emptyMap()));
+
+        mockNodeCreatingPart();
+
+        // configured with 3 executors, node hardware scaling on but describeInstanceTypes will fail
+        EC2FleetCloud.NodeHardwareScaler nodeHardwareScaler = new EC2FleetCloud.NodeHardwareScaler(1, 1);
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud(
+                "TestCloud",
+                "credId",
+                null,
+                "region",
+                "",
+                "fleetId",
+                "",
+                null,
+                Mockito.mock(ComputerConnector.class),
+                false,
+                false,
+                0,
+                0,
+                10,
+                0,
+                3,
+                true,
+                false,
+                "-1",
+                false,
+                0,
+                0,
+                10,
+                false,
+                false,
+                nodeHardwareScaler);
+
+        ArgumentCaptor<Node> nodeCaptor = ArgumentCaptor.forClass(Node.class);
+        doNothing().when(jenkins).addNode(nodeCaptor.capture());
+
+        // when
+        fleetCloud.update();
+
+        // then - node is still registered, falling back to the configured numExecutors
+        Node actualFleetNode = nodeCaptor.getValue();
+        assertEquals(3, actualFleetNode.getNumExecutors());
     }
 
     @Test
