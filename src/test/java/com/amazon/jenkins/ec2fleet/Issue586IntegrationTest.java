@@ -86,7 +86,7 @@ class Issue586IntegrationTest extends IntegrationTest {
         assertFalse(computer.getExecutors().isEmpty());
         ageIdleTime(computer, TimeUnit.MINUTES.toMillis(2));
 
-        ((EC2RetentionStrategy) node.getRetentionStrategy()).check(computer);
+        ((EC2RetentionStrategy) computer.getRetentionStrategy()).check(computer);
 
         assertTrue(computer.isScheduledForTermination());
         assertTrue(computer.isOffline());
