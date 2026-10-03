@@ -110,6 +110,8 @@ class Issue586IntegrationTest extends IntegrationTest {
     void removeNode_resubmits_running_build_after_cloud_reference_is_cleared() throws Exception {
         final EC2FleetCloud cloud = newCloud();
         j.jenkins.clouds.add(cloud);
+        // Register the instance directly. CloudNanny would otherwise wait cloudStatusIntervalSec before the first update.
+        cloud.update();
 
         final FreeStyleProject project = j.createFreeStyleProject();
         project.setAssignedLabel(new LabelAtom("momo"));
@@ -117,11 +119,13 @@ class Issue586IntegrationTest extends IntegrationTest {
                 .add(Functions.isWindows() ? new BatchFile("ping -n 20 127.0.0.1 > nul") : new Shell("sleep 20"));
         project.scheduleBuild2(0);
         triggerSuggestReviewNow();
-        assertAtLeastOneNode();
 
         final Node node = j.jenkins.getNode("i-1");
         assertNotNull(node);
-        assertQueueIsEmpty();
+        tryUntil(() -> {
+            assertNotNull(project.getLastBuild());
+            assertTrue(project.getLastBuild().isBuilding());
+        });
 
         j.jenkins.removeNode(node);
         // afterDisconnect runs after the node is unlinked; give it a moment, then let the fleet reattach the instance.

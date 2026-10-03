@@ -164,11 +164,12 @@ class EC2FleetNodeComputerTest {
     void getCloud_uses_cached_name_when_node_is_gone() {
         when(agent.getCloudName()).thenReturn("asg-devops");
         when(agent.getDisplayName()).thenReturn("asg-devops i-1");
+        // Construct before stubbing Jenkins.getInstanceOrNull. SlaveComputer's constructor
+        // resolves console filters through that call, and a mock Jenkins has no extension list.
+        final EC2FleetNodeComputer computer = spy(new EC2FleetNodeComputer(agent));
         final EC2FleetCloud cloud = mock(EC2FleetCloud.class);
         mockedJenkins.when(Jenkins::getInstanceOrNull).thenReturn(jenkins);
         when(jenkins.getCloud("asg-devops")).thenReturn(cloud);
-
-        final EC2FleetNodeComputer computer = spy(new EC2FleetNodeComputer(agent));
         doReturn(null).when(computer).getNode();
 
         assertSame(cloud, computer.getCloud());
