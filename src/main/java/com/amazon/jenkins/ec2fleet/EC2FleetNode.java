@@ -84,6 +84,20 @@ public class EC2FleetNode extends Slave implements EphemeralNode {
         return new EC2FleetNodeComputer(this);
     }
 
+    /**
+     * Flyweight tasks consult {@link Node#canTake} and therefore {@link #isAcceptingTasks()}, not
+     * {@link Computer#setAcceptingTasks(boolean)}. A condemned agent must fail that check too.
+     */
+    @Override
+    public boolean isAcceptingTasks() {
+        final Computer computer = toComputer();
+        if (computer instanceof EC2FleetNodeComputer
+                && ((EC2FleetNodeComputer) computer).isScheduledForTermination()) {
+            return false;
+        }
+        return true;
+    }
+
     public AbstractEC2FleetCloud getCloud() {
         return (AbstractEC2FleetCloud) Jenkins.get().getCloud(cloudName);
     }
