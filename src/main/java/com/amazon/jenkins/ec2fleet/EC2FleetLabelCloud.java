@@ -96,6 +96,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
     private final Integer initOnlineCheckIntervalSec;
     private final Integer cloudStatusIntervalSec;
     private final String ec2KeyPairName;
+    private boolean terminateOnConnectionFailure;
 
     /**
      * @see EC2FleetAutoResubmitComputerLauncher
@@ -106,6 +107,7 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
      * @see NoDelayProvisionStrategy
      */
     private final boolean noDelayProvision;
+
     private List<CloudEnvironmentVariable> environmentVariables = Collections.emptyList();
 
     private transient Map<String, State> states;
@@ -170,6 +172,15 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
 
     public boolean isDisableTaskResubmit() {
         return disableTaskResubmit;
+    }
+
+    public boolean isTerminateOnConnectionFailure() {
+        return terminateOnConnectionFailure;
+    }
+
+    @DataBoundSetter
+    public void setTerminateOnConnectionFailure(final boolean terminateOnConnectionFailure) {
+        this.terminateOnConnectionFailure = terminateOnConnectionFailure;
     }
 
     public List<CloudEnvironmentVariable> getEnvironmentVariables() {
@@ -476,16 +487,23 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
                 }
                 final EC2Fleet fleet = EC2Fleets.get(state.fleetId);
                 // Look up the warm pool at most once per fleet.
-                final boolean useWarmPool = warmPoolByFleetId.computeIfAbsent(state.fleetId, id ->
-                        fleet.isAutoScalingGroup()
-                                && ((AutoScalingGroupFleet) fleet).hasWarmPoolWithInstanceReuse(
-                                        getAwsCredentialsId(), region, endpoint, id));
+                final boolean useWarmPool = warmPoolByFleetId.computeIfAbsent(
+                        state.fleetId,
+                        id -> fleet.isAutoScalingGroup()
+                                && ((AutoScalingGroupFleet) fleet)
+                                        .hasWarmPoolWithInstanceReuse(getAwsCredentialsId(), region, endpoint, id));
                 if (useWarmPool) {
                     // Warm pool with instance reuse confirmed: hand instances back to the ASG so it can reuse them.
-                    fine("Scaling down AutoScalingGroup %s with warm pool: %s",
+                    fine(
+                            "Scaling down AutoScalingGroup %s with warm pool: %s",
                             state.fleetId, state.instanceIdsToTerminate.keySet());
-                    ((AutoScalingGroupFleet) fleet).scaleDownWithWarmPool(
-                            getAwsCredentialsId(), region, endpoint, state.fleetId, state.instanceIdsToTerminate);
+                    ((AutoScalingGroupFleet) fleet)
+                            .scaleDownWithWarmPool(
+                                    getAwsCredentialsId(),
+                                    region,
+                                    endpoint,
+                                    state.fleetId,
+                                    state.instanceIdsToTerminate);
                     instanceIdsToRemove.keySet().removeAll(state.instanceIdsToTerminate.keySet());
                 }
             }

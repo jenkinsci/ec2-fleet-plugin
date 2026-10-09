@@ -1,5 +1,11 @@
 package com.amazon.jenkins.ec2fleet;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 import hudson.plugins.sshslaves.SSHConnector;
@@ -8,18 +14,11 @@ import io.jenkins.plugins.casc.ConfiguratorException;
 import io.jenkins.plugins.casc.misc.ConfiguredWithCode;
 import io.jenkins.plugins.casc.misc.JenkinsConfiguredWithCodeRule;
 import io.jenkins.plugins.casc.misc.junit.jupiter.WithJenkinsConfiguredWithCode;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.nullable;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 @WithJenkinsConfiguredWithCode
 class EC2FleetLabelCloudConfigurationAsCodeTest {
@@ -29,14 +28,20 @@ class EC2FleetLabelCloudConfigurationAsCodeTest {
         final EC2Fleet fleet = mock(EC2Fleet.class);
         EC2Fleets.setGet(fleet);
         when(fleet.getState(anyString(), anyString(), nullable(String.class), anyString()))
-                .thenReturn(new FleetStateStats("", 2, FleetStateStats.State.active(), new HashSet<>(Arrays.asList("i-1", "i-2")), Collections.emptyMap()));
+                .thenReturn(new FleetStateStats(
+                        "",
+                        2,
+                        FleetStateStats.State.active(),
+                        new HashSet<>(Arrays.asList("i-1", "i-2")),
+                        Collections.emptyMap()));
     }
 
     @Test
     @ConfiguredWithCode(
             value = "EC2FleetLabelCloud/name-required-configuration-as-code.yml",
             expected = ConfiguratorException.class,
-            message = "error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator")
+            message =
+                    "error configuring 'jenkins' with class io.jenkins.plugins.casc.core.JenkinsConfigurator configurator")
     void configurationWithNullName_shouldFail(JenkinsConfiguredWithCodeRule jenkinsRule) {
         // NOP
     }
@@ -62,6 +67,7 @@ class EC2FleetLabelCloudConfigurationAsCodeTest {
         assertEquals(15, cloud.getInitOnlineCheckIntervalSec());
         assertEquals(10, cloud.getCloudStatusIntervalSec());
         assertFalse(cloud.isDisableTaskResubmit());
+        assertFalse(cloud.isTerminateOnConnectionFailure());
         assertFalse(cloud.isNoDelayProvision());
         assertNull(cloud.getEc2KeyPairName());
         assertTrue(cloud.getEnvironmentVariables().isEmpty());
@@ -88,17 +94,22 @@ class EC2FleetLabelCloudConfigurationAsCodeTest {
         assertEquals(13, cloud.getInitOnlineCheckIntervalSec());
         assertEquals(11, cloud.getCloudStatusIntervalSec());
         assertTrue(cloud.isDisableTaskResubmit());
+        assertTrue(cloud.isTerminateOnConnectionFailure());
         assertFalse(cloud.isNoDelayProvision());
         assertEquals("xx", cloud.getAwsCredentialsId());
         assertEquals("keyPairName", cloud.getEc2KeyPairName());
         assertEquals(2, cloud.getEnvironmentVariables().size());
         assertEquals("JAVA_TOOL_OPTIONS", cloud.getEnvironmentVariables().get(0).getName());
-        assertEquals("-Dsun.jnu.encoding=UTF-8", cloud.getEnvironmentVariables().get(0).getValue());
+        assertEquals(
+                "-Dsun.jnu.encoding=UTF-8",
+                cloud.getEnvironmentVariables().get(0).getValue());
         assertEquals("CLOUD_KIND", cloud.getEnvironmentVariables().get(1).getName());
         assertEquals("label", cloud.getEnvironmentVariables().get(1).getValue());
 
         SSHConnector sshConnector = (SSHConnector) cloud.getComputerConnector();
-        assertEquals(NonVerifyingKeyVerificationStrategy.class, sshConnector.getSshHostKeyVerificationStrategy().getClass());
+        assertEquals(
+                NonVerifyingKeyVerificationStrategy.class,
+                sshConnector.getSshHostKeyVerificationStrategy().getClass());
     }
 
     @Test
@@ -106,7 +117,7 @@ class EC2FleetLabelCloudConfigurationAsCodeTest {
     void configurationWithEmptyName_shouldUseDefault(JenkinsConfiguredWithCodeRule jenkinsRule) {
         assertEquals(3, jenkinsRule.jenkins.clouds.size());
 
-        for (EC2FleetLabelCloud cloud : jenkinsRule.jenkins.clouds.getAll(EC2FleetLabelCloud.class)){
+        for (EC2FleetLabelCloud cloud : jenkinsRule.jenkins.clouds.getAll(EC2FleetLabelCloud.class)) {
 
             assertTrue(cloud.name.startsWith(EC2FleetLabelCloud.BASE_DEFAULT_FLEET_CLOUD_ID));
             assertEquals(("FleetLabelCloud".length() + CloudNames.SUFFIX_LENGTH + 1), cloud.name.length());

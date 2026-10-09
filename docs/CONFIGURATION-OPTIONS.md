@@ -24,7 +24,7 @@ Disable Build Resubmit | Do not automatically resubmit jobs that were interrupte
 Maximum Init Connection Timeout in sec | EC2 instances aren't ready immediately after they're provisioned. They must become active and complete any userdata script. If that process takes longer than the time set here, consider that EC2 instance lost.                                 | 180                                         
 Cloud Status Interval in sec | How long to wait between update cycles. Shorter times enable the fleet to scale faster, but cause more API calls.                                                                                                                                 | 10                                          
 No Delay Provision Strategy | The default Jenkins strategy scales exponentially, meaning it might take a few cycles before all the pending jobs are provisioned. The "No Delay Provisioning Strategy" tries to get enough executors for all pending jobs in a single cycle.     | disabled                                    
-
+Terminate agent after connection failure | Schedule an agent for termination when its initial connection fails after launcher retries, so the fleet can replace it. | disabled
 
 # EC2 Fleet Label Based
 
@@ -48,3 +48,4 @@ Disable Build Resubmit | Do not automatically resubmit jobs that were interrupte
 Maximum Init Connection Timeout in sec | EC2 instances aren't ready immediately after they're provisioned. They must become active and complete any userdata script. If that process takes longer than the time set here, consider that EC2 instance lost. | 180
 Cloud Status Interval in sec | How long to wait between update cycles. Shorter times enable the fleet to scale faster, but cause more API calls. | 10
 No Delay Provision Strategy | The default Jenkins strategy scales exponentially, meaning it might take a few cycles before all the pending jobs are provisioned. The "No Delay Provisioning Strategy" tries to get enough executors for all pending jobs in a single cycle. | disabled
+Terminate agent after connection failure | Schedule an agent for termination when its initial connection fails after launcher retries, so the fleet can replace it. | disabled
