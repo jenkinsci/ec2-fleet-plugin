@@ -11,7 +11,6 @@ import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlFormUtil;
 import org.htmlunit.html.HtmlInput;
 import org.htmlunit.html.HtmlPage;
-import org.htmlunit.html.HtmlTableRow;
 import org.htmlunit.html.HtmlTextInput;
 import hudson.PluginWrapper;
 import hudson.model.Node;
@@ -329,10 +328,10 @@ class UiIntegrationTest {
         assertEquals("test-cloud", ((HtmlInput) elementsByName.get(0)).getValueAttribute());
         assertEquals("test-cloud", ((HtmlInput) elementsByName.get(1)).getValueAttribute());
 
-        List<HtmlTableRow> rows = page.getByXPath("//table[@id='clouds']/tbody/tr[@class='repeated-chunk']");
-        assertEquals(2, rows.size());
-        for (HtmlTableRow row : rows) {
-            List<HtmlAnchor> configureLinks = row.getByXPath(".//a[contains(@href, '/configure')]");
+        List<DomElement> cloudItems = page.getByXPath("//div[@class='repeated-chunk']");
+        assertEquals(2, cloudItems.size());
+        for (DomElement cloudItem : cloudItems) {
+            List<HtmlAnchor> configureLinks = cloudItem.getByXPath(".//a[contains(@href, '/configure')]");
             assertEquals(1, configureLinks.size());
         }
     }
