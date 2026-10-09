@@ -1,12 +1,17 @@
 package com.amazon.jenkins.ec2fleet;
 
 import hudson.EnvVars;
+import hudson.slaves.ComputerLauncher;
+import hudson.slaves.DelegatingComputerLauncher;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.SlaveComputer;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -24,6 +29,8 @@ public class EC2FleetNodeComputer extends SlaveComputer {
     private static final Logger LOGGER = Logger.getLogger(EC2FleetNodeComputer.class.getName());
     private boolean isMarkedForDeletion;
     private volatile boolean hasConnectedSuccessfully;
+    private transient ScheduledFuture<?> connectionFailureCheck;
+    private transient boolean connectionFailureCheckScheduled;
 
     public EC2FleetNodeComputer(final EC2FleetNode agent) {
         super(agent);
@@ -38,8 +45,37 @@ public class EC2FleetNodeComputer extends SlaveComputer {
         return hasConnectedSuccessfully;
     }
 
-    void markConnectedSuccessfully() {
+    synchronized void markConnectedSuccessfully() {
         hasConnectedSuccessfully = true;
+        if (connectionFailureCheck != null) {
+            connectionFailureCheck.cancel(false);
+            connectionFailureCheck = null;
+        }
+    }
+
+    synchronized void scheduleConnectionFailureCheck(
+            final ScheduledExecutorService executor, final Runnable check, final long delayMillis) {
+        if (hasConnectedSuccessfully || connectionFailureCheckScheduled) {
+            return;
+        }
+        connectionFailureCheckScheduled = true;
+        connectionFailureCheck = executor.schedule(() -> {
+            synchronized (EC2FleetNodeComputer.this) {
+                connectionFailureCheck = null;
+                if (hasConnectedSuccessfully || isOnline()) {
+                    return;
+                }
+            }
+            check.run();
+        }, delayMillis, TimeUnit.MILLISECONDS);
+    }
+
+    ComputerLauncher getBaseLauncher() {
+        ComputerLauncher launcher = getLauncher();
+        while (launcher instanceof DelegatingComputerLauncher) {
+            launcher = ((DelegatingComputerLauncher) launcher).getLauncher();
+        }
+        return launcher;
     }
 
     @Override

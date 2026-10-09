@@ -30,7 +30,7 @@
 | restrictUsage              | boolean | no, default ```false```                  | if ```true``` fleet nodes will executed only jobs with same label                                                                           |
 | executorScaler             | object  | no, default ```NoScaler```               | Can be set to noScaler, weightedScaler, or nodeHardwareScaler. nodeHardwareScaler has subfields of vCpuPerExecutor and memoryGiBPerExecutor |
 | disableTaskResubmit        | boolean | no, default ```false```                  |                                                                                                                                             |
-| terminateOnConnectionFailure | boolean | no, default ```false```                  | Schedule an agent for termination when its initial connection fails after launcher retries, allowing the fleet to replace it.                  |
+| terminateOnConnectionFailure | boolean | no, default ```false```                  | For SSH connectors, terminate an agent when its initial connection still fails after the configured retries, allowing the fleet to replace it.     |
 | initOnlineTimeoutSec       | int     | no, default ```180```                    |                                                                                                                                             |
 | initOnlineCheckIntervalSec | int     | no, default ```15```                     |                                                                                                                                             |
 | cloudStatusIntervalSec     | int     | no, default ```10```                     |                                                                                                                                             |
@@ -42,7 +42,7 @@ More about this type [here](LABEL-BASED-CONFIGURATION.md)
 
 [Definition](https://github.com/jenkinsci/ec2-fleet-plugin/blob/master/src/main/java/com/amazon/jenkins/ec2fleet/EC2FleetLabelCloud.java#L123-L145)
 
-The `terminateOnConnectionFailure` property is also supported and defaults to `false`.
+The `terminateOnConnectionFailure` property is also supported and defaults to `false`. With SSH connectors, it schedules an agent for termination after the configured connection retries fail.
 
 ## Examples
 
