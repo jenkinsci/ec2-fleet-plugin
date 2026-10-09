@@ -124,6 +124,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
     private final Integer initOnlineCheckIntervalSec;
     private final Integer cloudStatusIntervalSec;
     private final Integer maxTotalUses;
+    private boolean terminateOnConnectionFailure;
 
     /**
      * @see EC2FleetAutoResubmitComputerLauncher
@@ -134,6 +135,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
      * @see NoDelayProvisionStrategy
      */
     private final boolean noDelayProvision;
+
     private List<CloudEnvironmentVariable> environmentVariables = Collections.emptyList();
 
     /**
@@ -242,6 +244,15 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
 
     public boolean isDisableTaskResubmit() {
         return disableTaskResubmit;
+    }
+
+    public boolean isTerminateOnConnectionFailure() {
+        return terminateOnConnectionFailure;
+    }
+
+    @DataBoundSetter
+    public void setTerminateOnConnectionFailure(final boolean terminateOnConnectionFailure) {
+        this.terminateOnConnectionFailure = terminateOnConnectionFailure;
     }
 
     public List<CloudEnvironmentVariable> getEnvironmentVariables() {
@@ -682,11 +693,13 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                 if (asgFleet.hasWarmPoolWithInstanceReuse(awsCredentialsId, region, endpoint, fleet)) {
                     // Warm pool with instance reuse: hand instances back to the ASG so it can reuse them.
                     fine("Scaling down AutoScalingGroup with warm pool: %s", currentInstanceIdsToTerminate.keySet());
-                    asgFleet.scaleDownWithWarmPool(awsCredentialsId, region, endpoint, fleet, currentInstanceIdsToTerminate);
+                    asgFleet.scaleDownWithWarmPool(
+                            awsCredentialsId, region, endpoint, fleet, currentInstanceIdsToTerminate);
                 } else {
                     // No warm pool: terminate instances directly so the ASG replaces them.
                     fine("Terminating instances in AutoScalingGroup: %s", currentInstanceIdsToTerminate.keySet());
-                    asgFleet.terminateInstances(awsCredentialsId, region, endpoint, currentInstanceIdsToTerminate.keySet());
+                    asgFleet.terminateInstances(
+                            awsCredentialsId, region, endpoint, currentInstanceIdsToTerminate.keySet());
                 }
             } else {
                 fine("Terminating instances: %s", currentInstanceIdsToTerminate.keySet());
@@ -790,11 +803,7 @@ public class EC2FleetCloud extends AbstractEC2FleetCloud {
                         try {
                             addNewAgent(ec2, instance, updatedState);
                         } catch (final Exception ex) {
-                            warning(
-                                    ex,
-                                    "Unable to add new agent for instance '%s': %s",
-                                    instance.instanceId(),
-                                    ex);
+                            warning(ex, "Unable to add new agent for instance '%s': %s", instance.instanceId(), ex);
                         }
                     }
                 }

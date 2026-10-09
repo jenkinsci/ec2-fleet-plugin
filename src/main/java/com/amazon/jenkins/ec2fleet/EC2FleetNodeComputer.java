@@ -1,20 +1,24 @@
 package com.amazon.jenkins.ec2fleet;
 
 import hudson.EnvVars;
+import hudson.slaves.ComputerLauncher;
+import hudson.slaves.DelegatingComputerLauncher;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.SlaveComputer;
-import org.apache.commons.lang3.StringUtils;
-import org.kohsuke.stapler.HttpResponse;
-import org.kohsuke.stapler.interceptor.RequirePOST;
-
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-import javax.annotation.concurrent.ThreadSafe;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+import javax.annotation.concurrent.ThreadSafe;
+import org.apache.commons.lang3.StringUtils;
+import org.kohsuke.stapler.HttpResponse;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * The {@link EC2FleetNodeComputer} represents the running state of {@link EC2FleetNode} that holds executors.
@@ -24,6 +28,9 @@ import java.util.logging.Logger;
 public class EC2FleetNodeComputer extends SlaveComputer {
     private static final Logger LOGGER = Logger.getLogger(EC2FleetNodeComputer.class.getName());
     private boolean isMarkedForDeletion;
+    private volatile boolean hasConnectedSuccessfully;
+    private transient ScheduledFuture<?> connectionFailureCheck;
+    private transient boolean connectionFailureCheckScheduled;
 
     public EC2FleetNodeComputer(final EC2FleetNode agent) {
         super(agent);
@@ -32,6 +39,43 @@ public class EC2FleetNodeComputer extends SlaveComputer {
 
     public boolean isMarkedForDeletion() {
         return isMarkedForDeletion;
+    }
+
+    boolean hasConnectedSuccessfully() {
+        return hasConnectedSuccessfully;
+    }
+
+    synchronized void markConnectedSuccessfully() {
+        hasConnectedSuccessfully = true;
+        if (connectionFailureCheck != null) {
+            connectionFailureCheck.cancel(false);
+            connectionFailureCheck = null;
+        }
+    }
+
+    synchronized void scheduleConnectionFailureCheck(
+            final ScheduledExecutorService executor, final Runnable check, final long delayMillis) {
+        if (hasConnectedSuccessfully || connectionFailureCheckScheduled) {
+            return;
+        }
+        connectionFailureCheckScheduled = true;
+        connectionFailureCheck = executor.schedule(() -> {
+            synchronized (EC2FleetNodeComputer.this) {
+                connectionFailureCheck = null;
+                if (hasConnectedSuccessfully || isOnline()) {
+                    return;
+                }
+            }
+            check.run();
+        }, delayMillis, TimeUnit.MILLISECONDS);
+    }
+
+    ComputerLauncher getBaseLauncher() {
+        ComputerLauncher launcher = getLauncher();
+        while (launcher instanceof DelegatingComputerLauncher) {
+            launcher = ((DelegatingComputerLauncher) launcher).getLauncher();
+        }
+        return launcher;
     }
 
     @Override
@@ -88,9 +132,9 @@ public class EC2FleetNodeComputer extends SlaveComputer {
     @Override
     public String getDisplayName() {
         final EC2FleetNode node = getNode();
-        if(node != null) {
+        if (node != null) {
             final int usesRemaining = node.getUsesRemaining();
-            if(usesRemaining >= 0) {
+            if (usesRemaining >= 0) {
                 return String.format("%s Builds left: %d ", node.getDisplayName(), usesRemaining);
             }
             return node.getDisplayName();
@@ -116,7 +160,8 @@ public class EC2FleetNodeComputer extends SlaveComputer {
                 // between now and when the cloud's next update cycle terminates the instance on EC2.
                 setAcceptingTasks(false);
                 cloud.scheduleToTerminate(instanceId, false, EC2AgentTerminationReason.AGENT_DELETED);
-                // Persist a flag here as the cloud objects can be re-created on user-initiated changes, hence, losing track of instance ids scheduled to terminate.
+                // Persist a flag here as the cloud objects can be re-created on user-initiated changes, hence, losing
+                // track of instance ids scheduled to terminate.
                 this.isMarkedForDeletion = true;
             }
         }
