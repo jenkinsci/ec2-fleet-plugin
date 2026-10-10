@@ -10,13 +10,16 @@ public abstract class AbstractEC2FleetCloud extends Cloud {
 
     public abstract boolean isDisableTaskResubmit();
 
+    public abstract boolean isTerminateOnConnectionFailure();
+
     public abstract int getIdleMinutes();
 
     public abstract boolean isAlwaysReconnect();
 
     public abstract boolean hasExcessCapacity();
 
-    public abstract boolean scheduleToTerminate(String instanceId, boolean ignoreMinConstraints, EC2AgentTerminationReason reason);
+    public abstract boolean scheduleToTerminate(
+            String instanceId, boolean ignoreMinConstraints, EC2AgentTerminationReason reason);
 
     /**
      * Whether {@code instanceId} is already recorded for termination on this cloud.

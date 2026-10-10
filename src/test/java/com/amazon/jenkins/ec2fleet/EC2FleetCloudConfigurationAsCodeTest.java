@@ -1,5 +1,11 @@
 package com.amazon.jenkins.ec2fleet;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleet;
 import com.amazon.jenkins.ec2fleet.fleet.EC2Fleets;
 import hudson.plugins.sshslaves.SSHConnector;
@@ -8,18 +14,11 @@ import io.jenkins.plugins.casc.ConfiguratorException;
 import io.jenkins.plugins.casc.misc.ConfiguredWithCode;
 import io.jenkins.plugins.casc.misc.JenkinsConfiguredWithCodeRule;
 import io.jenkins.plugins.casc.misc.junit.jupiter.WithJenkinsConfiguredWithCode;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.nullable;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 @WithJenkinsConfiguredWithCode
 class EC2FleetCloudConfigurationAsCodeTest {
@@ -29,7 +28,12 @@ class EC2FleetCloudConfigurationAsCodeTest {
         final EC2Fleet ec2Fleet = mock(EC2Fleet.class);
         EC2Fleets.setGet(ec2Fleet);
         when(ec2Fleet.getState(anyString(), anyString(), nullable(String.class), anyString()))
-                .thenReturn(new FleetStateStats("", 2, FleetStateStats.State.active(), new HashSet<>(Arrays.asList("i-1", "i-2")), Collections.emptyMap()));
+                .thenReturn(new FleetStateStats(
+                        "",
+                        2,
+                        FleetStateStats.State.active(),
+                        new HashSet<>(Arrays.asList("i-1", "i-2")),
+                        Collections.emptyMap()));
     }
 
     @Test
@@ -66,6 +70,7 @@ class EC2FleetCloudConfigurationAsCodeTest {
         assertEquals(15, cloud.getInitOnlineCheckIntervalSec());
         assertEquals(10, cloud.getCloudStatusIntervalSec());
         assertFalse(cloud.isDisableTaskResubmit());
+        assertFalse(cloud.isTerminateOnConnectionFailure());
         assertFalse(cloud.isNoDelayProvision());
         assertTrue(cloud.getEnvironmentVariables().isEmpty());
     }
@@ -90,21 +95,26 @@ class EC2FleetCloudConfigurationAsCodeTest {
         assertEquals(12, cloud.getNumExecutors());
         assertTrue(cloud.isAddNodeOnlyIfRunning());
         assertTrue(cloud.isRestrictUsage());
-        assertEquals(EC2FleetCloud.WeightedScaler.class, cloud.getExecutorScaler().getClass());
+        assertEquals(
+                EC2FleetCloud.WeightedScaler.class, cloud.getExecutorScaler().getClass());
         assertEquals(181, cloud.getInitOnlineTimeoutSec());
         assertEquals(13, cloud.getInitOnlineCheckIntervalSec());
         assertEquals(11, cloud.getCloudStatusIntervalSec());
         assertTrue(cloud.isDisableTaskResubmit());
+        assertTrue(cloud.isTerminateOnConnectionFailure());
         assertTrue(cloud.isNoDelayProvision());
         assertEquals("xx", cloud.getAwsCredentialsId());
         assertEquals(2, cloud.getEnvironmentVariables().size());
         assertEquals("JAVA_TOOL_OPTIONS", cloud.getEnvironmentVariables().get(0).getName());
-        assertEquals("-Dfile.encoding=UTF-8", cloud.getEnvironmentVariables().get(0).getValue());
+        assertEquals(
+                "-Dfile.encoding=UTF-8", cloud.getEnvironmentVariables().get(0).getValue());
         assertEquals("FLEET_ID", cloud.getEnvironmentVariables().get(1).getName());
         assertEquals("my-fleet", cloud.getEnvironmentVariables().get(1).getValue());
 
         SSHConnector sshConnector = (SSHConnector) cloud.getComputerConnector();
-        assertEquals(NonVerifyingKeyVerificationStrategy.class, sshConnector.getSshHostKeyVerificationStrategy().getClass());
+        assertEquals(
+                NonVerifyingKeyVerificationStrategy.class,
+                sshConnector.getSshHostKeyVerificationStrategy().getClass());
     }
 
     @Test
@@ -112,7 +122,7 @@ class EC2FleetCloudConfigurationAsCodeTest {
     void configurationWithEmptyName_shouldUseDefault(JenkinsConfiguredWithCodeRule jenkinsRule) {
         assertEquals(3, jenkinsRule.jenkins.clouds.size());
 
-        for (EC2FleetCloud cloud : jenkinsRule.jenkins.clouds.getAll(EC2FleetCloud.class)){
+        for (EC2FleetCloud cloud : jenkinsRule.jenkins.clouds.getAll(EC2FleetCloud.class)) {
 
             assertTrue(cloud.name.startsWith(EC2FleetCloud.BASE_DEFAULT_FLEET_CLOUD_ID));
             assertEquals(("FleetCloud".length() + CloudNames.SUFFIX_LENGTH + 1), cloud.name.length());
