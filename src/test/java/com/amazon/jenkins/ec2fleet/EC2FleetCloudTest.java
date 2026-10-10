@@ -29,7 +29,9 @@ import com.amazon.jenkins.ec2fleet.fleet.EC2SpotFleet;
 import hudson.ExtensionList;
 import hudson.PluginManager;
 import hudson.model.Computer;
+import hudson.model.Executor;
 import hudson.model.Label;
+import hudson.model.Queue;
 import hudson.model.LabelFinder;
 import hudson.model.Node;
 import hudson.model.labels.LabelAtom;
@@ -2359,6 +2361,140 @@ class EC2FleetCloudTest {
         fleetCloud.update();
 
         // then - no AWS terminate fired; instance stays in the map for next cycle
+        verify(ec2Api, never()).terminateInstances(any(Ec2Client.class), any(Set.class));
+        assertEquals(
+                Collections.singleton("i-1"),
+                fleetCloud.getInstanceIdsToTerminate().keySet());
+    }
+
+    // issue#586: a Jenkins node that still exists must not be terminated just because its computer cannot be found.
+    @Test
+    void update_shouldNotTerminate_whenNodeExistsButComputerIsMissing() {
+        when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class)))
+                .thenReturn(new HashMap<String, Instance>() {
+                    {
+                        put(
+                                "i-1",
+                                Instance.builder()
+                                        .publicIpAddress("p-ip")
+                                        .instanceId("i-1")
+                                        .build());
+                    }
+                });
+        Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(new FleetStateStats(
+                        "fleetId",
+                        1,
+                        FleetStateStats.State.active(),
+                        Collections.singleton("i-1"),
+                        Collections.emptyMap()));
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud(
+                "TestCloud",
+                "credId",
+                null,
+                "region",
+                "",
+                "fleetId",
+                "",
+                null,
+                Mockito.mock(ComputerConnector.class),
+                false,
+                false,
+                0,
+                0,
+                2,
+                0,
+                1,
+                false,
+                false,
+                "-1",
+                false,
+                0,
+                0,
+                10,
+                false,
+                false,
+                noScaling);
+
+        when(jenkins.getComputer("i-1")).thenReturn(null);
+        when(jenkins.getNode("i-1")).thenReturn(mock(Node.class));
+
+        fleetCloud.scheduleToTerminate("i-1", false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
+
+        fleetCloud.update();
+
+        verify(ec2Api, never()).terminateInstances(any(Ec2Client.class), any(Set.class));
+        assertEquals(
+                Collections.singleton("i-1"),
+                fleetCloud.getInstanceIdsToTerminate().keySet());
+    }
+
+    // issue#586: an assigned executable must block termination even if isIdle()/countBusy() still say idle.
+    @Test
+    void update_shouldNotTerminate_whenExecutorHasExecutableButComputerLooksIdle() {
+        when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class)))
+                .thenReturn(new HashMap<String, Instance>() {
+                    {
+                        put(
+                                "i-1",
+                                Instance.builder()
+                                        .publicIpAddress("p-ip")
+                                        .instanceId("i-1")
+                                        .build());
+                    }
+                });
+        Mockito.when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(new FleetStateStats(
+                        "fleetId",
+                        1,
+                        FleetStateStats.State.active(),
+                        Collections.singleton("i-1"),
+                        Collections.emptyMap()));
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud(
+                "TestCloud",
+                "credId",
+                null,
+                "region",
+                "",
+                "fleetId",
+                "",
+                null,
+                Mockito.mock(ComputerConnector.class),
+                false,
+                false,
+                0,
+                0,
+                2,
+                0,
+                1,
+                false,
+                false,
+                "-1",
+                false,
+                0,
+                0,
+                10,
+                false,
+                false,
+                noScaling);
+
+        final Executor executor = mock(Executor.class);
+        when(executor.getCurrentExecutable()).thenReturn(mock(Queue.Executable.class));
+        final EC2FleetNodeComputer assignedComputer = mock(EC2FleetNodeComputer.class);
+        when(assignedComputer.isIdle()).thenReturn(true);
+        when(assignedComputer.countBusy()).thenReturn(0);
+        when(assignedComputer.isAcceptingTasks()).thenReturn(false);
+        when(assignedComputer.getAllExecutors()).thenReturn(Collections.singletonList(executor));
+        when(jenkins.getComputer("i-1")).thenReturn(assignedComputer);
+
+        fleetCloud.scheduleToTerminate("i-1", false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
+
+        fleetCloud.update();
+
         verify(ec2Api, never()).terminateInstances(any(Ec2Client.class), any(Set.class));
         assertEquals(
                 Collections.singleton("i-1"),

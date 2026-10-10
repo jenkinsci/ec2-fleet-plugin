@@ -650,6 +650,19 @@ public class EC2FleetLabelCloud extends AbstractEC2FleetCloud {
         return true;
     }
 
+    @Override
+    public synchronized boolean isTerminationScheduled(final String instanceId) {
+        if (instanceId == null || states == null) {
+            return false;
+        }
+        for (final State state : states.values()) {
+            if (state.instanceIdsToTerminate != null && state.instanceIdsToTerminate.containsKey(instanceId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // sync as we are using modifiable state
     @Override
     public synchronized boolean canProvision(final Cloud.CloudState cloudState) {

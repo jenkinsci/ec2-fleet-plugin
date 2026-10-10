@@ -138,6 +138,28 @@ class EC2RetentionStrategyTest {
     }
 
     @Test
+    void should_suspend_node_when_idle_termination_is_scheduled() {
+        when(computer.isIdle()).thenReturn(Boolean.TRUE);
+        when(computer.isMarkedForDeletion()).thenReturn(Boolean.FALSE);
+        when(cloud.hasExcessCapacity()).thenReturn(Boolean.FALSE);
+        when(cloud.hasUnlimitedUsesForNodes()).thenReturn(Boolean.TRUE);
+        when(cloud.getIdleMinutes()).thenReturn(10);
+        when(cloud.scheduleToTerminate(anyString(), anyBoolean(), any(EC2AgentTerminationReason.class))).thenReturn(true);
+
+        new EC2RetentionStrategy().check(computer);
+
+        verify(cloud).scheduleToTerminate("n-a", false, EC2AgentTerminationReason.IDLE_FOR_TOO_LONG);
+        verify(computer).suspendForTermination(EC2AgentTerminationReason.IDLE_FOR_TOO_LONG, false);
+        verify(computer, never()).setAcceptingTasks(true);
+    }
+
+    @Test
+    void isAcceptingTasks_false_when_scheduled_for_termination() {
+        when(computer.isScheduledForTermination()).thenReturn(true);
+        assertFalse(new EC2RetentionStrategy().isAcceptingTasks(computer));
+    }
+
+    @Test
     void should_do_nothing_if_node_is_null() {
         when(cloud.hasExcessCapacity()).thenReturn(Boolean.FALSE);
         when(computer.isIdle()).thenReturn(Boolean.TRUE);

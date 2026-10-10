@@ -9,9 +9,11 @@ import hudson.model.Queue;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.model.queue.SubTask;
+import hudson.slaves.Cloud;
 import hudson.slaves.ComputerLauncher;
 import hudson.slaves.DelegatingComputerLauncher;
 import hudson.slaves.SlaveComputer;
+import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 
@@ -78,8 +80,9 @@ public class EC2FleetAutoResubmitComputerLauncher extends DelegatingComputerLaun
         // according to jenkins docs could be null in edge cases, check ComputerLauncher.afterDisconnect
         if (computer == null) return;
 
-        // in some multi-thread edge cases cloud could be null for some time, just be ok with that
-        final AbstractEC2FleetCloud cloud = ((EC2FleetNodeComputer) computer).getCloud();
+        // removeNode unlinks the node before this callback, so getNode() is often null here.
+        // EC2FleetNodeComputer keeps the cloud name from before that unlink.
+        final AbstractEC2FleetCloud cloud = resolveCloud((EC2FleetNodeComputer) computer);
         if (cloud == null) {
             LOGGER.warning("Cloud is null for computer " + computer.getDisplayName()
                     + ". This should be autofixed in a few minutes, if not please create an issue for the plugin");
@@ -129,6 +132,36 @@ public class EC2FleetAutoResubmitComputerLauncher extends DelegatingComputerLaun
 
         // call parent
         super.afterDisconnect(computer, listener);
+    }
+
+    /**
+     * Resolve the fleet cloud after the node has been removed. {@link EC2FleetNodeComputer#getCloud()} uses the
+     * cached cloud name; if that misses, find a cloud that still has this instance scheduled for termination.
+     */
+    private static AbstractEC2FleetCloud resolveCloud(final EC2FleetNodeComputer computer) {
+        final AbstractEC2FleetCloud cached = computer.getCloud();
+        if (cached != null) {
+            return cached;
+        }
+        final Jenkins jenkins = Jenkins.getInstanceOrNull();
+        if (jenkins == null || jenkins.clouds == null) {
+            return null;
+        }
+        final String instanceId = computer.getName();
+        final String cloudName = computer.getCloudName();
+        for (final Cloud candidate : jenkins.clouds) {
+            if (!(candidate instanceof AbstractEC2FleetCloud)) {
+                continue;
+            }
+            final AbstractEC2FleetCloud fleetCloud = (AbstractEC2FleetCloud) candidate;
+            if (cloudName != null && cloudName.equals(fleetCloud.getDisplayName())) {
+                return fleetCloud;
+            }
+            if (instanceId != null && !instanceId.isEmpty() && fleetCloud.isTerminationScheduled(instanceId)) {
+                return fleetCloud;
+            }
+        }
+        return null;
     }
 
 }
