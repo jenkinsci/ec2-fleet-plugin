@@ -171,4 +171,14 @@ class EC2FleetNodeComputerTest {
         assertTrue(computer.isConfiguredEnvironmentVariablesVisible());
     }
 
+    @Test
+    void getDisplayName_uses_cached_name_when_node_is_gone() {
+        when(agent.getCloudName()).thenReturn("asg-devops");
+        when(agent.getDisplayName()).thenReturn("asg-devops i-1");
+        final EC2FleetNodeComputer computer = spy(new EC2FleetNodeComputer(agent));
+        doReturn(null).when(computer).getNode();
+
+        assertEquals("asg-devops i-1", computer.getDisplayName());
+    }
+
 }
