@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -157,6 +158,22 @@ class EC2FleetNodeComputerTest {
         doReturn(true).when(computer).hasPermission(EC2FleetNodeComputer.CONFIGURE);
 
         assertTrue(computer.isConfiguredEnvironmentVariablesVisible());
+    }
+
+    @Test
+    void getCloud_uses_cached_name_when_node_is_gone() {
+        when(agent.getCloudName()).thenReturn("asg-devops");
+        when(agent.getDisplayName()).thenReturn("asg-devops i-1");
+        // Construct before stubbing Jenkins.getInstanceOrNull. SlaveComputer's constructor
+        // resolves console filters through that call, and a mock Jenkins has no extension list.
+        final EC2FleetNodeComputer computer = spy(new EC2FleetNodeComputer(agent));
+        final EC2FleetCloud cloud = mock(EC2FleetCloud.class);
+        mockedJenkins.when(Jenkins::getInstanceOrNull).thenReturn(jenkins);
+        when(jenkins.getCloud("asg-devops")).thenReturn(cloud);
+        doReturn(null).when(computer).getNode();
+
+        assertSame(cloud, computer.getCloud());
+        assertEquals("asg-devops i-1", computer.getDisplayName());
     }
 
 }
