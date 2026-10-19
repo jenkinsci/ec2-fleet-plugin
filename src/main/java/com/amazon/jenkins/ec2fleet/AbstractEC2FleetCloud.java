@@ -20,4 +20,10 @@ public abstract class AbstractEC2FleetCloud extends Cloud {
 
     public abstract boolean scheduleToTerminate(
             String instanceId, boolean ignoreMinConstraints, EC2AgentTerminationReason reason);
+
+    /**
+     * Whether {@code instanceId} is already recorded for termination on this cloud.
+     * A replaced cloud object starts empty, so callers can reschedule a condemned agent onto the new object.
+     */
+    public abstract boolean isTerminationScheduled(String instanceId);
 }
