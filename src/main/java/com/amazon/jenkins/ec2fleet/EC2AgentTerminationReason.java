@@ -7,6 +7,7 @@ public enum EC2AgentTerminationReason {
     IDLE_FOR_TOO_LONG("Agent idle for too long"),
     MAX_TOTAL_USES_EXHAUSTED("MaxTotalUses exhausted for agent"),
     EXCESS_CAPACITY("Excess capacity for fleet"),
+    CONNECTION_FAILURE("Agent failed to connect"),
     AGENT_DELETED("Agent deleted");
 
     private final String description;
@@ -20,8 +21,8 @@ public enum EC2AgentTerminationReason {
     }
 
     public static EC2AgentTerminationReason fromDescription(String desc) {
-        for (EC2AgentTerminationReason reason: values()) {
-            if(reason.description.equalsIgnoreCase(desc)) {
+        for (EC2AgentTerminationReason reason : values()) {
+            if (reason.description.equalsIgnoreCase(desc)) {
                 return reason;
             }
         }

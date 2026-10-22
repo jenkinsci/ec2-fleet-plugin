@@ -97,6 +97,7 @@ public class CloudNanny extends PeriodicWork {
                 oldCloud.getCloudStatusIntervalSec(), oldCloud.isNoDelayProvision(),
                 oldCloud.isScaleExecutorsByWeight(), scaler);
         cloud.setEnvironmentVariables(oldCloud.getEnvironmentVariables());
+        cloud.setTerminateOnConnectionFailure(oldCloud.isTerminateOnConnectionFailure());
         return cloud;
     }
 

@@ -25,6 +25,7 @@ jenkins:
         initOnlineCheckIntervalSec: 13
         cloudStatusIntervalSec: 11
         disableTaskResubmit: true
+        terminateOnConnectionFailure: true
         noDelayProvision: true
         environmentVariables:
           - name: JAVA_TOOL_OPTIONS
