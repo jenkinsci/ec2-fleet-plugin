@@ -79,6 +79,18 @@ class EC2FleetNodeComputerTest {
     }
 
     @Test
+    void getCloud_returns_cloud_when_node_has_been_removed() {
+        final EC2FleetCloud cloud = mock(EC2FleetCloud.class);
+        when(agent.getCloudName()).thenReturn("fleet");
+        when(jenkins.getCloud("fleet")).thenReturn(cloud);
+
+        EC2FleetNodeComputer computer = spy(new EC2FleetNodeComputer(agent));
+        doReturn(null).when(computer).getNode();
+
+        assertEquals(cloud, computer.getCloud());
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     void getConfiguredEnvironmentVariables_returns_values_from_node_property() {
         final DescribableList properties = new DescribableList(agent);
