@@ -48,7 +48,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -2012,6 +2014,92 @@ class EC2FleetCloudTest {
     }
 
     @Test
+    void update_shouldCancelStrandedPlannedNodesWhenFleetSettlesWithoutThem() throws IOException {
+        // given
+        when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
+
+        final Map<String, Instance> described = new HashMap<>();
+        described.put("i-0", Instance.builder().instanceId("i-0").build());
+        described.put("i-1", Instance.builder().instanceId("i-1").build());
+        when(ec2Api.describeInstances(any(Ec2Client.class), any(Set.class))).thenReturn(described);
+
+        // AWS reports the same settled state before and after the scale-up attempt: the extra
+        // instance requested by provision was reclaimed before it could register with Jenkins
+        final FleetStateStats settledState = new FleetStateStats(
+                "fleetId",
+                2,
+                FleetStateStats.State.active(),
+                new HashSet<>(Arrays.asList("i-0", "i-1")),
+                Collections.emptyMap());
+        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(settledState);
+
+        mockNodeCreatingPart();
+
+        EC2FleetCloud fleetCloud = new EC2FleetCloud(
+                "TestCloud",
+                "credId",
+                null,
+                "region",
+                "",
+                "fleetId",
+                "",
+                null,
+                Mockito.mock(ComputerConnector.class),
+                false,
+                false,
+                0,
+                0,
+                10,
+                0,
+                1,
+                false,
+                true,
+                "-1",
+                false,
+                0,
+                0,
+                10,
+                false,
+                false,
+                noScaling);
+        fleetCloud.setStats(settledState);
+
+        // both fleet instances are already registered as Jenkins nodes, so the planned node
+        // cannot be adopted by addNewAgent
+        final EC2FleetNode node0 = mock(EC2FleetNode.class);
+        when(node0.getNodeName()).thenReturn("i-0");
+        when(node0.getCloudName()).thenReturn("TestCloud");
+        when(node0.getCloud()).thenReturn(fleetCloud);
+        final EC2FleetNode node1 = mock(EC2FleetNode.class);
+        when(node1.getNodeName()).thenReturn("i-1");
+        when(node1.getCloudName()).thenReturn("TestCloud");
+        when(node1.getCloud()).thenReturn(fleetCloud);
+        when(jenkins.getNodes()).thenReturn(Arrays.asList(node0, node1));
+
+        doNothing().when(jenkins).addNode(any(Node.class));
+
+        // when
+        final Collection<NodeProvisioner.PlannedNode> plannedNodes =
+                fleetCloud.provision(new Cloud.CloudState(null, 0), 1);
+        assertEquals(1, plannedNodes.size());
+
+        // scale-up cycle: target capacity is raised to 3, the planned node is legitimately waiting
+        // for its instance and must survive
+        fleetCloud.update();
+        assertEquals(1, fleetCloud.getPlannedNodesCache().size());
+
+        // next cycle the fleet settled back at 2 active == 2 desired: the planned node's instance
+        // will never arrive and its scheduled timeout was already cancelled after scaling
+        fleetCloud.update();
+
+        // then
+        assertEquals(0, fleetCloud.getPlannedNodesCache().size());
+        for (NodeProvisioner.PlannedNode plannedNode : plannedNodes) {
+            assertTrue(plannedNode.future.isCancelled(), "Stranded planned node should be cancelled");
+        }
+    }
+
+    @Test
     void update_shouldTrimPlannedNodesBasedOnUpdatedTargetCapacityIfProvisionCalledInBetween() throws IOException {
         // given
         when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
@@ -2072,6 +2160,198 @@ class EC2FleetCloudTest {
         // then
         // should be two, planned one added before update another during update
         assertEquals(2, fleetCloud.getPlannedNodesCache().size());
+    }
+
+    @Test
+    void provision_shouldCancelAndRemoveScheduledFutureWhenPlannedNodeFutureIsCancelled() throws IOException {
+        // given
+        final FleetStateStats initState = new FleetStateStats(
+                "fleetId", 0, FleetStateStats.State.active(), Collections.emptySet(), Collections.emptyMap());
+
+        final EC2FleetCloud fleetCloud = new EC2FleetCloud(
+                "TestCloud",
+                "credId",
+                null,
+                "region",
+                "",
+                "fleetId",
+                "",
+                null,
+                Mockito.mock(ComputerConnector.class),
+                false,
+                false,
+                0,
+                0,
+                10,
+                0,
+                1,
+                false,
+                true,
+                "-1",
+                false,
+                0,
+                0,
+                10,
+                false,
+                false,
+                noScaling);
+        fleetCloud.setStats(initState);
+
+        final NodeProvisioner.PlannedNode plannedNode =
+                fleetCloud.provision(new Cloud.CloudState(null, 0), 1).iterator().next();
+        final ScheduledFuture<?> scheduledFuture = fleetCloud.getPlannedNodeScheduledFutures().get(0);
+
+        // when
+        plannedNode.future.cancel(true);
+
+        // then
+        assertTrue(scheduledFuture.isCancelled());
+        assertFalse(fleetCloud.getPlannedNodeScheduledFutures().contains(scheduledFuture));
+    }
+
+    @Test
+    void provision_shouldNotRemoveScheduledFutureWhenPlannedNodeFutureCompletesNormally() throws IOException {
+        // given
+        final FleetStateStats initState = new FleetStateStats(
+                "fleetId", 0, FleetStateStats.State.active(), Collections.emptySet(), Collections.emptyMap());
+
+        final EC2FleetCloud fleetCloud = new EC2FleetCloud(
+                "TestCloud",
+                "credId",
+                null,
+                "region",
+                "",
+                "fleetId",
+                "",
+                null,
+                Mockito.mock(ComputerConnector.class),
+                false,
+                false,
+                0,
+                0,
+                10,
+                0,
+                1,
+                false,
+                true,
+                "-1",
+                false,
+                0,
+                0,
+                10,
+                false,
+                false,
+                noScaling);
+        fleetCloud.setStats(initState);
+
+        final NodeProvisioner.PlannedNode plannedNode =
+                fleetCloud.provision(new Cloud.CloudState(null, 0), 1).iterator().next();
+        final ScheduledFuture<?> scheduledFuture = fleetCloud.getPlannedNodeScheduledFutures().get(0);
+
+        // when
+        // same completion path the scaling-timeout task itself uses once it fires
+        ((CompletableFuture<Node>) plannedNode.future).complete(null);
+
+        // then
+        assertFalse(scheduledFuture.isCancelled());
+        assertTrue(fleetCloud.getPlannedNodeScheduledFutures().contains(scheduledFuture));
+    }
+
+    @Test
+    void update_shouldRemoveScheduledFutureForPlannedNodeCancelledDuringConcurrentProvision() throws IOException {
+        // given
+        when(ec2Api.connect(any(String.class), any(String.class), anyString())).thenReturn(amazonEC2);
+
+        final Map<String, Instance> described = new HashMap<>();
+        described.put("i-0", Instance.builder().instanceId("i-0").build());
+        described.put("i-1", Instance.builder().instanceId("i-1").build());
+
+        // fleet already carries two registered instances but now wants zero: everything
+        // planned this cycle, including one injected mid-update, must be trimmed away
+        final FleetStateStats settledState = new FleetStateStats(
+                "fleetId",
+                0,
+                FleetStateStats.State.active(),
+                new HashSet<>(Arrays.asList("i-0", "i-1")),
+                Collections.emptyMap());
+        when(ec2Fleet.getState(anyString(), anyString(), anyString(), anyString())).thenReturn(settledState);
+
+        mockNodeCreatingPart();
+
+        final EC2FleetCloud fleetCloud = new EC2FleetCloud(
+                "TestCloud",
+                "credId",
+                null,
+                "region",
+                "",
+                "fleetId",
+                "",
+                null,
+                Mockito.mock(ComputerConnector.class),
+                false,
+                false,
+                0,
+                0,
+                10,
+                0,
+                1,
+                false,
+                true,
+                "-1",
+                false,
+                0,
+                0,
+                10,
+                false,
+                false,
+                noScaling);
+        fleetCloud.setStats(settledState);
+
+        final EC2FleetNode node0 = mock(EC2FleetNode.class);
+        when(node0.getNodeName()).thenReturn("i-0");
+        when(node0.getCloudName()).thenReturn("TestCloud");
+        when(node0.getCloud()).thenReturn(fleetCloud);
+        final EC2FleetNode node1 = mock(EC2FleetNode.class);
+        when(node1.getNodeName()).thenReturn("i-1");
+        when(node1.getCloudName()).thenReturn("TestCloud");
+        when(node1.getCloud()).thenReturn(fleetCloud);
+        when(jenkins.getNodes()).thenReturn(Arrays.asList(node0, node1));
+
+        doNothing().when(jenkins).addNode(any(Node.class));
+
+        final NodeProvisioner.PlannedNode nodeA =
+                fleetCloud.provision(new Cloud.CloudState(null, 0), 1).iterator().next();
+
+        final ArrayList<ScheduledFuture<?>> scheduledFutures = fleetCloud.getPlannedNodeScheduledFutures();
+
+        // emulate a second, concurrent provision() call landing during update()'s unsynchronized
+        // updateByState() window, same technique as
+        // update_shouldTrimPlannedNodesBasedOnUpdatedTargetCapacityIfProvisionCalledInBetween,
+        // but hooked on describeInstances since modify() is not called on every update() cycle
+        final List<NodeProvisioner.PlannedNode> injected = new ArrayList<>();
+        final ScheduledFuture<?>[] scheduledFutureBHolder = new ScheduledFuture<?>[1];
+        doAnswer(invocation -> {
+                    injected.addAll(fleetCloud.provision(new Cloud.CloudState(null, 0), 1));
+                    scheduledFutureBHolder[0] = scheduledFutures.get(scheduledFutures.size() - 1);
+                    return described;
+                })
+                .when(ec2Api)
+                .describeInstances(any(Ec2Client.class), any(Set.class));
+
+        // when
+        fleetCloud.update();
+
+        // then
+        assertEquals(1, injected.size());
+        final NodeProvisioner.PlannedNode nodeB = injected.get(0);
+        final ScheduledFuture<?> scheduledFutureB = scheduledFutureBHolder[0];
+
+        assertEquals(0, fleetCloud.getPlannedNodesCache().size());
+        assertTrue(nodeA.future.isCancelled());
+        assertTrue(nodeB.future.isCancelled());
+        assertTrue(scheduledFutureB.isCancelled());
+        assertFalse(scheduledFutures.contains(scheduledFutureB));
+        assertTrue(scheduledFutures.isEmpty());
     }
 
     @Test
