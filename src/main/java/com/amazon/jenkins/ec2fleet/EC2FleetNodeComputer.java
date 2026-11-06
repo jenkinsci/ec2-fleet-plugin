@@ -5,6 +5,7 @@ import hudson.slaves.ComputerLauncher;
 import hudson.slaves.DelegatingComputerLauncher;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.SlaveComputer;
+import jenkins.model.Jenkins;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -27,6 +28,7 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 @ThreadSafe
 public class EC2FleetNodeComputer extends SlaveComputer {
     private static final Logger LOGGER = Logger.getLogger(EC2FleetNodeComputer.class.getName());
+    private final String cloudName;
     private boolean isMarkedForDeletion;
     private volatile boolean hasConnectedSuccessfully;
     private transient ScheduledFuture<?> connectionFailureCheck;
@@ -34,6 +36,7 @@ public class EC2FleetNodeComputer extends SlaveComputer {
 
     public EC2FleetNodeComputer(final EC2FleetNode agent) {
         super(agent);
+        this.cloudName = agent.getCloudName();
         this.isMarkedForDeletion = false;
     }
 
@@ -91,7 +94,10 @@ public class EC2FleetNodeComputer extends SlaveComputer {
 
     public AbstractEC2FleetCloud getCloud() {
         final EC2FleetNode node = getNode();
-        return node == null ? null : node.getCloud();
+        if (node != null) {
+            return node.getCloud();
+        }
+        return cloudName == null ? null : (AbstractEC2FleetCloud) Jenkins.get().getCloud(cloudName);
     }
 
     @Nonnull
