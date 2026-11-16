@@ -24,6 +24,15 @@ public class EC2RetentionStrategy extends RetentionStrategy<EC2FleetNodeComputer
      * @param fc EC2FleetNodeComputer
      * @return delay in min before next run
      */
+    /**
+     * Condemned agents stay unschedulable even if {@link hudson.slaves.SlaveComputer#setAcceptingTasks(boolean)}
+     * is later flipped back on. Jenkins recommends this over the computer flag alone.
+     */
+    @Override
+    public boolean isAcceptingTasks(final EC2FleetNodeComputer c) {
+        return !c.isScheduledForTermination();
+    }
+
     @Override
     public long check(final EC2FleetNodeComputer fc) {
         final AbstractEC2FleetCloud cloud = fc.getCloud();
@@ -41,8 +50,8 @@ public class EC2RetentionStrategy extends RetentionStrategy<EC2FleetNodeComputer
         // we're doing this check
         // Ensure nobody provisions onto this node until we've done
         // checking
-        boolean shouldAcceptTasks = fc.isAcceptingTasks();
-        boolean markedForTermination = false;
+        boolean shouldAcceptTasks = !fc.isScheduledForTermination() && fc.isAcceptingTasks();
+        boolean markedForTermination = fc.isScheduledForTermination();
         fc.setAcceptingTasks(false);
         try {
             if(fc.isIdle()) {
@@ -51,32 +60,46 @@ public class EC2RetentionStrategy extends RetentionStrategy<EC2FleetNodeComputer
                     return RE_CHECK_IN_A_MINUTE;
                 }
 
-                EC2AgentTerminationReason reason;
-                // Determine the reason for termination from specific to generic use cases.
-                // Reasoning for checking all cases of termination initiated by the plugin:
-                //  A user-initiated change to cloud configuration creates a new EC2FleetCloud object, erasing class fields containing data like instance IDs to terminate.
-                //  Hence, determine the reasons for termination here using persisted fields for accurate handling of termination.
-                if (fc.isMarkedForDeletion()) {
-                    reason = EC2AgentTerminationReason.AGENT_DELETED;
-                } else if (cloud.hasExcessCapacity()) {
-                    reason = EC2AgentTerminationReason.EXCESS_CAPACITY;
-                } else if (cloud instanceof EC2FleetCloud && !((EC2FleetCloud) cloud).hasUnlimitedUsesForNodes()
-                        && ((EC2FleetNode)node).getUsesRemaining() <= 0) {
-                    reason = EC2AgentTerminationReason.MAX_TOTAL_USES_EXHAUSTED;
-                } else if (isIdleForTooLong(cloud, fc)) {
-                    reason = EC2AgentTerminationReason.IDLE_FOR_TOO_LONG;
-                } else {
-                    return RE_CHECK_IN_A_MINUTE;
-                }
-
-                final String instanceId = node.getNodeName();
-                final boolean ignoreMinConstraints = reason.equals(EC2AgentTerminationReason.MAX_TOTAL_USES_EXHAUSTED);
-                if (cloud.scheduleToTerminate(instanceId, ignoreMinConstraints, reason)) {
-                    // Instance successfully scheduled for termination, so no longer accept tasks (i.e. suspended)
+                if (fc.isScheduledForTermination()) {
+                    // Cloud objects are replaced on config changes and drop instanceIdsToTerminate.
+                    // Put the condemned instance back on the current cloud and keep the agent offline.
+                    final String instanceId = node.getNodeName();
+                    if (!cloud.isTerminationScheduled(instanceId)) {
+                        cloud.scheduleToTerminate(instanceId, fc.isIgnoreMinOnTermination(), fc.getTerminationReason());
+                    }
+                    fc.suspendForTermination(fc.getTerminationReason(), fc.isIgnoreMinOnTermination());
                     shouldAcceptTasks = false;
-                    LOGGER.fine(String.format("Suspended node %s after scheduling instance for termination, reason: %s.",
-                            node.getDisplayName(), instanceId, reason));
                     markedForTermination = true;
+                } else {
+                    EC2AgentTerminationReason reason;
+                    // Determine the reason for termination from specific to generic use cases.
+                    // Reasoning for checking all cases of termination initiated by the plugin:
+                    //  A user-initiated change to cloud configuration creates a new EC2FleetCloud object, erasing class fields containing data like instance IDs to terminate.
+                    //  Hence, determine the reasons for termination here using persisted fields for accurate handling of termination.
+                    if (fc.isMarkedForDeletion()) {
+                        reason = EC2AgentTerminationReason.AGENT_DELETED;
+                    } else if (cloud.hasExcessCapacity()) {
+                        reason = EC2AgentTerminationReason.EXCESS_CAPACITY;
+                    } else if (cloud instanceof EC2FleetCloud && !((EC2FleetCloud) cloud).hasUnlimitedUsesForNodes()
+                            && ((EC2FleetNode)node).getUsesRemaining() <= 0) {
+                        reason = EC2AgentTerminationReason.MAX_TOTAL_USES_EXHAUSTED;
+                    } else if (isIdleForTooLong(cloud, fc)) {
+                        reason = EC2AgentTerminationReason.IDLE_FOR_TOO_LONG;
+                    } else {
+                        return RE_CHECK_IN_A_MINUTE;
+                    }
+
+                    final String instanceId = node.getNodeName();
+                    final boolean ignoreMinConstraints = reason.equals(EC2AgentTerminationReason.MAX_TOTAL_USES_EXHAUSTED);
+                    if (cloud.scheduleToTerminate(instanceId, ignoreMinConstraints, reason)) {
+                        // Fence before the queue lock is released: offline, not accepting tasks, and condemned.
+                        fc.suspendForTermination(reason, ignoreMinConstraints);
+                        shouldAcceptTasks = false;
+                        markedForTermination = true;
+                        LOGGER.log(Level.INFO,
+                                "Suspended node {0} after scheduling instance {1} for termination, reason: {2}.",
+                                new Object[]{node.getDisplayName(), instanceId, reason});
+                    }
                 }
             }
 
@@ -171,10 +194,12 @@ public class EC2RetentionStrategy extends RetentionStrategy<EC2FleetNodeComputer
             final EC2FleetNode ec2FleetNode = computer.getNode();
             if (ec2FleetNode != null) {
                 final AbstractEC2FleetCloud cloud = ec2FleetNode.getCloud();
-                if (computer.countBusy() <= 1 && !computer.isAcceptingTasks()) {
+                if (cloud != null && computer.countBusy() <= 1 && !computer.isAcceptingTasks()) {
                     LOGGER.info("Calling scheduleToTerminate for node " + ec2FleetNode.getNodeName() + " due to exhausted maxTotalUses.");
                     // Schedule instance for termination even if it breaches minSize and minSpareSize constraints
-                    cloud.scheduleToTerminate(ec2FleetNode.getNodeName(), true, EC2AgentTerminationReason.MAX_TOTAL_USES_EXHAUSTED);
+                    if (cloud.scheduleToTerminate(ec2FleetNode.getNodeName(), true, EC2AgentTerminationReason.MAX_TOTAL_USES_EXHAUSTED)) {
+                        computer.suspendForTermination(EC2AgentTerminationReason.MAX_TOTAL_USES_EXHAUSTED, true);
+                    }
                 }
             }
         }

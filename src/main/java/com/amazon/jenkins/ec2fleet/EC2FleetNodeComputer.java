@@ -1,6 +1,7 @@
 package com.amazon.jenkins.ec2fleet;
 
 import hudson.EnvVars;
+import hudson.model.Node;
 import hudson.slaves.ComputerLauncher;
 import hudson.slaves.DelegatingComputerLauncher;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
@@ -13,6 +14,7 @@ import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -30,6 +32,10 @@ public class EC2FleetNodeComputer extends SlaveComputer {
     private static final Logger LOGGER = Logger.getLogger(EC2FleetNodeComputer.class.getName());
     private final String cloudName;
     private boolean isMarkedForDeletion;
+    private volatile String cachedDisplayName;
+    private volatile boolean scheduledForTermination;
+    private volatile EC2AgentTerminationReason terminationReason;
+    private volatile boolean ignoreMinOnTermination;
     private volatile boolean hasConnectedSuccessfully;
     private transient ScheduledFuture<?> connectionFailureCheck;
     private transient boolean connectionFailureCheckScheduled;
@@ -38,6 +44,39 @@ public class EC2FleetNodeComputer extends SlaveComputer {
         super(agent);
         this.cloudName = agent.getCloudName();
         this.isMarkedForDeletion = false;
+        this.cachedDisplayName = agent.getDisplayName();
+    }
+
+    public boolean isScheduledForTermination() {
+        return scheduledForTermination;
+    }
+
+    public EC2AgentTerminationReason getTerminationReason() {
+        return terminationReason == null ? EC2AgentTerminationReason.IDLE_FOR_TOO_LONG : terminationReason;
+    }
+
+    public boolean isIgnoreMinOnTermination() {
+        return ignoreMinOnTermination;
+    }
+
+    /**
+     * Fence the agent as soon as termination is decided. The queue lock is held by
+     * {@link hudson.slaves.ComputerRetentionWork} around {@link EC2RetentionStrategy#check}, so this takes effect
+     * before another task can be assigned. Temporary offline keeps the channel up for a build that is already
+     * running, and is checked by both heavyweight and flyweight assignment.
+     */
+    public void suspendForTermination(final EC2AgentTerminationReason reason, final boolean ignoreMinConstraints) {
+        this.terminationReason = reason == null ? EC2AgentTerminationReason.IDLE_FOR_TOO_LONG : reason;
+        this.ignoreMinOnTermination = ignoreMinConstraints;
+        this.scheduledForTermination = true;
+        setAcceptingTasks(false);
+        if (getNode() != null && !isTemporarilyOffline()) {
+            try {
+                setTemporaryOfflineCause(new ScheduledForTerminationOfflineCause(this.terminationReason.getDescription()));
+            } catch (RuntimeException ex) {
+                LOGGER.log(Level.WARNING, "Failed to mark node offline for termination: " + getName(), ex);
+            }
+        }
     }
 
     public boolean isMarkedForDeletion() {
@@ -141,9 +180,14 @@ public class EC2FleetNodeComputer extends SlaveComputer {
         if (node != null) {
             final int usesRemaining = node.getUsesRemaining();
             if (usesRemaining >= 0) {
-                return String.format("%s Builds left: %d ", node.getDisplayName(), usesRemaining);
+                cachedDisplayName = String.format("%s Builds left: %d ", node.getDisplayName(), usesRemaining);
+            } else {
+                cachedDisplayName = node.getDisplayName();
             }
-            return node.getDisplayName();
+            return cachedDisplayName;
+        }
+        if (cachedDisplayName != null) {
+            return cachedDisplayName;
         }
         return "unknown fleet" + " " + getName();
     }
@@ -165,7 +209,9 @@ public class EC2FleetNodeComputer extends SlaveComputer {
                 // Suspend the computer before scheduling so the queue cannot dispatch new work to it
                 // between now and when the cloud's next update cycle terminates the instance on EC2.
                 setAcceptingTasks(false);
-                cloud.scheduleToTerminate(instanceId, false, EC2AgentTerminationReason.AGENT_DELETED);
+                if (cloud.scheduleToTerminate(instanceId, false, EC2AgentTerminationReason.AGENT_DELETED)) {
+                    suspendForTermination(EC2AgentTerminationReason.AGENT_DELETED, false);
+                }
                 // Persist a flag here as the cloud objects can be re-created on user-initiated changes, hence, losing
                 // track of instance ids scheduled to terminate.
                 this.isMarkedForDeletion = true;
